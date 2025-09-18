@@ -39,8 +39,8 @@
   }
 </script>
 
-<section class="p-4 space-y-4">
-  <h1 class="text-xl font-semibold">Appointments</h1>
+<section class="space-y-4">
+  <h1 class="text-2xl font-semibold">Appointments</h1>
   <div class="grid gap-3 max-w-xl">
     <input class="border p-2 rounded" placeholder="Customer name" bind:value={form.customer_name} />
     <input class="border p-2 rounded" placeholder="Contact info" bind:value={form.contact_info} />

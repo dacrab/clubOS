@@ -55,9 +55,9 @@
   }
 </script>
 
-<section class="p-4 space-y-4">
-  <h1 class="text-xl font-semibold">Products</h1>
-  <div class="grid gap-3 max-w-xl">
+<section class="space-y-4">
+  <h1 class="text-2xl font-semibold">Products</h1>
+  <div class="grid gap-3 md:max-w-xl">
     <input class="border p-2 rounded" placeholder="Name" bind:value={form.name} />
     <div class="flex gap-2">
       <input type="number" step="0.01" class="border p-2 rounded w-40" placeholder="Price" bind:value={form.price} />
@@ -73,7 +73,7 @@
   </div>
 
   <h2 class="font-semibold mt-6">All products</h2>
-  <table class="text-sm w-full border">
+  <table class="text-sm w-full border rounded-md overflow-hidden">
     <thead>
       <tr class="bg-gray-50">
         <th class="text-left p-2">Name</th>

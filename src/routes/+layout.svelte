@@ -3,6 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { supabase } from '$lib/supabaseClient';
 	import { t, locale } from '$lib/i18n';
+    import Button from '$lib/components/ui/button/button.svelte';
 
 	let { children } = $props();
 
@@ -16,24 +17,26 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<header class="p-3 flex items-center gap-3 border-b">
-	<nav class="flex-1 flex items-center gap-4">
-		<a href="/dashboard">Dashboard</a>
-		<a href="/orders">{t('nav.orders')}</a>
-		<a href="/admin">Admin</a>
-		<a href="/admin/products">Products</a>
-		<a href="/admin/categories">Categories</a>
-		<a href="/admin/users">Users</a>
-		<a href="/secretary/appointments">Appointments</a>
-		<a href="/secretary/football">Football</a>
-	</nav>
-	<select bind:value={$locale} class="border p-1 rounded">
+<header class="sticky top-0 z-20 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+	<div class="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
+		<nav class="flex-1 flex items-center gap-2 text-sm">
+			<Button variant="ghost" href="/dashboard">Dashboard</Button>
+			<Button variant="ghost" href="/orders">{t('nav.orders')}</Button>
+			<Button variant="ghost" href="/admin">Admin</Button>
+			<Button variant="ghost" href="/admin/products">Products</Button>
+			<Button variant="ghost" href="/admin/categories">Categories</Button>
+			<Button variant="ghost" href="/admin/users">Users</Button>
+			<Button variant="ghost" href="/secretary/appointments">Appointments</Button>
+			<Button variant="ghost" href="/secretary/football">Football</Button>
+		</nav>
+		<select bind:value={$locale} class="border p-1 rounded">
 		<option value="en">EN</option>
 		<option value="el">EL</option>
-	</select>
-	<button class="border rounded px-3 py-1" onclick={logout}>{t('nav.logout')}</button>
+		</select>
+		<Button variant="outline" onclick={logout}>{t('nav.logout')}</Button>
+	</div>
 </header>
 
-<main>
+<main class="max-w-6xl mx-auto px-4 py-4">
     {@render children?.()}
 </main>
