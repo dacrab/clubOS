@@ -47,6 +47,7 @@
 		"vitest-browser-svelte": "^0.1.0"
 	},
 	"dependencies": {
+		"@supabase/supabase-js": "^2.57.4",
 		"postgres": "^3.4.5"
 	}
 }
