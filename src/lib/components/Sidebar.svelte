@@ -16,38 +16,38 @@
     <p class="text-xs text-muted-foreground">{t('nav.dashboard')}</p>
   </div>
   <nav class="flex flex-col gap-1 text-sm">
-    <Button variant="ghost" class="justify-start data-[active=true]:bg-accent" href="/dashboard" data-active={isActive('/dashboard')}>
+    <Button variant="ghost" class="justify-start data-[active=true]:bg-accent data-[active=true]:text-foreground rounded-md" href="/dashboard" data-active={isActive('/dashboard')} aria-current={isActive('/dashboard') ? 'page' : undefined}>
       <Home class="mr-2 h-4 w-4" /> {t('nav.dashboard')}
     </Button>
-    <Button variant="ghost" class="justify-start data-[active=true]:bg-accent" href="/orders" data-active={isActive('/orders')}>
+    <Button variant="ghost" class="justify-start data-[active=true]:bg-accent data-[active=true]:text-foreground rounded-md" href="/orders" data-active={isActive('/orders')} aria-current={isActive('/orders') ? 'page' : undefined}>
       <ShoppingCart class="mr-2 h-4 w-4" /> {t('nav.orders')}
     </Button>
 
     {#if $currentUser?.role === 'admin'}
       <div class="px-3 mt-3 mb-1 text-xs uppercase text-muted-foreground">{t('nav.admin')}</div>
-      <Button variant="ghost" class="justify-start data-[active=true]:bg-accent" href="/admin/products" data-active={isActive('/admin/products')}>
+      <Button variant="ghost" class="justify-start data-[active=true]:bg-accent data-[active=true]:text-foreground rounded-md" href="/admin/products" data-active={isActive('/admin/products')} aria-current={isActive('/admin/products') ? 'page' : undefined}>
         <Package class="mr-2 h-4 w-4" /> {t('nav.products')}
       </Button>
-      <Button variant="ghost" class="justify-start data-[active=true]:bg-accent" href="/admin/categories" data-active={isActive('/admin/categories')}>
+      <Button variant="ghost" class="justify-start data-[active=true]:bg-accent data-[active=true]:text-foreground rounded-md" href="/admin/categories" data-active={isActive('/admin/categories')} aria-current={isActive('/admin/categories') ? 'page' : undefined}>
         <Tags class="mr-2 h-4 w-4" /> {t('nav.categories')}
       </Button>
-      <Button variant="ghost" class="justify-start data-[active=true]:bg-accent" href="/admin/users" data-active={isActive('/admin/users')}>
+      <Button variant="ghost" class="justify-start data-[active=true]:bg-accent data-[active=true]:text-foreground rounded-md" href="/admin/users" data-active={isActive('/admin/users')} aria-current={isActive('/admin/users') ? 'page' : undefined}>
         <UserCog class="mr-2 h-4 w-4" /> {t('nav.users')}
       </Button>
-      <Button variant="ghost" class="justify-start data-[active=true]:bg-accent" href="/admin/registers" data-active={isActive('/admin/registers')}>
+      <Button variant="ghost" class="justify-start data-[active=true]:bg-accent data-[active=true]:text-foreground rounded-md" href="/admin/registers" data-active={isActive('/admin/registers')} aria-current={isActive('/admin/registers') ? 'page' : undefined}>
         <ClipboardList class="mr-2 h-4 w-4" /> {t('nav.registers')}
       </Button>
-      <Button variant="ghost" class="justify-start data-[active=true]:bg-accent" href="/admin/reports" data-active={isActive('/admin/reports')}>
+      <Button variant="ghost" class="justify-start data-[active=true]:bg-accent data-[active=true]:text-foreground rounded-md" href="/admin/reports" data-active={isActive('/admin/reports')} aria-current={isActive('/admin/reports') ? 'page' : undefined}>
         <ClipboardList class="mr-2 h-4 w-4" /> {t('nav.reports')}
       </Button>
     {/if}
 
     {#if $currentUser?.role === 'admin' || $currentUser?.role === 'secretary'}
       <div class="px-3 mt-3 mb-1 text-xs uppercase text-muted-foreground">{t('nav.bookings')}</div>
-      <Button variant="ghost" class="justify-start data-[active=true]:bg-accent" href="/secretary/appointments" data-active={isActive('/secretary/appointments')}>
+      <Button variant="ghost" class="justify-start data-[active=true]:bg-accent data-[active=true]:text-foreground rounded-md" href="/secretary/appointments" data-active={isActive('/secretary/appointments')} aria-current={isActive('/secretary/appointments') ? 'page' : undefined}>
         <ClipboardList class="mr-2 h-4 w-4" /> {t('nav.appointments')}
       </Button>
-      <Button variant="ghost" class="justify-start data-[active=true]:bg-accent" href="/secretary/football" data-active={isActive('/secretary/football')}>
+      <Button variant="ghost" class="justify-start data-[active=true]:bg-accent data-[active=true]:text-foreground rounded-md" href="/secretary/football" data-active={isActive('/secretary/football')} aria-current={isActive('/secretary/football') ? 'page' : undefined}>
         <ClipboardList class="mr-2 h-4 w-4" /> {t('nav.football')}
       </Button>
     {/if}

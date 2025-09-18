@@ -9,6 +9,7 @@
   let form = $state({ name: '', price: 0, stock_quantity: 0, category_id: '' });
   let uploadingFor: string | null = $state(null);
   import Button from '$lib/components/ui/button/button.svelte';
+  import Input from '$lib/components/ui/input/input.svelte';
 
   $effect(() => {
     loadCurrentUser().then(() => {
@@ -55,13 +56,13 @@
   }
 </script>
 
-<section class="space-y-4">
+<section class="space-y-6">
   <h1 class="text-2xl font-semibold">Products</h1>
   <div class="grid gap-3 md:max-w-xl">
-    <input class="border p-2 rounded" placeholder="Name" bind:value={form.name} />
+    <Input placeholder="Name" bind:value={form.name} />
     <div class="flex gap-2">
-      <input type="number" step="0.01" class="border p-2 rounded w-40" placeholder="Price" bind:value={form.price} />
-      <input type="number" class="border p-2 rounded w-40" placeholder="Stock" bind:value={form.stock_quantity} />
+      <Input type="number" step="0.01" class="w-40" placeholder="Price" bind:value={form.price} />
+      <Input type="number" class="w-40" placeholder="Stock" bind:value={form.stock_quantity} />
     </div>
     <select class="border p-2 rounded" bind:value={form.category_id}>
       <option value="">No category</option>
