@@ -6,6 +6,7 @@
   let users: Row[] = $state([] as Row[]);
   let targetRole = $state<'admin' | 'staff' | 'secretary'>('staff');
   let targetUserId = $state('');
+  let createForm = $state({ email: '', password: '', username: '', role: 'staff' as 'admin'|'staff'|'secretary' });
 
   $effect(() => {
     loadCurrentUser().then(() => {
@@ -33,10 +34,36 @@
     const { error } = await (supabase as any).rpc('admin_soft_delete_user', { p_user_id: userId });
     if (!error) load();
   }
+
+  async function createUser() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return (window.location.href = '/login');
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify(createForm),
+    });
+    if (res.ok) {
+      createForm = { email: '', password: '', username: '', role: 'staff' } as any;
+      await load();
+    }
+  }
 </script>
 
 <section class="p-4 space-y-4">
   <h1 class="text-xl font-semibold">Users</h1>
+  <div class="grid gap-2 max-w-xl">
+    <h2 class="font-semibold">Create user</h2>
+    <input class="border p-2 rounded" placeholder="Email" bind:value={createForm.email} />
+    <input class="border p-2 rounded" placeholder="Password" type="password" bind:value={createForm.password} />
+    <input class="border p-2 rounded" placeholder="Username" bind:value={createForm.username} />
+    <select class="border p-2 rounded" bind:value={createForm.role}>
+      <option value="admin">admin</option>
+      <option value="staff">staff</option>
+      <option value="secretary">secretary</option>
+    </select>
+    <button class="border rounded px-3 py-1" onclick={createUser}>Create</button>
+  </div>
   <div class="flex gap-2 items-end">
     <select class="border p-2 rounded" bind:value={targetUserId}>
       <option value="">Select user</option>
