@@ -5,8 +5,9 @@
   import { t } from '$lib/i18n';
   import OpenRegister from './OpenRegister.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
+  import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
+  import RecentOrders from '$lib/components/RecentOrders.svelte';
   
-  let recent: Array<{ id: string; total_amount: number; created_at: string }> = $state([]);
   let closing = $state(false);
   
   $effect(() => {
@@ -15,17 +16,7 @@
       if (!u) return (window.location.href = '/login');
       if (u.role !== 'staff') window.location.href = '/dashboard';
     });
-    loadRecent();
   });
-  
-  async function loadRecent() {
-    const { data } = await supabase
-      .from('orders')
-      .select('id,total_amount,created_at')
-      .order('created_at', { ascending: false })
-      .limit(5);
-    recent = (data as any) ?? [];
-  }
   
   async function onCloseRegister() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -34,33 +25,34 @@
     closing = true;
     try {
       await closeRegister(supabase, sessionId, null);
-      await loadRecent();
     } finally {
       closing = false;
     }
   }
 </script>
 
-<section class="p-4 space-y-4">
-  <h1 class="text-xl font-semibold">Staff Dashboard</h1>
-  <ul class="list-disc pl-5">
-    <li>Sales entry</li>
-    <li><Button href="/orders">New sale</Button></li>
-    <li>
-      <div class="mb-2">{t('orders.recent')}</div>
-      <ul class="text-sm space-y-1">
-        {#each recent as r}
-          <li>#{r.id.slice(0,8)} — €{Number(r.total_amount).toFixed(2)} — {new Date(r.created_at).toLocaleString()}</li>
-        {/each}
-      </ul>
-    </li>
-    <li>
-      <Button onclick={onCloseRegister} disabled={closing}>{closing ? '...' : 'Close register'}</Button>
-    </li>
-  </ul>
-  <div class="mt-6 grid gap-3 max-w-md">
-    <h2 class="font-semibold">Open register</h2>
-    <OpenRegister />
+<section class="space-y-4">
+  <h1 class="text-2xl font-semibold">Staff Dashboard</h1>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Card>
+      <CardHeader><CardTitle>Point of Sale</CardTitle></CardHeader>
+      <CardContent class="flex flex-col gap-2">
+        <Button href="/orders" size="lg">New Sale</Button>
+      </CardContent>
+    </Card>
+    <Card>
+        <CardHeader><CardTitle>{t('orders.recent')}</CardTitle></CardHeader>
+        <CardContent>
+            <RecentOrders limit={5} />
+        </CardContent>
+    </Card>
+    <Card>
+      <CardHeader><CardTitle>Register</CardTitle></CardHeader>
+      <CardContent class="flex flex-col gap-2">
+        <OpenRegister />
+        <Button onclick={onCloseRegister} disabled={closing} variant="destructive">{closing ? '...' : 'Close Register'}</Button>
+      </CardContent>
+    </Card>
   </div>
 </section>
 

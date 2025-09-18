@@ -6,6 +6,9 @@
   let todayTotal = $state(0);
   let closing = $state(false);
   import Button from '$lib/components/ui/button/button.svelte';
+  import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
+  import { t } from '$lib/i18n';
+
   $effect(() => {
     loadCurrentUser().then(() => {
       const u = $currentUser;
@@ -35,27 +38,29 @@
   }
 </script>
 
-<section class="p-4 space-y-4">
-  <h1 class="text-xl font-semibold">Admin Dashboard</h1>
-  <div class="grid grid-cols-2 gap-4 max-w-2xl">
-    <div class="border rounded p-4">
-      <div class="text-sm opacity-70">Today</div>
-      <div class="text-2xl font-semibold">€{todayTotal.toFixed(2)}</div>
-    </div>
-    <div class="border rounded p-4">
-      <div class="text-sm opacity-70">Recent orders</div>
-      <RecentOrders limit={5} />
-    </div>
+<section class="space-y-4">
+  <h1 class="text-2xl font-semibold">Admin Dashboard</h1>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <Card>
+      <CardHeader><CardTitle>Today's Revenue</CardTitle></CardHeader>
+      <CardContent>
+        <div class="text-3xl font-bold">€{todayTotal.toFixed(2)}</div>
+      </CardContent>
+    </Card>
+    <Card>
+      <CardHeader><CardTitle>{t('orders.recent')}</CardTitle></CardHeader>
+      <CardContent>
+        <RecentOrders limit={5} />
+      </CardContent>
+    </Card>
+     <Card>
+      <CardHeader><CardTitle>Actions</CardTitle></CardHeader>
+      <CardContent class="flex flex-col gap-2">
+        <Button href="/admin/registers">Manage Registers</Button>
+        <Button onclick={onCloseRegister} disabled={closing}>{closing ? '...' : 'Close Current Register'}</Button>
+      </CardContent>
+    </Card>
   </div>
-  <ul class="list-disc pl-5">
-    <li>KPIs and recent sales (to implement)</li>
-    <li>Manage products & categories</li>
-    <li>Manage bookings</li>
-    <li>Manage users</li>
-    <li>
-      Register sessions — <Button onclick={onCloseRegister} disabled={closing}>{closing ? '...' : 'Close register'}</Button>
-    </li>
-  </ul>
 </section>
 
 

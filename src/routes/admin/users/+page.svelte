@@ -7,7 +7,10 @@
   let targetRole = $state<'admin' | 'staff' | 'secretary'>('staff');
   let targetUserId = $state('');
   let createForm = $state({ email: '', password: '', username: '', role: 'staff' as 'admin'|'staff'|'secretary' });
+  let showCreate = $state(false);
   import Button from '$lib/components/ui/button/button.svelte';
+  import UserDialog from './UserDialog.svelte';
+  import { t } from '$lib/i18n';
 
   $effect(() => {
     loadCurrentUser().then(() => {
@@ -36,9 +39,9 @@
     if (!error) load();
   }
 
-  async function createUser() {
+  async function createUser(): Promise<void> {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return (window.location.href = '/login');
+    if (!session) { window.location.href = '/login'; return; }
     const res = await fetch('/api/admin/users', {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${session.access_token}` },
@@ -54,16 +57,9 @@
 <section class="space-y-4">
   <h1 class="text-2xl font-semibold">Users</h1>
   <div class="grid gap-2 max-w-xl">
-    <h2 class="font-semibold">Create user</h2>
-    <input class="border p-2 rounded" placeholder="Email" bind:value={createForm.email} />
-    <input class="border p-2 rounded" placeholder="Password" type="password" bind:value={createForm.password} />
-    <input class="border p-2 rounded" placeholder="Username" bind:value={createForm.username} />
-    <select class="border p-2 rounded" bind:value={createForm.role}>
-      <option value="admin">admin</option>
-      <option value="staff">staff</option>
-      <option value="secretary">secretary</option>
-    </select>
-    <Button onclick={createUser}>Create</Button>
+    <h2 class="font-semibold">{t('table.actions')}</h2>
+    <Button onclick={() => (showCreate = true)}>+ {t('nav.users')}</Button>
+    <UserDialog bind:open={showCreate} title="Create user" bind:form={createForm} onSubmit={createUser} />
   </div>
   <div class="flex gap-2 items-end">
     <select class="border p-2 rounded" bind:value={targetUserId}>
@@ -80,14 +76,14 @@
     <Button disabled={!targetUserId} onclick={setRole}>Set role</Button>
   </div>
 
-  <h2 class="font-semibold mt-6">All users</h2>
+  <h2 class="font-semibold mt-6">{t('nav.users')}</h2>
   <table class="text-sm w-full border rounded-md overflow-hidden">
     <thead>
       <tr class="bg-gray-50">
-        <th class="text-left p-2">Username</th>
-        <th class="text-left p-2">Role</th>
-        <th class="text-left p-2">Active</th>
-        <th class="text-left p-2">Actions</th>
+        <th class="text-left p-2">{t('table.username')}</th>
+        <th class="text-left p-2">{t('table.role')}</th>
+        <th class="text-left p-2">{t('table.active')}</th>
+        <th class="text-left p-2">{t('table.actions')}</th>
       </tr>
     </thead>
     <tbody>
@@ -97,7 +93,7 @@
           <td class="p-2">{u.role}</td>
           <td class="p-2">{u.is_active ? 'yes' : 'no'}</td>
           <td class="p-2">
-            <Button variant="outline" onclick={() => deactivate(u.id)}>Deactivate</Button>
+            <Button variant="outline" onclick={() => deactivate(u.id)}>{t('table.deactivate')}</Button>
           </td>
         </tr>
       {/each}
