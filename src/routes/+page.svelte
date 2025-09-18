@@ -1,2 +1,13 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script lang="ts">
+  // redirect root to orders or login based on session
+  import { supabase } from '$lib/supabaseClient';
+
+  $effect(() => {
+    supabase.auth.getSession().then((result: { data: { session: any } }) => {
+      if (result.data.session) window.location.href = '/orders';
+      else window.location.href = '/login';
+    });
+  });
+</script>
+
+<p>Loading...</p>
