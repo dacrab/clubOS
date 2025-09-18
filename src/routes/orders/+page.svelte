@@ -156,7 +156,7 @@
 <section class="p-4">
   <div class="flex items-center gap-2 mb-4">
     <DialogRoot open={showDialog} onOpenChange={onOpenChange}>
-      <Button onclick={() => onOpenChange(true)}>{t('orders.newSale')}</Button>
+      <Button onclick={() => onOpenChange(true)}>{t('orders.new')}</Button>
       <DialogContent class="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{t('orders.products')}</DialogTitle>
