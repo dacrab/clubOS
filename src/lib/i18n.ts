@@ -103,6 +103,9 @@ const translations = {
     passwordLabel: { en: 'Password', el: 'Κωδικός' },
     passwordPlaceholder: { en: 'Enter your password', el: 'Εισάγετε τον κωδικό σας' },
     submit: { en: 'Sign in', el: 'Σύνδεση' },
+    loading: { en: 'Signing in...', el: 'Γίνεται σύνδεση...' },
+    success: { en: 'Welcome back!', el: 'Καλώς ήρθατε!' },
+    error: { en: 'Invalid credentials', el: 'Μη έγκυρα στοιχεία' },
     domainNote: { en: 'Domain is auto-applied (user → user@domain).', el: 'Το domain προστίθεται αυτόματα (user → user@domain).' }
   },
   inventory: {

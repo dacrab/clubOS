@@ -6,6 +6,7 @@
     import Button from '$lib/components/ui/button/button.svelte';
     import Sidebar from '$lib/components/Sidebar.svelte';
     import { loadCurrentUser } from '$lib/user';
+    import { Toaster } from 'svelte-sonner';
 
  	let { children } = $props();
 
@@ -29,6 +30,7 @@
 </svelte:head>
 
 <div class="min-h-screen bg-[radial-gradient(ellipse_at_top,theme(colors.chart-2/.15),transparent_60%),radial-gradient(ellipse_at_bottom,theme(colors.chart-1/.12),transparent_60%)]">
+    <Toaster richColors position="top-center" />
     {#if !isLoginPage}
     <div class="flex min-h-screen">
         <Sidebar />
