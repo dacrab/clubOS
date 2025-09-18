@@ -32,12 +32,12 @@
 </script>
 
 <section class="space-y-4">
-  <h1 class="text-2xl font-semibold">Staff Dashboard</h1>
+  <h1 class="text-2xl font-semibold">{t('dashboard.staff.title')}</h1>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <Card>
-      <CardHeader><CardTitle>Point of Sale</CardTitle></CardHeader>
+      <CardHeader><CardTitle>{t('dashboard.staff.pos')}</CardTitle></CardHeader>
       <CardContent class="flex flex-col gap-2">
-        <Button href="/orders" size="lg">New Sale</Button>
+        <Button href="/orders" size="lg">{t('orders.new')}</Button>
       </CardContent>
     </Card>
     <Card>
@@ -47,10 +47,10 @@
         </CardContent>
     </Card>
     <Card>
-      <CardHeader><CardTitle>Register</CardTitle></CardHeader>
+      <CardHeader><CardTitle>{t('dashboard.staff.register')}</CardTitle></CardHeader>
       <CardContent class="flex flex-col gap-2">
         <OpenRegister />
-        <Button onclick={onCloseRegister} disabled={closing} variant="destructive">{closing ? '...' : 'Close Register'}</Button>
+        <Button onclick={onCloseRegister} disabled={closing} variant="destructive">{closing ? t('dashboard.admin.closing') : t('dashboard.staff.closeRegister')}</Button>
       </CardContent>
     </Card>
   </div>

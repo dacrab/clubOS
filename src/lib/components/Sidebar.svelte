@@ -15,12 +15,12 @@
       <Button variant="ghost" class="justify-start" href="/admin/products">{t('nav.products')}</Button>
       <Button variant="ghost" class="justify-start" href="/admin/categories">{t('nav.categories')}</Button>
       <Button variant="ghost" class="justify-start" href="/admin/users">{t('nav.users')}</Button>
-      <Button variant="ghost" class="justify-start" href="/admin/registers">Registers</Button>
-      <Button variant="ghost" class="justify-start" href="/admin/reports">Reports</Button>
+      <Button variant="ghost" class="justify-start" href="/admin/registers">{t('nav.registers')}</Button>
+      <Button variant="ghost" class="justify-start" href="/admin/reports">{t('nav.reports')}</Button>
     {/if}
 
     {#if $currentUser?.role === 'admin' || $currentUser?.role === 'secretary'}
-      <div class="px-3 mt-3 mb-1 text-xs uppercase text-gray-500">Bookings</div>
+      <div class="px-3 mt-3 mb-1 text-xs uppercase text-gray-500">{t('nav.bookings')}</div>
       <Button variant="ghost" class="justify-start" href="/secretary/appointments">{t('nav.appointments')}</Button>
       <Button variant="ghost" class="justify-start" href="/secretary/football">{t('nav.football')}</Button>
     {/if}

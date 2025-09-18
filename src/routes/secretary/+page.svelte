@@ -14,20 +14,20 @@
 </script>
 
 <section class="space-y-4">
-  <h1 class="text-2xl font-semibold">Secretary Dashboard</h1>
+  <h1 class="text-2xl font-semibold">{t('dashboard.secretary.title')}</h1>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <Card>
         <CardHeader><CardTitle>{t('nav.appointments')}</CardTitle></CardHeader>
         <CardContent class="flex flex-col gap-2">
-            <p class="text-sm text-gray-500">Manage birthday parties and events.</p>
-            <Button href="/secretary/appointments">Manage</Button>
+            <p class="text-sm text-gray-500">{t('dashboard.secretary.appointmentsDesc')}</p>
+            <Button href="/secretary/appointments">{t('dashboard.secretary.manage')}</Button>
         </CardContent>
     </Card>
     <Card>
         <CardHeader><CardTitle>{t('nav.football')}</CardTitle></CardHeader>
         <CardContent class="flex flex-col gap-2">
-            <p class="text-sm text-gray-500">Manage football field reservations.</p>
-            <Button href="/secretary/football">Manage</Button>
+            <p class="text-sm text-gray-500">{t('dashboard.secretary.footballDesc')}</p>
+            <Button href="/secretary/football">{t('dashboard.secretary.manage')}</Button>
         </CardContent>
     </Card>
   </div>

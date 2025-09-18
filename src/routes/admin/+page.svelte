@@ -39,10 +39,10 @@
 </script>
 
 <section class="space-y-4">
-  <h1 class="text-2xl font-semibold">Admin Dashboard</h1>
+  <h1 class="text-2xl font-semibold">{t('dashboard.admin.title')}</h1>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
     <Card>
-      <CardHeader><CardTitle>Today's Revenue</CardTitle></CardHeader>
+      <CardHeader><CardTitle>{t('dashboard.admin.revenue')}</CardTitle></CardHeader>
       <CardContent>
         <div class="text-3xl font-bold">€{todayTotal.toFixed(2)}</div>
       </CardContent>
@@ -54,10 +54,10 @@
       </CardContent>
     </Card>
      <Card>
-      <CardHeader><CardTitle>Actions</CardTitle></CardHeader>
+      <CardHeader><CardTitle>{t('common.actions')}</CardTitle></CardHeader>
       <CardContent class="flex flex-col gap-2">
-        <Button href="/admin/registers">Manage Registers</Button>
-        <Button onclick={onCloseRegister} disabled={closing}>{closing ? '...' : 'Close Current Register'}</Button>
+        <Button href="/admin/registers">{t('dashboard.admin.manageRegisters')}</Button>
+        <Button onclick={onCloseRegister} disabled={closing}>{closing ? t('dashboard.admin.closing') : t('dashboard.admin.closeRegister')}</Button>
       </CardContent>
     </Card>
   </div>
