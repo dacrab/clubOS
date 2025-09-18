@@ -5,6 +5,7 @@
   let todayTotal = $state(0);
   let weekTotal = $state(0);
   let topProducts = $state([] as Array<{ name: string; qty: number; revenue: number }>);
+  let series = $state([] as Array<{ day: string; total: number }>);
 
   $effect(() => {
     loadCurrentUser().then(() => {
@@ -32,6 +33,20 @@
       .select('total_amount')
       .gte('created_at', startOfWeek.toISOString());
     weekTotal = (week ?? []).reduce((sum: number, r: any) => sum + Number(r.total_amount), 0);
+
+    // 7 day series (client-side rollup)
+    const { data: last7 } = await supabase
+      .from('orders')
+      .select('total_amount, created_at')
+      .gte('created_at', startOfWeek.toISOString())
+      .order('created_at');
+    const dayMap = new Map<string, number>();
+    (last7 ?? []).forEach((o: any) => {
+      const d = new Date(o.created_at);
+      const key = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+      dayMap.set(key, (dayMap.get(key) ?? 0) + Number(o.total_amount));
+    });
+    series = Array.from(dayMap.entries()).map(([day, total]) => ({ day, total }));
 
     const { data: items } = await supabase
       .from('order_items')
@@ -73,4 +88,17 @@
       {/each}
     </tbody>
   </table>
+
+  <h2 class="font-semibold mt-6">Revenue (7d)</h2>
+  <div class="grid gap-2 max-w-2xl">
+    {#each series as s}
+      <div class="flex items-center gap-2 text-sm">
+        <div class="w-24">{s.day}</div>
+        <div class="flex-1 bg-gray-100 h-3 rounded">
+          <div class="bg-black h-3 rounded" style={`width:${Math.min(100, (s.total / Math.max(1, weekTotal)) * 100)}%`}></div>
+        </div>
+        <div class="w-20 text-right">€{s.total.toFixed(2)}</div>
+      </div>
+    {/each}
+  </div>
 </section>

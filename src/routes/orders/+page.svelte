@@ -112,9 +112,44 @@
     const { error: itemErr } = await supabase.from('order_items').insert(items);
     loading = false;
     if (!itemErr) {
+      printReceipt(order.id, new Date().toLocaleString());
       clearCart();
       showDialog = false;
     }
+  }
+
+  function printReceipt(orderId: string, dateStr: string) {
+    const w = window.open('', 'PRINT', 'height=650,width=400,top=100,left=100');
+    if (!w) return;
+    const rows = cart
+      .map((c) => `<tr><td>${c.name}${c.is_treat ? ' (treat)' : ''}</td><td style="text-align:right">€${(c.is_treat ? 0 : Number(c.price)).toFixed(2)}</td></tr>`) 
+      .join('');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Receipt #${orderId}</title>
+      <style>
+        body{font:14px/1.3 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;}
+        .rcpt{width:260px;margin:0 auto}
+        h1{font-size:16px;margin:0 0 8px}
+        table{width:100%;border-collapse:collapse}
+        tfoot td{font-weight:600;border-top:1px solid #000;padding-top:6px}
+      </style>
+    </head><body onload="window.print();setTimeout(()=>window.close(),300)">
+      <div class="rcpt">
+        <h1>clubOS Receipt</h1>
+        <div>Order: ${orderId.slice(0,8)}</div>
+        <div>${dateStr}</div>
+        <hr />
+        <table>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            <tr><td>Subtotal</td><td style="text-align:right">€${subtotal().toFixed(2)}</td></tr>
+            <tr><td>Discount</td><td style="text-align:right">€${discount().toFixed(2)}</td></tr>
+            <tr><td>Total</td><td style="text-align:right">€${total().toFixed(2)}</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </body></html>`;
+    w.document.write(html);
+    w.document.close();
   }
 </script>
 
