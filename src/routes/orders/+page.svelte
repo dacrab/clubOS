@@ -2,6 +2,8 @@
   import { supabase } from '$lib/supabaseClient';
   import { t } from '$lib/i18n';
   import RecentOrders from '$lib/components/RecentOrders.svelte';
+  import Button from '$lib/components/ui/button/button.svelte';
+  import { Dialog as DialogRoot, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '$lib/components/ui/dialog';
 
   let showDialog = $state(false);
   let products: Array<{ id: string; name: string; price: number } > = $state([]);
@@ -14,9 +16,9 @@
     if (!error && data) products = data as any;
   }
 
-  function openDialog() {
-    showDialog = true;
-    if (products.length === 0) loadProducts();
+  function onOpenChange(next: boolean) {
+    showDialog = next;
+    if (next && products.length === 0) loadProducts();
   }
 
   function addToCart(p: { id: string; name: string; price: number }) {
@@ -118,30 +120,18 @@
 
 <section class="p-4">
   <div class="flex items-center gap-2 mb-4">
-    <button class="border rounded px-3 py-1" onclick={openDialog}>{t('orders.newSale')}</button>
-    <button class="border rounded px-3 py-1" onclick={() => (couponApplied = !couponApplied)} aria-pressed={couponApplied}>
-      {t('orders.coupon')}
-    </button>
-  </div>
-
-  <div class="mb-4">
-    <h2 class="font-semibold mb-2">{t('orders.recent')}</h2>
-    <RecentOrders limit={5} />
-  </div>
-
-  {#if showDialog}
-    <div class="fixed inset-0 bg-black/30 flex items-center justify-center">
-      <div class="bg-white rounded shadow max-w-2xl w-full p-4">
-        <div class="flex justify-between items-center mb-3">
-          <h3 class="font-semibold">{t('orders.products')}</h3>
-          <button class="border rounded px-2 py-1" onclick={() => (showDialog = false)}>{t('orders.close')}</button>
-        </div>
+    <DialogRoot open={showDialog} onOpenChange={onOpenChange}>
+      <Button onclick={() => onOpenChange(true)}>{t('orders.newSale')}</Button>
+      <DialogContent class="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{t('orders.products')}</DialogTitle>
+        </DialogHeader>
         <div class="grid grid-cols-2 gap-2 max-h-72 overflow-auto mb-3">
           {#each products as p}
-            <button class="border rounded p-2 text-left" onclick={() => addToCart(p)}>
+            <Button variant="outline" class="justify-start" onclick={() => addToCart(p)}>
               <div class="font-medium">{p.name}</div>
-              <div class="text-sm opacity-70">€{Number(p.price).toFixed(2)}</div>
-            </button>
+              <div class="text-sm opacity-70 ml-auto">€{Number(p.price).toFixed(2)}</div>
+            </Button>
           {/each}
         </div>
         <div class="border-t pt-3">
@@ -149,6 +139,7 @@
           <div class="mb-2 flex items-center gap-3 text-sm">
             <label class="flex items-center gap-1"><input type="radio" name="pm" value="cash" checked={paymentMethod==='cash'} onclick={() => paymentMethod='cash'} /> Cash</label>
             <label class="flex items-center gap-1"><input type="radio" name="pm" value="card" checked={paymentMethod==='card'} onclick={() => paymentMethod='card'} /> Card</label>
+            <Button variant="outline" onclick={() => (couponApplied = !couponApplied)} aria-pressed={couponApplied}>{t('orders.coupon')}</Button>
           </div>
           <ul class="space-y-2 mb-3">
             {#each cart as item, i}
@@ -157,7 +148,7 @@
                   <div>{item.name}</div>
                   <div class="text-xs opacity-70">€{item.is_treat ? '0.00' : Number(item.price).toFixed(2)}</div>
                 </div>
-                <button class="border rounded px-2 py-1" onclick={() => toggleTreat(i)}>{t('orders.treat')}</button>
+                <Button variant="outline" onclick={() => toggleTreat(i)}>{t('orders.treat')}</Button>
               </li>
             {/each}
           </ul>
@@ -166,14 +157,21 @@
             <div class="flex justify-between"><span>{t('orders.discount')}</span><span>€{discount().toFixed(2)}</span></div>
             <div class="flex justify-between font-semibold"><span>{t('orders.total')}</span><span>€{total().toFixed(2)}</span></div>
           </div>
-          <div class="flex justify-end gap-2">
-            <button class="border rounded px-3 py-1" onclick={clearCart}>{t('orders.close')}</button>
-            <button class="border rounded px-3 py-1" onclick={submitOrder} disabled={loading || cart.length === 0}>{t('orders.submit')}</button>
-          </div>
+          <DialogFooter class="flex justify-end gap-2">
+            <Button variant="outline" onclick={() => onOpenChange(false)}>{t('orders.close')}</Button>
+            <Button onclick={submitOrder} disabled={loading || cart.length === 0}>{t('orders.submit')}</Button>
+          </DialogFooter>
         </div>
-      </div>
-    </div>
-  {/if}
+      </DialogContent>
+    </DialogRoot>
+  </div>
+
+  <div class="mb-4">
+    <h2 class="font-semibold mb-2">{t('orders.recent')}</h2>
+    <RecentOrders limit={5} />
+  </div>
+
+  
 </section>
 
 
