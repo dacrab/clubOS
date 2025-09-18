@@ -1,6 +1,7 @@
 <script lang="ts">
   import { supabase } from '$lib/supabaseClient';
   import { t } from '$lib/i18n';
+  import RecentOrders from '$lib/components/RecentOrders.svelte';
 
   let showDialog = $state(false);
   let products: Array<{ id: string; name: string; price: number } > = $state([]);
@@ -52,6 +53,8 @@
     return Math.max(0, subtotal() - discount());
   }
 
+  let paymentMethod: 'cash' | 'card' = $state('cash');
+
   async function submitOrder() {
     loading = true;
     const { data: { user } } = await supabase.auth.getUser();
@@ -83,7 +86,7 @@
       subtotal: subtotal(),
       discount_amount: discount(),
       total_amount: total(),
-      payment_method: 'cash',
+      payment_method: paymentMethod,
       card_discounts_applied: 0,
       created_by: user.id,
     } as const;
@@ -123,7 +126,7 @@
 
   <div class="mb-4">
     <h2 class="font-semibold mb-2">{t('orders.recent')}</h2>
-    <!-- TODO: query last 5 orders and render -->
+    <RecentOrders limit={5} />
   </div>
 
   {#if showDialog}
@@ -143,6 +146,10 @@
         </div>
         <div class="border-t pt-3">
           <h4 class="font-semibold mb-2">Cart</h4>
+          <div class="mb-2 flex items-center gap-3 text-sm">
+            <label class="flex items-center gap-1"><input type="radio" name="pm" value="cash" checked={paymentMethod==='cash'} onclick={() => paymentMethod='cash'} /> Cash</label>
+            <label class="flex items-center gap-1"><input type="radio" name="pm" value="card" checked={paymentMethod==='card'} onclick={() => paymentMethod='card'} /> Card</label>
+          </div>
           <ul class="space-y-2 mb-3">
             {#each cart as item, i}
               <li class="flex items-center justify-between gap-2">
