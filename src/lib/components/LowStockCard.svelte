@@ -12,10 +12,10 @@
     const { data } = await supabase
       .from('products')
       .select('id,name,stock_quantity')
-      .lte('stock_quantity', threshold)
       .order('stock_quantity', { ascending: true })
-      .limit(8);
-    items = (data as any) ?? [];
+      .limit(20);
+    const list = (data as any) ?? [];
+    items = list.filter((p: any) => p.stock_quantity !== -1 && p.stock_quantity <= threshold);
   }
 
   $effect(() => { load(); });

@@ -37,12 +37,12 @@
         <div class="flex-1 pl-64">
             <header class="sticky top-0 z-20 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
                 <div class="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
-                    <div class="flex-1"></div>
-                    <select bind:value={$locale} class="border p-1 rounded">
+                    <div class="flex-1 font-medium tracking-tight">clubOS</div>
+                    <select bind:value={$locale} class="h-8 px-2 rounded-md bg-muted text-foreground border-transparent">
                         <option value="en">EN</option>
                         <option value="el">EL</option>
                     </select>
-                    <Button variant="outline" onclick={logout}>{t('nav.logout')}</Button>
+                    <Button variant="outline" class="hover:bg-primary hover:text-primary-foreground" onclick={logout}>{t('nav.logout')}</Button>
                 </div>
             </header>
 

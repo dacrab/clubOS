@@ -4,6 +4,12 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
+	optimizeDeps: {
+		exclude: ['svelte-sonner']
+	},
+	ssr: {
+		noExternal: ['svelte-sonner']
+	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [

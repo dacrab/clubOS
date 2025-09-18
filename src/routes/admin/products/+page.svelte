@@ -87,7 +87,7 @@
         <tr class="border-t {p.stock_quantity !== -1 && p.stock_quantity <= 3 ? 'bg-red-50' : ''}">
           <td class="p-2">{p.name} {#if p.stock_quantity !== -1 && p.stock_quantity <= 3}<span class="ml-1 text-xs text-red-700">low</span>{/if}</td>
           <td class="p-2">€{Number(p.price).toFixed(2)}</td>
-          <td class="p-2">{p.stock_quantity}</td>
+          <td class="p-2">{p.stock_quantity === -1 ? '∞' : p.stock_quantity}</td>
           <td class="p-2">
             {#if p.image_url}
               <img src={p.image_url} alt={p.name} class="h-10 w-10 object-cover inline-block mr-2" />
