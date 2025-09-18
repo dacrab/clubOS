@@ -49,7 +49,12 @@
   <h2 class="font-semibold mt-6">Upcoming</h2>
   <ul class="text-sm space-y-1">
     {#each list as a}
-      <li> {new Date(a.appointment_date).toLocaleString()} — {a.customer_name} ({a.contact_info}) — kids {a.num_children}, adults {a.num_adults}</li>
+      <li>
+        {new Date(a.appointment_date).toLocaleString()} — {a.customer_name} ({a.contact_info}) — kids {a.num_children}, adults {a.num_adults}
+        {#if (new Date(a.appointment_date).getTime() - Date.now()) <= 7 * 24 * 60 * 60 * 1000}
+          <span class="ml-2 text-xs bg-yellow-100 px-2 py-0.5 rounded">Reminder in 1w</span>
+        {/if}
+      </li>
     {/each}
   </ul>
 </section>

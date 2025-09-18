@@ -3,6 +3,7 @@
   import { supabase } from '$lib/supabaseClient';
   import { ensureOpenSession, closeRegister } from '$lib/register';
   import { t } from '$lib/i18n';
+  import OpenRegister from './OpenRegister.svelte';
   
   let recent: Array<{ id: string; total_amount: number; created_at: string }> = $state([]);
   let closing = $state(false);
@@ -57,6 +58,10 @@
       </button>
     </li>
   </ul>
+  <div class="mt-6 grid gap-3 max-w-md">
+    <h2 class="font-semibold">Open register</h2>
+    <OpenRegister />
+  </div>
 </section>
 
 
