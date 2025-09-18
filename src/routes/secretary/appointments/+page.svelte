@@ -31,6 +31,11 @@
       load();
     }
   }
+  
+  async function setStatus(id: string, status: 'confirmed'|'cancelled'|'completed') {
+    await supabase.from('appointments').update({ status }).eq('id', id);
+    await load();
+  }
 </script>
 
 <section class="p-4 space-y-4">
@@ -54,6 +59,12 @@
         {#if (new Date(a.appointment_date).getTime() - Date.now()) <= 7 * 24 * 60 * 60 * 1000}
           <span class="ml-2 text-xs bg-yellow-100 px-2 py-0.5 rounded">Reminder in 1w</span>
         {/if}
+        <span class="ml-2">[{a.status}]</span>
+        <span class="ml-2">
+          <button class="border rounded px-1" onclick={() => setStatus(a.id, 'confirmed')}>Confirm</button>
+          <button class="border rounded px-1" onclick={() => setStatus(a.id, 'completed')}>Complete</button>
+          <button class="border rounded px-1" onclick={() => setStatus(a.id, 'cancelled')}>Cancel</button>
+        </span>
       </li>
     {/each}
   </ul>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { currentUser, loadCurrentUser } from '$lib/user';
   import { supabase } from '$lib/supabaseClient';
-  type Booking = { field_number: number; booking_datetime: string; customer_name: string; contact_info: string; num_players: number };
+  type Booking = { id: string; status: 'confirmed'|'cancelled'|'completed'; field_number: number; booking_datetime: string; customer_name: string; contact_info: string; num_players: number };
   let list: Booking[] = $state([] as Booking[]);
   let form = $state({ customer_name: '', contact_info: '', booking_datetime: '', field_number: 1, num_players: 10, notes: '' });
   
@@ -32,6 +32,11 @@
       load();
     }
   }
+
+  async function setStatus(id: string, status: 'confirmed'|'cancelled'|'completed') {
+    await supabase.from('football_bookings').update({ status }).eq('id', id);
+    await load();
+  }
 </script>
 
 <section class="p-4 space-y-4">
@@ -50,7 +55,14 @@
   <h2 class="font-semibold mt-6">Upcoming</h2>
   <ul class="text-sm space-y-1">
     {#each list as b}
-      <li>Field {b.field_number} — {new Date(b.booking_datetime).toLocaleString()} — {b.customer_name} ({b.contact_info}) — players {b.num_players}</li>
+      <li>Field {b.field_number} — {new Date(b.booking_datetime).toLocaleString()} — {b.customer_name} ({b.contact_info}) — players {b.num_players}
+        <span class="ml-2">[{b.status}]</span>
+        <span class="ml-2">
+          <button class="border rounded px-1" onclick={() => setStatus(b.id, 'confirmed')}>Confirm</button>
+          <button class="border rounded px-1" onclick={() => setStatus(b.id, 'completed')}>Complete</button>
+          <button class="border rounded px-1" onclick={() => setStatus(b.id, 'cancelled')}>Cancel</button>
+        </span>
+      </li>
     {/each}
   </ul>
 </section>
