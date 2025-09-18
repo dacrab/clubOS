@@ -20,6 +20,12 @@
 	<nav class="flex-1 flex items-center gap-4">
 		<a href="/dashboard">Dashboard</a>
 		<a href="/orders">{t('nav.orders')}</a>
+		<a href="/admin">Admin</a>
+		<a href="/admin/products">Products</a>
+		<a href="/admin/categories">Categories</a>
+		<a href="/admin/users">Users</a>
+		<a href="/secretary/appointments">Appointments</a>
+		<a href="/secretary/football">Football</a>
 	</nav>
 	<select bind:value={$locale} class="border p-1 rounded">
 		<option value="en">EN</option>
