@@ -8,6 +8,7 @@
   let categories: Category[] = $state([] as Category[]);
   let form = $state({ name: '', price: 0, stock_quantity: 0, category_id: '' });
   let uploadingFor: string | null = $state(null);
+  import Button from '$lib/components/ui/button/button.svelte';
 
   $effect(() => {
     loadCurrentUser().then(() => {
@@ -68,7 +69,7 @@
         <option value={c.id}>{c.name}</option>
       {/each}
     </select>
-    <button class="border rounded px-3 py-1" onclick={createProduct}>Create</button>
+    <Button onclick={createProduct}>Create</Button>
   </div>
 
   <h2 class="font-semibold mt-6">All products</h2>
@@ -91,8 +92,8 @@
             {#if p.image_url}
               <img src={p.image_url} alt={p.name} class="h-10 w-10 object-cover inline-block mr-2" />
             {/if}
-            <label class="inline-block border rounded px-2 py-1 cursor-pointer">
-              {uploadingFor===p.id ? '...' : 'Upload'}
+            <label class="inline-flex items-center gap-2 cursor-pointer">
+              <Button variant="outline">{uploadingFor===p.id ? '...' : 'Upload'}</Button>
               <input class="hidden" type="file" accept="image/*" onchange={(e) => onSelectImage(e, p.id)} />
             </label>
           </td>

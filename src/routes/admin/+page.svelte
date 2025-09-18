@@ -5,6 +5,7 @@
   import RecentOrders from '$lib/components/RecentOrders.svelte';
   let todayTotal = $state(0);
   let closing = $state(false);
+  import Button from '$lib/components/ui/button/button.svelte';
   $effect(() => {
     loadCurrentUser().then(() => {
       const u = $currentUser;
@@ -52,7 +53,7 @@
     <li>Manage bookings</li>
     <li>Manage users</li>
     <li>
-      Register sessions — <button class="border rounded px-2" onclick={onCloseRegister} disabled={closing}>{closing ? '...' : 'Close register'}</button>
+      Register sessions — <Button onclick={onCloseRegister} disabled={closing}>{closing ? '...' : 'Close register'}</Button>
     </li>
   </ul>
 </section>

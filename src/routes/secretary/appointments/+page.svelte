@@ -3,6 +3,7 @@
   import { supabase } from '$lib/supabaseClient';
   let list: Array<any> = $state([]);
   let form = $state({ customer_name: '', contact_info: '', appointment_date: '', num_children: 1, num_adults: 0, notes: '' });
+  import Button from '$lib/components/ui/button/button.svelte';
   
   $effect(() => {
     loadCurrentUser().then(() => {
@@ -49,7 +50,7 @@
       <input type="number" min="0" class="border p-2 rounded w-24" bind:value={form.num_adults} />
     </div>
     <textarea class="border p-2 rounded" placeholder="Notes" bind:value={form.notes}></textarea>
-    <button class="border rounded px-3 py-1" onclick={create}>Create</button>
+    <Button onclick={create}>Create</Button>
   </div>
   <h2 class="font-semibold mt-6">Upcoming</h2>
   <ul class="text-sm space-y-1">
@@ -61,9 +62,9 @@
         {/if}
         <span class="ml-2">[{a.status}]</span>
         <span class="ml-2">
-          <button class="border rounded px-1" onclick={() => setStatus(a.id, 'confirmed')}>Confirm</button>
-          <button class="border rounded px-1" onclick={() => setStatus(a.id, 'completed')}>Complete</button>
-          <button class="border rounded px-1" onclick={() => setStatus(a.id, 'cancelled')}>Cancel</button>
+          <Button variant="outline" onclick={() => setStatus(a.id, 'confirmed')}>Confirm</Button>
+          <Button variant="outline" onclick={() => setStatus(a.id, 'completed')}>Complete</Button>
+          <Button variant="outline" onclick={() => setStatus(a.id, 'cancelled')}>Cancel</Button>
         </span>
       </li>
     {/each}

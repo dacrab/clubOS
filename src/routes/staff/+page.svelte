@@ -4,6 +4,7 @@
   import { ensureOpenSession, closeRegister } from '$lib/register';
   import { t } from '$lib/i18n';
   import OpenRegister from './OpenRegister.svelte';
+  import Button from '$lib/components/ui/button/button.svelte';
   
   let recent: Array<{ id: string; total_amount: number; created_at: string }> = $state([]);
   let closing = $state(false);
@@ -44,9 +45,7 @@
   <h1 class="text-xl font-semibold">Staff Dashboard</h1>
   <ul class="list-disc pl-5">
     <li>Sales entry</li>
-    <li>
-      <a class="border rounded px-3 py-1 inline-block" href="/orders">New sale</a>
-    </li>
+    <li><Button href="/orders">New sale</Button></li>
     <li>
       <div class="mb-2">{t('orders.recent')}</div>
       <ul class="text-sm space-y-1">
@@ -56,9 +55,7 @@
       </ul>
     </li>
     <li>
-      <button class="border rounded px-3 py-1" onclick={onCloseRegister} disabled={closing}>
-        {closing ? '...' : 'Close register'}
-      </button>
+      <Button onclick={onCloseRegister} disabled={closing}>{closing ? '...' : 'Close register'}</Button>
     </li>
   </ul>
   <div class="mt-6 grid gap-3 max-w-md">

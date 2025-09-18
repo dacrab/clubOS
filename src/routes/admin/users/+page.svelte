@@ -7,6 +7,7 @@
   let targetRole = $state<'admin' | 'staff' | 'secretary'>('staff');
   let targetUserId = $state('');
   let createForm = $state({ email: '', password: '', username: '', role: 'staff' as 'admin'|'staff'|'secretary' });
+  import Button from '$lib/components/ui/button/button.svelte';
 
   $effect(() => {
     loadCurrentUser().then(() => {
@@ -62,7 +63,7 @@
       <option value="staff">staff</option>
       <option value="secretary">secretary</option>
     </select>
-    <button class="border rounded px-3 py-1" onclick={createUser}>Create</button>
+    <Button onclick={createUser}>Create</Button>
   </div>
   <div class="flex gap-2 items-end">
     <select class="border p-2 rounded" bind:value={targetUserId}>
@@ -76,7 +77,7 @@
       <option value="staff">staff</option>
       <option value="secretary">secretary</option>
     </select>
-    <button class="border rounded px-3 py-1" disabled={!targetUserId} onclick={setRole}>Set role</button>
+    <Button disabled={!targetUserId} onclick={setRole}>Set role</Button>
   </div>
 
   <h2 class="font-semibold mt-6">All users</h2>
@@ -96,7 +97,7 @@
           <td class="p-2">{u.role}</td>
           <td class="p-2">{u.is_active ? 'yes' : 'no'}</td>
           <td class="p-2">
-            <button class="border rounded px-2 py-1" onclick={() => deactivate(u.id)}>Deactivate</button>
+            <Button variant="outline" onclick={() => deactivate(u.id)}>Deactivate</Button>
           </td>
         </tr>
       {/each}

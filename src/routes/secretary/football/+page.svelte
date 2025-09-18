@@ -4,6 +4,7 @@
   type Booking = { id: string; status: 'confirmed'|'cancelled'|'completed'; field_number: number; booking_datetime: string; customer_name: string; contact_info: string; num_players: number };
   let list: Booking[] = $state([] as Booking[]);
   let form = $state({ customer_name: '', contact_info: '', booking_datetime: '', field_number: 1, num_players: 10, notes: '' });
+  import Button from '$lib/components/ui/button/button.svelte';
   
   $effect(() => {
     loadCurrentUser().then(() => {
@@ -50,7 +51,7 @@
       <input type="number" min="2" max="12" class="border p-2 rounded w-24" bind:value={form.num_players} />
     </div>
     <textarea class="border p-2 rounded" placeholder="Notes" bind:value={form.notes}></textarea>
-    <button class="border rounded px-3 py-1" onclick={create}>Create</button>
+    <Button onclick={create}>Create</Button>
   </div>
   <h2 class="font-semibold mt-6">Upcoming</h2>
   <ul class="text-sm space-y-1">
@@ -58,9 +59,9 @@
       <li>Field {b.field_number} — {new Date(b.booking_datetime).toLocaleString()} — {b.customer_name} ({b.contact_info}) — players {b.num_players}
         <span class="ml-2">[{b.status}]</span>
         <span class="ml-2">
-          <button class="border rounded px-1" onclick={() => setStatus(b.id, 'confirmed')}>Confirm</button>
-          <button class="border rounded px-1" onclick={() => setStatus(b.id, 'completed')}>Complete</button>
-          <button class="border rounded px-1" onclick={() => setStatus(b.id, 'cancelled')}>Cancel</button>
+          <Button variant="outline" onclick={() => setStatus(b.id, 'confirmed')}>Confirm</Button>
+          <Button variant="outline" onclick={() => setStatus(b.id, 'completed')}>Complete</Button>
+          <Button variant="outline" onclick={() => setStatus(b.id, 'cancelled')}>Cancel</Button>
         </span>
       </li>
     {/each}
