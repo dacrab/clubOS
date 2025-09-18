@@ -45,6 +45,9 @@
   <ul class="list-disc pl-5">
     <li>Sales entry</li>
     <li>
+      <a class="border rounded px-3 py-1 inline-block" href="/orders">New sale</a>
+    </li>
+    <li>
       <div class="mb-2">{t('orders.recent')}</div>
       <ul class="text-sm space-y-1">
         {#each recent as r}

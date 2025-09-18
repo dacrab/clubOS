@@ -15,7 +15,8 @@
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
-		"db:studio": "drizzle-kit studio"
+		"db:studio": "drizzle-kit studio",
+		"seed": "bun run scripts/seed.ts"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-vercel": "^5.6.3",
@@ -35,7 +36,8 @@
 		"typescript": "^5.0.0",
 		"vite": "^7.0.4",
 		"vitest": "^3.2.3",
-		"vitest-browser-svelte": "^0.1.0"
+		"vitest-browser-svelte": "^0.1.0",
+		"dotenv": "^16.4.5"
 	},
 	"dependencies": {
 		"postgres": "^3.4.5"
