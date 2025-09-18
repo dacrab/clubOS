@@ -8,6 +8,7 @@
   import Button from '$lib/components/ui/button/button.svelte';
   import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
   import { t } from '$lib/i18n';
+  import LowStockCard from '$lib/components/LowStockCard.svelte';
 
   $effect(() => {
     loadCurrentUser().then(() => {
@@ -39,6 +40,15 @@
 </script>
 
 <section class="space-y-4">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-2 flex-wrap">
+      <Button variant="outline" href="/admin/reports">{t('nav.reports')}</Button>
+      <Button variant="outline" href="/secretary/appointments">{t('nav.appointments')}</Button>
+      <Button variant="outline" href="/secretary/football">{t('nav.football')}</Button>
+    </div>
+    <Button href="/orders">{t('orders.new')}</Button>
+  </div>
+
   <h1 class="text-2xl font-semibold">{t('dashboard.admin.title')}</h1>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
     <Card>
@@ -60,6 +70,9 @@
         <Button onclick={onCloseRegister} disabled={closing}>{closing ? t('dashboard.admin.closing') : t('dashboard.admin.closeRegister')}</Button>
       </CardContent>
     </Card>
+    <div class="md:col-span-2">
+      <LowStockCard threshold={10} />
+    </div>
   </div>
 </section>
 
