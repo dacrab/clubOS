@@ -12,10 +12,12 @@
   import { t } from '$lib/i18n';
   import { loadCurrentUser } from '$lib/user';
   import PageHeader from '$lib/components/common/PageHeader.svelte';
+  import ResetPasswordDialog from './ResetPasswordDialog.svelte';
 
   let users = $state<any[]>([]);
   let showUserDialog = $state(false);
   let selectedUser = $state<any>(null);
+  let showReset = $state(false);
 
   $effect(() => {
     loadCurrentUser();
@@ -32,6 +34,11 @@
     showUserDialog = true;
   }
 
+  function resetPassword(user: any) {
+    selectedUser = user;
+    showReset = true;
+  }
+
   async function loadUsers() {
     const { data } = await supabase.from('users').select('*');
     users = data ?? [];
@@ -39,23 +46,26 @@
 
   async function onSaveUser(user: any) {
     if (user.id) {
-      // TODO: update via edge functions for role/active/password
+      // TODO: call edge functions for role/active update
     } else {
       const { error } = await supabase.auth.signUp({
         email: `${user.username}@example.com`,
         password: user.password,
         options: { data: { username: user.username, role: user.role } }
       });
-      if (error) {
-        alert(error.message);
-        return;
-      }
+      if (error) { alert(error.message); return; }
     }
+    await loadUsers();
+  }
+
+  async function onResetPassword(newPassword: string) {
+    // TODO: supabase.functions.invoke('admin_set_password', { body: { user_id: selectedUser.id, password: newPassword } })
     await loadUsers();
   }
 </script>
 
 <UserDialog bind:open={showUserDialog} user={selectedUser} onSave={onSaveUser} />
+<ResetPasswordDialog bind:open={showReset} user={selectedUser} onReset={onResetPassword} />
 
 <section class="space-y-4">
   <PageHeader title={t('pages.users.title')}>
@@ -78,8 +88,9 @@
             <TableCell>{user.username}</TableCell>
             <TableCell>{user.role}</TableCell>
             <TableCell>{user.active ? 'Yes' : 'No'}</TableCell>
-            <TableCell class="text-right">
+            <TableCell class="text-right space-x-2">
               <Button variant="ghost" size="sm" onclick={() => editUser(user)}>{t('common.edit')}</Button>
+              <Button variant="outline" size="sm" onclick={() => resetPassword(user)}>{t('common.password')}</Button>
             </TableCell>
           </TableRow>
         {/each}
