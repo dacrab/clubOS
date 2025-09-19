@@ -1,15 +1,23 @@
 <script lang="ts">
   import { currentUser, loadCurrentUser } from '$lib/user';
   import { supabase } from '$lib/supabaseClient';
-  
+  import PageHeader from '$lib/components/common/PageHeader.svelte';
+  import SearchBar from '$lib/components/common/SearchBar.svelte';
+  import DataTable, { type Column } from '$lib/components/common/DataTable.svelte';
+  import Button from '$lib/components/ui/button/button.svelte';
+  import AddProductDialog from './AddProductDialog.svelte';
+  import EditProductDialog from './EditProductDialog.svelte';
+  import { t } from '$lib/i18n';
+
   type Product = { id: string; name: string; price: number; stock_quantity: number; category_id: string | null; image_url?: string | null };
   type Category = { id: string; name: string };
   let products: Product[] = $state([] as Product[]);
   let categories: Category[] = $state([] as Category[]);
-  let form = $state({ name: '', price: 0, stock_quantity: 0, category_id: '' });
-  let uploadingFor: string | null = $state(null);
-  import Button from '$lib/components/ui/button/button.svelte';
-  import Input from '$lib/components/ui/input/input.svelte';
+  let search = $state('');
+
+  let showAdd = $state(false);
+  let showEdit = $state(false);
+  let selected: Product | null = $state(null);
 
   $effect(() => {
     loadCurrentUser().then(() => {
@@ -23,85 +31,77 @@
   async function loadLists() {
     const { data: pcats } = await supabase.from('categories').select('id,name').order('name');
     categories = (pcats as any) ?? [];
-    const { data: prods } = await supabase.from('products').select('id,name,price,stock_quantity,category_id').order('name');
+    const { data: prods } = await supabase.from('products').select('id,name,price,stock_quantity,category_id,image_url').order('name');
     products = (prods as any) ?? [];
   }
 
-  async function createProduct() {
-    const payload = { ...form, price: Number(form.price), stock_quantity: Number(form.stock_quantity) };
+  async function onCreate(payload: { name: string; price: number; stock_quantity: number; category_id: string | null }) {
     const { error } = await supabase.from('products').insert(payload);
-    if (!error) {
-      form = { name: '', price: 0, stock_quantity: 0, category_id: '' };
-      await loadLists();
-    }
+    if (!error) await loadLists();
   }
 
-  async function onSelectImage(e: Event, productId: string) {
-    const input = e.target as HTMLInputElement;
-    const file = input.files && input.files[0];
-    if (!file) return;
-    uploadingFor = productId;
-    try {
-      const path = `product-${productId}-${Date.now()}-${file.name}`;
-      const { error: upErr } = await supabase.storage.from('product-images').upload(path, file, { upsert: true });
-      if (upErr) return;
-      const { data: pub } = supabase.storage.from('product-images').getPublicUrl(path);
-      const url = pub.publicUrl;
-      await supabase.from('products').update({ image_url: url }).eq('id', productId);
-      await loadLists();
-    } finally {
-      uploadingFor = null;
-      (e.target as HTMLInputElement).value = '';
-    }
+  async function onSave(payload: { id: string; name: string; price: number; stock_quantity: number; category_id: string | null }) {
+    const { error } = await supabase.from('products').update({
+      name: payload.name,
+      price: Number(payload.price),
+      stock_quantity: Number(payload.stock_quantity),
+      category_id: payload.category_id
+    }).eq('id', payload.id);
+    if (!error) await loadLists();
   }
+
+  async function onUploadImage(file: File, productId: string) {
+    const path = `product-${productId}-${Date.now()}-${file.name}`;
+    const { error: upErr } = await supabase.storage.from('product-images').upload(path, file, { upsert: true });
+    if (upErr) return;
+    const { data: pub } = supabase.storage.from('product-images').getPublicUrl(path);
+    const url = pub.publicUrl;
+    await supabase.from('products').update({ image_url: url }).eq('id', productId);
+    await loadLists();
+  }
+
+  function filtered() {
+    const s = search.trim().toLowerCase();
+    if (!s) return products;
+    return products.filter(p => p.name.toLowerCase().includes(s));
+  }
+
+  const columns: Array<Column<Product>> = [
+    { key: 'name', header: t('common.name'), cell: (p) => `${p.name}${p.stock_quantity !== -1 && p.stock_quantity <= 3 ? '  • low' : ''}` },
+    { key: 'price', header: t('common.price'), cell: (p) => `€${Number(p.price).toFixed(2)}`, align: 'right' },
+    { key: 'stock_quantity', header: t('common.stock'), cell: (p) => (p.stock_quantity === -1 ? '∞' : String(p.stock_quantity)), align: 'center' },
+    { key: 'image_url', header: t('common.image'), cell: (p) => p.image_url ? `<img src="${p.image_url}" alt="${p.name}" class="h-10 w-10 object-cover rounded" />` : '', align: 'center' },
+    { key: 'id', header: t('common.actions'), cell: (p) => {
+      return {
+        // Use a render function to place buttons
+        $$render() {
+          return `<div class=\"text-right\"><button class=\"inline-flex items-center justify-center rounded-md bg-background border px-3 py-1 text-sm hover:bg-accent\" onclick=\"__edit('${p.id}')\">${t('common.edit')}</button></div>`;
+        }
+      } as any;
+    }, align: 'right' },
+  ];
+
+  // Bridge function for DataTable action rendering
+  (window as any).__edit = (id: string) => {
+    const row = products.find(x => x.id === id) || null;
+    selected = row;
+    showEdit = !!row;
+  };
 </script>
 
-<section class="space-y-6">
-  <h1 class="text-2xl font-semibold">Products</h1>
-  <div class="grid gap-3 md:max-w-xl">
-    <Input placeholder="Name" bind:value={form.name} />
-    <div class="flex gap-2">
-      <Input type="number" step="0.01" class="w-40" placeholder="Price" bind:value={form.price} />
-      <Input type="number" class="w-40" placeholder="Stock" bind:value={form.stock_quantity} />
-    </div>
-    <select class="border p-2 rounded" bind:value={form.category_id}>
-      <option value="">No category</option>
-      {#each categories as c}
-        <option value={c.id}>{c.name}</option>
-      {/each}
-    </select>
-    <Button onclick={createProduct}>Create</Button>
+<section class="space-y-4">
+  <PageHeader title={t('pages.products.title')}>
+    <Button variant="outline" onclick={() => showAdd = true}>{t('pages.products.add')}</Button>
+  </PageHeader>
+
+  <div class="flex items-center gap-2">
+    <SearchBar bind:value={search} placeholder={t('orders.search')} />
   </div>
 
-  <h2 class="font-semibold mt-6">All products</h2>
-  <table class="text-sm w-full border rounded-md overflow-hidden">
-    <thead>
-      <tr class="bg-gray-50">
-        <th class="text-left p-2">Name</th>
-        <th class="text-left p-2">Price</th>
-        <th class="text-left p-2">Stock</th>
-        <th class="text-left p-2">Image</th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each products as p}
-        <tr class="border-t {p.stock_quantity !== -1 && p.stock_quantity <= 3 ? 'bg-red-50' : ''}">
-          <td class="p-2">{p.name} {#if p.stock_quantity !== -1 && p.stock_quantity <= 3}<span class="ml-1 text-xs text-red-700">low</span>{/if}</td>
-          <td class="p-2">€{Number(p.price).toFixed(2)}</td>
-          <td class="p-2">{p.stock_quantity === -1 ? '∞' : p.stock_quantity}</td>
-          <td class="p-2">
-            {#if p.image_url}
-              <img src={p.image_url} alt={p.name} class="h-10 w-10 object-cover inline-block mr-2" />
-            {/if}
-            <label class="inline-flex items-center gap-2 cursor-pointer">
-              <Button variant="outline">{uploadingFor===p.id ? '...' : 'Upload'}</Button>
-              <input class="hidden" type="file" accept="image/*" onchange={(e) => onSelectImage(e, p.id)} />
-            </label>
-          </td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
+  <DataTable {columns} rows={filtered()} />
+
+  <AddProductDialog bind:open={showAdd} {categories} onCreate={onCreate} />
+  <EditProductDialog bind:open={showEdit} product={selected} {categories} onSave={onSave} onUploadImage={onUploadImage} />
 </section>
 
 
