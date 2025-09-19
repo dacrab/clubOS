@@ -1,15 +1,13 @@
 <script lang="ts">
   import { supabase } from '$lib/supabaseClient';
   import Button from '$lib/components/ui/button/button.svelte';
-  import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-  } from '$lib/components/ui/table';
-  import { Card } from '$lib/components/ui/card';
+  import Table from '$lib/components/ui/table/table.svelte';
+  import TableBody from '$lib/components/ui/table/table-body.svelte';
+  import TableCell from '$lib/components/ui/table/table-cell.svelte';
+  import TableHead from '$lib/components/ui/table/table-head.svelte';
+  import TableHeader from '$lib/components/ui/table/table-header.svelte';
+  import TableRow from '$lib/components/ui/table/table-row.svelte';
+  import Card from '$lib/components/ui/card/card.svelte';
   import UserDialog from './UserDialog.svelte';
   import { t } from '$lib/i18n';
   import { loadCurrentUser, currentUser } from '$lib/user';
@@ -73,9 +71,9 @@
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>{t('table.username')}</TableHead>
-          <TableHead>{t('table.role')}</TableHead>
-          <TableHead>{t('table.active')}</TableHead>
+          <TableHead>{t('common.username')}</TableHead>
+          <TableHead>{t('common.role')}</TableHead>
+          <TableHead>{t('common.active')}</TableHead>
           <TableHead class="text-right">{t('common.actions')}</TableHead>
         </TableRow>
       </TableHeader>

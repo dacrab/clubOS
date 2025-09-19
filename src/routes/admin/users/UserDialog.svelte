@@ -1,14 +1,11 @@
 <script lang="ts">
-  import {
-    Button,
-  } from '$lib/components/ui/button';
-  import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-  } from '$lib/components/ui/dialog';
+  import Button from '$lib/components/ui/button/button.svelte';
+  import { Dialog as DialogPrimitive } from 'bits-ui';
+  const Dialog = DialogPrimitive.Root;
+  import DialogContent from '$lib/components/ui/dialog/dialog-content.svelte';
+  import DialogFooter from '$lib/components/ui/dialog/dialog-footer.svelte';
+  import DialogHeader from '$lib/components/ui/dialog/dialog-header.svelte';
+  import DialogTitle from '$lib/components/ui/dialog/dialog-title.svelte';
   import Input from '$lib/components/ui/input/input.svelte';
   import Label from '$lib/components/ui/label/label.svelte';
   import { t } from '$lib/i18n';

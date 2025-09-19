@@ -1,11 +1,16 @@
 <script lang="ts">
   import { supabase } from '$lib/supabaseClient';
-  import { t } from '$lib/i18n';
-  import { env as publicEnv } from '$env/dynamic/public';
-  import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '$lib/components/ui/card';
+  import Card from '$lib/components/ui/card/card.svelte';
+  import CardContent from '$lib/components/ui/card/card-content.svelte';
+  import CardDescription from '$lib/components/ui/card/card-description.svelte';
+  import CardFooter from '$lib/components/ui/card/card-footer.svelte';
+  import CardHeader from '$lib/components/ui/card/card-header.svelte';
+  import CardTitle from '$lib/components/ui/card/card-title.svelte';
   import Input from '$lib/components/ui/input/input.svelte';
   import Label from '$lib/components/ui/label/label.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
+  import { t } from '$lib/i18n';
+  import { env as publicEnv } from '$env/dynamic/public';
   import { toast } from 'svelte-sonner';
 
   let username = $state('');

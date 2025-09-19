@@ -1,7 +1,10 @@
 <script lang="ts">
   import { currentUser, loadCurrentUser } from '$lib/user';
   import Button from '$lib/components/ui/button/button.svelte';
-  import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
+  import Card from '$lib/components/ui/card/card.svelte';
+  import CardContent from '$lib/components/ui/card/card-content.svelte';
+  import CardHeader from '$lib/components/ui/card/card-header.svelte';
+  import CardTitle from '$lib/components/ui/card/card-title.svelte';
   import { t } from '$lib/i18n';
 
   $effect(() => {
