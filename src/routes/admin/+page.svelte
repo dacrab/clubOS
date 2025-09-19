@@ -12,6 +12,9 @@
   import CardTitle from '$lib/components/ui/card/card-title.svelte';
   import { t } from '$lib/i18n';
   import LowStockCard from '$lib/components/LowStockCard.svelte';
+  import StatsCards from '$lib/components/common/StatsCards.svelte';
+
+  let ordersCount = $state(0);
 
   $effect(() => {
     loadCurrentUser().then(() => {
@@ -20,6 +23,7 @@
       if (u.role !== 'admin') window.location.href = '/dashboard';
     });
     loadToday();
+    loadCounts();
   });
 
   async function loadToday() {
@@ -27,6 +31,11 @@
     startOfDay.setHours(0,0,0,0);
     const { data } = await supabase.from('orders').select('total_amount').gte('created_at', startOfDay.toISOString());
     todayTotal = (data ?? []).reduce((sum: number, r: any) => sum + Number(r.total_amount), 0);
+  }
+
+  async function loadCounts() {
+    const { count } = await supabase.from('orders').select('*', { count: 'exact', head: true });
+    ordersCount = count ?? 0;
   }
 
   async function onCloseRegister() {
@@ -53,6 +62,12 @@
   </div>
 
   <h1 class="text-2xl font-semibold">{t('dashboard.admin.title')}</h1>
+
+  <StatsCards items={[
+    { title: t('dashboard.admin.revenue'), value: `€${todayTotal.toFixed(2)}`, accent: 'green' },
+    { title: t('orders.recent'), value: String(ordersCount), accent: 'blue' },
+  ]} />
+
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
     <Card>
       <CardHeader><CardTitle>{t('dashboard.admin.revenue')}</CardTitle></CardHeader>

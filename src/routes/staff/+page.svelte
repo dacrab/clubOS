@@ -10,9 +10,11 @@
   import CardHeader from '$lib/components/ui/card/card-header.svelte';
   import CardTitle from '$lib/components/ui/card/card-title.svelte';
   import RecentOrders from '$lib/components/RecentOrders.svelte';
-  
+  import StatsCards from '$lib/components/common/StatsCards.svelte';
+
   let closing = $state(false);
-  
+  let recentCount = $state(0);
+
   $effect(() => {
     loadCurrentUser().then(() => {
       const u = $currentUser;
@@ -20,7 +22,14 @@
       if (u.role !== 'staff') window.location.href = '/dashboard';
     });
   });
-  
+
+  $effect(() => { loadCount(); });
+
+  async function loadCount() {
+    const { count } = await supabase.from('orders').select('*', { head: true, count: 'exact' });
+    recentCount = count ?? 0;
+  }
+
   async function onCloseRegister() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return (window.location.href = '/login');
@@ -36,6 +45,10 @@
 
 <section class="space-y-4">
   <h1 class="text-2xl font-semibold">{t('dashboard.staff.title')}</h1>
+
+  <StatsCards items={[
+    { title: t('orders.recent'), value: String(recentCount), accent: 'blue' },
+  ]} />
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <Card>
       <CardHeader><CardTitle>{t('dashboard.staff.pos')}</CardTitle></CardHeader>
