@@ -3,7 +3,12 @@
   import { t } from '$lib/i18n';
   import RecentOrders from '$lib/components/RecentOrders.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
-  import { Dialog as DialogRoot, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '$lib/components/ui/dialog';
+  import { Dialog as DialogPrimitive } from 'bits-ui';
+  const DialogRoot = DialogPrimitive.Root;
+  import DialogContent from '$lib/components/ui/dialog/dialog-content.svelte';
+  import DialogHeader from '$lib/components/ui/dialog/dialog-header.svelte';
+  import DialogTitle from '$lib/components/ui/dialog/dialog-title.svelte';
+  import DialogFooter from '$lib/components/ui/dialog/dialog-footer.svelte';
 
   let showDialog = $state(false);
   let products: Array<{ id: string; name: string; price: number } > = $state([]);

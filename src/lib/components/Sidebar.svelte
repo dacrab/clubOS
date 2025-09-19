@@ -1,12 +1,18 @@
 <script lang="ts">
   import { currentUser } from '$lib/user';
-  import { t } from '$lib/i18n';
+  import { t, locale } from '$lib/i18n';
   import Button from '$lib/components/ui/button/button.svelte';
-  import { Home, ShoppingCart, UserCog, ClipboardList, Package, Tags } from '@lucide/svelte';
+  import { Home, ShoppingCart, UserCog, ClipboardList, Package, Tags, LogOut } from '@lucide/svelte';
+  import { supabase } from '$lib/supabaseClient';
 
   function isActive(path: string) {
     if (typeof window === 'undefined') return false;
     return window.location.pathname.startsWith(path);
+  }
+
+  async function logout() {
+    await supabase.auth.signOut();
+    window.location.href = '/';
   }
 </script>
 
@@ -52,4 +58,14 @@
       </Button>
     {/if}
   </nav>
+
+  <div class="absolute bottom-4 left-4 right-4 flex items-center gap-2">
+    <select bind:value={$locale} class="h-9 px-2 rounded-md bg-muted text-foreground border-transparent flex-1">
+      <option value="en">EN</option>
+      <option value="el">EL</option>
+    </select>
+    <Button variant="destructive" class="flex-1" onclick={logout}>
+      <LogOut class="mr-2 h-4 w-4" /> {t('nav.logout')}
+    </Button>
+  </div>
 </aside>

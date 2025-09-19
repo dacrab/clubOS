@@ -1,11 +1,10 @@
 <script lang="ts">
   import { supabase } from '$lib/supabaseClient';
-  import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-  } from '$lib/components/ui/dropdown-menu';
+  import { DropdownMenu as DropdownMenuPrimitive } from 'bits-ui';
+  const DropdownMenu = DropdownMenuPrimitive.Root;
+  import DropdownMenuContent from '$lib/components/ui/dropdown-menu/dropdown-menu-content.svelte';
+  import DropdownMenuItem from '$lib/components/ui/dropdown-menu/dropdown-menu-item.svelte';
+  import DropdownMenuTrigger from '$lib/components/ui/dropdown-menu/dropdown-menu-trigger.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
   import { t } from '$lib/i18n';
   const __props = $props<{ limit?: number }>();

@@ -1,28 +1,20 @@
 <script lang="ts">
  	import '../app.css';
  	import favicon from '$lib/assets/favicon.svg';
- 	import { supabase } from '$lib/supabaseClient';
- 	import { t, locale } from '$lib/i18n';
-    import Button from '$lib/components/ui/button/button.svelte';
-    import Sidebar from '$lib/components/Sidebar.svelte';
-    import { loadCurrentUser } from '$lib/user';
-    import { Toaster } from 'svelte-sonner';
+ 	import Sidebar from '$lib/components/Sidebar.svelte';
+ 	import { loadCurrentUser } from '$lib/user';
+ 	import { Toaster } from 'svelte-sonner';
 
  	let { children } = $props();
 
- 	async function logout() {
- 		await supabase.auth.signOut();
- 		window.location.href = '/';
- 	}
+ 	let isLoginPage = $state(false);
 
-    let isLoginPage = $state(false);
-
-    $effect(() => {
-        if (typeof window !== 'undefined') {
-            isLoginPage = window.location.pathname === '/';
-            if (!isLoginPage) loadCurrentUser();
-        }
-    });
+ 	$effect(() => {
+ 		if (typeof window !== 'undefined') {
+ 			isLoginPage = window.location.pathname === '/';
+ 			if (!isLoginPage) loadCurrentUser();
+ 		}
+ 	});
 </script>
 
 <svelte:head>
@@ -38,11 +30,6 @@
             <header class="sticky top-0 z-20 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
                 <div class="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
                     <div class="flex-1 font-medium tracking-tight">clubOS</div>
-                    <select bind:value={$locale} class="h-8 px-2 rounded-md bg-muted text-foreground border-transparent">
-                        <option value="en">EN</option>
-                        <option value="el">EL</option>
-                    </select>
-                    <Button variant="outline" class="hover:bg-primary hover:text-primary-foreground" onclick={logout}>{t('nav.logout')}</Button>
                 </div>
             </header>
 
