@@ -10,7 +10,8 @@
   import Card from '$lib/components/ui/card/card.svelte';
   import UserDialog from './UserDialog.svelte';
   import { t } from '$lib/i18n';
-  import { loadCurrentUser, currentUser } from '$lib/user';
+  import { loadCurrentUser } from '$lib/user';
+  import PageHeader from '$lib/components/common/PageHeader.svelte';
 
   let users = $state<any[]>([]);
   let showUserDialog = $state(false);
@@ -38,15 +39,9 @@
 
   async function onSaveUser(user: any) {
     if (user.id) {
-      // Update
-      if (user.password) {
-        // TODO: update password via edge function
-      }
-      // TODO: update role via edge function
-      // TODO: update active status via edge function
+      // TODO: update via edge functions for role/active/password
     } else {
-      // Create
-      const { data: { user: authUser }, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: `${user.username}@example.com`,
         password: user.password,
         options: { data: { username: user.username, role: user.role } }
@@ -63,10 +58,10 @@
 <UserDialog bind:open={showUserDialog} user={selectedUser} onSave={onSaveUser} />
 
 <section class="space-y-4">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-semibold">{t('pages.users.title')}</h1>
+  <PageHeader title={t('pages.users.title')}>
     <Button onclick={openNewUserDialog}>{t('pages.users.add')}</Button>
-  </div>
+  </PageHeader>
+
   <Card>
     <Table>
       <TableHeader>
