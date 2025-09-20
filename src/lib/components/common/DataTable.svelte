@@ -30,7 +30,11 @@
         {#each columns as col}
           <TableCell class={col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : undefined}>
             {#if col.cell}
-              {@render col.cell(row)}
+              {#if typeof col.cell(row) === 'string' || typeof col.cell(row) === 'number'}
+                {@html String(col.cell(row))}
+              {:else}
+                {@render col.cell(row)}
+              {/if}
             {:else}
               {row[col.key as keyof typeof row]}
             {/if}

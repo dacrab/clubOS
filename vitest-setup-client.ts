@@ -1,2 +1,1 @@
-/// <reference types="@vitest/browser/matchers" />
-/// <reference types="@vitest/browser/providers/playwright" />
+// Browser test setup removed as @vitest/browser is not used.

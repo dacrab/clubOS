@@ -5,6 +5,9 @@
   let list: Booking[] = $state([] as Booking[]);
   let form = $state({ customer_name: '', contact_info: '', booking_datetime: '', field_number: 1, num_players: 10, notes: '' });
   import Button from '$lib/components/ui/button/button.svelte';
+  import Input from '$lib/components/ui/input/input.svelte';
+  import Label from '$lib/components/ui/label/label.svelte';
+  import Textarea from '$lib/components/ui/textarea/textarea.svelte';
   
   $effect(() => {
     loadCurrentUser().then(() => {
@@ -43,15 +46,33 @@
 <section class="space-y-4">
   <h1 class="text-2xl font-semibold">Football Bookings</h1>
   <div class="grid gap-3 max-w-xl">
-    <input class="border p-2 rounded" placeholder="Customer name" bind:value={form.customer_name} />
-    <input class="border p-2 rounded" placeholder="Contact info" bind:value={form.contact_info} />
-    <input type="datetime-local" class="border p-2 rounded" bind:value={form.booking_datetime} />
-    <div class="flex gap-2">
-      <input type="number" min="1" max="5" class="border p-2 rounded w-24" bind:value={form.field_number} />
-      <input type="number" min="2" max="12" class="border p-2 rounded w-24" bind:value={form.num_players} />
+    <div class="grid grid-cols-4 items-center gap-3">
+      <Label class="text-right">Customer</Label>
+      <Input class="col-span-3" placeholder="Customer name" bind:value={form.customer_name} />
     </div>
-    <textarea class="border p-2 rounded" placeholder="Notes" bind:value={form.notes}></textarea>
-    <Button onclick={create}>Create</Button>
+    <div class="grid grid-cols-4 items-center gap-3">
+      <Label class="text-right">Contact</Label>
+      <Input class="col-span-3" placeholder="Contact info" bind:value={form.contact_info} />
+    </div>
+    <div class="grid grid-cols-4 items-center gap-3">
+      <Label class="text-right">Date & Time</Label>
+      <Input class="col-span-3" type="datetime-local" bind:value={form.booking_datetime} />
+    </div>
+    <div class="grid grid-cols-4 items-center gap-3">
+      <Label class="text-right">Field</Label>
+      <Input class="col-span-3 w-40" type="number" min="1" max="5" bind:value={form.field_number} />
+    </div>
+    <div class="grid grid-cols-4 items-center gap-3">
+      <Label class="text-right">Players</Label>
+      <Input class="col-span-3 w-40" type="number" min="2" max="12" bind:value={form.num_players} />
+    </div>
+    <div class="grid grid-cols-4 items-center gap-3">
+      <Label class="text-right">Notes</Label>
+      <Textarea class="col-span-3" placeholder="Notes" bind:value={form.notes} />
+    </div>
+    <div class="flex justify-end">
+      <Button onclick={create}>Create</Button>
+    </div>
   </div>
   <h2 class="font-semibold mt-6">Upcoming</h2>
   <ul class="text-sm space-y-1">

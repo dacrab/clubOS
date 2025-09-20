@@ -8,6 +8,8 @@
   import DialogTitle from '$lib/components/ui/dialog/dialog-title.svelte';
   import Input from '$lib/components/ui/input/input.svelte';
   import Label from '$lib/components/ui/label/label.svelte';
+  import * as Select from '$lib/components/ui/select';
+  import Switch from '$lib/components/ui/switch/switch.svelte';
   import { t } from '$lib/i18n';
 
   let { open = $bindable(), user = null, onSave } = $props<{
@@ -58,16 +60,23 @@
         <Input id="password" type="password" bind:value={form.password} class="col-span-3" placeholder="Leave blank to keep unchanged" />
       </div>
       <div class="grid grid-cols-4 items-center gap-4">
-        <Label for="role" class="text-right">{t('common.role')}</Label>
-        <select id="role" bind:value={form.role} class="col-span-3 border p-2 rounded">
-            <option value="admin">Admin</option>
-            <option value="staff">Staff</option>
-            <option value="secretary">Secretary</option>
-        </select>
+        <Label class="text-right">{t('common.role')}</Label>
+        <div class="col-span-3">
+          <Select.Root bind:value={form.role} type="single">
+            <Select.Trigger class="w-full" />
+            <Select.Content>
+              <Select.Item value="admin" label="Admin" />
+              <Select.Item value="staff" label="Staff" />
+              <Select.Item value="secretary" label="Secretary" />
+            </Select.Content>
+          </Select.Root>
+        </div>
       </div>
       <div class="grid grid-cols-4 items-center gap-4">
-        <Label for="active" class="text-right">{t('common.active')}</Label>
-        <input id="active" type="checkbox" bind:checked={form.active} />
+        <Label class="text-right">{t('common.active')}</Label>
+        <div class="col-span-3">
+          <Switch bind:checked={form.active} id="active" />
+        </div>
       </div>
     </div>
     <DialogFooter>

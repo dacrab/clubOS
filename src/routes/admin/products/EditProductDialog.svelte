@@ -8,6 +8,8 @@
   const Dialog = DialogPrimitive.Root;
   import Input from '$lib/components/ui/input/input.svelte';
   import Label from '$lib/components/ui/label/label.svelte';
+  import * as Select from '$lib/components/ui/select';
+  import Switch from '$lib/components/ui/switch/switch.svelte';
   import { t } from '$lib/i18n';
 
   let { open = $bindable(false), product = null as any, categories = [] as Array<{ id: string; name: string }>, onSave, onUploadImage } = $props<{
@@ -18,7 +20,7 @@
     onUploadImage: (file: File, productId: string) => Promise<void>;
   }>();
 
-  let form = $state({ id: '', name: '', price: 0, stock_quantity: 0, category_id: '', image_url: '' });
+  let form = $state({ id: '', name: '', price: 0, stock_quantity: 0, category_id: '', image_url: '', unlimited: false });
 
   $effect(() => {
     if (product) {
@@ -28,7 +30,8 @@
         price: Number(product.price),
         stock_quantity: Number(product.stock_quantity),
         category_id: product.category_id || '',
-        image_url: product.image_url || ''
+        image_url: product.image_url || '',
+        unlimited: product.stock_quantity === -1
       };
     }
   });
@@ -38,7 +41,7 @@
       id: form.id,
       name: form.name,
       price: Number(form.price),
-      stock_quantity: Number(form.stock_quantity),
+      stock_quantity: Number(form.unlimited ? -1 : form.stock_quantity),
       category_id: form.category_id || null,
     });
     open = false;
@@ -67,17 +70,27 @@
         <Input id="price" type="number" step="0.01" bind:value={form.price} class="col-span-3" />
       </div>
       <div class="grid grid-cols-4 items-center gap-4">
-        <Label for="stock" class="text-right">{t('common.stock')}</Label>
-        <Input id="stock" type="number" bind:value={form.stock_quantity} class="col-span-3" />
+        <Label class="text-right">Stock</Label>
+        <div class="col-span-3 flex items-center gap-3">
+          <Input id="stock" type="number" bind:value={form.stock_quantity} class="w-40" disabled={form.unlimited} />
+          <div class="flex items-center gap-2 text-sm">
+            <Switch bind:checked={form.unlimited} id="unlimited-edit" />
+            <label for="unlimited-edit">Unlimited</label>
+          </div>
+        </div>
       </div>
       <div class="grid grid-cols-4 items-center gap-4">
-        <Label for="cat" class="text-right">{t('common.category')}</Label>
-        <select id="cat" bind:value={form.category_id} class="col-span-3 border p-2 rounded">
-          <option value="">—</option>
-          {#each categories as c}
-            <option value={c.id}>{c.name}</option>
-          {/each}
-        </select>
+        <Label class="text-right">{t('common.category')}</Label>
+        <div class="col-span-3">
+          <Select.Root bind:value={form.category_id} type="single">
+            <Select.Trigger class="w-full" />
+            <Select.Content>
+              {#each categories as c}
+                <Select.Item value={c.id} label={c.name} />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+        </div>
       </div>
       <div class="grid grid-cols-4 items-center gap-4">
         <Label class="text-right">{t('common.image')}</Label>

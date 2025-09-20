@@ -7,6 +7,8 @@
   import Button from '$lib/components/ui/button/button.svelte';
   import AddProductDialog from './AddProductDialog.svelte';
   import EditProductDialog from './EditProductDialog.svelte';
+  import ManageCategoriesDialog from './ManageCategoriesDialog.svelte';
+  import Card from '$lib/components/ui/card/card.svelte';
   import { t } from '$lib/i18n';
 
   type Product = { id: string; name: string; price: number; stock_quantity: number; category_id: string | null; image_url?: string | null };
@@ -17,9 +19,11 @@
 
   let showAdd = $state(false);
   let showEdit = $state(false);
+  let showCategories = $state(false);
   let selected: Product | null = $state(null);
 
   $effect(() => {
+    if (typeof window === 'undefined') return;
     loadCurrentUser().then(() => {
       const u = $currentUser;
       if (!u) return (window.location.href = '/login');
@@ -70,38 +74,43 @@
     { key: 'name', header: t('common.name'), cell: (p) => `${p.name}${p.stock_quantity !== -1 && p.stock_quantity <= 3 ? '  • low' : ''}` },
     { key: 'price', header: t('common.price'), cell: (p) => `€${Number(p.price).toFixed(2)}`, align: 'right' },
     { key: 'stock_quantity', header: t('common.stock'), cell: (p) => (p.stock_quantity === -1 ? '∞' : String(p.stock_quantity)), align: 'center' },
-    { key: 'image_url', header: t('common.image'), cell: (p) => p.image_url ? `<img src="${p.image_url}" alt="${p.name}" class="h-10 w-10 object-cover rounded" />` : '', align: 'center' },
+    { key: 'image_url', header: t('common.image'), cell: (p) => p.image_url ? `<img src=\"${p.image_url}\" alt=\"${p.name}\" class=\"h-10 w-10 object-cover rounded\" />` : '', align: 'center' },
     { key: 'id', header: t('common.actions'), cell: (p) => {
       return {
-        // Use a render function to place buttons
         $$render() {
-          return `<div class=\"text-right\"><button class=\"inline-flex items-center justify-center rounded-md bg-background border px-3 py-1 text-sm hover:bg-accent\" onclick=\"__edit('${p.id}')\">${t('common.edit')}</button></div>`;
+          return `<div class=\"text-right\"><button class=\"inline-flex items-center justify-center rounded-md border px-3 py-1 text-sm hover:bg-accent\" onclick=\"__edit('${p.id}')\">${t('common.edit')}</button></div>`;
         }
       } as any;
     }, align: 'right' },
   ];
 
-  // Bridge function for DataTable action rendering
-  (window as any).__edit = (id: string) => {
-    const row = products.find(x => x.id === id) || null;
-    selected = row;
-    showEdit = !!row;
-  };
+  // Bridge function for DataTable action rendering (client only)
+  if (typeof window !== 'undefined') {
+    (window as any).__edit = (id: string) => {
+      const row = products.find(x => x.id === id) || null;
+      selected = row;
+      showEdit = !!row;
+    };
+  }
 </script>
 
 <section class="space-y-4">
   <PageHeader title={t('pages.products.title')}>
     <Button variant="outline" onclick={() => showAdd = true}>{t('pages.products.add')}</Button>
+    <Button variant="ghost" onclick={() => (showCategories = true)}>Manage Categories</Button>
   </PageHeader>
 
   <div class="flex items-center gap-2">
     <SearchBar bind:value={search} placeholder={t('orders.search')} />
   </div>
 
-  <DataTable {columns} rows={filtered()} />
+  <Card>
+    <DataTable {columns} rows={filtered()} />
+  </Card>
 
   <AddProductDialog bind:open={showAdd} {categories} onCreate={onCreate} />
   <EditProductDialog bind:open={showEdit} product={selected} {categories} onSave={onSave} onUploadImage={onUploadImage} />
+  <ManageCategoriesDialog bind:open={showCategories} bind:categories />
 </section>
 
 

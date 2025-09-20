@@ -1,6 +1,8 @@
 <script lang="ts">
   import { supabase } from '$lib/supabaseClient';
   import { ensureOpenSession } from '$lib/register';
+  import Input from '$lib/components/ui/input/input.svelte';
+  import Button from '$lib/components/ui/button/button.svelte';
   let openingCash = $state('');
   let saving = $state(false);
 
@@ -10,7 +12,6 @@
     saving = true;
     try {
       const sessionId = await ensureOpenSession(supabase, user.id);
-      // store opening cash in session notes
       await supabase.from('register_sessions').update({ notes: { opening_cash: Number(openingCash || 0) } }).eq('id', sessionId);
     } finally {
       saving = false;
@@ -19,8 +20,8 @@
 </script>
 
 <div class="flex gap-2 items-center">
-  <input class="border p-2 rounded w-40" type="number" step="0.01" placeholder="Opening cash €" bind:value={openingCash} />
-  <button class="border rounded px-3 py-1" onclick={openNow} disabled={saving}>Open</button>
+  <Input class="w-40" type="number" step="0.01" placeholder="Opening cash €" bind:value={openingCash} />
+  <Button variant="outline" onclick={openNow} disabled={saving}>Open</Button>
 </div>
 
 
