@@ -1,10 +1,10 @@
-import { supabase } from '$lib/supabaseClient';
-import { writable } from 'svelte/store';
+import { writable } from "svelte/store";
+import { supabase } from "$lib/supabaseClient";
 
 export type AppUser = {
   id: string;
   email: string | null;
-  role: 'admin' | 'staff' | 'secretary' | null;
+  role: "admin" | "staff" | "secretary" | null;
   username: string | null;
 };
 
@@ -18,16 +18,14 @@ export async function loadCurrentUser(): Promise<void> {
     return;
   }
   const { data: profile } = await supabase
-    .from('users')
-    .select('id, username, role')
-    .eq('id', session.user.id)
+    .from("users")
+    .select("id, username, role")
+    .eq("id", session.user.id)
     .single();
   currentUser.set({
     id: session.user.id,
     email: session.user.email ?? null,
-    role: (profile?.role as any) ?? null,
-    username: (profile?.username as any) ?? null,
+    role: (profile?.role as "admin" | "staff" | "secretary") ?? null,
+    username: (profile?.username as string | null) ?? null,
   });
 }
-
-

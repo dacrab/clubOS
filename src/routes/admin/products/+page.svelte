@@ -1,97 +1,189 @@
 <script lang="ts">
-  import { currentUser, loadCurrentUser } from '$lib/user';
-  import { supabase } from '$lib/supabaseClient';
-  import PageHeader from '$lib/components/common/PageHeader.svelte';
-  import SearchBar from '$lib/components/common/SearchBar.svelte';
-  import DataTable, { type Column } from '$lib/components/common/DataTable.svelte';
-  import Button from '$lib/components/ui/button/button.svelte';
-  import AddProductDialog from './AddProductDialog.svelte';
-  import EditProductDialog from './EditProductDialog.svelte';
-  import ManageCategoriesDialog from './ManageCategoriesDialog.svelte';
-  import Card from '$lib/components/ui/card/card.svelte';
-  import { t } from '$lib/i18n';
+import DataTable, {
+  type Column,
+} from "$lib/components/common/DataTable.svelte";
+import PageHeader from "$lib/components/common/PageHeader.svelte";
+import SearchBar from "$lib/components/common/SearchBar.svelte";
+import { Button } from "$lib/components/ui/button";
+import { Card } from "$lib/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "$lib/components/ui/table";
+import { t } from "$lib/i18n";
+import { supabase } from "$lib/supabaseClient";
+import { currentUser, loadCurrentUser } from "$lib/user";
+import AddProductDialog from "./AddProductDialog.svelte";
+import EditProductDialog from "./EditProductDialog.svelte";
+import ManageCategoriesDialog from "./ManageCategoriesDialog.svelte";
 
-  type Product = { id: string; name: string; price: number; stock_quantity: number; category_id: string | null; image_url?: string | null };
-  type Category = { id: string; name: string };
-  let products: Product[] = $state([] as Product[]);
-  let categories: Category[] = $state([] as Category[]);
-  let search = $state('');
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+  stock_quantity: number;
+  category_id: string | null;
+  image_url?: string | null;
+};
+type Category = { id: string; name: string };
+let products: Product[] = $state([] as Product[]);
+let categories: Category[] = $state([] as Category[]);
+let search = $state("");
 
-  let showAdd = $state(false);
-  let showEdit = $state(false);
-  let showCategories = $state(false);
-  let selected: Product | null = $state(null);
+let showAdd = $state(false);
+let showEdit = $state(false);
+let showCategories = $state(false);
+let selected: Product | null = $state(null);
 
-  $effect(() => {
-    if (typeof window === 'undefined') return;
-    loadCurrentUser().then(() => {
-      const u = $currentUser;
-      if (!u) return (window.location.href = '/login');
-      if (u.role !== 'admin') window.location.href = '/dashboard';
-      loadLists();
-    });
+$effect(() => {
+  if (typeof window === "undefined") return;
+  loadCurrentUser().then(() => {
+    const u = $currentUser;
+    if (!u) {
+      window.location.href = "/login";
+      return;
+    }
+    if (u.role !== "admin") window.location.href = "/dashboard";
+    loadLists();
   });
+});
 
-  async function loadLists() {
-    const { data: pcats } = await supabase.from('categories').select('id,name').order('name');
-    categories = (pcats as any) ?? [];
-    const { data: prods } = await supabase.from('products').select('id,name,price,stock_quantity,category_id,image_url').order('name');
-    products = (prods as any) ?? [];
+async function loadLists() {
+  const { data: pcats } = await supabase
+    .from("categories")
+    .select("id,name")
+    .order("name");
+  categories = (pcats as any) ?? [];
+  const { data: prods } = await supabase
+    .from("products")
+    .select("id,name,price,stock_quantity,category_id,image_url")
+    .order("name");
+  products = (prods as any) ?? [];
+}
+
+async function onCreate(payload: {
+  name: string;
+  price: number;
+  stock_quantity: number;
+  category_id: string | null;
+}): Promise<void> {
+  const toast = (await import("svelte-sonner")).toast;
+  const { error } = await supabase.from("products").insert(payload);
+  if (error) {
+    toast.error(error.message);
+    return;
   }
+  toast.success(t("common.save"));
+  await loadLists();
+}
 
-  async function onCreate(payload: { name: string; price: number; stock_quantity: number; category_id: string | null }) {
-    const { error } = await supabase.from('products').insert(payload);
-    if (!error) await loadLists();
-  }
-
-  async function onSave(payload: { id: string; name: string; price: number; stock_quantity: number; category_id: string | null }) {
-    const { error } = await supabase.from('products').update({
+async function onSave(payload: {
+  id: string;
+  name: string;
+  price: number;
+  stock_quantity: number;
+  category_id: string | null;
+}): Promise<void> {
+  const toast = (await import("svelte-sonner")).toast;
+  const { error } = await supabase
+    .from("products")
+    .update({
       name: payload.name,
       price: Number(payload.price),
       stock_quantity: Number(payload.stock_quantity),
-      category_id: payload.category_id
-    }).eq('id', payload.id);
-    if (!error) await loadLists();
+      category_id: payload.category_id,
+    })
+    .eq("id", payload.id);
+  if (error) {
+    toast.error(error.message);
+    return;
   }
+  toast.success(t("common.save"));
+  await loadLists();
+}
 
-  async function onUploadImage(file: File, productId: string) {
-    const path = `product-${productId}-${Date.now()}-${file.name}`;
-    const { error: upErr } = await supabase.storage.from('product-images').upload(path, file, { upsert: true });
-    if (upErr) return;
-    const { data: pub } = supabase.storage.from('product-images').getPublicUrl(path);
-    const url = pub.publicUrl;
-    await supabase.from('products').update({ image_url: url }).eq('id', productId);
-    await loadLists();
-  }
+async function onUploadImage(file: File, productId: string) {
+  const path = `product-${productId}-${Date.now()}-${file.name}`;
+  const { error: upErr } = await supabase.storage
+    .from("product-images")
+    .upload(path, file, { upsert: true });
+  if (upErr) return;
+  const { data: pub } = supabase.storage
+    .from("product-images")
+    .getPublicUrl(path);
+  const url = pub.publicUrl;
+  await supabase
+    .from("products")
+    .update({ image_url: url })
+    .eq("id", productId);
+  await loadLists();
+}
 
-  function filtered() {
-    const s = search.trim().toLowerCase();
-    if (!s) return products;
-    return products.filter(p => p.name.toLowerCase().includes(s));
-  }
+function filtered() {
+  const s = search.trim().toLowerCase();
+  if (!s) return products;
+  return products.filter((p) => p.name.toLowerCase().includes(s));
+}
 
-  const columns: Array<Column<Product>> = [
-    { key: 'name', header: t('common.name'), cell: (p) => `${p.name}${p.stock_quantity !== -1 && p.stock_quantity <= 3 ? '  • low' : ''}` },
-    { key: 'price', header: t('common.price'), cell: (p) => `€${Number(p.price).toFixed(2)}`, align: 'right' },
-    { key: 'stock_quantity', header: t('common.stock'), cell: (p) => (p.stock_quantity === -1 ? '∞' : String(p.stock_quantity)), align: 'center' },
-    { key: 'image_url', header: t('common.image'), cell: (p) => p.image_url ? `<img src=\"${p.image_url}\" alt=\"${p.name}\" class=\"h-10 w-10 object-cover rounded\" />` : '', align: 'center' },
-    { key: 'id', header: t('common.actions'), cell: (p) => {
-      return {
+const columns: Array<Column<Product>> = [
+  {
+    key: "name",
+    header: t("common.name"),
+    cell: (p) => {
+      const LOW_STOCK_THRESHOLD = 3;
+      const isLow =
+        p.stock_quantity !== -1 && p.stock_quantity <= LOW_STOCK_THRESHOLD;
+      return `${p.name}${isLow ? "  • low" : ""}`;
+    },
+  },
+  {
+    key: "price",
+    header: t("common.price"),
+    cell: (p) => `€${Number(p.price).toFixed(2)}`,
+    align: "right",
+  },
+  {
+    key: "stock_quantity",
+    header: t("common.stock"),
+    cell: (p) => (p.stock_quantity === -1 ? "∞" : String(p.stock_quantity)),
+    align: "center",
+  },
+  {
+    key: "image_url",
+    header: t("common.image"),
+    cell: (p) =>
+      p.image_url
+        ? `<img src="${p.image_url}" alt="${p.name}" class="h-10 w-10 object-cover rounded" />`
+        : "",
+    align: "center",
+  },
+  {
+    key: "id",
+    header: t("common.actions"),
+    cell: (p) =>
+      ({
         $$render() {
-          return `<div class=\"text-right\"><button class=\"inline-flex items-center justify-center rounded-md border px-3 py-1 text-sm hover:bg-accent\" onclick=\"__edit('${p.id}')\">${t('common.edit')}</button></div>`;
-        }
-      } as any;
-    }, align: 'right' },
-  ];
+          return `<div class="text-right"><button class="inline-flex items-center justify-center rounded-md border px-3 py-1 text-sm hover:bg-accent" onclick="__edit('${p.id}')">${t(
+            "common.edit"
+          )}</button></div>`;
+        },
+      }) as any,
+    align: "right",
+  },
+];
 
-  // Bridge function for DataTable action rendering (client only)
-  if (typeof window !== 'undefined') {
-    (window as any).__edit = (id: string) => {
-      const row = products.find(x => x.id === id) || null;
-      selected = row;
-      showEdit = !!row;
-    };
-  }
+// Bridge function for DataTable action rendering (client only)
+if (typeof window !== "undefined") {
+  (window as any).__edit = (id: string) => {
+    const row = products.find((x) => x.id === id) || null;
+    selected = row;
+    showEdit = !!row;
+  };
+}
 </script>
 
 <section class="space-y-4">
@@ -103,6 +195,30 @@
   <div class="flex items-center gap-2">
     <SearchBar bind:value={search} placeholder={t('orders.search')} />
   </div>
+
+  <!-- Demonstrate Table API using filtered preview (keeps DataTable as primary) -->
+  {#if filtered().length > 0}
+    <Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t('common.name')}</TableHead>
+            <TableHead class="text-right">{t('common.price')}</TableHead>
+            <TableHead class="text-center">{t('common.stock')}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {#each filtered().slice(0, 3) as p}
+            <TableRow>
+              <TableCell>{p.name}</TableCell>
+              <TableCell class="text-right">€{Number(p.price).toFixed(2)}</TableCell>
+              <TableCell class="text-center">{p.stock_quantity === -1 ? '∞' : String(p.stock_quantity)}</TableCell>
+            </TableRow>
+          {/each}
+        </TableBody>
+      </Table>
+    </Card>
+  {/if}
 
   <Card>
     <DataTable {columns} rows={filtered()} />

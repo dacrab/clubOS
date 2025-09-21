@@ -1,5 +1,5 @@
 <script lang="ts">
-  let { text, children } = $props<{ text: string; children?: any }>();
+const { text, children } = $props<{ text: string; children?: any }>();
 </script>
 
 <div class="text-sm text-muted-foreground p-6 border rounded-md text-center">

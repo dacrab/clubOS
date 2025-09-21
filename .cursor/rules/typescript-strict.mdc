@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+## TypeScript Strictness
+
+- Use strictest options as configured in [`tsconfig.json`](mdc:tsconfig.json):
+  - `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`, `noImplicitOverride`, `noUnusedLocals`, `noUnusedParameters`, `noPropertyAccessFromIndexSignature`, `useDefineForClassFields`.
+- Import types with `import type { ... }` and avoid value imports for types.
+- Avoid `any`; if unavoidable due to Supabase response unions, isolate casts and keep surfaces typed.
+- Prefer `const` for values not reassigned; use `let` only when necessary (especially for `$bindable`).
+- Guard optional values and handle edge cases (`undefined`/`null`).

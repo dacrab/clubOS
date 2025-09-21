@@ -1,0 +1,15 @@
+---
+alwaysApply: true
+---
+## Tooling Commands
+
+- Full checks (typecheck + svelte-check + biome):
+  - `bun run check`
+- Biome auto-fix and formatting:
+  - `npx ultracite fix`
+- Knip unused analysis:
+  - `bun knip`
+
+## Notes
+- `biome.jsonc` carries strict rules and Svelte overrides.
+- `knip.json` ignores UI barrels and optional primitives kept for reuse.

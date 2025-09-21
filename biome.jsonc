@@ -1,0 +1,78 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": ["ultracite"],
+  "formatter": { "enabled": true },
+  "linter": { "enabled": true, "rules": { "recommended": true } },
+  "overrides": [
+    {
+      "includes": ["src/**/*.css"],
+      "linter": { "rules": { "suspicious": { "noUnknownAtRules": "off" } } }
+    },
+    {
+      "includes": ["src/app.d.ts"],
+      "linter": { "rules": { "style": { "noNamespace": "off" } } }
+    },
+    {
+      "includes": ["**/*.spec.ts", "**/*.test.ts"],
+      "linter": { "rules": { "style": { "noMagicNumbers": "off" } } }
+    },
+    {
+      "includes": ["**/*.svelte"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedImports": "off",
+            "noUnusedVariables": "off",
+            "noUndeclaredVariables": "off"
+          },
+          "suspicious": {
+            "noExplicitAny": "off",
+            "noConsole": "off",
+            "useAwait": "off"
+          },
+          "style": {
+            "useFilenamingConvention": "off",
+            "useNamingConvention": "off",
+            "useBlockStatements": "off",
+            "useConsistentArrayType": "off",
+            "useConst": "off",
+            "useImportType": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/lib/components/ui/**/index.ts"],
+      "linter": {
+        "rules": {
+          "performance": { "noBarrelFile": "off" },
+          "style": { "noExportedImports": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["scripts/**"],
+      "linter": { "rules": { "style": { "useNamingConvention": "off" } } }
+    },
+    {
+      "includes": ["src/lib/server/supabaseAdmin.ts"],
+      "linter": {
+        "rules": {
+          "style": { "useFilenamingConvention": "off" },
+          "complexity": { "useLiteralKeys": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["src/lib/supabaseClient.ts"],
+      "linter": { "rules": { "style": { "useFilenamingConvention": "off" } } }
+    },
+    {
+      "includes": [
+        "src/lib/register.ts",
+        "src/routes/api/admin/users/+server.ts"
+      ],
+      "linter": { "rules": { "style": { "useNamingConvention": "off" } } }
+    }
+  ]
+}

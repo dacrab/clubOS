@@ -1,0 +1,20 @@
+---
+alwaysApply: true
+---
+## Imports, Aliases, and UI Barrels
+
+### Aliases
+- Use `$lib/*`, `$app/*`, `$env/*` paths (see [`knip.json`](mdc:knip.json)).
+
+### UI barrels
+- Import UI components from barrels to keep a clean API and exercise exports:
+  - `import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card"`.
+  - `import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$lib/components/ui/table"`.
+  - `import { Button } from "$lib/components/ui/button"`.
+  - `import { DropdownMenuContent, DropdownMenuTrigger } from "$lib/components/ui/dropdown-menu"`.
+  - `import { Badge } from "$lib/components/ui/badge"`.
+
+### Conventions
+- Avoid namespace imports; use named imports for tree-shaking.
+- Prefer re-exported barrels over deep component paths for shared UI.
+- Keep imports typed-only where appropriate to satisfy `verbatimModuleSyntax`.

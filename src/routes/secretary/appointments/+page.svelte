@@ -1,51 +1,111 @@
 <script lang="ts">
-  import { currentUser, loadCurrentUser } from '$lib/user';
-  import { supabase } from '$lib/supabaseClient';
-  let list: Array<any> = $state([]);
-  let form = $state({ customer_name: '', contact_info: '', appointment_date: '', num_children: 1, num_adults: 0, notes: '' });
-  import Button from '$lib/components/ui/button/button.svelte';
-  import Card from '$lib/components/ui/card/card.svelte';
-  import CardContent from '$lib/components/ui/card/card-content.svelte';
-  import CardHeader from '$lib/components/ui/card/card-header.svelte';
-  import CardTitle from '$lib/components/ui/card/card-title.svelte';
-  import * as Tabs from '$lib/components/ui/tabs';
-  import Input from '$lib/components/ui/input/input.svelte';
-  import Label from '$lib/components/ui/label/label.svelte';
-  import Textarea from '$lib/components/ui/textarea/textarea.svelte';
-  import { Calendar, ClipboardList, Clock } from '@lucide/svelte';
-  
-  $effect(() => {
-    loadCurrentUser().then(() => {
-      const u = $currentUser;
-      if (!u) return (window.location.href = '/login');
-      if (u.role !== 'secretary' && u.role !== 'admin') window.location.href = '/dashboard';
-      load();
-    });
-  });
-  
-  async function load() {
-    const { data } = await supabase
-      .from('appointments')
-      .select('*')
-      .order('appointment_date');
-    list = (data as any) ?? [];
-  }
-  
-  async function create() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return (window.location.href = '/login');
-    const payload = { ...form, appointment_date: new Date(form.appointment_date), created_by: user.id };
-    const { error } = await supabase.from('appointments').insert(payload);
-    if (!error) {
-      form = { customer_name: '', contact_info: '', appointment_date: '', num_children: 1, num_adults: 0, notes: '' } as any;
-      load();
+import { supabase } from "$lib/supabaseClient";
+import { currentUser, loadCurrentUser } from "$lib/user";
+
+let list: Array<any> = $state([]);
+let form = $state({
+  customer_name: "",
+  contact_info: "",
+  appointment_date: "",
+  num_children: 1,
+  num_adults: 0,
+  notes: "",
+});
+
+import { Calendar, ClipboardList, Clock } from "@lucide/svelte";
+import { toast } from "svelte-sonner";
+import { Button } from "$lib/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "$lib/components/ui/card";
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "$lib/components/ui/tabs";
+import { Textarea } from "$lib/components/ui/textarea";
+
+$effect(() => {
+  loadCurrentUser().then(() => {
+    const u = $currentUser;
+    if (!u) {
+      window.location.href = "/login";
+      return;
     }
+    if (u.role !== "secretary" && u.role !== "admin")
+      window.location.href = "/dashboard";
+    load();
+  });
+});
+
+async function load() {
+  const { data } = await supabase
+    .from("appointments")
+    .select("*")
+    .order("appointment_date");
+  list = (data as any) ?? [];
+}
+
+async function create() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    window.location.href = "/login";
+    return;
   }
-  
-  async function setStatus(id: string, status: 'confirmed'|'cancelled'|'completed') {
-    await supabase.from('appointments').update({ status }).eq('id', id);
-    await load();
+  const payload = {
+    ...form,
+    appointment_date: new Date(form.appointment_date),
+    created_by: user.id,
+  };
+  const { error } = await supabase.from("appointments").insert(payload);
+  if (!error) {
+    form = {
+      customer_name: "",
+      contact_info: "",
+      appointment_date: "",
+      num_children: 1,
+      num_adults: 0,
+      notes: "",
+    } as any;
+    load();
   }
+}
+
+async function setStatus(
+  id: string,
+  status: "confirmed" | "cancelled" | "completed"
+) {
+  await supabase.from("appointments").update({ status }).eq("id", id);
+  await load();
+}
+
+const PHONE_RE = /^\+?\d[\d\s()-]{5,}$/;
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+function sendReminder(a: any) {
+  const when = new Date(a.appointment_date).toLocaleString();
+  const message = encodeURIComponent(
+    `Reminder: ${a.customer_name}, your appointment is at ${when}.`
+  );
+  const contact = String(a.contact_info || "").trim();
+  if (PHONE_RE.test(contact)) {
+    window.location.href = `tel:${contact}`;
+    toast.success("Opening dialer for reminder call");
+  } else if (EMAIL_RE.test(contact)) {
+    window.location.href = `mailto:${contact}?subject=Appointment%20Reminder&body=${message}`;
+    toast.success("Opening email client for reminder");
+  } else {
+    toast.error("Invalid contact info to send reminder");
+  }
+}
 </script>
 
 <section class="space-y-8">
@@ -113,13 +173,13 @@
   </div>
 
   <!-- Main Content -->
-  <Tabs.Root value="create" class="w-full">
-    <Tabs.List class="grid w-full grid-cols-2 lg:w-96">
-      <Tabs.Trigger value="create" class="rounded-lg">Create New</Tabs.Trigger>
-      <Tabs.Trigger value="upcoming" class="rounded-lg">View All</Tabs.Trigger>
-    </Tabs.List>
+  <Tabs value="create" class="w-full">
+    <TabsList class="grid w-full grid-cols-2 lg:w-96">
+      <TabsTrigger value="create" class="rounded-lg">Create New</TabsTrigger>
+      <TabsTrigger value="upcoming" class="rounded-lg">View All</TabsTrigger>
+    </TabsList>
 
-    <Tabs.Content value="create" class="mt-8">
+    <TabsContent value="create" class="mt-8">
       <Card class="card-hover">
         <CardHeader class="pb-6">
           <CardTitle class="text-xl">Create New Appointment</CardTitle>
@@ -190,9 +250,9 @@
           </div>
         </CardContent>
       </Card>
-    </Tabs.Content>
+    </TabsContent>
 
-    <Tabs.Content value="upcoming" class="mt-8">
+    <TabsContent value="upcoming" class="mt-8">
       <Card class="card-hover">
         <CardHeader class="pb-6">
           <div class="flex items-center justify-between">
@@ -247,6 +307,9 @@
                         Reminder in 1w
                       </span>
                     {/if}
+                  <Button variant="outline" size="sm" onclick={() => sendReminder(a)} class="h-8 px-2">
+                    Send Reminder
+                  </Button>
                     <span class="px-3 py-1 bg-{a.status === 'confirmed' ? 'green' : a.status === 'completed' ? 'blue' : 'red'}-100 dark:bg-{a.status === 'confirmed' ? 'green' : a.status === 'completed' ? 'blue' : 'red'}-900/50 text-{a.status === 'confirmed' ? 'green' : a.status === 'completed' ? 'blue' : 'red'}-700 dark:text-{a.status === 'confirmed' ? 'green' : a.status === 'completed' ? 'blue' : 'red'}-300 text-xs font-medium rounded-full capitalize">
                       {a.status}
                     </span>
@@ -283,8 +346,8 @@
           {/if}
         </CardContent>
       </Card>
-    </Tabs.Content>
-  </Tabs.Root>
+    </TabsContent>
+  </Tabs>
 </section>
 
 

@@ -1,58 +1,85 @@
 <script lang="ts">
-  import Button from '$lib/components/ui/button/button.svelte';
-  import DialogContent from '$lib/components/ui/dialog/dialog-content.svelte';
-  import DialogHeader from '$lib/components/ui/dialog/dialog-header.svelte';
-  import DialogTitle from '$lib/components/ui/dialog/dialog-title.svelte';
-  import DialogFooter from '$lib/components/ui/dialog/dialog-footer.svelte';
-  import { Dialog as DialogPrimitive } from 'bits-ui';
-  const Dialog = DialogPrimitive.Root;
-  import Input from '$lib/components/ui/input/input.svelte';
-  import Label from '$lib/components/ui/label/label.svelte';
-  import * as Select from '$lib/components/ui/select';
-  import Switch from '$lib/components/ui/switch/switch.svelte';
-  import { t } from '$lib/i18n';
+import { Dialog as DialogPrimitive } from "bits-ui";
+import Button from "$lib/components/ui/button/button.svelte";
+import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
+import DialogFooter from "$lib/components/ui/dialog/dialog-footer.svelte";
+import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
+import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
 
-  let { open = $bindable(false), product = null as any, categories = [] as Array<{ id: string; name: string }>, onSave, onUploadImage } = $props<{
-    open: boolean;
-    product: any | null;
-    categories: Array<{ id: string; name: string }>;
-    onSave: (payload: { id: string; name: string; price: number; stock_quantity: number; category_id: string | null }) => Promise<void>;
-    onUploadImage: (file: File, productId: string) => Promise<void>;
-  }>();
+const Dialog = DialogPrimitive.Root;
 
-  let form = $state({ id: '', name: '', price: 0, stock_quantity: 0, category_id: '', image_url: '', unlimited: false });
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "$lib/components/ui/select";
+import Switch from "$lib/components/ui/switch/switch.svelte";
+import { t } from "$lib/i18n";
 
-  $effect(() => {
-    if (product) {
-      form = {
-        id: product.id,
-        name: product.name,
-        price: Number(product.price),
-        stock_quantity: Number(product.stock_quantity),
-        category_id: product.category_id || '',
-        image_url: product.image_url || '',
-        unlimited: product.stock_quantity === -1
-      };
-    }
+let {
+  open = $bindable(false),
+  product = null as any,
+  categories = [] as Array<{ id: string; name: string }>,
+  onSave,
+  onUploadImage,
+} = $props<{
+  open: boolean;
+  product: any | null;
+  categories: Array<{ id: string; name: string }>;
+  onSave: (payload: {
+    id: string;
+    name: string;
+    price: number;
+    stock_quantity: number;
+    category_id: string | null;
+  }) => Promise<void>;
+  onUploadImage: (file: File, productId: string) => Promise<void>;
+}>();
+
+let form = $state({
+  id: "",
+  name: "",
+  price: 0,
+  stock_quantity: 0,
+  category_id: "",
+  image_url: "",
+  unlimited: false,
+});
+
+$effect(() => {
+  if (product) {
+    form = {
+      id: product.id,
+      name: product.name,
+      price: Number(product.price),
+      stock_quantity: Number(product.stock_quantity),
+      category_id: product.category_id || "",
+      image_url: product.image_url || "",
+      unlimited: product.stock_quantity === -1,
+    };
+  }
+});
+
+async function save() {
+  await onSave({
+    id: form.id,
+    name: form.name,
+    price: Number(form.price),
+    stock_quantity: Number(form.unlimited ? -1 : form.stock_quantity),
+    category_id: form.category_id || null,
   });
+  open = false;
+}
 
-  async function save() {
-    await onSave({
-      id: form.id,
-      name: form.name,
-      price: Number(form.price),
-      stock_quantity: Number(form.unlimited ? -1 : form.stock_quantity),
-      category_id: form.category_id || null,
-    });
-    open = false;
-  }
-
-  async function selectImage(e: Event) {
-    const input = e.target as HTMLInputElement;
-    const file = input.files && input.files[0];
-    if (!file || !form.id) return;
-    await onUploadImage(file, form.id);
-  }
+async function selectImage(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!(file && form.id)) return;
+  await onUploadImage(file, form.id);
+}
 </script>
 
 <Dialog bind:open={open}>
@@ -82,14 +109,14 @@
       <div class="grid grid-cols-4 items-center gap-4">
         <Label class="text-right">{t('common.category')}</Label>
         <div class="col-span-3">
-          <Select.Root bind:value={form.category_id} type="single">
-            <Select.Trigger class="w-full" />
-            <Select.Content>
+          <Select bind:value={form.category_id} type="single">
+            <SelectTrigger class="w-full" />
+            <SelectContent>
               {#each categories as c}
-                <Select.Item value={c.id} label={c.name} />
+                <SelectItem value={c.id} label={c.name} />
               {/each}
-            </Select.Content>
-          </Select.Root>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <div class="grid grid-cols-4 items-center gap-4">

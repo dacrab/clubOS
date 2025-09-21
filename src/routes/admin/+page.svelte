@@ -1,76 +1,164 @@
 <script lang="ts">
-  import { currentUser, loadCurrentUser } from '$lib/user';
-  import { supabase } from '$lib/supabaseClient';
-  import { ensureOpenSession, closeRegister } from '$lib/register';
-  import RecentOrders from '$lib/components/RecentOrders.svelte';
-  let todayTotal = $state(0);
-  let closing = $state(false);
-  import Button from '$lib/components/ui/button/button.svelte';
-  import Card from '$lib/components/ui/card/card.svelte';
-  import CardContent from '$lib/components/ui/card/card-content.svelte';
-  import CardHeader from '$lib/components/ui/card/card-header.svelte';
-  import CardTitle from '$lib/components/ui/card/card-title.svelte';
-  import { t } from '$lib/i18n';
-  import LowStockCard from '$lib/components/LowStockCard.svelte';
-  import StatsCards from '$lib/components/common/StatsCards.svelte';
-  import PageHeader from '$lib/components/common/PageHeader.svelte';
-  import { BarChart3, ReceiptText, Users, Package, ShoppingCart, ClipboardList, UserCog, LogOut } from '@lucide/svelte';
+import RecentOrders from "$lib/components/RecentOrders.svelte";
+import { closeRegister, ensureOpenSession } from "$lib/register";
+import { supabase } from "$lib/supabaseClient";
 
-  let ordersCount = $state(0);
-  let activeUsers = $state(0);
-  let pendingTasks = $state(0);
+let todayTotal = $state(0);
+let closing = $state(false);
 
-  $effect(() => {
-    if (typeof window === 'undefined') return;
-    loadCurrentUser().then(() => {
-      const u = $currentUser;
-      if (!u) return (window.location.href = '/login');
-      if (u.role !== 'admin') window.location.href = '/dashboard';
-    });
-    loadToday();
-    loadCounts();
-  });
+import {
+  BarChart3,
+  ClipboardList,
+  LogOut,
+  Package,
+  ReceiptText,
+  ShoppingCart,
+  UserCog,
+  Users,
+} from "@lucide/svelte";
+import { toast } from "svelte-sonner";
+import LowStockCard from "$lib/components/LowStockCard.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "$lib/components/ui/card";
+import { t } from "$lib/i18n";
+import NewSaleDialog from "../orders/NewSaleDialog.svelte";
 
-  async function loadToday() {
-    const startOfDay = new Date();
-    startOfDay.setHours(0,0,0,0);
-    const { data } = await supabase.from('orders').select('total_amount').gte('created_at', startOfDay.toISOString());
-    todayTotal = (data ?? []).reduce((sum: number, r: any) => sum + Number(r.total_amount), 0);
+let ordersCount = $state(0);
+let activeUsers = $state(0);
+let pendingTasks = $state(0);
+let showSale = $state(false);
+let productsForSale: Array<{
+  id: string;
+  name: string;
+  price: number;
+  category_id?: string | null;
+}> = $state([]);
+
+$effect(() => {
+  if (typeof window === "undefined") return;
+  loadToday();
+  loadCounts();
+  notifyLowStock();
+});
+
+async function loadToday() {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const { data } = await supabase
+    .from("orders")
+    .select("total_amount")
+    .gte("created_at", startOfDay.toISOString());
+  todayTotal = (data ?? []).reduce(
+    (sum: number, r: any) => sum + Number(r.total_amount),
+    0
+  );
+}
+
+async function loadCounts() {
+  const { count } = await supabase
+    .from("orders")
+    .select("*", { count: "exact", head: true });
+  ordersCount = count ?? 0;
+
+  const { count: usersCount } = await supabase
+    .from("users")
+    .select("*", { count: "exact", head: true })
+    .eq("is_active", true);
+  activeUsers = usersCount ?? 0;
+
+  const { count: tasksCount } = await supabase
+    .from("appointments")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "confirmed");
+  pendingTasks = tasksCount ?? 0;
+}
+
+async function notifyLowStock() {
+  const LOW_STOCK_THRESHOLD_VALUE = 3;
+  const LOW_STOCK_SAMPLE_LIMIT = 5;
+  const { data } = await supabase
+    .from("products")
+    .select("name, stock_quantity")
+    .lte("stock_quantity", LOW_STOCK_THRESHOLD_VALUE)
+    .neq("stock_quantity", -1)
+    .order("stock_quantity", { ascending: true })
+    .limit(LOW_STOCK_SAMPLE_LIMIT);
+  const low =
+    (data as Array<{ name: string; stock_quantity: number }> | null) ?? [];
+  if (low.length > 0) {
+    const names = low.map((p) => `${p.name} (${p.stock_quantity})`).join(", ");
+    toast.warning(`Low stock: ${names}`);
   }
+}
 
-  async function loadCounts() {
-    const { count } = await supabase.from('orders').select('*', { count: 'exact', head: true });
-    ordersCount = count ?? 0;
-
-    // Get active users count
-    const { count: usersCount } = await supabase
-      .from('users')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true);
-    activeUsers = usersCount ?? 0;
-
-    // Get pending tasks count (using appointments as tasks for now)
-    const { count: tasksCount } = await supabase
-      .from('appointments')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'confirmed');
-    pendingTasks = tasksCount ?? 0;
+async function onCloseRegister() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    window.location.href = "/login";
+    return;
   }
-
-  async function onCloseRegister() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return (window.location.href = '/login');
-    const sessionId = await ensureOpenSession(supabase, user.id);
-    closing = true;
-    try {
-      await closeRegister(supabase, sessionId, null);
-    } finally {
-      closing = false;
-    }
+  const sessionId = await ensureOpenSession(supabase, user.id);
+  closing = true;
+  try {
+    await closeRegister(supabase, sessionId, null);
+  } finally {
+    closing = false;
   }
+}
+
+async function createSale(payload: {
+  items: Array<{ id: string; name: string; price: number; is_treat?: boolean }>;
+  paymentMethod: "cash";
+  couponCount: number;
+}) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    window.location.href = "/login";
+    return;
+  }
+  const sessionId = await ensureOpenSession(supabase, user.id);
+  const subtotal = payload.items.reduce(
+    (acc, i) => acc + (i.is_treat ? 0 : Number(i.price)),
+    0
+  );
+  const discount_amount = Math.max(0, payload.couponCount) * 2;
+  const total_amount = Math.max(0, subtotal - discount_amount);
+  const { data: order, error: orderErr } = await supabase
+    .from("orders")
+    .insert({
+      session_id: sessionId,
+      subtotal,
+      discount_amount,
+      total_amount,
+      payment_method: "cash",
+      card_discounts_applied: 0,
+      created_by: user?.id,
+    })
+    .select()
+    .single();
+  if (orderErr) return;
+  const items = payload.items.map((c) => ({
+    order_id: order.id,
+    product_id: c.id,
+    quantity: 1,
+    unit_price: Number(c.price),
+    line_total: c.is_treat ? 0 : Number(c.price),
+    is_treat: !!c.is_treat,
+  }));
+  await supabase.from("order_items").insert(items);
+}
 </script>
 
-<section class="space-y-12">
+<section class="space-y-8">
   <!-- Header -->
   <div class="space-y-4">
     <div class="flex items-center gap-3">
@@ -82,14 +170,14 @@
         <p class="text-muted-foreground">Overview of your business</p>
       </div>
     </div>
-    <Button href="/orders" size="lg" class="gap-2">
+    <Button onclick={() => (showSale = true)} size="lg" class="gap-2">
       <ShoppingCart class="h-4 w-4" />
       {t('orders.new')}
     </Button>
   </div>
 
   <!-- Stats -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
     <Card class="card-hover">
       <CardContent class="p-6">
         <div class="flex items-center gap-4">
@@ -148,7 +236,7 @@
   </div>
 
   <!-- Content Grid -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Recent Orders -->
     <div class="lg:col-span-2">
       <Card class="card-hover">
@@ -203,6 +291,8 @@
       </Card>
     </div>
   </div>
+
+  <NewSaleDialog bind:open={showSale} products={productsForSale} onSubmit={createSale} />
 </section>
 
 

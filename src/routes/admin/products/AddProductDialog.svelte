@@ -1,35 +1,63 @@
 <script lang="ts">
-  import Button from '$lib/components/ui/button/button.svelte';
-  import DialogContent from '$lib/components/ui/dialog/dialog-content.svelte';
-  import DialogHeader from '$lib/components/ui/dialog/dialog-header.svelte';
-  import DialogTitle from '$lib/components/ui/dialog/dialog-title.svelte';
-  import DialogFooter from '$lib/components/ui/dialog/dialog-footer.svelte';
-  import { Dialog as DialogPrimitive } from 'bits-ui';
-  const Dialog = DialogPrimitive.Root;
-  import Input from '$lib/components/ui/input/input.svelte';
-  import Label from '$lib/components/ui/label/label.svelte';
-  import * as Select from '$lib/components/ui/select';
-  import Switch from '$lib/components/ui/switch/switch.svelte';
-  import { t } from '$lib/i18n';
+import { Dialog as DialogPrimitive } from "bits-ui";
+import Button from "$lib/components/ui/button/button.svelte";
+import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
+import DialogFooter from "$lib/components/ui/dialog/dialog-footer.svelte";
+import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
+import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
 
-  let { open = $bindable(false), categories = [] as Array<{ id: string; name: string }>, onCreate } = $props<{
-    open: boolean;
-    categories: Array<{ id: string; name: string }>;
-    onCreate: (payload: { name: string; price: number; stock_quantity: number; category_id: string | null }) => Promise<void>;
-  }>();
+const Dialog = DialogPrimitive.Root;
 
-  let form = $state({ name: '', price: 0, stock_quantity: 0, category_id: '', unlimited: false });
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "$lib/components/ui/select";
+import Switch from "$lib/components/ui/switch/switch.svelte";
+import { t } from "$lib/i18n";
 
-  async function save() {
-    await onCreate({
-      name: form.name,
-      price: Number(form.price),
-      stock_quantity: Number(form.unlimited ? -1 : form.stock_quantity),
-      category_id: form.category_id || null,
-    });
-    form = { name: '', price: 0, stock_quantity: 0, category_id: '', unlimited: false };
-    open = false;
-  }
+let {
+  open = $bindable(false),
+  categories = [] as Array<{ id: string; name: string }>,
+  onCreate,
+} = $props<{
+  open: boolean;
+  categories: Array<{ id: string; name: string }>;
+  onCreate: (payload: {
+    name: string;
+    price: number;
+    stock_quantity: number;
+    category_id: string | null;
+  }) => Promise<void>;
+}>();
+
+let form = $state({
+  name: "",
+  price: 0,
+  stock_quantity: 0,
+  category_id: "",
+  unlimited: false,
+});
+
+async function save() {
+  await onCreate({
+    name: form.name,
+    price: Number(form.price),
+    stock_quantity: Number(form.unlimited ? -1 : form.stock_quantity),
+    category_id: form.category_id || null,
+  });
+  form = {
+    name: "",
+    price: 0,
+    stock_quantity: 0,
+    category_id: "",
+    unlimited: false,
+  };
+  open = false;
+}
 </script>
 
 <Dialog bind:open={open}>
@@ -59,14 +87,14 @@
       <div class="grid grid-cols-4 items-center gap-4">
         <Label class="text-right">{t('common.category')}</Label>
         <div class="col-span-3">
-          <Select.Root bind:value={form.category_id} type="single">
-            <Select.Trigger class="w-full" />
-            <Select.Content>
+          <Select bind:value={form.category_id} type="single">
+            <SelectTrigger class="w-full" />
+            <SelectContent>
               {#each categories as c}
-                <Select.Item value={c.id} label={c.name} />
+                <SelectItem value={c.id} label={c.name} />
               {/each}
-            </Select.Content>
-          </Select.Root>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>

@@ -1,67 +1,86 @@
 <script lang="ts">
-  import { currentUser, loadCurrentUser } from '$lib/user';
-  import { supabase } from '$lib/supabaseClient';
+import { supabase } from "$lib/supabaseClient";
+import { currentUser, loadCurrentUser } from "$lib/user";
 
-  let todayTotal = $state(0);
-  let weekTotal = $state(0);
-  let topProducts = $state([] as Array<{ name: string; qty: number; revenue: number }>);
-  let series = $state([] as Array<{ day: string; total: number }>);
+let todayTotal = $state(0);
+let weekTotal = $state(0);
+let topProducts = $state(
+  [] as Array<{ name: string; qty: number; revenue: number }>
+);
+let series = $state([] as Array<{ day: string; total: number }>);
 
-  $effect(() => {
-    loadCurrentUser().then(() => {
-      const u = $currentUser;
-      if (!u) return (window.location.href = '/login');
-      if (u.role !== 'admin') window.location.href = '/dashboard';
-      loadKPIs();
-    });
+$effect(() => {
+  loadCurrentUser().then(() => {
+    const u = $currentUser;
+    if (!u) {
+      window.location.href = "/login";
+      return;
+    }
+    if (u.role !== "admin") window.location.href = "/dashboard";
+    loadKpIs();
   });
+});
 
-  async function loadKPIs() {
-    const startOfDay = new Date();
-    startOfDay.setHours(0,0,0,0);
-    const startOfWeek = new Date();
-    startOfWeek.setDate(startOfWeek.getDate() - 7);
+async function loadKpIs() {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const startOfWeek = new Date();
+  const DAYS_7 = 7;
+  startOfWeek.setDate(startOfWeek.getDate() - DAYS_7);
 
-    const { data: today } = await supabase
-      .from('orders')
-      .select('total_amount')
-      .gte('created_at', startOfDay.toISOString());
-    todayTotal = (today ?? []).reduce((sum: number, r: any) => sum + Number(r.total_amount), 0);
+  const { data: today } = await supabase
+    .from("orders")
+    .select("total_amount")
+    .gte("created_at", startOfDay.toISOString());
+  todayTotal = (today ?? []).reduce(
+    (sum: number, r: any) => sum + Number(r.total_amount),
+    0
+  );
 
-    const { data: week } = await supabase
-      .from('orders')
-      .select('total_amount')
-      .gte('created_at', startOfWeek.toISOString());
-    weekTotal = (week ?? []).reduce((sum: number, r: any) => sum + Number(r.total_amount), 0);
+  const { data: week } = await supabase
+    .from("orders")
+    .select("total_amount")
+    .gte("created_at", startOfWeek.toISOString());
+  weekTotal = (week ?? []).reduce(
+    (sum: number, r: any) => sum + Number(r.total_amount),
+    0
+  );
 
-    // 7 day series (client-side rollup)
-    const { data: last7 } = await supabase
-      .from('orders')
-      .select('total_amount, created_at')
-      .gte('created_at', startOfWeek.toISOString())
-      .order('created_at');
-    const dayMap = new Map<string, number>();
-    (last7 ?? []).forEach((o: any) => {
-      const d = new Date(o.created_at);
-      const key = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
-      dayMap.set(key, (dayMap.get(key) ?? 0) + Number(o.total_amount));
-    });
-    series = Array.from(dayMap.entries()).map(([day, total]) => ({ day, total }));
-
-    const { data: items } = await supabase
-      .from('order_items')
-      .select('quantity, line_total, product_id, products(name)')
-      .gte('created_at', startOfWeek.toISOString());
-    const map = new Map<string, { name: string; qty: number; revenue: number }>();
-    (items ?? []).forEach((it: any) => {
-      const key = it.product_id;
-      const prev = map.get(key) ?? { name: it.products?.name ?? 'N/A', qty: 0, revenue: 0 };
-      prev.qty += Number(it.quantity);
-      prev.revenue += Number(it.line_total);
-      map.set(key, prev);
-    });
-    topProducts = Array.from(map.values()).sort((a,b) => b.revenue - a.revenue).slice(0,5);
+  // 7 day series (client-side rollup)
+  const { data: last7 } = await supabase
+    .from("orders")
+    .select("total_amount, created_at")
+    .gte("created_at", startOfWeek.toISOString())
+    .order("created_at");
+  const dayMap = new Map<string, number>();
+  for (const o of last7 ?? []) {
+    const d = new Date(o.created_at);
+    const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+    dayMap.set(key, (dayMap.get(key) ?? 0) + Number(o.total_amount));
   }
+  series = Array.from(dayMap.entries()).map(([day, total]) => ({ day, total }));
+
+  const { data: items } = await supabase
+    .from("order_items")
+    .select("quantity, line_total, product_id, products(name)")
+    .gte("created_at", startOfWeek.toISOString());
+  const map = new Map<string, { name: string; qty: number; revenue: number }>();
+  for (const it of (items as any[] | null) ?? []) {
+    const key = (it as any).product_id as string;
+    const prev = map.get(key) ?? {
+      name: (it as any).products?.name ?? "N/A",
+      qty: 0,
+      revenue: 0,
+    };
+    prev.qty += Number((it as any).quantity);
+    prev.revenue += Number((it as any).line_total);
+    map.set(key, prev);
+  }
+  const TOP_N = 5;
+  topProducts = Array.from(map.values())
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, TOP_N);
+}
 </script>
 
 <section class="p-4 space-y-4">

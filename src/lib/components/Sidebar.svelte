@@ -1,21 +1,50 @@
 <script lang="ts">
-  import { currentUser } from '$lib/user';
-  import { t, locale } from '$lib/i18n';
-  import { Home, ShoppingCart, UserCog, ClipboardList, Package, LogOut, BarChart3 } from '@lucide/svelte';
-  import { supabase } from '$lib/supabaseClient';
-  import { page } from '$app/stores';
+import {
+  BarChart3,
+  ClipboardList,
+  Home,
+  LogOut,
+  Moon,
+  Package,
+  ShoppingCart,
+  Sun,
+  UserCog,
+} from "@lucide/svelte";
+import { page } from "$app/stores";
+import { locale, t } from "$lib/i18n";
+import { supabase } from "$lib/supabaseClient";
+import { currentUser } from "$lib/user";
 
-  const linkBase = 'flex items-center gap-2 h-9 px-3 rounded-md text-sm transition-colors hover:bg-accent hover:text-accent-foreground';
-  const activeCls = 'bg-accent text-accent-foreground';
+const linkBase =
+  "flex items-center gap-1.5 h-8 px-2 rounded-md text-[13px] whitespace-nowrap transition-colors hover:bg-accent hover:text-accent-foreground";
+const activeCls = "bg-accent text-accent-foreground";
 
-  function isActive(path: string): boolean {
-    return $page.url.pathname.startsWith(path);
-  }
+function isActive(path: string): boolean {
+  return $page.url.pathname.startsWith(path);
+}
 
-  async function logout(): Promise<void> {
-    await supabase.auth.signOut();
-    window.location.href = '/';
-  }
+async function logout(): Promise<void> {
+  await supabase.auth.signOut();
+  window.location.href = "/";
+}
+
+let theme = $state<"light" | "dark">("dark");
+$effect(() => {
+  if (typeof window === "undefined") return;
+  const stored = window.localStorage.getItem("theme");
+  if (stored === "light" || stored === "dark")
+    theme = stored as "light" | "dark";
+  const root = document.documentElement;
+  if (theme === "dark") root.classList.add("dark");
+  else root.classList.remove("dark");
+});
+function toggleTheme() {
+  theme = theme === "dark" ? "light" : "dark";
+  const root = document.documentElement;
+  if (theme === "dark") root.classList.add("dark");
+  else root.classList.remove("dark");
+  window.localStorage.setItem("theme", theme);
+}
 </script>
 
 <aside class="w-64 fixed left-0 top-0 h-full z-30 bg-background border-r">
@@ -31,10 +60,10 @@
     <!-- Nav -->
     <nav class="flex-1 space-y-1">
       <a href="/dashboard" class={`${linkBase} ${isActive('/dashboard') ? activeCls : ''}`} aria-current={isActive('/dashboard') ? 'page' : undefined}>
-        <Home class="w-4 h-4" /> {t('nav.dashboard')}
+        <Home class="w-3.5 h-3.5" /> {t('nav.dashboard')}
       </a>
       <a href="/orders" class={`${linkBase} ${isActive('/orders') ? activeCls : ''}`} aria-current={isActive('/orders') ? 'page' : undefined}>
-        <ShoppingCart class="w-4 h-4" /> {t('nav.orders')}
+        <ShoppingCart class="w-3.5 h-3.5" /> {t('nav.orders')}
       </a>
 
       {#if $currentUser?.role === 'admin'}
@@ -42,19 +71,19 @@
           <div class="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">{t('nav.admin')}</div>
         </div>
         <a href="/admin/products" class={`${linkBase} ${isActive('/admin/products') ? activeCls : ''}`} aria-current={isActive('/admin/products') ? 'page' : undefined}>
-          <Package class="w-4 h-4" /> {t('nav.products')}
+          <Package class="w-3.5 h-3.5" /> {t('nav.products')}
         </a>
         <a href="/admin/users" class={`${linkBase} ${isActive('/admin/users') ? activeCls : ''}`} aria-current={isActive('/admin/users') ? 'page' : undefined}>
-          <UserCog class="w-4 h-4" /> {t('nav.users')}
+          <UserCog class="w-3.5 h-3.5" /> {t('nav.users')}
         </a>
         <a href="/admin/registers" class={`${linkBase} ${isActive('/admin/registers') ? activeCls : ''}`} aria-current={isActive('/admin/registers') ? 'page' : undefined}>
-          <ClipboardList class="w-4 h-4" /> {t('nav.registers')}
+          <ClipboardList class="w-3.5 h-3.5" /> {t('nav.registers')}
         </a>
         <a href="/admin/reports" class={`${linkBase} ${isActive('/admin/reports') ? activeCls : ''}`} aria-current={isActive('/admin/reports') ? 'page' : undefined}>
-          <BarChart3 class="w-4 h-4" /> {t('nav.reports')}
+          <BarChart3 class="w-3.5 h-3.5" /> {t('nav.reports')}
         </a>
         <a href="/admin/bookings" class={`${linkBase} ${isActive('/admin/bookings') ? activeCls : ''}`} aria-current={isActive('/admin/bookings') ? 'page' : undefined}>
-          <ClipboardList class="w-4 h-4" /> {t('nav.bookings')}
+          <ClipboardList class="w-3.5 h-3.5" /> {t('nav.bookings')}
         </a>
       {/if}
 
@@ -63,23 +92,36 @@
           <div class="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">{t('nav.bookings')}</div>
         </div>
         <a href="/secretary/appointments" class={`${linkBase} ${isActive('/secretary/appointments') ? activeCls : ''}`} aria-current={isActive('/secretary/appointments') ? 'page' : undefined}>
-          <ClipboardList class="w-4 h-4" /> {t('nav.appointments')}
+          <ClipboardList class="w-3.5 h-3.5" /> {t('nav.appointments')}
         </a>
         <a href="/secretary/football" class={`${linkBase} ${isActive('/secretary/football') ? activeCls : ''}`} aria-current={isActive('/secretary/football') ? 'page' : undefined}>
-          <ClipboardList class="w-4 h-4" /> {t('nav.football')}
+          <ClipboardList class="w-3.5 h-3.5" /> {t('nav.football')}
         </a>
       {/if}
     </nav>
 
     <!-- Footer -->
-    <div class="mt-6 space-y-3">
-      <select bind:value={$locale} class="w-full h-9 px-2 rounded-md border bg-background text-sm">
-        <option value="en">English</option>
-        <option value="el">Ελληνικά</option>
-      </select>
-      <button type="button" class="w-full ${linkBase} justify-start bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground" onclick={logout}>
-        <LogOut class="w-4 h-4" /> {t('nav.logout')}
-      </button>
+    <div class="mt-6">
+      <div class="flex items-center gap-1.5">
+        <div class="inline-flex items-center gap-1 rounded-md border p-0.5 h-8">
+          <button type="button" class={`${$locale==='en' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'} px-1.5 h-7 rounded text-xs`} aria-pressed={$locale==='en'} onclick={() => { locale.set('en'); }}>
+            EN
+          </button>
+          <button type="button" class={`${$locale==='el' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'} px-1.5 h-7 rounded text-xs`} aria-pressed={$locale==='el'} onclick={() => { locale.set('el'); }}>
+            EL
+          </button>
+        </div>
+        <button type="button" class="inline-flex items-center justify-center h-8 w-8 rounded-md border ${linkBase} !px-0" onclick={toggleTheme} aria-label="Toggle theme">
+          {#if theme === 'dark'}
+            <Sun class="w-3.5 h-3.5" />
+          {:else}
+            <Moon class="w-3.5 h-3.5" />
+          {/if}
+        </button>
+        <button type="button" class="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-2 rounded-md text-[13px] transition-colors bg-destructive text-white hover:bg-destructive/90" onclick={logout}>
+          <LogOut class="w-3.5 h-3.5" /> {t('nav.logout')}
+        </button>
+      </div>
     </div>
   </div>
 </aside>

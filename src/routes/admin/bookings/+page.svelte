@@ -1,24 +1,32 @@
 <script lang="ts">
-  import { currentUser, loadCurrentUser } from '$lib/user';
-  import { supabase } from '$lib/supabaseClient';
-  let appointmentsCount = $state(0);
-  let footballCount = $state(0);
+import { supabase } from "$lib/supabaseClient";
+import { currentUser, loadCurrentUser } from "$lib/user";
 
-  $effect(() => {
-    loadCurrentUser().then(() => {
-      const u = $currentUser;
-      if (!u) return (window.location.href = '/login');
-      if (u.role !== 'admin') window.location.href = '/dashboard';
-      load();
-    });
+let appointmentsCount = $state(0);
+let footballCount = $state(0);
+
+$effect(() => {
+  loadCurrentUser().then(() => {
+    const u = $currentUser;
+    if (!u) {
+      window.location.href = "/login";
+      return;
+    }
+    if (u.role !== "admin") window.location.href = "/dashboard";
+    load();
   });
+});
 
-  async function load() {
-    const { count: ac } = await supabase.from('appointments').select('*', { count: 'exact', head: true });
-    appointmentsCount = ac ?? 0;
-    const { count: fc } = await supabase.from('football_bookings').select('*', { count: 'exact', head: true });
-    footballCount = fc ?? 0;
-  }
+async function load() {
+  const { count: ac } = await supabase
+    .from("appointments")
+    .select("*", { count: "exact", head: true });
+  appointmentsCount = ac ?? 0;
+  const { count: fc } = await supabase
+    .from("football_bookings")
+    .select("*", { count: "exact", head: true });
+  footballCount = fc ?? 0;
+}
 </script>
 
 <section class="p-4 space-y-4">

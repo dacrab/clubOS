@@ -1,8 +1,13 @@
 <script lang="ts">
-  let { title, subtitle, icon, children } = $props<{ title: string; subtitle?: string; icon?: any; children?: any }>();
+const { title, subtitle, icon, children } = $props<{
+  title: string;
+  subtitle?: string;
+  icon?: any;
+  children?: any;
+}>();
 </script>
 
-<div class="flex items-center justify-between gap-3">
+<div class="flex items-center justify-between gap-4 pb-4 border-b">
   <div class="flex items-center gap-3">
     {#if icon}
       <div class="size-9 rounded-md border bg-muted flex items-center justify-center">
@@ -10,9 +15,9 @@
       </div>
     {/if}
     <div>
-      <h1 class="text-2xl font-semibold leading-tight">{title}</h1>
+      <h1 class="text-lg font-semibold tracking-tight">{title}</h1>
       {#if subtitle}
-        <p class="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
+        <p class="text-sm text-muted-foreground mt-1">{subtitle}</p>
       {/if}
     </div>
   </div>

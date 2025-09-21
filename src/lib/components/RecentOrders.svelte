@@ -1,52 +1,53 @@
 <script lang="ts">
-  import { supabase } from '$lib/supabaseClient';
-  import { DropdownMenu as DropdownMenuPrimitive } from 'bits-ui';
-  const DropdownMenu = DropdownMenuPrimitive.Root;
-  import DropdownMenuContent from '$lib/components/ui/dropdown-menu/dropdown-menu-content.svelte';
-  import DropdownMenuItem from '$lib/components/ui/dropdown-menu/dropdown-menu-item.svelte';
-  import DropdownMenuTrigger from '$lib/components/ui/dropdown-menu/dropdown-menu-trigger.svelte';
-  import Button from '$lib/components/ui/button/button.svelte';
-  import Card from '$lib/components/ui/card/card.svelte';
-  import CardContent from '$lib/components/ui/card/card-content.svelte';
-  import CardHeader from '$lib/components/ui/card/card-header.svelte';
-  import CardTitle from '$lib/components/ui/card/card-title.svelte';
-  import { t } from '$lib/i18n';
-  import { Printer, Receipt, Eye } from '@lucide/svelte';
+import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
+import { supabase } from "$lib/supabaseClient";
+import { openPrintWindow } from "$lib/utils";
 
-  const __props = $props<{ limit?: number }>();
-  let { limit = 5 } = __props;
+const DropdownMenu = DropdownMenuPrimitive.Root;
 
-  type OrderItem = {
+import { Eye, Printer, Receipt } from "@lucide/svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import {
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "$lib/components/ui/dropdown-menu";
+import { t } from "$lib/i18n";
+
+const __props = $props<{ limit?: number }>();
+const { limit = 5 } = __props;
+
+type OrderItem = {
+  id: string;
+  quantity: number;
+  unit_price: number;
+  line_total: number;
+  is_treat: boolean;
+  product: {
     id: string;
-    quantity: number;
-    unit_price: number;
-    line_total: number;
-    is_treat: boolean;
-    product: {
-      id: string;
-      name: string;
-      price: number;
-    };
+    name: string;
+    price: number;
   };
+};
 
-  type OrderDetails = {
-    id: string;
-    total_amount: number;
-    subtotal: number;
-    discount_amount: number;
-    payment_method: 'cash' | 'card' | 'treat';
-    card_discounts_applied: number;
-    created_at: string;
-    items: OrderItem[];
-  };
+type OrderDetails = {
+  id: string;
+  total_amount: number;
+  subtotal: number;
+  discount_amount: number;
+  payment_method: "cash" | "card" | "treat";
+  card_discounts_applied: number;
+  created_at: string;
+  items: OrderItem[];
+};
 
-  let orders: OrderDetails[] = $state([]);
-  let selectedOrder: OrderDetails | null = $state(null);
+let orders: OrderDetails[] = $state([]);
 
-  async function load() {
-    const { data } = await supabase
-      .from('orders')
-      .select(`
+const ORDER_ID_PREFIX_LEN = 8;
+
+async function load() {
+  const { data } = await supabase
+    .from("orders")
+    .select(`
         id,
         total_amount,
         subtotal,
@@ -67,28 +68,57 @@
           )
         )
       `)
-      .order('created_at', { ascending: false })
-      .limit(limit);
+    .order("created_at", { ascending: false })
+    .limit(limit);
 
-    orders = (data as any)?.map((order: any) => ({
+  orders =
+    (data as any)?.map((order: any) => ({
       ...order,
-      items: order.order_items?.map((item: any) => ({
-        ...item,
-        product: item.products
-      })) || []
+      items:
+        order.order_items?.map((item: any) => ({
+          ...item,
+          product: item.products,
+        })) || [],
     })) ?? [];
-  }
+}
 
-  async function printReceipt(order: OrderDetails) {
-    // Implementation for printing receipt
-    console.log('Printing receipt for order:', order.id);
-  }
+function formatMoney(v: number) {
+  return `€${Number(v).toFixed(2)}`;
+}
+function renderReceipt(order: OrderDetails) {
+  const lines = order.items
+    .map(
+      (i) => `
+    <tr>
+      <td>${i.product.name}${i.is_treat ? ' <span class="muted">(free)</span>' : ""}</td>
+      <td style="text-align:right">${formatMoney(i.line_total)}</td>
+    </tr>
+  `
+    )
+    .join("");
+  return `
+    <h1>clubOS Receipt</h1>
+    <div class="muted">#${order.id.slice(0, ORDER_ID_PREFIX_LEN)} — ${new Date(order.created_at).toLocaleString()}</div>
+    <hr />
+    <table>${lines}</table>
+    <hr />
+    <table>
+      <tr><td class="muted">Subtotal</td><td style="text-align:right" class="muted">${formatMoney(order.subtotal)}</td></tr>
+      ${order.discount_amount > 0 ? `<tr><td class="muted">Discount</td><td style="text-align:right" class="muted">- ${formatMoney(order.discount_amount)}</td></tr>` : ""}
+      <tr><td class="total">Total</td><td style="text-align:right" class="total">${formatMoney(order.total_amount)}</td></tr>
+      <tr><td class="muted">Payment</td><td style="text-align:right" class="muted">${order.payment_method}</td></tr>
+    </table>
+  `;
+}
 
-  function showOrderDetails(order: OrderDetails) {
-    selectedOrder = order;
-  }
+async function printReceipt(order: OrderDetails) {
+  const html = renderReceipt(order);
+  openPrintWindow(html);
+}
 
-  $effect(() => { load(); });
+$effect(() => {
+  load();
+});
 </script>
 
 {#if orders.length === 0}
@@ -174,7 +204,6 @@
                   <Button
                     variant="outline"
                     size="sm"
-                    onclick={() => showOrderDetails(order)}
                     class="flex-1"
                   >
                     <Receipt class="h-3 w-3 mr-1" />

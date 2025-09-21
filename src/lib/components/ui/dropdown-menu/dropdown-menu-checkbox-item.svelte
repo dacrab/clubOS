@@ -1,20 +1,20 @@
 <script lang="ts">
-	import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
-	import CheckIcon from "@lucide/svelte/icons/check";
-	import MinusIcon from "@lucide/svelte/icons/minus";
-	import { cn, type WithoutChildrenOrChild } from "$lib/utils.js";
-	import type { Snippet } from "svelte";
+import CheckIcon from "@lucide/svelte/icons/check";
+import MinusIcon from "@lucide/svelte/icons/minus";
+import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
+import type { Snippet } from "svelte";
+import { cn, type WithoutChildrenOrChild } from "$lib/utils.js";
 
-	let {
-		ref = $bindable(null),
-		checked = $bindable(false),
-		indeterminate = $bindable(false),
-		class: className,
-		children: childrenProp,
-		...restProps
-	}: WithoutChildrenOrChild<DropdownMenuPrimitive.CheckboxItemProps> & {
-		children?: Snippet;
-	} = $props();
+let {
+  ref = $bindable(null),
+  checked = $bindable(false),
+  indeterminate = $bindable(false),
+  class: className,
+  children: childrenProp,
+  ...restProps
+}: WithoutChildrenOrChild<DropdownMenuPrimitive.CheckboxItemProps> & {
+  children?: Snippet<[]>;
+} = $props();
 </script>
 
 <DropdownMenuPrimitive.CheckboxItem
@@ -23,7 +23,7 @@
 	bind:indeterminate
 	data-slot="dropdown-menu-checkbox-item"
 	class={cn(
-		"focus:bg-accent focus:text-accent-foreground outline-hidden relative flex cursor-default select-none items-center gap-2 rounded-sm py-1.5 pl-8 pr-2 text-sm data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+		"focus:outline-hidden data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground data-[state=checked]:border-accent/50 hover:bg-muted gap-2 rounded-sm border px-2 py-1.5 text-sm outline-none transition-colors",
 		className
 	)}
 	{...restProps}

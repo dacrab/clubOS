@@ -1,76 +1,99 @@
 <script lang="ts">
-  import { supabase } from '$lib/supabaseClient';
-  import { t } from '$lib/i18n';
-  import RecentOrders from '$lib/components/RecentOrders.svelte';
-  import Button from '$lib/components/ui/button/button.svelte';
-  import Card from '$lib/components/ui/card/card.svelte';
-  import CardContent from '$lib/components/ui/card/card-content.svelte';
-  import CardHeader from '$lib/components/ui/card/card-header.svelte';
-  import CardTitle from '$lib/components/ui/card/card-title.svelte';
-  import NewSaleDialog from './NewSaleDialog.svelte';
-  import { ensureOpenSession } from '$lib/register';
-  import { ShoppingCart, ReceiptText, Package } from '@lucide/svelte';
+import { Package, ReceiptText, ShoppingCart } from "@lucide/svelte";
+import RecentOrders from "$lib/components/RecentOrders.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card from "$lib/components/ui/card/card.svelte";
+import CardContent from "$lib/components/ui/card/card-content.svelte";
+import CardHeader from "$lib/components/ui/card/card-header.svelte";
+import CardTitle from "$lib/components/ui/card/card-title.svelte";
+import { t } from "$lib/i18n";
+import { ensureOpenSession } from "$lib/register";
+import { supabase } from "$lib/supabaseClient";
+import NewSaleDialog from "./NewSaleDialog.svelte";
 
-  let showDialog = $state(false);
-  let products: Array<{ id: string; name: string; price: number } > = $state([]);
-  let todayTotal = $state(0);
-  let ordersCount = $state(0);
+let showDialog = $state(false);
+let products: Array<{ id: string; name: string; price: number }> = $state([]);
+let todayTotal = $state(0);
+let ordersCount = $state(0);
 
-  $effect(() => {
-    loadStats();
-  });
+$effect(() => {
+  loadStats();
+});
 
-  async function loadStats() {
-    const startOfDay = new Date();
-    startOfDay.setHours(0,0,0,0);
-    const { data: salesData } = await supabase.from('orders').select('total_amount').gte('created_at', startOfDay.toISOString());
-    todayTotal = (salesData ?? []).reduce((sum: number, r: any) => sum + Number(r.total_amount), 0);
+async function loadStats() {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const { data: salesData } = await supabase
+    .from("orders")
+    .select("total_amount")
+    .gte("created_at", startOfDay.toISOString());
+  todayTotal = (salesData ?? []).reduce(
+    (sum: number, r: any) => sum + Number(r.total_amount),
+    0
+  );
 
-    const { count } = await supabase.from('orders').select('*', { count: 'exact', head: true });
-    ordersCount = count ?? 0;
+  const { count } = await supabase
+    .from("orders")
+    .select("*", { count: "exact", head: true });
+  ordersCount = count ?? 0;
+}
+
+async function loadProducts() {
+  const { data, error } = await supabase
+    .from("products")
+    .select("id,name,price,category_id,image_url")
+    .order("name");
+  if (!error && data) products = data as any;
+}
+
+function onOpenChange(next: boolean) {
+  showDialog = next;
+  if (next && products.length === 0) loadProducts();
+}
+
+async function submitSaleNew(payload: {
+  items: Array<{ id: string; name: string; price: number; is_treat?: boolean }>;
+  paymentMethod: "cash";
+  couponCount: number;
+}) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    window.location.href = "/login";
+    return;
   }
-
-  async function loadProducts() {
-    const { data, error } = await supabase.from('products').select('id,name,price').order('name');
-    if (!error && data) products = data as any;
-  }
-
-  function onOpenChange(next: boolean) {
-    showDialog = next;
-    if (next && products.length === 0) loadProducts();
-  }
-
-  async function submitSale(payload: { items: Array<{ id: string; name: string; price: number; is_treat?: boolean }>, paymentMethod: 'cash'|'card', coupon: boolean }) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { window.location.href = '/login'; return; }
-    const sessionId = await ensureOpenSession(supabase, user.id);
-    const subtotal = payload.items.reduce((acc, i) => acc + (i.is_treat ? 0 : Number(i.price)), 0);
-    const discount_amount = payload.coupon ? 2 : 0;
-    const total_amount = Math.max(0, subtotal - discount_amount);
-    const { data: order, error: orderErr } = await supabase
-      .from('orders')
-      .insert({
-        session_id: sessionId,
-        subtotal,
-        discount_amount,
-        total_amount,
-        payment_method: payload.paymentMethod,
-        card_discounts_applied: 0,
-        created_by: user?.id
-      })
-      .select()
-      .single();
-    if (orderErr) return;
-    const items = payload.items.map((c) => ({
-      order_id: order.id,
-      product_id: c.id,
-      quantity: 1,
-      unit_price: Number(c.price),
-      line_total: c.is_treat ? 0 : Number(c.price),
-      is_treat: !!c.is_treat,
-    }));
-    await supabase.from('order_items').insert(items);
-  }
+  const sessionId = await ensureOpenSession(supabase, user.id);
+  const subtotal = payload.items.reduce(
+    (acc, i) => acc + (i.is_treat ? 0 : Number(i.price)),
+    0
+  );
+  const discountAmount = Math.max(0, payload.couponCount) * 2;
+  const totalAmount = Math.max(0, subtotal - discountAmount);
+  const { data: order, error: orderErr } = await supabase
+    .from("orders")
+    .insert({
+      session_id: sessionId,
+      subtotal,
+      discount_amount: discountAmount,
+      total_amount: totalAmount,
+      payment_method: "cash",
+      card_discounts_applied: 0,
+      created_by: user?.id,
+    })
+    .select()
+    .single();
+  if (orderErr) return;
+  const items = payload.items.map((c) => ({
+    order_id: order.id,
+    product_id: c.id,
+    quantity: 1,
+    unit_price: Number(c.price),
+    line_total: c.is_treat ? 0 : Number(c.price),
+    is_treat: !!c.is_treat,
+  }));
+  await supabase.from("order_items").insert(items);
+}
 </script>
 
 <section class="space-y-8">
@@ -84,7 +107,7 @@
       <ShoppingCart class="mr-2 h-5 w-5" />
       {t('orders.new')}
     </Button>
-    <NewSaleDialog bind:open={showDialog} {products} onSubmit={submitSale} />
+    <NewSaleDialog bind:open={showDialog} {products} onSubmit={submitSaleNew} />
   </div>
 
   <!-- Quick Stats -->
