@@ -1,23 +1,17 @@
 <script lang="ts">
 import PageHeader from "$lib/components/common/PageHeader.svelte";
 import { Button } from "$lib/components/ui/button";
-import Card from "$lib/components/ui/card/card.svelte";
-import Table from "$lib/components/ui/table/table.svelte";
-import TableBody from "$lib/components/ui/table/table-body.svelte";
-import TableCell from "$lib/components/ui/table/table-cell.svelte";
-import TableHead from "$lib/components/ui/table/table-head.svelte";
-import TableHeader from "$lib/components/ui/table/table-header.svelte";
-import TableRow from "$lib/components/ui/table/table-row.svelte";
+import { Card } from "$lib/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$lib/components/ui/table";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabaseClient";
 import { loadCurrentUser } from "$lib/user";
-import ResetPasswordDialog from "./ResetPasswordDialog.svelte";
 import UserDialog from "./UserDialog.svelte";
+import { Pencil, Shield, User as UserIcon } from "@lucide/svelte";
 
 let users = $state<any[]>([]);
 let showUserDialog = $state(false);
 let selectedUser = $state<any>(null);
-let showReset = $state(false);
 
 $effect(() => {
   loadCurrentUser();
@@ -34,10 +28,6 @@ function editUser(user: any) {
   showUserDialog = true;
 }
 
-function resetPassword(user: any) {
-  selectedUser = user;
-  showReset = true;
-}
 
 async function loadUsers() {
   const { data } = await supabase.from("users").select("*");
@@ -62,14 +52,9 @@ async function onSaveUser(user: any) {
   await loadUsers();
 }
 
-async function onResetPassword() {
-  // TODO: supabase.functions.invoke('admin_set_password', { body: { user_id: selectedUser.id, password: newPassword } })
-  await loadUsers();
-}
 </script>
 
 <UserDialog bind:open={showUserDialog} user={selectedUser} onSave={onSaveUser} />
-<ResetPasswordDialog bind:open={showReset} onReset={onResetPassword} />
 
 <section class="space-y-4">
   <PageHeader title={t('pages.users.title')}>
@@ -80,21 +65,30 @@ async function onResetPassword() {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>{t('common.username')}</TableHead>
-          <TableHead>{t('common.role')}</TableHead>
-          <TableHead>{t('common.active')}</TableHead>
-          <TableHead class="text-right">{t('common.actions')}</TableHead>
+          <TableHead class="text-base">{t('common.username')}</TableHead>
+          <TableHead class="text-base">{t('common.role')}</TableHead>
+          <TableHead class="text-right text-base">{t('common.actions')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {#each users as user}
-          <TableRow>
-            <TableCell>{user.username}</TableCell>
-            <TableCell>{user.role}</TableCell>
-            <TableCell>{user.active ? 'Yes' : 'No'}</TableCell>
-            <TableCell class="text-right space-x-2">
-              <Button variant="ghost" size="sm" onclick={() => editUser(user)}>{t('common.edit')}</Button>
-              <Button variant="outline" size="sm" onclick={() => resetPassword(user)}>{t('common.password')}</Button>
+          <TableRow class="text-sm md:text-base">
+            <TableCell>
+              <div class="flex items-center gap-2">
+                <UserIcon class="w-4 h-4 text-muted-foreground" />
+                <span class="truncate max-w-[260px]">{user.username}</span>
+              </div>
+            </TableCell>
+            <TableCell class="capitalize">
+              <div class="flex items-center gap-2">
+                <Shield class="w-4 h-4 text-muted-foreground" />
+                {user.role}
+              </div>
+            </TableCell>
+            <TableCell class="text-right">
+              <Button variant="ghost" size="icon" onclick={() => editUser(user)} aria-label={t('common.edit')}>
+                <Pencil class="w-4 h-4" />
+              </Button>
             </TableCell>
           </TableRow>
         {/each}

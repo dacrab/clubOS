@@ -3,11 +3,8 @@ import { Dialog as DialogPrimitive } from "bits-ui";
 
 const Dialog = DialogPrimitive.Root;
 
-import Button from "$lib/components/ui/button/button.svelte";
-import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
-import DialogFooter from "$lib/components/ui/dialog/dialog-footer.svelte";
-import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
-import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
+import { Button } from "$lib/components/ui/button";
+import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "$lib/components/ui/dialog";
 import { Input } from "$lib/components/ui/input";
 import { Label } from "$lib/components/ui/label";
 import {
@@ -16,13 +13,9 @@ import {
   SelectItem,
   SelectTrigger,
 } from "$lib/components/ui/select";
-import Table from "$lib/components/ui/table/table.svelte";
-import TableBody from "$lib/components/ui/table/table-body.svelte";
-import TableCell from "$lib/components/ui/table/table-cell.svelte";
-import TableHead from "$lib/components/ui/table/table-head.svelte";
-import TableHeader from "$lib/components/ui/table/table-header.svelte";
-import TableRow from "$lib/components/ui/table/table-row.svelte";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$lib/components/ui/table";
 import { supabase } from "$lib/supabaseClient";
+import { t } from "$lib/i18n";
 
 export type Category = {
   id: string;
@@ -99,22 +92,26 @@ $effect(() => {
 <Dialog bind:open={open}>
   <DialogContent class="sm:max-w-[720px]">
     <DialogHeader>
-      <DialogTitle>Manage Categories</DialogTitle>
+      <DialogTitle>{t('pages.products.manageCategories')}</DialogTitle>
     </DialogHeader>
     <div class="grid gap-4 py-2">
       <div class="grid grid-cols-4 items-center gap-3">
-        <Label class="text-right">Name</Label>
+        <Label class="text-right">{t('common.name')}</Label>
         <Input class="col-span-3" bind:value={form.name} />
       </div>
       <div class="grid grid-cols-4 items-center gap-3">
-        <Label class="text-right">Description</Label>
+        <Label class="text-right">{t('common.description')}</Label>
         <Input class="col-span-3" bind:value={form.description} />
       </div>
       <div class="grid grid-cols-4 items-center gap-3">
-        <Label class="text-right">Parent</Label>
+        <Label class="text-right">{t('common.parent')}</Label>
         <div class="col-span-3">
           <Select bind:value={form.parent_id} type="single">
-            <SelectTrigger class="w-full" />
+            <SelectTrigger class="w-full">
+              <span data-slot="select-value" class="truncate">
+                {(categories.find((x: Category) => x.id === form.parent_id)?.name) || '—'}
+              </span>
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="" label="—" />
               {#each categories as c}
@@ -125,17 +122,17 @@ $effect(() => {
         </div>
       </div>
       <div class="flex gap-2 justify-end">
-        <Button variant="outline" onclick={clear}>Clear</Button>
-        <Button onclick={save}>{form.id ? 'Save' : 'Add'}</Button>
+        <Button variant="outline" onclick={clear}>{t('common.clear')}</Button>
+        <Button onclick={save}>{form.id ? t('common.save') : t('common.add')}</Button>
       </div>
       <div class="border-t pt-3">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Parent</TableHead>
-              <TableHead class="text-right">Actions</TableHead>
+              <TableHead>{t('common.name')}</TableHead>
+              <TableHead>{t('common.description')}</TableHead>
+              <TableHead>{t('common.parent')}</TableHead>
+              <TableHead class="text-right">{t('common.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -145,8 +142,8 @@ $effect(() => {
                 <TableCell class="truncate max-w-[260px]">{c.description}</TableCell>
                 <TableCell>{(categories.find((x: Category) => x.id === c.parent_id)?.name) || '—'}</TableCell>
                 <TableCell class="text-right space-x-2">
-                  <Button size="sm" variant="outline" onclick={() => edit(c)}>Edit</Button>
-                  <Button size="sm" variant="destructive" onclick={() => remove(c.id)}>Delete</Button>
+                  <Button size="sm" variant="outline" onclick={() => edit(c)}>{t('common.edit')}</Button>
+                  <Button size="sm" variant="destructive" onclick={() => remove(c.id)}>{t('common.delete')}</Button>
                 </TableCell>
               </TableRow>
             {/each}

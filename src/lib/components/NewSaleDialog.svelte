@@ -1,14 +1,11 @@
 <script lang="ts">
 import { Dialog as DialogPrimitive } from "bits-ui";
-import Button from "$lib/components/ui/button/button.svelte";
+import { Button } from "$lib/components/ui/button";
 
 const DialogRoot = DialogPrimitive.Root;
 
 import { Filter, Minus, Plus, ReceiptText, ShoppingCart } from "@lucide/svelte";
-import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
-import DialogFooter from "$lib/components/ui/dialog/dialog-footer.svelte";
-import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
-import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
+import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "$lib/components/ui/dialog";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabaseClient";
 
@@ -41,14 +38,6 @@ let selectedCategory = $state<string | null>(null);
 let categories: Array<{ id: string; name: string; parent_id: string | null }> =
   $state([]);
 let internalProducts: Array<Product> = $state([]);
-let productsPane: HTMLElement | null = $state(null);
-let scrollTop = $state(0);
-let viewportHeight = $state(0);
-const LG_COLUMNS = 4;
-const MD_COLUMNS = 3;
-const SM_COLUMNS = 2;
-let colCount = $state(LG_COLUMNS);
-const CARD_ROW_HEIGHT = 152; // px (card height + vertical gap approximation)
 
 function addToCart(p: { id: string; name: string; price: number }) {
   cart = [...cart, { ...p }];
@@ -135,121 +124,78 @@ $effect(() => {
   }
 });
 
-function updateLayoutMetrics() {
-  if (!productsPane) return;
-  viewportHeight = productsPane.clientHeight;
-  const w = productsPane.clientWidth;
-  const BREAKPOINT_LG = 1024;
-  const BREAKPOINT_MD = 768;
-  if (w >= BREAKPOINT_LG) {
-    colCount = LG_COLUMNS;
-  } else if (w >= BREAKPOINT_MD) {
-    colCount = MD_COLUMNS;
-  } else {
-    colCount = SM_COLUMNS;
-  }
-}
-function onProductsScroll() {
-  scrollTop = productsPane?.scrollTop ?? 0;
-}
-$effect(() => {
-  if (!open) return;
-  updateLayoutMetrics();
-  const onResize = () => updateLayoutMetrics();
-  window.addEventListener("resize", onResize);
-  return () => window.removeEventListener("resize", onResize);
-});
-
-const rowCount = $derived(Math.ceil(filteredProducts.length / colCount));
-const totalHeight = $derived(rowCount * CARD_ROW_HEIGHT);
-const startRow = $derived(
-  Math.max(0, Math.floor(scrollTop / CARD_ROW_HEIGHT) - 2)
-);
-const endRow = $derived(
-  Math.min(
-    rowCount,
-    Math.ceil((scrollTop + viewportHeight) / CARD_ROW_HEIGHT) + 2
-  )
-);
-const startIndex = $derived(startRow * colCount);
-const endIndex = $derived(Math.min(filteredProducts.length, endRow * colCount));
-const visibleProducts = $derived(filteredProducts.slice(startIndex, endIndex));
-const translateY = $derived(startRow * CARD_ROW_HEIGHT);
+// Simplified rendering without virtualization; CSS handles responsiveness
 </script>
 
 <DialogRoot bind:open={open}>
-  <DialogContent size="fullscreen" class="pb-2">
-    <DialogHeader class="pb-4">
+  <DialogContent size="fullscreen" class="p-0 overflow-hidden max-h-[90vh] flex flex-col">
+    <DialogHeader class="p-4 pb-2 flex-none">
       <DialogTitle class="text-2xl font-bold">{t('orders.new')}</DialogTitle>
     </DialogHeader>
 
-    <div class="grid grid-cols-[220px_1fr_360px] gap-4 h-[calc(90vh-5rem)]">
+    <div class="grid grid-cols-1 md:grid-cols-[220px_1fr_360px] gap-4 flex-1 min-h-0 p-4 pt-0 overflow-hidden">
       <!-- Categories -->
-      <aside class="border rounded-md p-3 overflow-auto min-w-[220px]">
+      <aside class="border rounded-md p-3 overflow-auto min-w-[220px] min-h-0">
         <h3 class="text-sm font-semibold mb-2 inline-flex items-center gap-2"><Filter class="w-4 h-4" /> {t('orders.categories')}</h3>
         <button class={`w-full text-left px-2 py-1 rounded ${!selectedCategory ? 'bg-accent text-accent-foreground' : ''}`} onclick={() => selectedCategory = null}>{t('orders.all')}</button>
         {#each categories.filter((c) => !c.parent_id) as cat}
           <div class="mt-2">
-            <button class={`w-full text-left px-2 py-1 rounded ${selectedCategory === cat.id ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'}`} onclick={() => selectedCategory = cat.id}>{cat.name}</button>
+            <button class={`w-full text-left px-2 py-1 rounded ${selectedCategory === cat.id ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'}`} onclick={() => selectedCategory = cat.id}><span class="block truncate">{cat.name}</span></button>
             {#each categories.filter((c) => c.parent_id === cat.id) as sub}
-              <button class={`ml-3 mt-1 w-[calc(100%-0.75rem)] text-left px-2 py-1 rounded ${selectedCategory === sub.id ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'}`} onclick={() => selectedCategory = sub.id}>{sub.name}</button>
+              <button class={`ml-3 mt-1 w-[calc(100%-0.75rem)] text-left px-2 py-1 rounded ${selectedCategory === sub.id ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'}`} onclick={() => selectedCategory = sub.id}><span class="block truncate">{sub.name}</span></button>
             {/each}
           </div>
         {/each}
       </aside>
 
       <!-- Products Grid -->
-      <section class="border rounded-md p-3 min-w-0 overflow-auto" bind:this={productsPane} onscroll={onProductsScroll}>
-        <div class="relative" style={`height:${totalHeight}px`}>
-          <div class="absolute left-0 right-0" style={`transform: translateY(${translateY}px)`}>
-            <div class={`grid gap-3 content-start ${colCount === 4 ? 'grid-cols-4' : colCount === 3 ? 'grid-cols-3' : 'grid-cols-2'} auto-rows-[minmax(120px,1fr)]`}>
-              {#each visibleProducts as p}
-                <button class="border rounded-md p-0 text-left hover:bg-accent/50 focus:outline-none focus:ring-2 focus:ring-primary overflow-hidden" onclick={() => addToCart(p)}>
-                  {#if p.image_url}
-                    <div class="h-24 w-full bg-muted/50 flex items-center justify-center">
-                      <img src={p.image_url} alt={p.name} class="h-full w-full object-cover" />
-                    </div>
-                    <div class="p-3">
-                      <div class="font-medium truncate">{p.name}</div>
-                      <div class="text-sm text-muted-foreground">€{Number(p.price).toFixed(2)}</div>
-                    </div>
-                  {:else}
-                    <div class="p-3 h-full grid content-between">
-                      <div class="font-medium truncate">{p.name}</div>
-                      <div class="text-sm text-muted-foreground">€{Number(p.price).toFixed(2)}</div>
-                    </div>
-                  {/if}
-                </button>
-              {/each}
-            </div>
-          </div>
+      <section class="border rounded-md p-3 min-w-0 overflow-auto min-h-0">
+        <div class="grid gap-3 content-start grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-[minmax(120px,1fr)]">
+          {#each filteredProducts as p}
+            <button class="border rounded-md p-0 text-left hover:bg-accent/50 focus:outline-none focus:ring-2 focus:ring-primary overflow-hidden" onclick={() => addToCart(p)}>
+              {#if p.image_url}
+                <div class="h-24 w-full bg-muted/50 flex items-center justify-center">
+                  <img src={p.image_url} alt={p.name} class="h-full w-full object-cover" />
+                </div>
+                <div class="p-3">
+                  <div class="font-medium truncate">{p.name}</div>
+                  <div class="text-sm text-muted-foreground">€{Number(p.price).toFixed(2)}</div>
+                </div>
+              {:else}
+                <div class="p-3 h-full grid content-between">
+                  <div class="font-medium truncate">{p.name}</div>
+                  <div class="text-sm text-muted-foreground">€{Number(p.price).toFixed(2)}</div>
+                </div>
+              {/if}
+            </button>
+          {/each}
         </div>
       </section>
 
       <!-- Order Summary -->
-      <aside class="border rounded-md p-3 flex flex-col min-w-[340px] overflow-auto">
+      <aside class="border rounded-md p-3 flex flex-col min-w-[340px] overflow-auto min-h-0">
         <div class="flex items-center justify-between mb-2">
-          <h3 class="font-semibold text-lg">Cart ({cart.length})</h3>
+          <h3 class="font-semibold text-lg">{t('orders.cart')} ({cart.length})</h3>
           {#if cart.length > 0}
-            <Button variant="ghost" size="sm" onclick={clearCart}>Clear</Button>
+            <Button variant="ghost" size="sm" onclick={clearCart}>{t('orders.clear')}</Button>
           {/if}
         </div>
         <div class="flex-1 overflow-auto space-y-2">
           {#if cart.length === 0}
             <div class="text-center py-8 text-muted-foreground">
               <ShoppingCart class="w-10 h-10 mx-auto mb-2 opacity-50" />
-              <p>Your cart is empty</p>
+              <p>{t('orders.emptyCart')}</p>
             </div>
           {:else}
             {#each cart as item, i}
-              <div class="flex items-center justify-between p-2 rounded bg-muted/50">
+              <div class="flex items-center justify-between p-2 rounded bg-muted/50 overflow-hidden">
                 <div class="min-w-0">
                   <div class="font-medium truncate">{item.name}</div>
                   <div class="text-xs text-muted-foreground">€{item.is_treat ? '0.00' : Number(item.price).toFixed(2)}</div>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 shrink-0">
                   <Button variant={item.is_treat ? 'default' : 'outline'} size="sm" onclick={() => toggleTreat(i)}>
-                    {item.is_treat ? 'Treat' : 'Free'}
+                    {item.is_treat ? t('orders.treat') : t('orders.free')}
                   </Button>
                   <Button variant="ghost" size="icon" onclick={() => removeFromCart(i)}>✕</Button>
                 </div>
@@ -285,3 +231,5 @@ const translateY = $derived(startRow * CARD_ROW_HEIGHT);
     </div>
   </DialogContent>
 </DialogRoot>
+
+

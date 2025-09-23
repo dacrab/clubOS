@@ -18,15 +18,10 @@ import {
 } from "@lucide/svelte";
 import { toast } from "svelte-sonner";
 import LowStockCard from "$lib/components/LowStockCard.svelte";
-import Button from "$lib/components/ui/button/button.svelte";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "$lib/components/ui/card";
+import { Button } from "$lib/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
 import { t } from "$lib/i18n";
-import NewSaleDialog from "../orders/NewSaleDialog.svelte";
+import NewSaleDialog from "$lib/components/NewSaleDialog.svelte";
 
 let ordersCount = $state(0);
 let activeUsers = $state(0);
@@ -167,7 +162,7 @@ async function createSale(payload: {
       </div>
       <div>
         <h1 class="text-2xl font-semibold">{t('dashboard.admin.title')}</h1>
-        <p class="text-muted-foreground">Overview of your business</p>
+        <p class="text-muted-foreground">{t('pages.admin.overview')}</p>
       </div>
     </div>
     <Button onclick={() => (showSale = true)} size="lg" class="gap-2">
@@ -214,7 +209,7 @@ async function createSale(payload: {
           </div>
           <div>
             <p class="text-2xl font-semibold">{activeUsers}</p>
-            <p class="text-sm text-muted-foreground">Active Users</p>
+            <p class="text-sm text-muted-foreground">{t('pages.admin.activeUsers')}</p>
           </div>
         </div>
       </CardContent>
@@ -228,7 +223,7 @@ async function createSale(payload: {
           </div>
           <div>
             <p class="text-2xl font-semibold">{pendingTasks}</p>
-            <p class="text-sm text-muted-foreground">Pending Tasks</p>
+            <p class="text-sm text-muted-foreground">{t('pages.admin.pendingTasks')}</p>
           </div>
         </div>
       </CardContent>
@@ -243,8 +238,8 @@ async function createSale(payload: {
         <CardHeader>
           <div class="flex items-center justify-between">
             <CardTitle>{t('orders.recent')}</CardTitle>
-            <Button variant="ghost" size="sm" href="/admin/reports">
-              View All
+            <Button variant="ghost" size="sm" href="/admin/orders">
+              {t('common.viewAll')}
             </Button>
           </div>
         </CardHeader>
@@ -277,10 +272,7 @@ async function createSale(payload: {
             <ClipboardList class="mr-2 h-4 w-4" />
             {t('dashboard.admin.manageRegisters')}
           </Button>
-          <Button variant="ghost" href="/admin/reports" class="w-full justify-start">
-            <BarChart3 class="mr-2 h-4 w-4" />
-            {t('nav.reports')}
-          </Button>
+          
           <div class="pt-2 border-t">
             <Button onclick={onCloseRegister} disabled={closing} variant="destructive" class="w-full justify-start">
               <LogOut class="mr-2 h-4 w-4" />

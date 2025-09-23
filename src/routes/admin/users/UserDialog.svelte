@@ -4,10 +4,7 @@ import { Button } from "$lib/components/ui/button";
 
 const Dialog = DialogPrimitive.Root;
 
-import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
-import DialogFooter from "$lib/components/ui/dialog/dialog-footer.svelte";
-import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
-import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
+import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "$lib/components/ui/dialog";
 import { Input } from "$lib/components/ui/input";
 import { Label } from "$lib/components/ui/label";
 import {
@@ -16,7 +13,6 @@ import {
   SelectItem,
   SelectTrigger,
 } from "$lib/components/ui/select";
-import Switch from "$lib/components/ui/switch/switch.svelte";
 import { t } from "$lib/i18n";
 
 let {
@@ -63,30 +59,26 @@ async function save() {
     </DialogHeader>
     <div class="grid gap-4 py-2">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="grid gap-2">
+        <div class="grid gap-1.5">
           <Label for="username">{t('common.username')}</Label>
-          <Input id="username" bind:value={form.username} />
+          <Input id="username" bind:value={form.username} placeholder={t('pages.users.usernamePlaceholder')} />
         </div>
-        <div class="grid gap-2">
+        <div class="grid gap-1.5">
           <Label for="password">{t('common.password')}</Label>
-          <Input id="password" type="password" bind:value={form.password} placeholder="Leave blank to keep unchanged" />
+          <Input id="password" type="password" bind:value={form.password} placeholder={t('pages.users.passwordOptionalPlaceholder')} />
         </div>
-        <div class="grid gap-2">
+        <div class="grid gap-1.5 sm:col-span-2">
           <Label>{t('common.role')}</Label>
           <Select bind:value={form.role} type="single">
-            <SelectTrigger class="w-full" />
+            <SelectTrigger class="w-full">
+              <span data-slot="select-value" class="truncate capitalize">{form.role}</span>
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="admin" label="Admin" />
               <SelectItem value="staff" label="Staff" />
               <SelectItem value="secretary" label="Secretary" />
             </SelectContent>
           </Select>
-        </div>
-        <div class="grid gap-2">
-          <Label for="active">{t('common.active')}</Label>
-          <div class="h-9 flex items-center">
-            <Switch bind:checked={form.active} id="active" />
-          </div>
         </div>
       </div>
     </div>

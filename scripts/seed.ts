@@ -236,11 +236,14 @@ async function seedOrders(
   const croissant = products.find((p) => p.name === "Κρουασάν");
 
   // Create order
-  const subtotal =
-    Number(espresso?.price ?? 0) +
-    Number(chocolate?.price ?? 0) +
-    Number(croissant?.price ?? 0);
-  const discountAmount = 0;
+  // Subtotal is full value of items; treat shows original price but is discounted to free
+  const espressoPrice = Number(espresso?.price ?? 0);
+  const chocolatePrice = Number(chocolate?.price ?? 0);
+  const croissantPrice = Number(croissant?.price ?? 0);
+  const subtotal = espressoPrice + chocolatePrice + croissantPrice;
+  const couponCount = 0;
+  const treatDiscount = espressoPrice; // espresso is treated
+  const discountAmount = couponCount * 2 + treatDiscount;
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
@@ -249,8 +252,7 @@ async function seedOrders(
       subtotal,
       discount_amount: discountAmount,
       total_amount: subtotal - discountAmount,
-      payment_method: "cash",
-      card_discounts_applied: 0,
+      coupon_count: couponCount,
       created_by: staffId,
     })
     .select()
@@ -267,7 +269,7 @@ async function seedOrders(
       product_id: espresso?.id,
       quantity: 1,
       unit_price: Number(espresso?.price ?? 0),
-      line_total: Number(espresso?.price ?? 0) * 1,
+      line_total: 0,
       is_treat: true,
     },
     {

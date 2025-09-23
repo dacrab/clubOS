@@ -3,12 +3,11 @@ import "../app.css";
 import { Toaster } from "svelte-sonner";
 import { page } from "$app/stores";
 import favicon from "$lib/assets/favicon.svg";
-import AppHeader from "$lib/components/common/AppHeader.svelte";
 import { loadCurrentUser } from "$lib/user";
 
 const { children } = $props();
 
-let theme = $state<"light" | "dark" | "system">("dark");
+let theme = $state<"light" | "dark" | "system">("system");
 const isLoginPage = $derived($page.url.pathname === "/");
 let SidebarComp = $state<any>(null);
 
@@ -25,8 +24,8 @@ $effect(() => {
     const stored = window.localStorage.getItem("theme");
     if (stored === "light" || stored === "dark" || stored === "system") {
       theme = stored as "light" | "dark" | "system";
-    } else if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
-      theme = "dark";
+    } else {
+      theme = "system";
     }
 
     const root = document.documentElement;
@@ -54,9 +53,6 @@ $effect(() => {
 
 <div class="min-h-screen bg-background">
     <Toaster richColors position="top-center" />
-		{#if !isLoginPage}
-			<AppHeader />
-		{/if}
     <div class="flex min-h-screen">
 			{#if !isLoginPage}
 				{#if SidebarComp}

@@ -16,6 +16,4 @@ $effect(() => {
 });
 </script>
 
-<p>Loading dashboard…</p>
-
 

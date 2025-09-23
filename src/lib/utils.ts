@@ -51,3 +51,16 @@ export function openPrintWindow(html: string): void {
     }
   }, printDelayMs);
 }
+
+// Consistent date-time formatting: DD/MM/YY HH:mm (24h)
+export function formatDateTime(value: string | number | Date): string {
+  const d = new Date(value);
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(d);
+}

@@ -1,7 +1,4 @@
 <script lang="ts">
-import DataTable, {
-  type Column,
-} from "$lib/components/common/DataTable.svelte";
 import PageHeader from "$lib/components/common/PageHeader.svelte";
 import SearchBar from "$lib/components/common/SearchBar.svelte";
 import { Button } from "$lib/components/ui/button";
@@ -20,6 +17,7 @@ import { currentUser, loadCurrentUser } from "$lib/user";
 import AddProductDialog from "./AddProductDialog.svelte";
 import EditProductDialog from "./EditProductDialog.svelte";
 import ManageCategoriesDialog from "./ManageCategoriesDialog.svelte";
+import { Pencil } from "@lucide/svelte";
 
 type Product = {
   id: string;
@@ -129,99 +127,62 @@ function filtered() {
   return products.filter((p) => p.name.toLowerCase().includes(s));
 }
 
-const columns: Array<Column<Product>> = [
-  {
-    key: "name",
-    header: t("common.name"),
-    cell: (p) => {
-      const LOW_STOCK_THRESHOLD = 3;
-      const isLow =
-        p.stock_quantity !== -1 && p.stock_quantity <= LOW_STOCK_THRESHOLD;
-      return `${p.name}${isLow ? "  • low" : ""}`;
-    },
-  },
-  {
-    key: "price",
-    header: t("common.price"),
-    cell: (p) => `€${Number(p.price).toFixed(2)}`,
-    align: "right",
-  },
-  {
-    key: "stock_quantity",
-    header: t("common.stock"),
-    cell: (p) => (p.stock_quantity === -1 ? "∞" : String(p.stock_quantity)),
-    align: "center",
-  },
-  {
-    key: "image_url",
-    header: t("common.image"),
-    cell: (p) =>
-      p.image_url
-        ? `<img src="${p.image_url}" alt="${p.name}" class="h-10 w-10 object-cover rounded" />`
-        : "",
-    align: "center",
-  },
-  {
-    key: "id",
-    header: t("common.actions"),
-    cell: (p) =>
-      ({
-        $$render() {
-          return `<div class="text-right"><button class="inline-flex items-center justify-center rounded-md border px-3 py-1 text-sm hover:bg-accent" onclick="__edit('${p.id}')">${t(
-            "common.edit"
-          )}</button></div>`;
-        },
-      }) as any,
-    align: "right",
-  },
-];
-
-// Bridge function for DataTable action rendering (client only)
-if (typeof window !== "undefined") {
-  (window as any).__edit = (id: string) => {
-    const row = products.find((x) => x.id === id) || null;
-    selected = row;
-    showEdit = !!row;
-  };
+function openEdit(p: Product) {
+  selected = p;
+  showEdit = true;
 }
 </script>
 
 <section class="space-y-4">
   <PageHeader title={t('pages.products.title')}>
     <Button variant="outline" onclick={() => showAdd = true}>{t('pages.products.add')}</Button>
-    <Button variant="ghost" onclick={() => (showCategories = true)}>Manage Categories</Button>
+    <Button variant="ghost" onclick={() => (showCategories = true)}>{t('pages.products.manageCategories')}</Button>
   </PageHeader>
 
   <div class="flex items-center gap-2">
     <SearchBar bind:value={search} placeholder={t('orders.search')} />
   </div>
 
-  <!-- Demonstrate Table API using filtered preview (keeps DataTable as primary) -->
-  {#if filtered().length > 0}
-    <Card>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t('common.name')}</TableHead>
-            <TableHead class="text-right">{t('common.price')}</TableHead>
-            <TableHead class="text-center">{t('common.stock')}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {#each filtered().slice(0, 3) as p}
-            <TableRow>
-              <TableCell>{p.name}</TableCell>
-              <TableCell class="text-right">€{Number(p.price).toFixed(2)}</TableCell>
-              <TableCell class="text-center">{p.stock_quantity === -1 ? '∞' : String(p.stock_quantity)}</TableCell>
-            </TableRow>
-          {/each}
-        </TableBody>
-      </Table>
-    </Card>
-  {/if}
-
   <Card>
-    <DataTable {columns} rows={filtered()} />
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead class="w-[72px] text-base">{t('common.image')}</TableHead>
+          <TableHead class="text-base">{t('common.name')}</TableHead>
+          <TableHead class="text-right text-base">{t('common.price')}</TableHead>
+          <TableHead class="text-center text-base">{t('common.stock')}</TableHead>
+          <TableHead class="text-right text-base">{t('common.actions')}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {#each filtered() as p}
+          <TableRow class="text-sm md:text-base">
+            <TableCell>
+              {#if p.image_url}
+                <img src={p.image_url} alt={p.name} class="h-10 w-10 object-cover rounded" />
+              {:else}
+                <div class="h-10 w-10 rounded bg-muted grid place-items-center text-xs">—</div>
+              {/if}
+            </TableCell>
+            <TableCell>
+              <div class="truncate max-w-[360px]">
+                {p.name}
+                {#if p.stock_quantity !== -1 && p.stock_quantity <= 3}
+                  <span class="text-xs text-muted-foreground"> • {t('inventory.low')}</span>
+                {/if}
+              </div>
+            </TableCell>
+            <TableCell class="text-right">€{Number(p.price).toFixed(2)}</TableCell>
+            <TableCell class="text-center">{p.stock_quantity === -1 ? '∞' : String(p.stock_quantity)}</TableCell>
+            <TableCell class="text-right">
+              <Button variant="ghost" size="icon" onclick={() => openEdit(p)} aria-label={t('common.edit')}>
+                <Pencil class="w-4 h-4" />
+              </Button>
+            </TableCell>
+          </TableRow>
+        {/each}
+      </TableBody>
+    </Table>
   </Card>
 
   <AddProductDialog bind:open={showAdd} {categories} onCreate={onCreate} />

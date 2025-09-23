@@ -2,15 +2,12 @@
 import Eye from "@lucide/svelte/icons/eye";
 import EyeOff from "@lucide/svelte/icons/eye-off";
 import Monitor from "@lucide/svelte/icons/monitor";
-import Moon from "@lucide/svelte/icons/moon";
-import Sun from "@lucide/svelte/icons/sun";
 import { toast } from "svelte-sonner";
 import { env as publicEnv } from "$env/dynamic/public";
-import Button from "$lib/components/ui/button/button.svelte";
-import Card from "$lib/components/ui/card/card.svelte";
-import CardContent from "$lib/components/ui/card/card-content.svelte";
-import Input from "$lib/components/ui/input/input.svelte";
-import Label from "$lib/components/ui/label/label.svelte";
+import { Button } from "$lib/components/ui/button";
+import { Card, CardContent } from "$lib/components/ui/card";
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
 import { locale, t } from "$lib/i18n";
 import { supabase } from "$lib/supabaseClient";
 
@@ -47,48 +44,8 @@ const seededUsers: Array<{
 ];
 
 function quickFill(emailOrUsername: string, pwd: string) {
-  // Allow either username or full email for convenience
   username = emailOrUsername;
   password = pwd;
-}
-
-// Theme & language controls (login page)
-type ThemeChoice = "light" | "dark" | "system";
-let themeChoice = $state<ThemeChoice>("system");
-
-function applyTheme(choice: ThemeChoice) {
-  const root = document.documentElement;
-  const mq = window.matchMedia("(prefers-color-scheme: dark)");
-  const resolved =
-    choice === "system" ? (mq.matches ? "dark" : "light") : choice;
-  if (resolved === "dark") root.classList.add("dark");
-  else root.classList.remove("dark");
-}
-
-$effect(() => {
-  if (typeof window === "undefined") return;
-  const stored = window.localStorage.getItem("theme");
-  if (stored === "light" || stored === "dark" || stored === "system")
-    themeChoice = stored as ThemeChoice;
-  else themeChoice = "system";
-  applyTheme(themeChoice);
-
-  const mq = window.matchMedia("(prefers-color-scheme: dark)");
-  const onChange = () => {
-    if (themeChoice === "system") applyTheme("system");
-  };
-  mq.addEventListener?.("change", onChange);
-  return () => mq.removeEventListener?.("change", onChange);
-});
-
-function setTheme(choice: ThemeChoice) {
-  themeChoice = choice;
-  try {
-    window.localStorage.setItem("theme", choice);
-  } catch {
-    /* ignore */
-  }
-  applyTheme(choice);
 }
 
 async function signIn(e?: Event) {
@@ -129,23 +86,16 @@ async function signIn(e?: Event) {
 }
 </script>
 
-<div class="min-h-screen flex items-center justify-center px-4 bg-grid">
+<div class="min-h-screen flex items-center justify-center px-4">
   {#if redirecting}
     <div class="fixed inset-0 z-50 grid place-items-center bg-background/80 backdrop-blur-sm">
-      <div class="flex flex-col items-center gap-4 p-6 rounded-xl border glass animate-in fade-in zoom-in duration-300">
-        <div class="relative w-10 h-10">
-          <div class="absolute inset-0 rounded-full border-2 border-primary/30"></div>
-          <div class="absolute inset-0 rounded-full border-t-2 border-primary animate-spin"></div>
-        </div>
-        <div class="text-sm text-muted-foreground flex items-center gap-2">
-          <Monitor class="w-4 h-4" /> {t('dashboard.loading')}
-        </div>
+      <div class="flex items-center gap-2 p-3 rounded-md border bg-card text-sm text-muted-foreground">
+        <Monitor class="w-4 h-4" /> {t('dashboard.loading')}
       </div>
     </div>
   {/if}
-  <!-- Quick Controls: language & theme -->
-  <div class="fixed top-4 right-4 flex items-center gap-2">
-    <!-- Language switch -->
+  <!-- Language switch -->
+  <div class="fixed top-4 right-4">
     <div class="inline-flex items-center gap-1 rounded-md border p-0.5 h-9 bg-card">
       <button
         type="button"
@@ -159,28 +109,6 @@ async function signIn(e?: Event) {
         aria-pressed={$locale==='el'}
         onclick={() => { locale.set('el'); }}
       >EL</button>
-    </div>
-
-    <!-- Theme switch: system / light / dark -->
-    <div class="inline-flex items-center gap-1 rounded-md border p-0.5 h-9 bg-card">
-      <button
-        type="button"
-        class={`${themeChoice==='system' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'} px-2 h-8 rounded text-xs inline-flex items-center gap-1`}
-        aria-pressed={themeChoice==='system'}
-        onclick={() => setTheme('system')}
-      ><Monitor class="w-3.5 h-3.5" /> {t('theme.system')}</button>
-      <button
-        type="button"
-        class={`${themeChoice==='light' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'} px-2 h-8 rounded text-xs inline-flex items-center gap-1`}
-        aria-pressed={themeChoice==='light'}
-        onclick={() => setTheme('light')}
-      ><Sun class="w-3.5 h-3.5" /> {t('theme.light')}</button>
-      <button
-        type="button"
-        class={`${themeChoice==='dark' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'} px-2 h-8 rounded text-xs inline-flex items-center gap-1`}
-        aria-pressed={themeChoice==='dark'}
-        onclick={() => setTheme('dark')}
-      ><Moon class="w-3.5 h-3.5" /> {t('theme.dark')}</button>
     </div>
   </div>
 
@@ -200,15 +128,21 @@ async function signIn(e?: Event) {
     <Card>
       <CardContent class="p-6">
         <form onsubmit={signIn} class="space-y-4">
-          <!-- Quick fill seeded users -->
-          <div class="flex gap-2 flex-wrap">
-            {#each seededUsers as u}
-              <button type="button" class="px-2 py-1 rounded bg-secondary text-secondary-foreground text-xs"
-                onclick={() => quickFill(u.email, u.password)}
-                aria-label={`Use ${u.label} user`}>
-                {u.label}
-              </button>
-            {/each}
+          <!-- Quick login -->
+          <div class="space-y-2">
+            <p class="text-xs text-muted-foreground">{t('login.quickLogin')}</p>
+            <div class="flex gap-2 flex-wrap">
+              {#each seededUsers as u}
+                <button
+                  type="button"
+                  class="px-2 py-1 rounded bg-secondary text-secondary-foreground text-xs"
+                  onclick={() => quickFill(u.email, u.password)}
+                  aria-label={`Use ${u.label} user`}
+                >
+                  {u.label}
+                </button>
+              {/each}
+            </div>
           </div>
 
           <div class="space-y-2">
@@ -257,10 +191,7 @@ async function signIn(e?: Event) {
             aria-busy={loading}
           >
             {#if loading}
-              <div class="flex items-center gap-2">
-                <div class="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
-                {t('login.loading')}
-              </div>
+              {t('login.loading')}
             {:else}
               {t('login.submit')}
             {/if}

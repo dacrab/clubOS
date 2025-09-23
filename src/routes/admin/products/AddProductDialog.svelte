@@ -1,10 +1,7 @@
 <script lang="ts">
 import { Dialog as DialogPrimitive } from "bits-ui";
-import Button from "$lib/components/ui/button/button.svelte";
-import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
-import DialogFooter from "$lib/components/ui/dialog/dialog-footer.svelte";
-import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
-import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
+import { Button } from "$lib/components/ui/button";
+import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "$lib/components/ui/dialog";
 
 const Dialog = DialogPrimitive.Root;
 
@@ -75,12 +72,12 @@ async function save() {
         <Input id="price" type="number" step="0.01" bind:value={form.price} class="col-span-3" />
       </div>
       <div class="grid grid-cols-4 items-center gap-4">
-        <Label class="text-right">Stock</Label>
+        <Label class="text-right">{t('common.stock')}</Label>
         <div class="col-span-3 flex items-center gap-3">
           <Input id="stock" type="number" bind:value={form.stock_quantity} class="w-40" disabled={form.unlimited} />
           <div class="flex items-center gap-2 text-sm">
             <Switch bind:checked={form.unlimited} id="unlimited" />
-            <label for="unlimited">Unlimited</label>
+            <label for="unlimited">{t('common.unlimited')}</label>
           </div>
         </div>
       </div>
@@ -88,7 +85,15 @@ async function save() {
         <Label class="text-right">{t('common.category')}</Label>
         <div class="col-span-3">
           <Select bind:value={form.category_id} type="single">
-            <SelectTrigger class="w-full" />
+            <SelectTrigger class="w-full">
+              <span data-slot="select-value" class="truncate">
+                {#if form.category_id}
+                  {(categories.find((c: { id: string; name: string }) => c.id === form.category_id)?.name) || ''}
+                {:else}
+                  {t('pages.products.selectCategory')}
+                {/if}
+              </span>
+            </SelectTrigger>
             <SelectContent>
               {#each categories as c}
                 <SelectItem value={c.id} label={c.name} />

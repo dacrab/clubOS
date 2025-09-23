@@ -1,14 +1,13 @@
 <script lang="ts">
 import {
-  BarChart3,
   ClipboardList,
   Home,
   LogOut,
   Moon,
   Package,
-  ShoppingCart,
   Sun,
   UserCog,
+  ReceiptText,
 } from "@lucide/svelte";
 import { page } from "$app/stores";
 import { locale, t } from "$lib/i18n";
@@ -62,9 +61,7 @@ function toggleTheme() {
       <a href="/dashboard" class={`${linkBase} ${isActive('/dashboard') ? activeCls : ''}`} aria-current={isActive('/dashboard') ? 'page' : undefined}>
         <Home class="w-3.5 h-3.5" /> {t('nav.dashboard')}
       </a>
-      <a href="/orders" class={`${linkBase} ${isActive('/orders') ? activeCls : ''}`} aria-current={isActive('/orders') ? 'page' : undefined}>
-        <ShoppingCart class="w-3.5 h-3.5" /> {t('nav.orders')}
-      </a>
+      
 
       {#if $currentUser?.role === 'admin'}
         <div class="pt-4">
@@ -76,23 +73,21 @@ function toggleTheme() {
         <a href="/admin/users" class={`${linkBase} ${isActive('/admin/users') ? activeCls : ''}`} aria-current={isActive('/admin/users') ? 'page' : undefined}>
           <UserCog class="w-3.5 h-3.5" /> {t('nav.users')}
         </a>
+        <a href="/admin/orders" class={`${linkBase} ${isActive('/admin/orders') ? activeCls : ''}`} aria-current={isActive('/admin/orders') ? 'page' : undefined}>
+          <ReceiptText class="w-3.5 h-3.5" /> {t('nav.orders')}
+        </a>
         <a href="/admin/registers" class={`${linkBase} ${isActive('/admin/registers') ? activeCls : ''}`} aria-current={isActive('/admin/registers') ? 'page' : undefined}>
           <ClipboardList class="w-3.5 h-3.5" /> {t('nav.registers')}
         </a>
-        <a href="/admin/reports" class={`${linkBase} ${isActive('/admin/reports') ? activeCls : ''}`} aria-current={isActive('/admin/reports') ? 'page' : undefined}>
-          <BarChart3 class="w-3.5 h-3.5" /> {t('nav.reports')}
-        </a>
-        <a href="/admin/bookings" class={`${linkBase} ${isActive('/admin/bookings') ? activeCls : ''}`} aria-current={isActive('/admin/bookings') ? 'page' : undefined}>
-          <ClipboardList class="w-3.5 h-3.5" /> {t('nav.bookings')}
-        </a>
+        
       {/if}
 
       {#if $currentUser?.role === 'admin' || $currentUser?.role === 'secretary'}
         <div class="pt-4">
           <div class="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">{t('nav.bookings')}</div>
         </div>
-        <a href="/secretary/appointments" class={`${linkBase} ${isActive('/secretary/appointments') ? activeCls : ''}`} aria-current={isActive('/secretary/appointments') ? 'page' : undefined}>
-          <ClipboardList class="w-3.5 h-3.5" /> {t('nav.appointments')}
+        <a href="/secretary/birthdays" class={`${linkBase} ${isActive('/secretary/birthdays') ? activeCls : ''}`} aria-current={isActive('/secretary/birthdays') ? 'page' : undefined}>
+          <ClipboardList class="w-3.5 h-3.5" /> {t('nav.birthdays')}
         </a>
         <a href="/secretary/football" class={`${linkBase} ${isActive('/secretary/football') ? activeCls : ''}`} aria-current={isActive('/secretary/football') ? 'page' : undefined}>
           <ClipboardList class="w-3.5 h-3.5" /> {t('nav.football')}
@@ -111,7 +106,7 @@ function toggleTheme() {
             EL
           </button>
         </div>
-        <button type="button" class="inline-flex items-center justify-center h-8 w-8 rounded-md border ${linkBase} !px-0" onclick={toggleTheme} aria-label="Toggle theme">
+        <button type="button" class="inline-flex items-center justify-center h-8 w-8 rounded-md border ${linkBase} !px-0" onclick={toggleTheme} aria-label={t('common.toggleTheme')}>
           {#if theme === 'dark'}
             <Sun class="w-3.5 h-3.5" />
           {:else}

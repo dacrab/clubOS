@@ -1,10 +1,7 @@
 <script lang="ts">
 import { Dialog as DialogPrimitive } from "bits-ui";
-import Button from "$lib/components/ui/button/button.svelte";
-import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
-import DialogFooter from "$lib/components/ui/dialog/dialog-footer.svelte";
-import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
-import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
+import { Button } from "$lib/components/ui/button";
+import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "$lib/components/ui/dialog";
 
 const Dialog = DialogPrimitive.Root;
 
@@ -18,6 +15,7 @@ import {
 } from "$lib/components/ui/select";
 import Switch from "$lib/components/ui/switch/switch.svelte";
 import { t } from "$lib/i18n";
+import { ImagePlus } from "@lucide/svelte";
 
 let {
   open = $bindable(false),
@@ -80,6 +78,11 @@ async function selectImage(e: Event) {
   if (!(file && form.id)) return;
   await onUploadImage(file, form.id);
 }
+
+let fileInput: HTMLInputElement | null = $state(null);
+function triggerFile() {
+  fileInput?.click();
+}
 </script>
 
 <Dialog bind:open={open}>
@@ -97,12 +100,12 @@ async function selectImage(e: Event) {
         <Input id="price" type="number" step="0.01" bind:value={form.price} class="col-span-3" />
       </div>
       <div class="grid grid-cols-4 items-center gap-4">
-        <Label class="text-right">Stock</Label>
+        <Label class="text-right">{t('common.stock')}</Label>
         <div class="col-span-3 flex items-center gap-3">
           <Input id="stock" type="number" bind:value={form.stock_quantity} class="w-40" disabled={form.unlimited} />
           <div class="flex items-center gap-2 text-sm">
             <Switch bind:checked={form.unlimited} id="unlimited-edit" />
-            <label for="unlimited-edit">Unlimited</label>
+            <label for="unlimited-edit">{t('common.unlimited')}</label>
           </div>
         </div>
       </div>
@@ -110,7 +113,15 @@ async function selectImage(e: Event) {
         <Label class="text-right">{t('common.category')}</Label>
         <div class="col-span-3">
           <Select bind:value={form.category_id} type="single">
-            <SelectTrigger class="w-full" />
+            <SelectTrigger class="w-full">
+              <span data-slot="select-value" class="truncate">
+                {#if form.category_id}
+                  {(categories.find((c: { id: string; name: string }) => c.id === form.category_id)?.name) || ''}
+                {:else}
+                  {t('pages.products.selectCategory')}
+                {/if}
+              </span>
+            </SelectTrigger>
             <SelectContent>
               {#each categories as c}
                 <SelectItem value={c.id} label={c.name} />
@@ -121,11 +132,18 @@ async function selectImage(e: Event) {
       </div>
       <div class="grid grid-cols-4 items-center gap-4">
         <Label class="text-right">{t('common.image')}</Label>
-        <div class="col-span-3 flex items-center gap-2">
+        <div class="col-span-3 flex items-center gap-3">
           {#if form.image_url}
-            <img src={form.image_url} alt={form.name} class="h-10 w-10 object-cover rounded" />
+            <button type="button" class="relative group" onclick={triggerFile} aria-label={t('common.changeImage')}>
+              <img src={form.image_url} alt={form.name} class="h-12 w-12 object-cover rounded border" />
+              <span class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity rounded"></span>
+            </button>
           {/if}
-          <input type="file" accept="image/*" onchange={selectImage} />
+          <input class="hidden" type="file" accept="image/*" onchange={selectImage} bind:this={fileInput} />
+          <Button variant="outline" size="sm" onclick={triggerFile}>
+            <ImagePlus class="w-4 h-4 mr-1" />
+            {form.image_url ? t('common.changeImage') : t('common.uploadImage')}
+          </Button>
         </div>
       </div>
     </div>
