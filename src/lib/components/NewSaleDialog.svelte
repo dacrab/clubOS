@@ -5,7 +5,12 @@ import { Button } from "$lib/components/ui/button";
 const DialogRoot = DialogPrimitive.Root;
 
 import { Filter, Minus, Plus, ReceiptText, ShoppingCart } from "@lucide/svelte";
-import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "$lib/components/ui/dialog";
+import {
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "$lib/components/ui/dialog";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabaseClient";
 
@@ -74,9 +79,18 @@ function total() {
 }
 
 async function submit() {
-  await onSubmit({ items: cart, paymentMethod: "cash", couponCount });
-  clearCart();
-  open = false;
+  try {
+    await onSubmit({ items: cart, paymentMethod: "cash", couponCount });
+    const { toast } = await import("svelte-sonner");
+    toast.success(t("orders.toast.success"));
+    clearCart();
+    // Keep dialog open after successful completion
+  } catch (error) {
+    const { toast } = await import("svelte-sonner");
+    const message =
+      error instanceof Error ? error.message : t("orders.toast.error");
+    toast.error(message);
+  }
 }
 
 async function loadCategories() {

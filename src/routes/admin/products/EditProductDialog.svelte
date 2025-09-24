@@ -1,10 +1,16 @@
 <script lang="ts">
 import { Dialog as DialogPrimitive } from "bits-ui";
 import { Button } from "$lib/components/ui/button";
-import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "$lib/components/ui/dialog";
+import {
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "$lib/components/ui/dialog";
 
 const Dialog = DialogPrimitive.Root;
 
+import { ImagePlus } from "@lucide/svelte";
 import { Input } from "$lib/components/ui/input";
 import { Label } from "$lib/components/ui/label";
 import {
@@ -15,7 +21,6 @@ import {
 } from "$lib/components/ui/select";
 import Switch from "$lib/components/ui/switch/switch.svelte";
 import { t } from "$lib/i18n";
-import { ImagePlus } from "@lucide/svelte";
 
 let {
   open = $bindable(false),

@@ -8,14 +8,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && biome check",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && biome check && knip",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch && biome check --write --watch",
     "test:unit": "bunx vitest",
     "test": "bun run test:unit -- --run",
     "db:seed": "bunx tsx scripts/seed.ts",
     "db:reset": "supabase db reset && bunx tsx scripts/seed.ts",
-    "db:restart": "supabase db stop && supabase db start",
-    "knip": "knip"
+    "db:restart": "supabase db stop && supabase db start"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",

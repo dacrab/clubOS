@@ -1,7 +1,7 @@
 <script lang="ts">
 import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 import { supabase } from "$lib/supabaseClient";
-import { openPrintWindow, formatDateTime } from "$lib/utils";
+import { formatDateTime, openPrintWindow } from "$lib/utils";
 
 const DropdownMenu = DropdownMenuPrimitive.Root;
 
@@ -95,15 +95,15 @@ function renderReceipt(order: OrderDetails) {
     )
     .join("");
   return `
-    <h1>clubOS ${t('orders.receiptTitle')}</h1>
+    <h1>clubOS ${t("orders.receiptTitle")}</h1>
     <div class="muted">#${order.id.slice(0, ORDER_ID_PREFIX_LEN)} — ${formatDateTime(order.created_at)}</div>
     <hr />
     <table>${lines}</table>
     <hr />
     <table>
-      <tr><td class="muted">${t('orders.subtotal')}</td><td style="text-align:right" class="muted">${formatMoney(order.subtotal)}</td></tr>
-      ${order.discount_amount > 0 ? `<tr><td class="muted">${t('orders.discount')}</td><td style="text-align:right" class="muted">- ${formatMoney(order.discount_amount)}</td></tr>` : ""}
-      <tr><td class="total">${t('orders.total')}</td><td style="text-align:right" class="total">${formatMoney(order.total_amount)}</td></tr>
+      <tr><td class="muted">${t("orders.subtotal")}</td><td style="text-align:right" class="muted">${formatMoney(order.subtotal)}</td></tr>
+      ${order.discount_amount > 0 ? `<tr><td class="muted">${t("orders.discount")}</td><td style="text-align:right" class="muted">- ${formatMoney(order.discount_amount)}</td></tr>` : ""}
+      <tr><td class="total">${t("orders.total")}</td><td style="text-align:right" class="total">${formatMoney(order.total_amount)}</td></tr>
     </table>
   `;
 }
@@ -119,117 +119,119 @@ $effect(() => {
 </script>
 
 {#if orders.length === 0}
-  <div class="text-sm text-muted-foreground">{t('orders.none')}</div>
+  <div class="rounded-2xl border border-outline-soft bg-surface p-6 text-sm text-muted-foreground">
+    {t('orders.none')}
+  </div>
 {:else}
-  <div class="space-y-3">
+  <div class="flex flex-col gap-3">
     {#each orders as order}
-      <div class="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 mb-1">
-            <span class="font-mono text-xs text-muted-foreground">#{order.id.slice(0,8)}</span>
-            <span class="text-sm font-semibold">€{Number(order.total_amount).toFixed(2)}</span>
+      <div class="flex items-center justify-between gap-4 rounded-2xl border border-outline-soft bg-surface px-4 py-3 transition-all hover:border-outline-strong hover:bg-surface-strong/60">
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-3 text-sm font-semibold text-foreground">
+            <span class="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">#{order.id.slice(0,8)}</span>
+            <span>€{Number(order.total_amount).toFixed(2)}</span>
           </div>
-          <div class="text-xs text-muted-foreground">
+          <div class="mt-1 text-xs text-muted-foreground">
             {formatDateTime(order.created_at)}
           </div>
-          <div class="text-xs text-muted-foreground mt-1">
+          <div class="mt-2 text-xs text-muted-foreground">
             {order.items.length} {t('orders.itemsWord')} • {order.items.filter(i => i.is_treat).length} {t('orders.treatsWord')}
           </div>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger>
-        <Button variant="ghost" size="sm" class="h-8 w-8 p-0">
+            <Button variant="ghost" size="sm" class="h-8 w-8 rounded-full border border-outline-soft p-0">
               <Eye class="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent class="w-96">
-            <div class="p-4">
-              <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                  <h4 class="font-semibold">{t('orders.orderLabel')} #{order.id.slice(0,8)}</h4>
-                  <span class="text-sm text-muted-foreground">
-                    {formatDateTime(order.created_at)}
-                  </span>
-                </div>
+          <DropdownMenuContent class="w-[24rem] rounded-2xl border border-outline-soft bg-surface-strong/80 backdrop-blur-xl">
+            <div class="flex flex-col gap-3 p-4">
+              <div class="flex items-center justify-between">
+                <h4 class="text-sm font-semibold text-foreground">
+                  {t('orders.orderLabel')} #{order.id.slice(0,8)}
+                </h4>
+                <span class="text-xs text-muted-foreground">
+                  {formatDateTime(order.created_at)}
+                </span>
+              </div>
 
-                <div class="space-y-2">
-                  <h5 class="font-medium text-sm">{t('orders.itemsHeader')}</h5>
-                  {#each order.items as item}
-                    <div class="flex items-center justify-between text-sm p-2 rounded bg-muted/30">
-                      <div class="flex items-center gap-2">
-                        <span class="font-medium">{item.product.name}</span>
-                        <span class="text-xs text-muted-foreground">×{item.quantity}</span>
-                        {#if item.is_treat}
-                          <span class="px-1.5 py-0.5 text-xs rounded bg-green-100 text-green-700">{t('orders.free')}</span>
-                        {/if}
-                      </div>
-                      <div class="flex items-center gap-2">
-                        {#if item.is_treat}
-                          <span class="text-xs line-through text-muted-foreground">€{Number(item.unit_price).toFixed(2)}</span>
-                          <span class="font-medium">€0.00</span>
-                        {:else}
-                          <span class="font-medium">€{Number(item.line_total).toFixed(2)}</span>
-                        {/if}
-                      </div>
+              <div class="grid gap-1 rounded-xl border border-outline-soft bg-surface/70 p-2 text-xs font-medium text-muted-foreground sm:grid-cols-3">
+                <div class="flex flex-col gap-1">
+                  <span>{t('orders.itemsHeader')}</span>
+                  <span class="text-base font-semibold text-foreground">{order.items.length}</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <span>{t('orders.coupons')}</span>
+                  <span class="text-base font-semibold text-foreground">{order.coupon_count}</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <span>{t('orders.treatsWord')}</span>
+                  <span class="text-base font-semibold text-foreground">{order.items.filter(i => i.is_treat).length}</span>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <h5 class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  {t('orders.itemsHeader')}
+                </h5>
+                {#each order.items as item}
+                  <div class="flex items-center justify-between gap-3 rounded-xl border border-outline-soft bg-surface px-2 py-1.5 text-xs">
+                    <div class="flex items-center gap-2 text-foreground">
+                      <span class="font-medium">{item.product.name}</span>
+                      <span class="text-xs text-muted-foreground">×{item.quantity}</span>
+                      {#if item.is_treat}
+                        <span class="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-300">
+                          {t('orders.free')}
+                        </span>
+                      {/if}
                     </div>
-                  {/each}
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                  <div class="p-2 rounded bg-muted/30">
-                    <div class="text-muted-foreground">{t('orders.itemsHeader')}</div>
-                    <div class="font-semibold">{order.items.length}</div>
-                  </div>
-                  <div class="p-2 rounded bg-muted/30">
-                    <div class="text-muted-foreground">{t('orders.coupons')}</div>
-                    <div class="font-semibold">{order.coupon_count}</div>
-                  </div>
-                  <div class="p-2 rounded bg-muted/30">
-                    <div class="text-muted-foreground">{t('orders.treatsWord')}</div>
-                    <div class="font-semibold">{order.items.filter(i => i.is_treat).length}</div>
-                  </div>
-                  <div class="p-2 rounded bg-muted/30">
-                    <div class="text-muted-foreground">{t('orders.discount')}</div>
-                    <div class="font-semibold">€{Number(order.discount_amount).toFixed(2)}</div>
-                  </div>
-                </div>
-
-                <div class="border-t pt-3 space-y-1">
-                  <div class="flex justify-between text-sm">
-                    <span>{t('orders.subtotal')}</span>
-                    <span>€{Number(order.subtotal).toFixed(2)}</span>
-                  </div>
-                  {#if order.discount_amount > 0}
-                    <div class="flex justify-between text-sm text-green-600">
-                      <span>{t('orders.discount')}</span>
-                      <span>-€{Number(order.discount_amount).toFixed(2)}</span>
+                    <div class="flex items-center gap-2 text-xs">
+                      {#if item.is_treat}
+                        <span class="text-xs text-muted-foreground line-through">€{Number(item.unit_price).toFixed(2)}</span>
+                        <span class="font-medium text-foreground">€0.00</span>
+                      {:else}
+                        <span class="font-medium text-foreground">€{Number(item.line_total).toFixed(2)}</span>
+                      {/if}
                     </div>
-                  {/if}
-                  <div class="flex justify-between font-semibold">
-                    <span>{t('orders.total')}</span>
-                    <span>€{Number(order.total_amount).toFixed(2)}</span>
                   </div>
-                </div>
+                {/each}
+              </div>
 
-                <div class="flex gap-2 pt-2 border-t">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onclick={() => printReceipt(order)}
-                    class="flex-1"
-                  >
-                    <Printer class="h-3 w-3 mr-1" />
-                    {t('orders.print')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    class="flex-1"
-                  >
-                    <Receipt class="h-3 w-3 mr-1" />
-                    {t('orders.details')}
-                  </Button>
+              <div class="flex flex-col gap-1.5 border-t border-outline-soft pt-3 text-xs text-foreground">
+                <div class="flex justify-between">
+                  <span class="text-muted-foreground">{t('orders.subtotal')}</span>
+                  <span>€{Number(order.subtotal).toFixed(2)}</span>
                 </div>
+                {#if order.discount_amount > 0}
+                  <div class="flex justify-between text-emerald-600 dark:text-emerald-300">
+                    <span>{t('orders.discount')}</span>
+                    <span>-€{Number(order.discount_amount).toFixed(2)}</span>
+                  </div>
+                {/if}
+                <div class="flex justify-between text-sm font-semibold">
+                  <span>{t('orders.total')}</span>
+                  <span>€{Number(order.total_amount).toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div class="flex gap-2 border-t border-outline-soft pt-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onclick={() => printReceipt(order)}
+                  class="flex-1 rounded-full border-outline-soft"
+                >
+                  <Printer class="mr-2 h-4 w-4" />
+                  {t('orders.print')}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="flex-1 rounded-full border-outline-soft"
+                >
+                  <Receipt class="mr-2 h-4 w-4" />
+                  {t('orders.details')}
+                </Button>
               </div>
             </div>
           </DropdownMenuContent>

@@ -40,12 +40,12 @@ const translations = {
     categories: { en: "Categories", el: "Κατηγορίες" },
     users: { en: "Users", el: "Χρήστες" },
     appointments: { en: "Appointments", el: "Ραντεβού" },
-    birthdays: { en: "Birthdays", el: "Γενέθλια" },
     football: { en: "Football", el: "Γήπεδα Ποδοσφαίρου" },
     logout: { en: "Logout", el: "Αποσύνδεση" },
     reports: { en: "Reports", el: "Αναφορές" },
-    registers: { en: "Registers", el: "Ταμειακές" },
+    registers: { en: "Registers", el: "Ταμεία" },
     bookings: { en: "Bookings", el: "Κρατήσεις" },
+    overview: { en: "Overview", el: "Επισκόπηση" },
   },
   orders: {
     recent: { en: "Recent Orders", el: "Πρόσφατες Παραγγελίες" },
@@ -71,6 +71,34 @@ const translations = {
       en: "Add some products to get started",
       el: "Προσθέστε προϊόντα για να ξεκινήσετε",
     },
+    newSalesSubtitle: {
+      en: "Filter categories, mark treats, and apply coupons in one flow.",
+      el: "Φιλτράρετε κατηγορίες, ορίστε κεράσματα και εφαρμόστε κουπόνια σε μία ροή.",
+    },
+    menuSubtitle: {
+      en: "Tap to add products to the ticket.",
+      el: "Πατήστε για προσθήκη.",
+    },
+    menuFallback: {
+      en: "Tap to add products to the ticket.",
+      el: "Πατήστε για προσθήκη.",
+    },
+    cartSubtitle: {
+      en: "Review items, mark treats, apply coupons.",
+      el: "Ελέγξτε είδη, ορίστε κεράσματα, εφαρμόστε κουπόνια.",
+    },
+    couponsHint: {
+      en: "Every coupon deducts €2 from the total.",
+      el: "Κάθε κουπόνι αφαιρεί €2 από το σύνολο.",
+    },
+    decrementCoupon: { en: "Remove coupon", el: "Αφαίρεση κουπονιού" },
+    incrementCoupon: { en: "Add coupon", el: "Προσθήκη κουπονιού" },
+    markTreat: { en: "Mark treat", el: "Σήμανση κεράσματος" },
+    removeItem: { en: "Remove item", el: "Αφαίρεση είδους" },
+    summaryHint: {
+      en: "Session syncs automatically when you submit.",
+      el: "Η συνεδρία ενημερώνεται αυτόματα με την υποβολή.",
+    },
     close: { en: "Close", el: "Κλείσιμο" },
     submit: { en: "Submit Order", el: "Υποβολή Παραγγελίας" },
     actions: { en: "Actions", el: "Ενέργειες" },
@@ -88,15 +116,23 @@ const translations = {
     receiptTitle: { en: "Receipt", el: "Απόδειξη" },
     details: { en: "Details", el: "Λεπτομέρειες" },
     print: { en: "Print", el: "Εκτύπωση" },
+    latest: { en: "Latest activity", el: "Τελευταίες κινήσεις" },
+    toast: {
+      success: { en: "Order created", el: "Η παραγγελία δημιουργήθηκε" },
+      error: {
+        en: "Failed to create order",
+        el: "Αποτυχία δημιουργίας παραγγελίας",
+      },
+    },
   },
   dashboard: {
     admin: {
       title: { en: "Admin Dashboard", el: "Πίνακας Ελέγχου Διαχειριστή" },
       revenue: { en: "Today's Revenue", el: "Σημερινά Έσοδα" },
-      manageRegisters: { en: "Manage Registers", el: "Διαχείριση Ταμειακών" },
+      manageRegisters: { en: "Manage Registers", el: "Διαχείριση Ταμείων" },
       closeRegister: {
         en: "Close Current Register",
-        el: "Κλείσιμο Τρέχουσας Ταμειακής",
+        el: "Κλείσιμο Ταμείου",
       },
       closing: { en: "Closing...", el: "Κλείσιμο..." },
     },
@@ -105,15 +141,15 @@ const translations = {
       pos: { en: "Point of Sale", el: "Σημείο Πώλησης" },
       posDesc: {
         en: "Process customer transactions",
-        el: "Επεξεργασία συναλλαγών πελατών",
+        el: "Επεξεργασία συναλλαγών",
       },
       quickActions: {
         en: "Fast actions for daily work",
-        el: "Γρήγορες ενέργειες για την καθημερινή εργασία",
+        el: "Γρήγορες ενέργειες",
       },
-      register: { en: "Register", el: "Ταμειακή" },
-      closeRegister: { en: "Close Register", el: "Κλείσιμο Ταμειακής" },
-      closePromptTitle: { en: "Close register", el: "Κλείσιμο ταμειακής" },
+      register: { en: "Register", el: "Ταμείο" },
+      closeRegister: { en: "Close Register", el: "Κλείσιμο Ταμείου" },
+      closePromptTitle: { en: "Close register", el: "Κλείσιμο ταμείου" },
       closePromptDesc: {
         en: "Please enter your name (required) and optional notes before closing.",
         el: "Παρακαλώ εισάγετε το όνομά σας (υποχρεωτικό) και προαιρετικές σημειώσεις πριν το κλείσιμο.",
@@ -162,12 +198,21 @@ const translations = {
     uploadImage: { en: "Upload Image", el: "Μεταφόρτωση Εικόνας" },
     changeImage: { en: "Change Image", el: "Αλλαγή Εικόνας" },
     unlimited: { en: "Unlimited", el: "Απεριόριστο" },
+    tagline: {
+      en: "Control centre for your club operations.",
+      el: "Κέντρο ελέγχου για τις λειτουργίες του συλλόγου σας.",
+    },
+    operatingSuite: { en: "Operating Suite", el: "Σουίτα Λειτουργιών" },
+    open: { en: "Open", el: "Ανοιχτό" },
   },
   pages: {
     products: {
       title: { en: "All Products", el: "Όλα τα Προϊόντα" },
       add: { en: "Add Product", el: "Προσθήκη Προϊόντος" },
-      manageCategories: { en: "Manage Categories", el: "Διαχείριση Κατηγοριών" },
+      manageCategories: {
+        en: "Manage Categories",
+        el: "Διαχείριση Κατηγοριών",
+      },
       selectCategory: { en: "Select category", el: "Επιλέξτε κατηγορία" },
     },
     categories: {
@@ -179,7 +224,10 @@ const translations = {
       title: { en: "Users", el: "Χρήστες" },
       add: { en: "Create User", el: "Δημιουργία Χρήστη" },
       edit: { en: "Edit User", el: "Επεξεργασία Χρήστη" },
-      usernamePlaceholder: { en: "Enter username", el: "Εισαγάγετε όνομα χρήστη" },
+      usernamePlaceholder: {
+        en: "Enter username",
+        el: "Εισαγάγετε όνομα χρήστη",
+      },
       passwordOptionalPlaceholder: {
         en: "Leave blank to keep unchanged",
         el: "Αφήστε κενό για να παραμείνει",
@@ -195,23 +243,26 @@ const translations = {
       todaySales: { en: "Today's Sales", el: "Σημερινές Πωλήσεις" },
       transactions: { en: "Transactions", el: "Συναλλαγές" },
       products: { en: "Products", el: "Προϊόντα" },
-      latest: {
-        en: "Latest transactions and activities",
-        el: "Τελευταίες συναλλαγές και δραστηριότητες",
-      },
+      latest: { en: "Latest", el: "Τελευταία" },
     },
     ordersPage: {
       title: { en: "All Orders", el: "Όλες οι Παραγγελίες" },
       date: { en: "Date", el: "Ημερομηνία" },
     },
     admin: {
-      overview: { en: "Overview of your business", el: "Επισκόπηση της επιχείρησής σας" },
+      overview: {
+        en: "Overview of your business",
+        el: "Επισκόπηση της επιχείρησής σας",
+      },
       activeUsers: { en: "Active Users", el: "Ενεργοί Χρήστες" },
       pendingTasks: { en: "Pending Tasks", el: "Εκκρεμείς Εργασίες" },
     },
     appointments: {
       title: { en: "Appointments", el: "Ραντεβού" },
-      subtitle: { en: "Manage birthday parties and events", el: "Διαχείριση παιδικών πάρτυ και εκδηλώσεων" },
+      subtitle: {
+        en: "Manage birthday parties and events",
+        el: "Διαχείριση παιδικών πάρτυ και εκδηλώσεων",
+      },
       totalBookings: { en: "Total Bookings", el: "Συνολικές Κρατήσεις" },
       activeAppointments: { en: "Active Appointments", el: "Ενεργά Ραντεβού" },
       thisMonth: { en: "This Month", el: "Αυτός ο Μήνας" },
@@ -219,23 +270,44 @@ const translations = {
       next7Days: { en: "Next 7 Days", el: "Επόμενες 7 Ημέρες" },
       tabsCreate: { en: "Create New", el: "Δημιουργία" },
       tabsUpcoming: { en: "View All", el: "Προβολή όλων" },
-      createTitle: { en: "Create New Appointment", el: "Δημιουργία Νέου Ραντεβού" },
-      createSubtitle: { en: "Schedule a new birthday party or event", el: "Προγραμματίστε ένα νέο παιδικό πάρτυ ή εκδήλωση" },
+      createTitle: {
+        en: "Create New Appointment",
+        el: "Δημιουργία Νέου Ραντεβού",
+      },
+      createSubtitle: {
+        en: "Schedule a new birthday party or event",
+        el: "Προγραμματίστε νέο πάρτυ ή εκδήλωση",
+      },
       customerName: { en: "Customer Name", el: "Όνομα Πελάτη" },
-      customerPlaceholder: { en: "Enter customer name", el: "Εισάγετε το όνομα πελάτη" },
+      customerPlaceholder: {
+        en: "Enter customer name",
+        el: "Εισάγετε το όνομα πελάτη",
+      },
       contactInfo: { en: "Contact Information", el: "Στοιχεία Επικοινωνίας" },
-      contactPlaceholder: { en: "Phone number or email", el: "Τηλέφωνο ή email" },
+      contactPlaceholder: {
+        en: "Phone number or email",
+        el: "Τηλέφωνο ή email",
+      },
       dateTime: { en: "Date & Time", el: "Ημερομηνία & Ώρα" },
       children: { en: "Children", el: "Παιδιά" },
       adults: { en: "Adults", el: "Ενήλικες" },
       notes: { en: "Additional Notes", el: "Επιπλέον Σημειώσεις" },
-      notesPlaceholder: { en: "Any special requirements or notes...", el: "Ειδικές απαιτήσεις ή σημειώσεις..." },
+      notesPlaceholder: {
+        en: "Any special requirements or notes...",
+        el: "Ειδικές απαιτήσεις ή σημειώσεις...",
+      },
       createButton: { en: "Create Appointment", el: "Δημιουργία Ραντεβού" },
       allAppointments: { en: "All Appointments", el: "Όλα τα Ραντεβού" },
-      manageExisting: { en: "Manage existing bookings and appointments", el: "Διαχείριση υπαρχόντων κρατήσεων και ραντεβού" },
+      manageExisting: {
+        en: "Manage existing bookings and appointments",
+        el: "Διαχείριση υπαρχόντων κρατήσεων και ραντεβού",
+      },
       exportList: { en: "Export List", el: "Εξαγωγή Λίστας" },
       emptyTitle: { en: "No appointments yet", el: "Δεν υπάρχουν ραντεβού" },
-      emptySubtitle: { en: "Start by creating your first appointment", el: "Ξεκινήστε δημιουργώντας το πρώτο ραντεβού" },
+      emptySubtitle: {
+        en: "Start by creating your first appointment",
+        el: "Ξεκινήστε δημιουργώντας το πρώτο ραντεβού",
+      },
       sendReminder: { en: "Send Reminder", el: "Αποστολή Υπενθύμισης" },
       reminderInWeek: { en: "Reminder in 1w", el: "Υπενθύμιση σε 1εβ" },
       createCta: { en: "Create Appointment", el: "Δημιουργία Ραντεβού" },
@@ -248,7 +320,10 @@ const translations = {
     },
     football: {
       title: { en: "Football Bookings", el: "Κρατήσεις Γηπέδων" },
-      subtitle: { en: "Manage football field reservations", el: "Διαχείριση κρατήσεων γηπέδων ποδοσφαίρου" },
+      subtitle: {
+        en: "Manage football field reservations",
+        el: "Διαχείριση κρατήσεων γηπέδων ποδοσφαίρου",
+      },
       tabsCreate: { en: "Create", el: "Δημιουργία" },
       tabsUpcoming: { en: "View All", el: "Προβολή όλων" },
       customerName: { en: "Customer", el: "Πελάτης" },
@@ -265,6 +340,10 @@ const translations = {
       none: { en: "No bookings yet", el: "Δεν υπάρχουν κρατήσεις" },
       fieldLabel: { en: "Field", el: "Γήπεδο" },
       editTitle: { en: "Edit Booking", el: "Επεξεργασία Κράτησης" },
+      manageExisting: {
+        en: "View and update bookings",
+        el: "Δείτε και ενημερώστε τις κρατήσεις",
+      },
       status: {
         confirmed: { en: "Confirmed", el: "Επιβεβαιώθηκε" },
         completed: { en: "Completed", el: "Ολοκληρώθηκε" },
@@ -273,7 +352,19 @@ const translations = {
     },
     registers: {
       title: { en: "Register Sessions", el: "Συνεδρίες Ταμείου" },
+      subtitle: {
+        en: "Daily openings, closings, and cash insights",
+        el: "Καθημερινά ανοίγματα, κλείσιμο και συνοπτικά οικονομικά",
+      },
       pickDate: { en: "Pick date", el: "Επιλογή ημερομηνίας" },
+      totalSessions: { en: "Sessions", el: "Συνεδρίες" },
+      openSessions: { en: "Open Today", el: "Ανοιχτές σήμερα" },
+      totalDiscounts: { en: "Discounts", el: "Εκπτώσεις" },
+      totalTreats: { en: "Treats", el: "Κεράσματα" },
+      empty: {
+        en: "No register activity for this date",
+        el: "Δεν υπάρχουν κινήσεις ταμείου για αυτή την ημερομηνία",
+      },
       date: { en: "Date", el: "Ημερομηνία" },
       id: { en: "ID", el: "ID" },
       opened: { en: "Opened", el: "Άνοιξε" },
@@ -309,12 +400,17 @@ const translations = {
   inventory: {
     lowStock: {
       title: { en: "Low Stock", el: "Χαμηλό Απόθεμα" },
+      subtitle: {
+        en: "Keep an eye on items nearing depletion.",
+        el: "Παρακολουθήστε τα είδη που κοντεύουν να εξαντληθούν.",
+      },
       limitPrefix: { en: "Limit:", el: "Όριο:" },
       items: { en: "items", el: "τεμάχια" },
       empty: {
         en: "No products with low stock",
         el: "Δεν υπάρχουν προϊόντα με χαμηλό απόθεμα",
       },
+      threshold: { en: "Below threshold", el: "Κάτω από το όριο" },
     },
     low: { en: "low", el: "χαμηλό" },
   },

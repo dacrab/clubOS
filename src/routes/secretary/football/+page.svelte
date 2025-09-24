@@ -1,8 +1,38 @@
 <script lang="ts">
-import { supabase } from "$lib/supabaseClient";
-import { formatDateTime } from "$lib/utils";
-import { currentUser, loadCurrentUser } from "$lib/user";
+import { Dialog as DialogPrimitive } from "bits-ui";
+import PageContent from "$lib/components/common/PageContent.svelte";
+import PageHeader from "$lib/components/common/PageHeader.svelte";
+import { Button } from "$lib/components/ui/button";
+import { Card } from "$lib/components/ui/card";
+import { DatePicker } from "$lib/components/ui/date-picker";
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "$lib/components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "$lib/components/ui/tabs";
+import { Textarea } from "$lib/components/ui/textarea";
+
+const DialogRoot = DialogPrimitive.Root;
+
+import {
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "$lib/components/ui/dialog";
 import { t } from "$lib/i18n";
+import { supabase } from "$lib/supabaseClient";
+import { currentUser, loadCurrentUser } from "$lib/user";
+import { formatDateTime } from "$lib/utils";
 
 type Booking = {
   id: string;
@@ -14,6 +44,7 @@ type Booking = {
   num_players: number;
   notes: string | null;
 };
+
 let list: Booking[] = $state([] as Booking[]);
 let form = $state({
   customer_name: "",
@@ -24,18 +55,6 @@ let form = $state({
   num_players: 10,
   notes: "",
 });
-
-import { Button } from "$lib/components/ui/button";
-import { Input } from "$lib/components/ui/input";
-import { Label } from "$lib/components/ui/label";
-import { Textarea } from "$lib/components/ui/textarea";
-import { DatePicker } from "$lib/components/ui/date-picker";
-import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "$lib/components/ui/tabs";
-import { Dialog as DialogPrimitive } from "bits-ui";
-const DialogRoot = DialogPrimitive.Root;
-import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "$lib/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "$lib/components/ui/select";
 
 $effect(() => {
   loadCurrentUser().then(() => {
@@ -69,7 +88,9 @@ async function create() {
   const payload = {
     customer_name: form.customer_name,
     contact_info: form.contact_info,
-    booking_datetime: new Date(`${form.booking_date}T${form.booking_time || "00:00"}`),
+    booking_datetime: new Date(
+      `${form.booking_date}T${form.booking_time || "00:00"}`
+    ),
     field_number: Number(form.field_number || 1),
     num_players: Number(form.num_players || 0),
     notes: form.notes || null,
@@ -126,105 +147,171 @@ async function saveEdit() {
 }
 </script>
 
-<section class="space-y-8">
-  <div class="text-center space-y-4 pb-2">
-    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500/20 to-green-600/10 mb-4">
-      <span class="text-2xl">⚽</span>
-    </div>
-    <div>
-      <h1 class="text-3xl font-bold gradient-text mb-2">{t('pages.football.title')}</h1>
-      <p class="text-muted-foreground text-lg">{t('pages.football.subtitle')}</p>
-    </div>
-  </div>
+<PageContent>
+  <PageHeader
+    title={t("pages.football.title")}
+    subtitle={t("pages.football.subtitle")}
+  />
 
   <Tabs value="create" class="w-full">
-    <TabsList class="grid w-full grid-cols-2 lg:w-96">
-      <TabsTrigger value="create" class="rounded-lg">{t('pages.football.tabsCreate')}</TabsTrigger>
-      <TabsTrigger value="upcoming" class="rounded-lg">{t('pages.football.tabsUpcoming')}</TabsTrigger>
+    <TabsList class="grid w-full max-w-lg grid-cols-2 rounded-2xl border border-outline-soft bg-surface">
+      <TabsTrigger value="create" class="rounded-xl">
+        {t("pages.football.tabsCreate")}
+      </TabsTrigger>
+      <TabsTrigger value="upcoming" class="rounded-xl">
+        {t("pages.football.tabsUpcoming")}
+      </TabsTrigger>
     </TabsList>
 
     <TabsContent value="create" class="mt-8">
-      <Card class="card-hover">
-        <CardHeader class="pb-6">
-          <CardTitle class="text-xl">{t('pages.football.createTitle')}</CardTitle>
-          <p class="text-sm text-muted-foreground mt-1">{t('pages.football.subtitle')}</p>
-        </CardHeader>
-        <CardContent>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-4">
-              <div class="space-y-2">
-                <Label class="text-sm font-medium">{t('pages.football.customerName')}</Label>
-                <Input bind:value={form.customer_name} class="h-11" />
+      <Card class="rounded-3xl border border-outline-soft bg-surface shadow-sm">
+        <div class="flex flex-col gap-6 border-b border-outline-soft/70 p-6">
+          <h2 class="text-lg font-semibold text-foreground">
+            {t("pages.football.createTitle")}
+          </h2>
+          <p class="text-sm text-muted-foreground">
+            {t("pages.football.subtitle")}
+          </p>
+        </div>
+        <div class="grid gap-6 p-6 md:grid-cols-2">
+            <div class="flex flex-col gap-4">
+              <label class="flex flex-col gap-2 text-sm text-muted-foreground">
+                <span class="font-medium text-foreground">{t("pages.football.customerName")}</span>
+                <Input
+                  bind:value={form.customer_name}
+                  class="rounded-xl border-outline-soft bg-background"
+                />
+              </label>
+              <label class="flex flex-col gap-2 text-sm text-muted-foreground">
+                <span class="font-medium text-foreground">{t("pages.football.contactInfo")}</span>
+                <Input
+                  placeholder={t("pages.football.contactPlaceholder")}
+                  bind:value={form.contact_info}
+                  class="rounded-xl border-outline-soft bg-background"
+                />
+              </label>
+            <label class="flex flex-col gap-2 text-sm text-muted-foreground">
+              <span class="font-medium text-foreground">{t("pages.football.dateTime")}</span>
+              <div class="grid grid-cols-[1fr_auto] items-center gap-2">
+                <DatePicker bind:value={form.booking_date} ariaLabel={t("pages.football.dateTime")} />
+                <Input
+                  type="time"
+                  bind:value={form.booking_time}
+                  class="w-28 rounded-xl border-outline-soft bg-background"
+                />
               </div>
-              <div class="space-y-2">
-                <Label class="text-sm font-medium">{t('pages.football.contactInfo')}</Label>
-                <Input placeholder={t('pages.football.contactPlaceholder')} bind:value={form.contact_info} class="h-11" />
-              </div>
-              <div class="space-y-2">
-                <Label class="text-sm font-medium">{t('pages.football.dateTime')}</Label>
-                <div class="grid grid-cols-[1fr_auto] gap-2 items-center">
-                  <DatePicker bind:value={form.booking_date} ariaLabel={t('pages.football.dateTime')} />
-                  <Input type="time" bind:value={form.booking_time} class="h-11 w-28" />
-                </div>
-              </div>
-            </div>
-            <div class="space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-2">
-                  <Label class="text-sm font-medium">{t('pages.football.field')}</Label>
-                  <Input type="number" min="1" max="5" bind:value={form.field_number} class="h-11" />
-                </div>
-                <div class="space-y-2">
-                  <Label class="text-sm font-medium">{t('pages.football.players')}</Label>
-                  <Input type="number" min="2" max="12" bind:value={form.num_players} class="h-11" />
-                </div>
-              </div>
-              <div class="space-y-2">
-                <Label class="text-sm font-medium">{t('pages.football.notes')}</Label>
-                <Textarea placeholder={t('pages.football.notesPlaceholder')} bind:value={form.notes} class="min-h-20" />
-              </div>
-              <Button onclick={create} size="lg" class="w-full h-12 rounded-xl">
-                {t('pages.football.createButton')}
-              </Button>
-            </div>
+            </label>
           </div>
-        </CardContent>
+
+          <div class="flex flex-col gap-4">
+            <div class="grid grid-cols-2 gap-4">
+              <label class="flex flex-col gap-2 text-sm text-muted-foreground">
+                <span class="font-medium text-foreground">{t("pages.football.field")}</span>
+                <Input
+                  type="number"
+                  min="1"
+                  max="5"
+                  bind:value={form.field_number}
+                  class="rounded-xl border-outline-soft bg-background"
+                />
+              </label>
+              <label class="flex flex-col gap-2 text-sm text-muted-foreground">
+                <span class="font-medium text-foreground">{t("pages.football.players")}</span>
+                <Input
+                  type="number"
+                  min="2"
+                  max="12"
+                  bind:value={form.num_players}
+                  class="rounded-xl border-outline-soft bg-background"
+                />
+              </label>
+            </div>
+            <label class="flex flex-col gap-2 text-sm text-muted-foreground">
+              <span class="font-medium text-foreground">{t("pages.football.notes")}</span>
+              <Textarea
+                placeholder={t("pages.football.notesPlaceholder")}
+                bind:value={form.notes}
+                class="min-h-24 rounded-xl border-outline-soft bg-background"
+              />
+            </label>
+            <Button
+              type="button"
+              onclick={create}
+              class="h-12 rounded-full text-sm font-semibold"
+            >
+              {t("pages.football.createButton")}
+            </Button>
+          </div>
+        </div>
       </Card>
     </TabsContent>
 
     <TabsContent value="upcoming" class="mt-8">
-      <Card class="card-hover">
-        <CardHeader class="pb-6">
-          <CardTitle class="text-xl">{t('pages.football.upcomingTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <Card class="rounded-3xl border border-outline-soft bg-surface shadow-sm">
+        <div class="flex flex-col gap-6 border-b border-outline-soft/70 p-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-lg font-semibold text-foreground">
+                {t("pages.football.upcomingTitle")}
+              </h2>
+              <p class="text-sm text-muted-foreground">
+                {t("pages.football.manageExisting")}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="p-6">
           {#if list.length === 0}
-            <div class="text-center py-10 text-muted-foreground">{t('pages.football.none')}</div>
+            <div class="grid place-items-center gap-4 rounded-2xl border border-dashed border-outline-soft/70 bg-surface-strong/40 px-8 py-16 text-center text-sm text-muted-foreground">
+              {t("pages.football.none")}
+            </div>
           {:else}
-            <div class="space-y-4">
-              {#each list as b}
-                <div class="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                  <div class="flex-1 min-w-0 text-sm text-muted-foreground">
-                    <div class="font-medium text-foreground">{b.customer_name}</div>
-                    <div>{formatDateTime(b.booking_datetime)} • {t('pages.football.fieldLabel')} {b.field_number} • {b.num_players} {t('pages.football.players').toLowerCase()}</div>
-                    <div>{b.contact_info}</div>
-                    {#if b.notes}
-                      <div class="italic mt-1">"{b.notes}"</div>
+            <div class="flex flex-col gap-4">
+              {#each list as booking}
+                <div class="flex items-center justify-between gap-4 rounded-2xl border border-outline-soft bg-surface px-4 py-4 text-sm text-muted-foreground transition-all hover:border-outline-strong hover:bg-surface-strong/60">
+                  <div class="min-w-0 flex-1">
+                    <div class="font-semibold text-foreground">{booking.customer_name}</div>
+                    <div class="mt-1 flex flex-wrap items-center gap-3 text-xs">
+                      <span>{formatDateTime(booking.booking_datetime)}</span>
+                      <span>
+                        {t("pages.football.fieldLabel")}
+                        {" "}
+                        {booking.field_number}
+                      </span>
+                      <span>{booking.num_players} {t("pages.football.players").toLowerCase()}</span>
+                    </div>
+                    <div class="mt-1 text-xs text-muted-foreground">{booking.contact_info}</div>
+                    {#if booking.notes}
+                      <div class="mt-2 text-xs italic text-muted-foreground">
+                        "{booking.notes}"
+                      </div>
                     {/if}
                   </div>
-                  <div class="flex items-center gap-2 ml-4">
-                    <span class={`px-3 py-1 rounded-full text-xs capitalize ${b.status === 'confirmed' ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' : 'bg-muted'}`}>{t(`pages.football.status.${b.status}` as any)}</span>
-                    <Button variant="outline" size="sm" class="h-8 px-2" onclick={() => openEdit(b)}>{t('common.edit')}</Button>
+                  <div class="flex items-center gap-2">
+                    <span
+                      class={`rounded-full px-3 py-1 text-xs font-medium capitalize ${booking.status === 'confirmed' ? 'bg-green-500/10 text-green-700 dark:text-green-300' : 'bg-muted text-muted-foreground'}`}
+                    >
+                      {t(`pages.football.status.${booking.status}` as any)}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      class="rounded-full"
+                      onclick={() => openEdit(booking)}
+                    >
+                      {t("common.edit")}
+                    </Button>
                   </div>
                 </div>
               {/each}
             </div>
           {/if}
-        </CardContent>
+        </div>
       </Card>
     </TabsContent>
   </Tabs>
-</section>
+</PageContent>
 
 
 <DialogRoot bind:open={showEdit}>

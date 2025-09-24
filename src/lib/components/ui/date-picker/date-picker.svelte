@@ -2,7 +2,12 @@
 import { Input } from "$lib/components/ui/input";
 import { locale } from "$lib/i18n";
 
-let { value = $bindable(""), ariaLabel = "", showTime = false, time = $bindable("") } = $props<{
+let {
+  value = $bindable(""),
+  ariaLabel = "",
+  showTime = false,
+  time = $bindable(""),
+} = $props<{
   value: string; // YYYY-MM-DD
   ariaLabel?: string;
   showTime?: boolean;
@@ -34,8 +39,10 @@ function formatDateOnly(): string {
     year: "2-digit",
   }).format(d);
 }
+const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
 function normalizeTimeString(str: string): string {
-  const m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(str.trim());
+  const m = TIME_PATTERN.exec(str.trim());
   if (m) return `${m[1]}:${m[2]}`;
   return "";
 }

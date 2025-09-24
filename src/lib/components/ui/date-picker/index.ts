@@ -5,5 +5,4 @@ export {
   //
   Root as DatePicker,
 };
-
-
+export { default as DateRangePicker } from "./date-range-picker.svelte";

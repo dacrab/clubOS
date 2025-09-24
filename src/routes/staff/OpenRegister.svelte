@@ -28,9 +28,24 @@ async function openNow() {
 }
 </script>
 
-<div class="flex gap-2 items-center">
-  <Input class="w-40" type="number" step="0.01" placeholder="Opening cash €" bind:value={openingCash} />
-  <Button variant="outline" onclick={openNow} disabled={saving}>Open</Button>
+<div class="flex items-center gap-3 rounded-2xl border border-outline-soft bg-surface px-4 py-3">
+  <Input
+    class="w-40 rounded-xl border-outline-soft bg-background"
+    type="number"
+    step="0.01"
+    min="0"
+    placeholder="Opening cash €"
+    bind:value={openingCash}
+  />
+  <Button
+    type="button"
+    variant="outline"
+    class="rounded-full"
+    onclick={openNow}
+    disabled={saving}
+  >
+    Open
+  </Button>
 </div>
 
 

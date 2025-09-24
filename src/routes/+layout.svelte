@@ -11,6 +11,10 @@ let theme = $state<"light" | "dark" | "system">("system");
 const isLoginPage = $derived($page.url.pathname === "/");
 let SidebarComp = $state<any>(null);
 
+const shellClass = $derived(
+  "min-h-screen bg-background text-foreground transition-colors duration-200"
+);
+
 $effect(() => {
   if (typeof window !== "undefined") {
     if (!isLoginPage) {
@@ -51,18 +55,22 @@ $effect(() => {
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<div class="min-h-screen bg-background">
-    <Toaster richColors position="top-center" />
-    <div class="flex min-h-screen">
-			{#if !isLoginPage}
-				{#if SidebarComp}
-					<SidebarComp />
-				{/if}
-			{/if}
-			<div class="flex-1" class:pl-64={!isLoginPage}>
-				<main class={`max-w-6xl mx-auto ${isLoginPage ? '' : 'px-6 py-6'}`}>
-                {@render children()}
-            </main>
-        </div>
+<div class={shellClass}>
+  <Toaster richColors position="top-center" />
+  <div class="flex min-h-screen">
+    {#if !isLoginPage}
+      {#if SidebarComp}
+        <SidebarComp />
+      {/if}
+    {/if}
+    <div class="flex-1" class:pl-72={!isLoginPage}>
+      <main
+        class={`mx-auto ${
+          isLoginPage ? "max-w-lg px-4 py-12" : "max-w-6xl px-12 py-12"
+        } flex flex-col gap-10`}
+      >
+        {@render children()}
+      </main>
     </div>
+  </div>
 </div>

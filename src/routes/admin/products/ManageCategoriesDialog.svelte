@@ -4,7 +4,12 @@ import { Dialog as DialogPrimitive } from "bits-ui";
 const Dialog = DialogPrimitive.Root;
 
 import { Button } from "$lib/components/ui/button";
-import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "$lib/components/ui/dialog";
+import {
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "$lib/components/ui/dialog";
 import { Input } from "$lib/components/ui/input";
 import { Label } from "$lib/components/ui/label";
 import {
@@ -13,9 +18,16 @@ import {
   SelectItem,
   SelectTrigger,
 } from "$lib/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$lib/components/ui/table";
-import { supabase } from "$lib/supabaseClient";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "$lib/components/ui/table";
 import { t } from "$lib/i18n";
+import { supabase } from "$lib/supabaseClient";
 
 export type Category = {
   id: string;

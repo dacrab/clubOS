@@ -86,90 +86,112 @@ async function signIn(e?: Event) {
 }
 </script>
 
-<div class="min-h-screen flex items-center justify-center px-4">
+<div class="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-4">
+  <div class="pointer-events-none absolute inset-0 -z-10 select-none bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.18),_transparent_60%)]"></div>
+
   {#if redirecting}
-    <div class="fixed inset-0 z-50 grid place-items-center bg-background/80 backdrop-blur-sm">
-      <div class="flex items-center gap-2 p-3 rounded-md border bg-card text-sm text-muted-foreground">
-        <Monitor class="w-4 h-4" /> {t('dashboard.loading')}
+    <div class="fixed inset-0 z-50 grid place-items-center bg-background/70 backdrop-blur-sm">
+      <div class="flex items-center gap-2 rounded-full border border-outline-soft bg-surface px-4 py-2 text-sm text-muted-foreground shadow-sm">
+        <Monitor class="h-4 w-4" /> {t("dashboard.loading")}
       </div>
     </div>
   {/if}
-  <!-- Language switch -->
-  <div class="fixed top-4 right-4">
-    <div class="inline-flex items-center gap-1 rounded-md border p-0.5 h-9 bg-card">
-      <button
-        type="button"
-        class={`${$locale==='en' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'} px-2 h-8 rounded text-xs`}
-        aria-pressed={$locale==='en'}
-        onclick={() => { locale.set('en'); }}
-      >EN</button>
-      <button
-        type="button"
-        class={`${$locale==='el' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'} px-2 h-8 rounded text-xs`}
-        aria-pressed={$locale==='el'}
-        onclick={() => { locale.set('el'); }}
-      >EL</button>
-    </div>
+
+  <div class="absolute right-4 top-4 flex items-center gap-2 rounded-full border border-outline-soft bg-surface px-1 py-1 text-xs shadow-sm">
+    <button
+      type="button"
+      class={`${
+        $locale === "en"
+          ? "rounded-full bg-primary px-3 py-1 text-white"
+          : "rounded-full px-3 py-1 text-muted-foreground"
+      } transition-colors`}
+      aria-pressed={$locale === "en"}
+      onclick={() => {
+        locale.set("en");
+      }}
+    >
+      EN
+    </button>
+    <button
+      type="button"
+      class={`${
+        $locale === "el"
+          ? "rounded-full bg-primary px-3 py-1 text-white"
+          : "rounded-full px-3 py-1 text-muted-foreground"
+      } transition-colors`}
+      aria-pressed={$locale === "el"}
+      onclick={() => {
+        locale.set("el");
+      }}
+    >
+      EL
+    </button>
   </div>
 
-  <div class="w-full max-w-md space-y-8">
-    <!-- Logo and Title -->
-    <div class="text-center space-y-4">
-      <div class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-primary mb-4">
-        <span class="text-primary-foreground font-semibold text-lg">C</span>
-      </div>
-      <div>
-        <h1 class="text-2xl font-semibold">{t('login.title')}</h1>
-        <p class="text-muted-foreground">{t('login.subtitle')}</p>
+  <div class="mx-auto w-full max-w-sm space-y-8">
+    <div class="flex flex-col items-center gap-6 text-center">
+      <span class="grid size-16 place-items-center rounded-3xl bg-primary/10 text-2xl font-semibold text-primary">
+        CO
+      </span>
+      <div class="space-y-2">
+        <h1 class="text-2xl font-semibold tracking-tight text-foreground">
+          {t("login.title")}
+        </h1>
+        <p class="text-sm text-muted-foreground">{t("login.subtitle")}</p>
       </div>
     </div>
 
-    <!-- Login Form -->
-    <Card>
-      <CardContent class="p-6">
-        <form onsubmit={signIn} class="space-y-4">
-          <!-- Quick login -->
-          <div class="space-y-2">
-            <p class="text-xs text-muted-foreground">{t('login.quickLogin')}</p>
-            <div class="flex gap-2 flex-wrap">
-              {#each seededUsers as u}
+    <Card class="rounded-3xl border border-outline-soft bg-surface/80 shadow-xl backdrop-blur">
+      <CardContent class="p-8">
+        <form onsubmit={signIn} class="flex flex-col gap-5">
+          <div class="space-y-3">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              {t("login.quickLogin")}
+            </p>
+            <div class="flex flex-wrap gap-2">
+              {#each seededUsers as userSeed}
                 <button
                   type="button"
-                  class="px-2 py-1 rounded bg-secondary text-secondary-foreground text-xs"
-                  onclick={() => quickFill(u.email, u.password)}
-                  aria-label={`Use ${u.label} user`}
+                  class="rounded-full border border-outline-soft bg-surface px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                  onclick={() => quickFill(userSeed.email, userSeed.password)}
+                  aria-label={`Use ${userSeed.label} user`}
                 >
-                  {u.label}
+                  {userSeed.label}
                 </button>
               {/each}
             </div>
           </div>
 
-          <div class="space-y-2">
-            <Label>{t('login.usernameLabel')}</Label>
+          <div class="flex flex-col gap-2">
+            <Label class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              {t("login.usernameLabel")}
+            </Label>
             <Input
-              placeholder={t('login.usernamePlaceholder')}
+              placeholder={t("login.usernamePlaceholder")}
               bind:value={username}
               autocomplete="username"
+              class="rounded-xl border-outline-soft bg-background"
             />
           </div>
 
-          <div class="space-y-2">
-            <Label>{t('login.passwordLabel')}</Label>
+          <div class="flex flex-col gap-2">
+            <Label class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              {t("login.passwordLabel")}
+            </Label>
             <div class="relative">
               <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder={t('login.passwordPlaceholder')}
+                type={showPassword ? "text" : "password"}
+                placeholder={t("login.passwordPlaceholder")}
                 bind:value={password}
                 autocomplete="current-password"
-                class="pr-10"
+                class="rounded-xl border-outline-soft bg-background pr-11"
               />
               <button
                 type="button"
-                class="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+                class="absolute inset-y-0 right-3 flex items-center text-muted-foreground transition-colors hover:text-foreground"
                 onclick={() => (showPassword = !showPassword)}
                 aria-pressed={showPassword}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {#if showPassword}
                   <EyeOff class="size-4" />
@@ -186,14 +208,14 @@ async function signIn(e?: Event) {
 
           <Button
             type="submit"
-            class="w-full"
+            class="h-12 rounded-full text-sm font-semibold"
             disabled={loading}
             aria-busy={loading}
           >
             {#if loading}
-              {t('login.loading')}
+              {t("login.loading")}
             {:else}
-              {t('login.submit')}
+              {t("login.submit")}
             {/if}
           </Button>
         </form>
