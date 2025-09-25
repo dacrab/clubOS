@@ -1,22 +1,23 @@
 <script lang="ts">
 import Eye from "@lucide/svelte/icons/eye";
 import EyeOff from "@lucide/svelte/icons/eye-off";
-import Monitor from "@lucide/svelte/icons/monitor";
 import { toast } from "svelte-sonner";
 import { env as publicEnv } from "$env/dynamic/public";
+import { goto } from "$app/navigation";
 import { Button } from "$lib/components/ui/button";
 import { Card, CardContent } from "$lib/components/ui/card";
 import { Input } from "$lib/components/ui/input";
 import { Label } from "$lib/components/ui/label";
 import { locale, t } from "$lib/i18n";
 import { supabase } from "$lib/supabaseClient";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "$lib/components/ui/dropdown-menu";
 
 let username = $state("");
 let password = $state("");
 let loading = $state(false);
-let redirecting = $state(false);
 let errorMessage = $state("");
 let showPassword = $state(false);
+let currentTheme = $state<"light" | "dark" | "system">("system");
 const seededUsers: Array<{
   label: string;
   email: string;
@@ -48,11 +49,30 @@ function quickFill(emailOrUsername: string, pwd: string) {
   password = pwd;
 }
 
+$effect(() => {
+  if (typeof window === "undefined") return;
+  const stored = window.localStorage.getItem("theme");
+  if (stored === "light" || stored === "dark" || stored === "system") {
+    currentTheme = stored;
+  }
+});
+
+function applyTheme(theme: "light" | "dark" | "system"): void {
+  if (typeof window === "undefined") return;
+  currentTheme = theme;
+  window.localStorage.setItem("theme", theme);
+  const root = document.documentElement;
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const resolved = theme === "system" ? (mq.matches ? "dark" : "light") : theme;
+  if (resolved === "dark") root.classList.add("dark");
+  else root.classList.remove("dark");
+}
+
 async function signIn(e?: Event) {
   e?.preventDefault();
   errorMessage = "";
   if (!(username && password)) {
-    errorMessage = t("login.usernamePlaceholder");
+    errorMessage = t("login.missingCredentials");
     toast.error(errorMessage);
     return;
   }
@@ -72,12 +92,7 @@ async function signIn(e?: Event) {
       return;
     }
     toast.success(t("login.success"));
-    redirecting = true;
-    // Give the overlay a moment to render/animate before navigation
-    const REDIRECT_DELAY_MS = 400;
-    setTimeout(() => {
-      window.location.href = "/dashboard";
-    }, REDIRECT_DELAY_MS);
+    await goto("/dashboard");
   } catch (err) {
     toast.error(t("login.error"));
   } finally {
@@ -86,47 +101,8 @@ async function signIn(e?: Event) {
 }
 </script>
 
-<div class="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-4">
+<div class="relative flex flex-col items-center bg-background px-4">
   <div class="pointer-events-none absolute inset-0 -z-10 select-none bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.18),_transparent_60%)]"></div>
-
-  {#if redirecting}
-    <div class="fixed inset-0 z-50 grid place-items-center bg-background/70 backdrop-blur-sm">
-      <div class="flex items-center gap-2 rounded-full border border-outline-soft bg-surface px-4 py-2 text-sm text-muted-foreground shadow-sm">
-        <Monitor class="h-4 w-4" /> {t("dashboard.loading")}
-      </div>
-    </div>
-  {/if}
-
-  <div class="absolute right-4 top-4 flex items-center gap-2 rounded-full border border-outline-soft bg-surface px-1 py-1 text-xs shadow-sm">
-    <button
-      type="button"
-      class={`${
-        $locale === "en"
-          ? "rounded-full bg-primary px-3 py-1 text-white"
-          : "rounded-full px-3 py-1 text-muted-foreground"
-      } transition-colors`}
-      aria-pressed={$locale === "en"}
-      onclick={() => {
-        locale.set("en");
-      }}
-    >
-      EN
-    </button>
-    <button
-      type="button"
-      class={`${
-        $locale === "el"
-          ? "rounded-full bg-primary px-3 py-1 text-white"
-          : "rounded-full px-3 py-1 text-muted-foreground"
-      } transition-colors`}
-      aria-pressed={$locale === "el"}
-      onclick={() => {
-        locale.set("el");
-      }}
-    >
-      EL
-    </button>
-  </div>
 
   <div class="mx-auto w-full max-w-sm space-y-8">
     <div class="flex flex-col items-center gap-6 text-center">
@@ -143,6 +119,51 @@ async function signIn(e?: Event) {
 
     <Card class="rounded-3xl border border-outline-soft bg-surface/80 shadow-xl backdrop-blur">
       <CardContent class="p-8">
+        <div class="mb-4 flex items-center justify-between">
+          <div class="flex items-center gap-2 rounded-full border border-outline-soft bg-surface px-1 py-1 text-xs shadow-sm">
+            <button
+              type="button"
+              class={`${
+                $locale === "en"
+                  ? "rounded-full bg-primary px-3 py-1 text-white"
+                  : "rounded-full px-3 py-1 text-muted-foreground"
+              } transition-colors`}
+              aria-pressed={$locale === "en"}
+              onclick={() => {
+                locale.set("en");
+              }}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              class={`${
+                $locale === "el"
+                  ? "rounded-full bg-primary px-3 py-1 text-white"
+                  : "rounded-full px-3 py-1 text-muted-foreground"
+              } transition-colors`}
+              aria-pressed={$locale === "el"}
+              onclick={() => {
+                locale.set("el");
+              }}
+            >
+              EL
+            </button>
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Button type="button" variant="outline" class="rounded-full text-xs">
+                {#if currentTheme === "system"}{t("theme.system")} {:else if currentTheme === "dark"}{t("theme.dark")} {:else}{t("theme.light")} {/if}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent class="w-36 rounded-2xl">
+              <DropdownMenuItem onclick={() => applyTheme("system")}>{t("theme.system")}</DropdownMenuItem>
+              <DropdownMenuItem onclick={() => applyTheme("light")}>{t("theme.light")}</DropdownMenuItem>
+              <DropdownMenuItem onclick={() => applyTheme("dark")}>{t("theme.dark")}</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         <form onsubmit={signIn} class="flex flex-col gap-5">
           <div class="space-y-3">
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
