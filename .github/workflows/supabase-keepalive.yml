@@ -12,13 +12,12 @@ jobs:
     steps:
       - name: Ping Supabase REST (health)
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
         run: |
           set -euo pipefail
-          BASE_URL="${SUPABASE_URL:-${PUBLIC_SUPABASE_URL:-}}"
+          BASE_URL="${PUBLIC_SUPABASE_URL:-}"
           if [ -z "$BASE_URL" ]; then
-            echo "Missing SUPABASE_URL or PUBLIC_SUPABASE_URL secret" >&2
+            echo "Missing PUBLIC_SUPABASE_URL secret" >&2
             exit 1
           fi
           # Try the platform health endpoint first (does not require auth)
