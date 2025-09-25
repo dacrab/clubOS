@@ -57,7 +57,7 @@ const navSections: NavSection[] = [
     headingKey: "nav.overview" as TranslationKey,
     items: [
       {
-        href: "/dashboard",
+        href: "/admin",
         icon: Home,
         labelKey: "nav.dashboard",
       },

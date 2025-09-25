@@ -92,7 +92,24 @@ async function signIn(e?: Event) {
       return;
     }
     toast.success(t("login.success"));
-    await goto("/dashboard");
+    // Redirect based on role
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    let target = "/";
+    if (user) {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      const role = (profile?.role as "admin" | "staff" | "secretary" | null) ?? null;
+      if (role === "admin") target = "/admin";
+      else if (role === "staff") target = "/staff";
+      else if (role === "secretary") target = "/secretary";
+      else target = "/";
+    }
+    await goto(target);
   } catch (err) {
     toast.error(t("login.error"));
   } finally {
