@@ -357,6 +357,7 @@ const translations = {
         el: "Καθημερινά ανοίγματα, κλείσιμο και συνοπτικά οικονομικά",
       },
       pickDate: { en: "Pick date", el: "Επιλογή ημερομηνίας" },
+      allDates: { en: "All", el: "Όλα" },
       totalSessions: { en: "Sessions", el: "Συνεδρίες" },
       openSessions: { en: "Open Today", el: "Ανοιχτές σήμερα" },
       totalDiscounts: { en: "Discounts", el: "Εκπτώσεις" },
@@ -400,6 +401,13 @@ const translations = {
     system: { en: "System", el: "Σύστημα" },
     light: { en: "Light", el: "Φωτεινό" },
     dark: { en: "Dark", el: "Σκούρο" },
+  },
+  date: {
+    all: { en: "All", el: "Όλα" },
+    today: { en: "Today", el: "Σήμερα" },
+    yesterday: { en: "Yesterday", el: "Χθες" },
+    last7: { en: "Last 7", el: "Τελευταίες 7" },
+    last30: { en: "Last 30", el: "Τελευταίες 30" },
   },
   inventory: {
     lowStock: {

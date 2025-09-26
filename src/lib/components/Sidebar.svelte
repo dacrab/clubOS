@@ -111,8 +111,23 @@ const navSections: NavSection[] = [
   },
 ];
 
+const TRAILING_SLASH_RE = /\/+$/;
+
+function normalizePath(p: string): string {
+  const n = p.replace(TRAILING_SLASH_RE, "");
+  return n === "" ? "/" : n;
+}
+
 function isActive(path: string): boolean {
-  return $page.url.pathname.startsWith(path);
+  const current = normalizePath($page.url.pathname);
+  const href = normalizePath(path);
+  const depth = href.split("/").filter(Boolean).length; // e.g. "/admin" -> 1, "/admin/products" -> 2
+  if (depth <= 1) {
+    // Top-level entries (like "/admin") should only be active on exact match
+    return current === href;
+  }
+  // Leaf entries are active on exact match or when current is a subpath
+  return current === href || current.startsWith(`${href}/`);
 }
 
 async function logout(): Promise<void> {

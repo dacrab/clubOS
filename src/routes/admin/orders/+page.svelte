@@ -21,6 +21,7 @@ import {
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabaseClient";
 import { formatDateTime } from "$lib/utils";
+import OrderDetails from "./OrderDetails.svelte";
 
 const DropdownMenu = DropdownMenuPrimitive.Root;
 
@@ -33,61 +34,57 @@ type OrderRow = {
   coupon_count: number;
 };
 
-type OrderItem = {
-  id: string;
-  quantity: number;
-  unit_price: number;
-  line_total: number;
-  is_treat: boolean;
-  products: { id: string; name: string; price: number };
-};
-
 let orders: OrderRow[] = $state([]);
-let itemsByOrder: Record<string, OrderItem[]> = $state({});
+// Virtualization state
+let scrollRef: HTMLDivElement | null = null;
+const ROW_HEIGHT = 56; // px, approximate row height
+const VIEW_BUFFER_ROWS = 6; // extra rows to render above/below view
+const VIEWPORT_HEIGHT = 560; // px container height
+let startIndex = $state(0);
+let endIndex = $state(0);
+let topPad = $derived(startIndex * ROW_HEIGHT);
+let bottomPad = $derived(Math.max(0, (orders.length - endIndex) * ROW_HEIGHT));
+
+function recomputeWindow() {
+  const scrollTop = scrollRef?.scrollTop ?? 0;
+  const visibleCount =
+    Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
+  const first = Math.max(
+    0,
+    Math.floor(scrollTop / ROW_HEIGHT) - Math.ceil(VIEW_BUFFER_ROWS / 2)
+  );
+  startIndex = first;
+  endIndex = Math.min(orders.length, first + visibleCount);
+}
 
 // Date range (default: today)
-const today = new Date();
-const yyyy = today.getFullYear();
-const mm = String(today.getMonth() + 1).padStart(2, "0");
-const dd = String(today.getDate()).padStart(2, "0");
-let startDate = $state<string>(`${yyyy}-${mm}-${dd}`);
-let endDate = $state<string>(`${yyyy}-${mm}-${dd}`);
+let startDate = $state<string>("");
+let endDate = $state<string>("");
 
 $effect(() => {
   loadAll();
 });
 
 async function loadAll() {
-  const start = new Date(`${startDate}T00:00:00`);
-  const end = new Date(`${endDate}T23:59:59`);
-  const { data } = await supabase
+  const startISO = startDate
+    ? new Date(`${startDate}T00:00:00`).toISOString()
+    : null;
+  const endISO = endDate ? new Date(`${endDate}T23:59:59`).toISOString() : null;
+  let query = supabase
     .from("orders")
     .select(
       "id, created_at, subtotal, discount_amount, total_amount, coupon_count"
     )
-    .gte("created_at", start.toISOString())
-    .lte("created_at", end.toISOString())
     .order("created_at", { ascending: false });
+  if (startISO) query = query.gte("created_at", startISO);
+  if (endISO) query = query.lte("created_at", endISO);
+  const { data } = await query;
   orders = (data as OrderRow[] | null) ?? [];
-
-  const ids = orders.map((order) => order.id);
-  if (ids.length === 0) {
-    itemsByOrder = {};
-    return;
-  }
-  const { data: items } = await supabase
-    .from("order_items")
-    .select(
-      "id, order_id, quantity, unit_price, line_total, is_treat, products(id,name,price)"
-    )
-    .in("order_id", ids);
-  const map: Record<string, OrderItem[]> = {};
-  for (const item of (items as OrderItem[] | null) ?? []) {
-    const orderId = (item as unknown as { order_id: string }).order_id;
-    if (!map[orderId]) map[orderId] = [];
-    map[orderId].push(item);
-  }
-  itemsByOrder = map;
+  // reset window on data change
+  startIndex = 0;
+  const visibleCount =
+    Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
+  endIndex = Math.min(orders.length, visibleCount);
 }
 
 function money(value: number) {
@@ -120,7 +117,8 @@ function money(value: number) {
       </div>
     </div>
     <div class="overflow-x-auto">
-      <Table class="min-w-full">
+      <div bind:this={scrollRef} onscroll={recomputeWindow} style={`max-height:${VIEWPORT_HEIGHT}px; overflow-y:auto;`}>
+        <Table class="min-w-full">
         <TableHeader>
           <TableRow class="border-0 text-xs uppercase tracking-[0.18em] text-muted-foreground">
             <TableHead class="rounded-l-2xl bg-surface-strong/60 pl-6">ID</TableHead>
@@ -132,7 +130,10 @@ function money(value: number) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {#each orders as order}
+          {#if topPad > 0}
+            <TableRow><TableCell colspan={6} style={`height:${topPad}px; padding:0; border:0;`}></TableCell></TableRow>
+          {/if}
+          {#each orders.slice(startIndex, endIndex) as order}
             <TableRow class="border-b border-outline-soft/40">
               <TableCell class="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
                 #{order.id.slice(0, 8)}
@@ -155,84 +156,18 @@ function money(value: number) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent class="w-[30rem] rounded-3xl border border-outline-soft bg-surface-strong/80 backdrop-blur-xl">
-                    <div class="flex flex-col gap-4 p-6">
-                      <div class="flex items-center justify-between">
-                        <h4 class="text-sm font-semibold text-foreground">
-                          {t("orders.orderLabel")} #{order.id.slice(0, 8)}
-                        </h4>
-                        <span class="text-xs text-muted-foreground">
-                          {formatDateTime(order.created_at)}
-                        </span>
-                      </div>
-
-                      <div class="grid gap-2 rounded-xl border border-outline-soft bg-surface/70 p-3 text-xs font-medium text-muted-foreground sm:grid-cols-3">
-                        <div class="flex flex-col gap-1">
-                          <span>{t("orders.itemsHeader")}</span>
-                          <span class="text-base font-semibold text-foreground">{(itemsByOrder[order.id] ?? []).length}</span>
-                        </div>
-                        <div class="flex flex-col gap-1">
-                          <span>{t("orders.coupons")}</span>
-                          <span class="text-base font-semibold text-foreground">{order.coupon_count}</span>
-                        </div>
-                        <div class="flex flex-col gap-1">
-                          <span>{t("orders.treatsWord")}</span>
-                          <span class="text-base font-semibold text-foreground">{(itemsByOrder[order.id] ?? []).filter((item) => item.is_treat).length}</span>
-                        </div>
-                      </div>
-
-                      <div class="flex flex-col gap-2">
-                        <h5 class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                          {t("orders.itemsHeader")}
-                        </h5>
-                        {#each itemsByOrder[order.id] ?? [] as item}
-                          <div class="flex items-center justify-between gap-4 rounded-xl border border-outline-soft bg-surface px-3 py-2 text-sm">
-                            <div class="flex items-center gap-2 text-foreground">
-                              <span class="font-medium">{item.products.name}</span>
-                              <span class="text-xs text-muted-foreground">×{item.quantity}</span>
-                              {#if item.is_treat}
-                                <span class="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-300">
-                                  {t("orders.free")}
-                                </span>
-                              {/if}
-                            </div>
-                            <div class="flex items-center gap-2 text-sm">
-                              {#if item.is_treat}
-                                <span class="text-xs text-muted-foreground line-through">€{Number(item.unit_price).toFixed(2)}</span>
-                                <span class="font-medium text-foreground">€0.00</span>
-                              {:else}
-                                <span class="font-medium text-foreground">€{Number(item.line_total).toFixed(2)}</span>
-                              {/if}
-                            </div>
-                          </div>
-                        {/each}
-                      </div>
-
-                      <div class="flex flex-col gap-2 border-t border-outline-soft pt-4 text-sm">
-                        <div class="flex justify-between text-muted-foreground">
-                          <span>{t("orders.subtotal")}</span>
-                          <span>{money(order.subtotal)}</span>
-                        </div>
-                        {#if order.discount_amount > 0}
-                          <div class="flex justify-between text-emerald-600 dark:text-emerald-300">
-                            <span>{t("orders.discount")}</span>
-                            <span>-{money(order.discount_amount)}</span>
-                          </div>
-                        {/if}
-                        <div class="flex justify-between text-base font-semibold">
-                          <span>{t("orders.total")}</span>
-                          <span>{money(order.total_amount)}</span>
-                        </div>
-                      </div>
-                    </div>
+                    <OrderDetails order={order} />
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
             </TableRow>
           {/each}
+          {#if bottomPad > 0}
+            <TableRow><TableCell colspan={6} style={`height:${bottomPad}px; padding:0; border:0;`}></TableCell></TableRow>
+          {/if}
         </TableBody>
-      </Table>
+        </Table>
+      </div>
     </div>
   </Card>
 </PageContent>
-
-

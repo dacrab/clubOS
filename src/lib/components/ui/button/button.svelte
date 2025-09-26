@@ -1,6 +1,7 @@
 <script lang="ts" module>
 import type {
   HTMLAnchorAttributes,
+  HTMLAttributes,
   HTMLButtonAttributes,
 } from "svelte/elements";
 import { tv, type VariantProps } from "tailwind-variants";
@@ -39,9 +40,11 @@ export type ButtonVariant = VariantProps<typeof buttonVariants>["variant"];
 export type ButtonSize = VariantProps<typeof buttonVariants>["size"];
 
 export type ButtonProps = WithElementRef<HTMLButtonAttributes> &
-  WithElementRef<HTMLAnchorAttributes> & {
+  WithElementRef<HTMLAnchorAttributes> &
+  WithElementRef<HTMLAttributes<HTMLSpanElement>> & {
     variant?: ButtonVariant;
     size?: ButtonSize;
+    as?: "button" | "a" | "span";
   };
 </script>
 
@@ -55,6 +58,7 @@ export type ButtonProps = WithElementRef<HTMLButtonAttributes> &
 		type = "button",
 		disabled,
 		children,
+  as = undefined,
 		...restProps
 	}: ButtonProps = $props();
 </script>
@@ -72,6 +76,18 @@ export type ButtonProps = WithElementRef<HTMLButtonAttributes> &
 	>
 		{@render children?.()}
 	</a>
+{:else if as === "span"}
+	<span
+		bind:this={ref}
+		data-slot="button"
+		class={cn(buttonVariants({ variant, size }), className)}
+		role="button"
+		aria-disabled={disabled}
+		tabindex={disabled ? -1 : 0}
+		{...restProps}
+	>
+		{@render children?.()}
+	</span>
 {:else}
 	<button
 		bind:this={ref}

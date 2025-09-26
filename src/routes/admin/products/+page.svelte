@@ -30,6 +30,29 @@ type Product = {
 };
 type Category = { id: string; name: string };
 let products: Product[] = $state([] as Product[]);
+// Virtualization state
+let scrollRef: HTMLDivElement | null = null;
+const ROW_HEIGHT = 56;
+const VIEW_BUFFER_ROWS = 6;
+const VIEWPORT_HEIGHT = 560;
+let startIndex = $state(0);
+let endIndex = $state(0);
+let topPad = $derived(startIndex * ROW_HEIGHT);
+let bottomPad = $derived(
+  Math.max(0, (products.length - endIndex) * ROW_HEIGHT)
+);
+
+function recomputeWindow() {
+  const scrollTop = scrollRef?.scrollTop ?? 0;
+  const visibleCount =
+    Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
+  const first = Math.max(
+    0,
+    Math.floor(scrollTop / ROW_HEIGHT) - Math.ceil(VIEW_BUFFER_ROWS / 2)
+  );
+  startIndex = first;
+  endIndex = Math.min(products.length, first + visibleCount);
+}
 let categories: Category[] = $state([] as Category[]);
 let search = $state("");
 
@@ -62,6 +85,11 @@ async function loadLists() {
     .select("id,name,price,stock_quantity,category_id,image_url")
     .order("name");
   products = (prods as any) ?? [];
+  // reset virtual window
+  startIndex = 0;
+  const visibleCount =
+    Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
+  endIndex = Math.min(products.length, visibleCount);
 }
 
 async function onCreate(payload: {
@@ -149,7 +177,8 @@ function openEdit(p: Product) {
 
     <Card class="rounded-3xl border border-outline-soft bg-surface shadow-sm">
       <div class="overflow-x-auto">
-        <Table class="min-w-full">
+        <div bind:this={scrollRef} onscroll={recomputeWindow} style={`max-height:${VIEWPORT_HEIGHT}px; overflow-y:auto;`}>
+          <Table class="min-w-full">
           <TableHeader>
             <TableRow class="border-0 text-xs uppercase tracking-[0.18em] text-muted-foreground">
               <TableHead class="w-[72px] rounded-l-2xl bg-surface-strong/60">{t("common.image")}</TableHead>
@@ -160,7 +189,10 @@ function openEdit(p: Product) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {#each filtered() as product}
+            {#if topPad > 0}
+              <TableRow><TableCell colspan={5} style={`height:${topPad}px; padding:0; border:0;`}></TableCell></TableRow>
+            {/if}
+            {#each filtered().slice(startIndex, endIndex) as product}
               <TableRow class="border-b border-outline-soft/40 text-sm">
                 <TableCell>
                   {#if product.image_url}
@@ -197,8 +229,12 @@ function openEdit(p: Product) {
                 </TableCell>
               </TableRow>
             {/each}
+            {#if bottomPad > 0}
+              <TableRow><TableCell colspan={5} style={`height:${bottomPad}px; padding:0; border:0;`}></TableCell></TableRow>
+            {/if}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </div>
     </Card>
   </div>

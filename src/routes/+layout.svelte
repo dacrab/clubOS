@@ -15,26 +15,6 @@ const shellClass = $derived(
   "min-h-screen bg-background text-foreground transition-colors duration-200"
 );
 
-function toTitleCase(input: string): string {
-  return input
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function derivePageTitle(pathname: string): string {
-  if (pathname === "/") return "Login";
-  const parts = pathname.replace(/\/+$/, "").split("/").filter(Boolean);
-  if (parts.length === 0) return "";
-  const last = parts.at(-1) ?? "";
-  return toTitleCase(last);
-}
-
-const computedTitle = $derived(() => {
-  const title = derivePageTitle($page.url.pathname);
-  return title ? `clubOS | ${title}` : "clubOS";
-});
-
 $effect(() => {
   if (typeof window !== "undefined") {
     if (!isLoginPage) {
@@ -73,7 +53,7 @@ $effect(() => {
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<title>{computedTitle}</title>
+	<title>clubOS</title>
 </svelte:head>
 
 <div class={shellClass}>

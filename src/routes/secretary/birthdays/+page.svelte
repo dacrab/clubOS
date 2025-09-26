@@ -4,7 +4,6 @@ import PageContent from "$lib/components/common/PageContent.svelte";
 import PageHeader from "$lib/components/common/PageHeader.svelte";
 import { Button } from "$lib/components/ui/button";
 import { Card } from "$lib/components/ui/card";
-import { DatePicker } from "$lib/components/ui/date-picker";
 import { Input } from "$lib/components/ui/input";
 import {
   Select,
@@ -19,6 +18,7 @@ import {
   TabsTrigger,
 } from "$lib/components/ui/tabs";
 import { Textarea } from "$lib/components/ui/textarea";
+import { locale } from "$lib/i18n";
 
 const DialogRoot = DialogPrimitive.Root;
 
@@ -185,9 +185,12 @@ async function saveEdit() {
             <label class="flex flex-col gap-2 text-sm text-muted-foreground">
               <span class="font-medium text-foreground">{t("pages.appointments.dateTime")}</span>
               <div class="grid grid-cols-[1fr_auto] items-center gap-2">
-                <DatePicker
+                <Input
+                  type="date"
                   bind:value={form.appointment_date}
-                  ariaLabel={t("pages.appointments.dateTime")}
+                  class="w-44 rounded-xl border-outline-soft bg-background"
+                  aria-label={t("pages.appointments.dateTime")}
+                  lang={$locale === 'el' ? 'el-GR' : 'en-GB'}
                 />
                 <Input
                   type="time"
@@ -377,7 +380,7 @@ async function saveEdit() {
         <label class="grid grid-cols-4 items-center gap-3 text-sm text-muted-foreground">
           <span class="text-right font-medium text-foreground">{t("pages.appointments.dateTime")}</span>
           <div class="col-span-3 grid grid-cols-[1fr_auto] items-center gap-2">
-            <DatePicker bind:value={editDate} ariaLabel={t("pages.appointments.dateTime")} />
+            <Input type="date" bind:value={editDate} class="w-44 rounded-xl border-outline-soft bg-background" aria-label={t("pages.appointments.dateTime")} lang={$locale === 'el' ? 'el-GR' : 'en-GB'} />
             <Input
               class="w-28 rounded-xl border-outline-soft bg-background"
               type="time"
