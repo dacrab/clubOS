@@ -43,7 +43,34 @@ async function loadUsers() {
 
 async function onSaveUser(user: any) {
   if (user.id) {
-    // TODO: call edge functions for role/active update
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token) {
+      const { toast } = await import("svelte-sonner");
+      toast.error("Not authenticated");
+      return;
+    }
+    const payload = {
+      id: user.id,
+      role: user.role,
+      username: user.username,
+      // send password only if provided
+      ...(user.password ? { password: user.password } : {}),
+      ...(typeof user.active === "boolean" ? { active: user.active } : {}),
+    };
+    const res = await fetch("/api/admin/users", {
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const { toast } = await import("svelte-sonner");
+      toast.error(await res.text());
+      return;
+    }
   } else {
     const { error } = await supabase.auth.signUp({
       email: `${user.username}@example.com`,

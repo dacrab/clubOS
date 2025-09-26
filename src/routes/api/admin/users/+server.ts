@@ -64,3 +64,98 @@ export const DELETE: RequestHandler = async ({ request, url }) => {
   }
   return new Response(null, { status: 204 });
 };
+
+export const PATCH: RequestHandler = async ({ request }) => {
+  const admin = await requireAdmin(request);
+  if (!admin) {
+    return new Response("Forbidden", { status: 403 });
+  }
+  type UserRole = "admin" | "staff" | "secretary";
+
+  const body = (await request.json()) as {
+    id?: string;
+    role?: UserRole;
+    username?: string;
+    password?: string;
+    active?: boolean;
+  };
+
+  const id = body.id ?? "";
+  if (!id) {
+    return new Response("Missing id", { status: 400 });
+  }
+
+  async function updateProfile(): Promise<Response | null> {
+    const updates: Partial<{ role: UserRole; username: string }> = {};
+    if (body.role) {
+      updates.role = body.role;
+    }
+    if (typeof body.username === "string" && body.username.trim() !== "") {
+      updates.username = body.username.trim();
+    }
+    if (Object.keys(updates).length === 0) {
+      return null;
+    }
+    const { error: profileError } = await supabaseAdmin
+      .from("users")
+      .update(updates)
+      .eq("id", id);
+    if (profileError) {
+      return new Response(profileError.message, { status: 400 });
+    }
+    return null;
+  }
+
+  function buildAdminAttrs(): {
+    password?: string;
+    user_metadata?: { role?: UserRole; username?: string; active?: boolean };
+  } {
+    const adminAttrs: {
+      password?: string;
+      user_metadata?: { role?: UserRole; username?: string; active?: boolean };
+    } = {};
+    if (body.password && body.password.length > 0) {
+      adminAttrs.password = body.password;
+    }
+    const user_meta: { role?: UserRole; username?: string; active?: boolean } =
+      {};
+    if (body.role) {
+      user_meta.role = body.role;
+    }
+    if (typeof body.username === "string" && body.username.trim() !== "") {
+      user_meta.username = body.username.trim();
+    }
+    if (typeof body.active === "boolean") {
+      user_meta.active = body.active;
+    }
+    if (Object.keys(user_meta).length > 0) {
+      adminAttrs.user_metadata = user_meta;
+    }
+    return adminAttrs;
+  }
+
+  async function updateAuth(): Promise<Response | null> {
+    const adminAttrs = buildAdminAttrs();
+    if (Object.keys(adminAttrs).length === 0) {
+      return null;
+    }
+    const { error: adminError } = await supabaseAdmin.auth.admin.updateUserById(
+      id,
+      adminAttrs
+    );
+    if (adminError) {
+      return new Response(adminError.message, { status: 400 });
+    }
+    return null;
+  }
+
+  const profileResult = await updateProfile();
+  if (profileResult) {
+    return profileResult;
+  }
+  const authResult = await updateAuth();
+  if (authResult) {
+    return authResult;
+  }
+  return new Response(null, { status: 204 });
+};
