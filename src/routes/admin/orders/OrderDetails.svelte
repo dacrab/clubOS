@@ -74,7 +74,7 @@ function money(value: number) {
     </span>
   </div>
 
-  <div class="grid gap-2 rounded-xl border border-outline-soft bg-surface/70 p-3 text-xs font-medium text-muted-foreground sm:grid-cols-3">
+  <div class="grid gap-3 rounded-xl border border-outline-soft/60 bg-surface-soft/80 p-4 text-xs font-medium text-muted-foreground sm:grid-cols-3">
     <div class="flex flex-col gap-1">
       <span>{t("orders.itemsHeader")}</span>
       <span class="text-base font-semibold text-foreground">{items.length}</span>
@@ -94,12 +94,12 @@ function money(value: number) {
       {t("orders.itemsHeader")}
     </h5>
     {#each items as item}
-      <div class="flex items-center justify-between gap-4 rounded-xl border border-outline-soft bg-surface px-3 py-2 text-sm">
+      <div class="flex items-center justify-between gap-4 rounded-xl border border-outline-soft/60 bg-surface px-3 py-3 text-sm">
         <div class="flex items-center gap-2 text-foreground">
           <span class="font-medium">{item.product_name}</span>
           <span class="text-xs text-muted-foreground">×{item.quantity}</span>
           {#if item.is_treat}
-            <span class="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-300">
+            <span class="rounded-lg bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-300">
               {t("orders.free")}
             </span>
           {/if}
@@ -116,7 +116,7 @@ function money(value: number) {
     {/each}
   </div>
 
-  <div class="flex flex-col gap-2 border-t border-outline-soft pt-4 text-sm">
+  <div class="flex flex-col gap-2 border-t border-outline-soft/60 pt-4 text-sm">
     <div class="flex justify-between text-muted-foreground">
       <span>{t("orders.subtotal")}</span>
       <span>{money(order.subtotal)}</span>

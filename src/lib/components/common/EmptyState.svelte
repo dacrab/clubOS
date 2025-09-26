@@ -19,31 +19,39 @@ const { title, description, icon, actionLabel, onAction, badge, children } =
   }>();
 </script>
 
-<Card class="empty-card">
-  <CardHeader class="empty-card__header">
-    <div class="empty-card__icon">
-      {#if icon}
-        <icon class="h-6 w-6"></icon>
-      {:else}
-        <span class="empty-card__pulse"></span>
+<Card class="rounded-2xl border border-outline-soft/70 bg-surface-soft/90 shadow-sm">
+  <CardHeader class="flex flex-col gap-3 rounded-t-2xl border-b border-outline-soft/50 bg-background/70 px-6 py-5">
+    <div class="flex items-center gap-4">
+      <div class="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
+        {#if icon}
+          <icon class="size-5"></icon>
+        {:else}
+          <span class="mx-auto size-2 rounded-full bg-primary"></span>
+        {/if}
+      </div>
+      <div class="flex min-w-0 flex-1 flex-col gap-1">
+        <CardTitle class="truncate text-lg font-semibold text-foreground">
+          {title}
+        </CardTitle>
+        {#if description}
+          <CardDescription class="text-sm text-muted-foreground">
+            {description}
+          </CardDescription>
+        {/if}
+      </div>
+      {#if badge}
+        <Badge variant="outline" class="rounded-full px-3 py-1 text-xs font-medium text-muted-foreground">
+          {badge}
+        </Badge>
       {/if}
     </div>
-    <div class="empty-card__titles">
-      <CardTitle class="empty-card__title">{title}</CardTitle>
-      {#if description}
-        <CardDescription class="empty-card__description">{description}</CardDescription>
-      {/if}
-    </div>
-    {#if badge}
-      <Badge variant="outline" class="empty-card__badge">{badge}</Badge>
-    {/if}
   </CardHeader>
-  <CardContent class="empty-card__content">
+  <CardContent class="flex flex-col gap-4 px-6 py-6 text-sm text-muted-foreground">
     {@render children?.()}
     {#if actionLabel}
       <Button
         type="button"
-        class="empty-card__action"
+        class="self-start rounded-lg px-5 py-2 text-sm font-medium"
         onclick={onAction}
         disabled={!onAction}
       >

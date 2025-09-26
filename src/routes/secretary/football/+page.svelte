@@ -164,7 +164,7 @@ async function saveEdit() {
     </TabsList>
 
     <TabsContent value="create" class="mt-8">
-      <Card class="rounded-3xl border border-outline-soft bg-surface shadow-sm">
+      <Card class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm">
         <div class="flex flex-col gap-6 border-b border-outline-soft/70 p-6">
           <h2 class="text-lg font-semibold text-foreground">
             {t("pages.football.createTitle")}
@@ -179,7 +179,7 @@ async function saveEdit() {
                 <span class="font-medium text-foreground">{t("pages.football.customerName")}</span>
                 <Input
                   bind:value={form.customer_name}
-                  class="rounded-xl border-outline-soft bg-background"
+                class="rounded-lg border-outline-soft bg-background"
                 />
               </label>
               <label class="flex flex-col gap-2 text-sm text-muted-foreground">
@@ -187,7 +187,7 @@ async function saveEdit() {
                 <Input
                   placeholder={t("pages.football.contactPlaceholder")}
                   bind:value={form.contact_info}
-                  class="rounded-xl border-outline-soft bg-background"
+                class="rounded-lg border-outline-soft bg-background"
                 />
               </label>
             <label class="flex flex-col gap-2 text-sm text-muted-foreground">
@@ -231,13 +231,13 @@ async function saveEdit() {
               <Textarea
                 placeholder={t("pages.football.notesPlaceholder")}
                 bind:value={form.notes}
-                class="min-h-24 rounded-xl border-outline-soft bg-background"
+                class="min-h-24 rounded-lg border-outline-soft bg-background"
               />
             </label>
             <Button
               type="button"
               onclick={create}
-              class="h-12 rounded-full text-sm font-semibold"
+              class="h-12 rounded-lg text-sm font-semibold"
             >
               {t("pages.football.createButton")}
             </Button>
@@ -247,7 +247,7 @@ async function saveEdit() {
     </TabsContent>
 
     <TabsContent value="upcoming" class="mt-8">
-      <Card class="rounded-3xl border border-outline-soft bg-surface shadow-sm">
+      <Card class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm">
         <div class="flex flex-col gap-6 border-b border-outline-soft/70 p-6">
           <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -289,7 +289,7 @@ async function saveEdit() {
                   </div>
                   <div class="flex items-center gap-2">
                     <span
-                      class={`rounded-full px-3 py-1 text-xs font-medium capitalize ${booking.status === 'confirmed' ? 'bg-green-500/10 text-green-700 dark:text-green-300' : 'bg-muted text-muted-foreground'}`}
+                      class={`rounded-lg px-3 py-1 text-xs font-medium capitalize ${booking.status === 'confirmed' ? 'bg-green-500/10 text-green-700 dark:text-green-300' : 'bg-muted text-muted-foreground'}`}
                     >
                       {t(`pages.football.status.${booking.status}` as any)}
                     </span>
@@ -297,7 +297,7 @@ async function saveEdit() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      class="rounded-full"
+                      class="rounded-lg"
                       onclick={() => openEdit(booking)}
                     >
                       {t("common.edit")}
@@ -315,7 +315,7 @@ async function saveEdit() {
 
 
 <DialogRoot bind:open={showEdit}>
-  <DialogContent class="sm:max-w-[520px]">
+  <DialogContent class="sm:max-w-[520px] rounded-2xl border border-outline-soft/70 bg-surface-soft/90 shadow-xl">
     <DialogHeader>
       <DialogTitle>{t('pages.football.editTitle')}</DialogTitle>
     </DialogHeader>

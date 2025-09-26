@@ -58,37 +58,58 @@ async function save() {
 </script>
 
 <Dialog bind:open={open}>
-  <DialogContent class="sm:max-w-[560px]">
-    <DialogHeader>
-      <DialogTitle>{user ? t('pages.users.edit') : t('pages.users.add')}</DialogTitle>
+  <DialogContent class="sm:max-w-[520px] rounded-2xl border border-outline-soft/70 bg-surface-soft/95 shadow-xl">
+    <DialogHeader class="border-b border-outline-soft/60 pb-4">
+      <DialogTitle class="text-lg font-semibold text-foreground">
+        {user ? t("pages.users.edit") : t("pages.users.add")}
+      </DialogTitle>
     </DialogHeader>
-    <div class="grid gap-4 py-2">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="grid gap-4 py-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div class="grid gap-1.5">
-          <Label for="username">{t('common.username')}</Label>
-          <Input id="username" bind:value={form.username} placeholder={t('pages.users.usernamePlaceholder')} />
+          <Label for="username" class="text-sm text-muted-foreground">
+            {t("common.username")}
+          </Label>
+          <Input
+            id="username"
+            bind:value={form.username}
+            placeholder={t("pages.users.usernamePlaceholder")}
+            class="rounded-lg border-outline-soft bg-background"
+          />
         </div>
         <div class="grid gap-1.5">
-          <Label for="password">{t('common.password')}</Label>
-          <Input id="password" type="password" bind:value={form.password} placeholder={t('pages.users.passwordOptionalPlaceholder')} />
+          <Label for="password" class="text-sm text-muted-foreground">
+            {t("common.password")}
+          </Label>
+          <Input
+            id="password"
+            type="password"
+            bind:value={form.password}
+            placeholder={t("pages.users.passwordOptionalPlaceholder")}
+            class="rounded-lg border-outline-soft bg-background"
+          />
         </div>
         <div class="grid gap-1.5 sm:col-span-2">
-          <Label>{t('common.role')}</Label>
+          <Label class="text-sm text-muted-foreground">{t("common.role")}</Label>
           <Select bind:value={form.role} type="single">
-            <SelectTrigger class="w-full">
-              <span data-slot="select-value" class="truncate capitalize">{form.role}</span>
+            <SelectTrigger class="w-full rounded-lg border-outline-soft bg-background">
+              <span data-slot="select-value" class="truncate capitalize text-sm">
+                {form.role}
+              </span>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="admin" label="Admin" />
-              <SelectItem value="staff" label="Staff" />
-              <SelectItem value="secretary" label="Secretary" />
+              <SelectItem value="admin" label={t("nav.admin")} />
+              <SelectItem value="staff" label={t("dashboard.staff.title")} />
+              <SelectItem value="secretary" label={t("dashboard.secretary.title")} />
             </SelectContent>
           </Select>
         </div>
       </div>
     </div>
-    <DialogFooter>
-      <Button type="submit" onclick={save}>{t('common.save')}</Button>
+    <DialogFooter class="border-t border-outline-soft/60 pt-4">
+      <Button type="submit" class="rounded-lg" onclick={save}>
+        {t("common.save")}
+      </Button>
     </DialogFooter>
   </DialogContent>
 </Dialog>

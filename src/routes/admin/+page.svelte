@@ -133,57 +133,55 @@ async function createSale(payload: {
     subtitle={t("pages.admin.overview")}
     icon={BarChart3}
   >
-    <Button type="button" size="lg" class="gap-2 rounded-full px-6" onclick={() => (showSale = true)}>
+    <Button type="button" size="lg" class="gap-2 rounded-xl px-5" onclick={() => (showSale = true)}>
       <ShoppingCart class="h-4 w-4" />
       {t("orders.new")}
     </Button>
   </PageHeader>
 
-  <div class="grid gap-8 lg:grid-cols-[2fr_1fr]">
-    <div class="flex flex-col gap-6">
-      <section class="rounded-3xl border border-outline-soft bg-surface p-6 shadow-sm">
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold">{t("orders.recent")}</h2>
-          <Button variant="ghost" size="sm" class="rounded-full px-4" href="/admin/orders">
-            {t("common.viewAll")}
-          </Button>
-        </div>
-        <div class="mt-6">
-          <RecentOrders limit={5} />
-        </div>
-      </section>
-    </div>
+  <div class="grid gap-6 lg:grid-cols-[3fr_2fr] xl:grid-cols-[2fr_1fr]">
+    <section class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm">
+      <div class="flex items-center justify-between gap-2">
+        <h2 class="text-lg font-semibold text-foreground">{t("orders.recent")}</h2>
+        <Button variant="ghost" size="sm" class="rounded-lg px-3" href="/admin/orders">
+          {t("common.viewAll")}
+        </Button>
+      </div>
+      <div class="mt-5">
+        <RecentOrders limit={5} />
+      </div>
+    </section>
 
     <aside class="flex flex-col gap-6">
-      <section class="rounded-3xl border border-outline-soft bg-surface shadow-sm">
+      <section class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm">
         <LowStockCard threshold={10} />
       </section>
 
-      <section class="rounded-3xl border border-outline-soft bg-surface p-6 shadow-sm">
-        <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+      <section class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm">
+        <h3 class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           {t("common.actions")}
         </h3>
         <div class="mt-4 flex flex-col gap-2">
-          <Button href="/admin/products" variant="ghost" class="justify-start gap-3 rounded-full px-4">
+          <Button href="/admin/products" variant="ghost" class="justify-start gap-3 rounded-lg px-3">
             <Package class="h-4 w-4" />
             {t("nav.products")}
           </Button>
-          <Button href="/admin/users" variant="ghost" class="justify-start gap-3 rounded-full px-4">
+          <Button href="/admin/users" variant="ghost" class="justify-start gap-3 rounded-lg px-3">
             <UserCog class="h-4 w-4" />
             {t("nav.users")}
           </Button>
-          <Button href="/admin/registers" variant="ghost" class="justify-start gap-3 rounded-full px-4">
+          <Button href="/admin/registers" variant="ghost" class="justify-start gap-3 rounded-lg px-3">
             <ClipboardList class="h-4 w-4" />
             {t("dashboard.admin.manageRegisters")}
           </Button>
         </div>
-        <div class="mt-6 border-t border-outline-soft pt-4">
+        <div class="mt-6 border-t border-outline-soft/60 pt-4">
           <Button
             type="button"
             onclick={onCloseRegister}
             disabled={closing}
             variant="destructive"
-            class="w-full justify-center gap-2 rounded-full"
+            class="w-full justify-center gap-2 rounded-lg"
           >
             <LogOut class="h-4 w-4" />
             {closing ? t("dashboard.admin.closing") : t("dashboard.admin.closeRegister")}

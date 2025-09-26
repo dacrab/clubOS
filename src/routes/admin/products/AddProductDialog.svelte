@@ -63,39 +63,55 @@ async function save() {
 </script>
 
 <Dialog bind:open={open}>
-  <DialogContent class="sm:max-w-[520px]">
-    <DialogHeader>
-      <DialogTitle>{t('pages.products.add')}</DialogTitle>
+  <DialogContent class="sm:max-w-[520px] rounded-2xl border border-outline-soft/70 bg-surface-soft/95 shadow-xl">
+    <DialogHeader class="border-b border-outline-soft/60 pb-4">
+      <DialogTitle class="text-lg font-semibold text-foreground">
+        {t("pages.products.add")}
+      </DialogTitle>
     </DialogHeader>
     <div class="grid gap-4 py-4">
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label for="name" class="text-right">{t('common.name')}</Label>
-        <Input id="name" bind:value={form.name} class="col-span-3" />
+      <div class="grid grid-cols-4 items-center gap-3">
+        <Label for="name" class="text-right text-sm text-muted-foreground">
+          {t("common.name")}
+        </Label>
+        <Input id="name" bind:value={form.name} class="col-span-3 rounded-lg border-outline-soft bg-background" />
       </div>
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label for="price" class="text-right">{t('common.price')}</Label>
-        <Input id="price" type="number" step="0.01" bind:value={form.price} class="col-span-3" />
+      <div class="grid grid-cols-4 items-center gap-3">
+        <Label for="price" class="text-right text-sm text-muted-foreground">
+          {t("common.price")}
+        </Label>
+        <Input id="price" type="number" step="0.01" bind:value={form.price} class="col-span-3 rounded-lg border-outline-soft bg-background" />
       </div>
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label class="text-right">{t('common.stock')}</Label>
+      <div class="grid grid-cols-4 items-center gap-3">
+        <Label class="text-right text-sm text-muted-foreground">
+          {t("common.stock")}
+        </Label>
         <div class="col-span-3 flex items-center gap-3">
-          <Input id="stock" type="number" bind:value={form.stock_quantity} class="w-40" disabled={form.unlimited} />
-          <div class="flex items-center gap-2 text-sm">
+          <Input
+            id="stock"
+            type="number"
+            bind:value={form.stock_quantity}
+            class="w-40 rounded-lg border-outline-soft bg-background"
+            disabled={form.unlimited}
+          />
+          <div class="flex items-center gap-2 text-sm text-muted-foreground">
             <Switch bind:checked={form.unlimited} id="unlimited" />
-            <label for="unlimited">{t('common.unlimited')}</label>
+            <label for="unlimited">{t("common.unlimited")}</label>
           </div>
         </div>
       </div>
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label class="text-right">{t('common.category')}</Label>
+      <div class="grid grid-cols-4 items-center gap-3">
+        <Label class="text-right text-sm text-muted-foreground">
+          {t("common.category")}
+        </Label>
         <div class="col-span-3">
           <Select bind:value={form.category_id} type="single">
-            <SelectTrigger class="w-full">
-              <span data-slot="select-value" class="truncate">
+            <SelectTrigger class="w-full rounded-lg border-outline-soft bg-background">
+              <span data-slot="select-value" class="truncate text-sm">
                 {#if form.category_id}
-                  {(categories.find((c: { id: string; name: string }) => c.id === form.category_id)?.name) || ''}
+                  {(categories.find((c: { id: string; name: string }) => c.id === form.category_id)?.name) || ""}
                 {:else}
-                  {t('pages.products.selectCategory')}
+                  {t("pages.products.selectCategory")}
                 {/if}
               </span>
             </SelectTrigger>
@@ -108,8 +124,11 @@ async function save() {
         </div>
       </div>
     </div>
-    <DialogFooter>
-      <Button onclick={save}>{t('common.add')}</Button>
+    <DialogFooter class="flex items-center justify-end gap-2 border-t border-outline-soft/60 pt-4">
+      <Button type="button" variant="ghost" class="rounded-lg" onclick={() => (open = false)}>
+        {t("common.cancel")}
+      </Button>
+      <Button type="button" class="rounded-lg" onclick={save}>{t("common.add")}</Button>
     </DialogFooter>
   </DialogContent>
 </Dialog>

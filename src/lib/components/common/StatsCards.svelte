@@ -16,14 +16,14 @@ const { items } = $props<{
 
 const ACCENT_MAP = {
   green:
-    "border-green-200/60 bg-green-50 text-foreground dark:border-emerald-900/40 dark:bg-emerald-950/50 dark:text-emerald-100",
-  blue: "border-blue-200/60 bg-blue-50 text-foreground dark:border-sky-900/40 dark:bg-sky-950/50 dark:text-sky-100",
-  red: "border-red-200/60 bg-rose-50 text-foreground dark:border-rose-900/40 dark:bg-rose-950/50 dark:text-rose-100",
+    "border-emerald-300/40 bg-emerald-50 text-emerald-950 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-100",
+  blue: "border-sky-300/40 bg-sky-50 text-sky-950 dark:border-sky-400/20 dark:bg-sky-500/10 dark:text-sky-100",
+  red: "border-rose-300/40 bg-rose-50 text-rose-950 dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-100",
   yellow:
-    "border-amber-200/60 bg-amber-50 text-foreground dark:border-amber-900/40 dark:bg-amber-950/50 dark:text-amber-100",
+    "border-amber-300/40 bg-amber-50 text-amber-950 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100",
   purple:
-    "border-violet-200/60 bg-violet-50 text-foreground dark:border-violet-900/40 dark:bg-violet-950/50 dark:text-violet-100",
-  neutral: "border-outline-soft bg-surface text-foreground",
+    "border-violet-300/40 bg-violet-50 text-violet-950 dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-100",
+  neutral: "border-outline-soft/70 bg-surface-soft text-foreground",
 } as const;
 
 type AccentKey = keyof typeof ACCENT_MAP;
@@ -36,24 +36,24 @@ function accentClass(accent?: AccentKey) {
 
 <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
   {#each items as item}
-    <Card class={`rounded-xl border ${accentClass(item.accent)}`}>
-      <CardHeader class="flex flex-row items-start justify-between gap-2 pb-1">
+    <Card class={`rounded-2xl border px-5 py-4 shadow-sm transition-all ${accentClass(item.accent)}`}>
+      <CardHeader class="flex flex-row items-start justify-between gap-3 p-0">
         <div class="flex flex-col gap-1">
-          <CardTitle class="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <CardTitle class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             {item.title}
           </CardTitle>
-          <div class="text-xl font-semibold tracking-tight text-foreground">
+          <div class="text-2xl font-semibold tracking-tight text-foreground">
             {item.value}
           </div>
         </div>
         {#if item.icon}
-          <span class="grid size-7 place-items-center rounded-full border border-outline-soft/50 bg-white/80 text-muted-foreground shadow-sm backdrop-blur">
-            <item.icon class="size-3.5" />
+          <span class="grid size-9 place-items-center rounded-xl border border-outline-soft/60 bg-background/80 text-muted-foreground shadow-sm">
+            <item.icon class="size-4" />
           </span>
         {/if}
       </CardHeader>
       {#if item.hint}
-        <CardContent class="pt-0 text-xs text-muted-foreground">
+        <CardContent class="mt-4 p-0 text-xs text-muted-foreground">
           {item.hint}
         </CardContent>
       {/if}

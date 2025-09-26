@@ -21,6 +21,7 @@ let {
   type,
   files = $bindable(),
   class: className,
+  lang,
   ...restProps
 }: Props = $props();
 </script>
@@ -39,7 +40,8 @@ let {
 		bind:files
 		bind:value
 		{...restProps}
-	/>
+    {lang}
+    />
 {:else}
 	<input
 		bind:this={ref}
@@ -53,5 +55,6 @@ let {
 		{type}
 		bind:value
 		{...restProps}
-	/>
+    {lang}
+    />
 {/if}

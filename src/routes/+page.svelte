@@ -1,6 +1,7 @@
 <script lang="ts">
 import Eye from "@lucide/svelte/icons/eye";
 import EyeOff from "@lucide/svelte/icons/eye-off";
+import Lock from "@lucide/svelte/icons/lock";
 import { toast } from "svelte-sonner";
 import { goto } from "$app/navigation";
 import { env as publicEnv } from "$env/dynamic/public";
@@ -14,7 +15,7 @@ import {
 } from "$lib/components/ui/dropdown-menu";
 import { Input } from "$lib/components/ui/input";
 import { Label } from "$lib/components/ui/label";
-import { locale, t } from "$lib/i18n";
+import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabaseClient";
 
 let username = $state("");
@@ -22,7 +23,6 @@ let password = $state("");
 let loading = $state(false);
 let errorMessage = $state("");
 let showPassword = $state(false);
-let currentTheme = $state<"light" | "dark" | "system">("system");
 const seededUsers: Array<{
   label: string;
   email: string;
@@ -53,26 +53,6 @@ function quickFill(emailOrUsername: string, pwd: string) {
   username = emailOrUsername;
   password = pwd;
 }
-
-$effect(() => {
-  if (typeof window === "undefined") return;
-  const stored = window.localStorage.getItem("theme");
-  if (stored === "light" || stored === "dark" || stored === "system") {
-    currentTheme = stored;
-  }
-});
-
-function applyTheme(theme: "light" | "dark" | "system"): void {
-  if (typeof window === "undefined") return;
-  currentTheme = theme;
-  window.localStorage.setItem("theme", theme);
-  const root = document.documentElement;
-  const mq = window.matchMedia("(prefers-color-scheme: dark)");
-  const resolved = theme === "system" ? (mq.matches ? "dark" : "light") : theme;
-  if (resolved === "dark") root.classList.add("dark");
-  else root.classList.remove("dark");
-}
-
 async function resolveRedirectTarget(): Promise<string> {
   const {
     data: { user },
@@ -128,99 +108,66 @@ async function signIn(e?: Event) {
 </script>
 
 <div class="relative flex flex-col items-center bg-background px-4">
-  <div class="pointer-events-none absolute inset-0 -z-10 select-none bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.18),_transparent_60%)]"></div>
+  <div class="pointer-events-none absolute inset-0 -z-10 select-none bg-[radial-gradient(circle_at_top,_rgba(94,99,255,0.12),_transparent_55%)]"></div>
 
-  <div class="mx-auto w-full max-w-sm space-y-8">
-    <div class="flex flex-col items-center gap-6 text-center">
-      <span class="grid size-16 place-items-center rounded-3xl bg-primary/10 text-2xl font-semibold text-primary">
+  <div class="mx-auto w-full max-w-md space-y-10">
+    <div class="flex flex-col items-center gap-5 text-center">
+      <span class="grid size-14 place-items-center rounded-2xl bg-primary/10 text-xl font-semibold text-primary">
         CO
       </span>
-      <div class="space-y-2">
-        <h1 class="text-2xl font-semibold tracking-tight text-foreground">
+      <div class="space-y-1.5">
+        <h1 class="text-3xl font-semibold tracking-tight text-foreground">
           {t("login.title")}
         </h1>
         <p class="text-sm text-muted-foreground">{t("login.subtitle")}</p>
       </div>
     </div>
 
-    <Card class="rounded-3xl border border-outline-soft bg-surface/80 shadow-xl backdrop-blur">
-      <CardContent class="p-8">
-        <div class="mb-4 flex items-center justify-between">
-          <div class="flex items-center gap-2 rounded-full border border-outline-soft bg-surface px-1 py-1 text-xs shadow-sm">
-    <button
-      type="button"
-      class={`${
-        $locale === "en"
-          ? "rounded-full bg-primary px-3 py-1 text-white"
-          : "rounded-full px-3 py-1 text-muted-foreground"
-      } transition-colors`}
-      aria-pressed={$locale === "en"}
-      onclick={() => {
-        locale.set("en");
-      }}
-    >
-      EN
-    </button>
-    <button
-      type="button"
-      class={`${
-        $locale === "el"
-          ? "rounded-full bg-primary px-3 py-1 text-white"
-          : "rounded-full px-3 py-1 text-muted-foreground"
-      } transition-colors`}
-      aria-pressed={$locale === "el"}
-      onclick={() => {
-        locale.set("el");
-      }}
-    >
-      EL
-    </button>
-  </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger type="button" class="rounded-full border border-outline-soft bg-surface px-3 py-1 text-xs">
-              {#if currentTheme === "system"}{t("theme.system")} {:else if currentTheme === "dark"}{t("theme.dark")} {:else}{t("theme.light")} {/if}
-            </DropdownMenuTrigger>
-            <DropdownMenuContent class="w-36 rounded-2xl">
-              <DropdownMenuItem onclick={() => applyTheme("system")}>{t("theme.system")}</DropdownMenuItem>
-              <DropdownMenuItem onclick={() => applyTheme("light")}>{t("theme.light")}</DropdownMenuItem>
-              <DropdownMenuItem onclick={() => applyTheme("dark")}>{t("theme.dark")}</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-    </div>
-        <form onsubmit={signIn} class="flex flex-col gap-5">
-          <div class="space-y-3">
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              {t("login.quickLogin")}
-            </p>
-            <div class="flex flex-wrap gap-2">
-              {#each seededUsers as userSeed}
-                <button
+    <Card class="rounded-2xl border border-outline-soft/70 bg-surface-strong/80 shadow-md backdrop-blur">
+      <CardContent class="space-y-6 p-8">
+        <div class="flex flex-col gap-4">
+          <div class="flex items-center gap-3 rounded-full border border-outline-soft/80 bg-background/90 p-1 text-xs font-medium text-muted-foreground">
+            <Lock class="ml-2 size-3.5 text-muted-foreground" aria-hidden="true" />
+            <div class="flex flex-1 items-center justify-between gap-1">
+              <span class="text-[12px] text-muted-foreground/90">{t("login.quickLogin")}</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger
                   type="button"
-                  class="rounded-full border border-outline-soft bg-surface px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
-                  onclick={() => quickFill(userSeed.email, userSeed.password)}
-                  aria-label={`Use ${userSeed.label} user`}
+                  class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {userSeed.label}
-                </button>
-              {/each}
+                  {t("login.seeded")}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent class="w-40 rounded-xl">
+                  {#each seededUsers as userSeed}
+                    <DropdownMenuItem onclick={() => quickFill(userSeed.email, userSeed.password)}>
+                      <div class="flex flex-col">
+                        <span class="text-sm font-medium text-foreground">{userSeed.label}</span>
+                        <span class="text-xs text-muted-foreground">{userSeed.username}</span>
+                      </div>
+                    </DropdownMenuItem>
+                  {/each}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
-          <div class="flex flex-col gap-2">
-            <Label class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+        </div>
+
+        <form onsubmit={signIn} class="flex flex-col gap-5">
+          <div class="space-y-2">
+            <Label class="text-[13px] font-medium text-muted-foreground/90">
               {t("login.usernameLabel")}
             </Label>
             <Input
               placeholder={t("login.usernamePlaceholder")}
               bind:value={username}
               autocomplete="username"
-              class="rounded-xl border-outline-soft bg-background"
+              class="h-12 rounded-xl border-outline-soft bg-background/90 text-sm"
             />
           </div>
 
-          <div class="flex flex-col gap-2">
-            <Label class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          <div class="space-y-2">
+            <Label class="text-[13px] font-medium text-muted-foreground/90">
               {t("login.passwordLabel")}
             </Label>
             <div class="relative">
@@ -229,7 +176,7 @@ async function signIn(e?: Event) {
                 placeholder={t("login.passwordPlaceholder")}
                 bind:value={password}
                 autocomplete="current-password"
-                class="rounded-xl border-outline-soft bg-background pr-11"
+                class="h-12 rounded-xl border-outline-soft bg-background/90 pr-11 text-sm"
               />
               <button
                 type="button"
@@ -253,7 +200,7 @@ async function signIn(e?: Event) {
 
           <Button
             type="submit"
-            class="h-12 rounded-full text-sm font-semibold"
+            class="h-12 rounded-xl text-sm font-semibold"
             disabled={loading}
             aria-busy={loading}
           >

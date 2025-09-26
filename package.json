@@ -42,6 +42,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
+    "flatpickr": "^4.6.13",
     "svelte-sonner": "^1.0.5"
   }
 }

@@ -392,6 +392,7 @@ const translations = {
     success: { en: "Welcome back!", el: "Καλώς ήρθατε!" },
     error: { en: "Invalid credentials", el: "Μη έγκυρα στοιχεία" },
     quickLogin: { en: "Quick login", el: "Γρήγορη σύνδεση" },
+    seeded: { en: "Demo users", el: "Χρήστες demo" },
     missingCredentials: {
       en: "Please enter your username and password",
       el: "Παρακαλώ εισάγετε όνομα χρήστη και κωδικό",

@@ -99,19 +99,21 @@ function money(value: number) {
     subtitle={t("orders.latest") ?? t("orders.recent")}
   />
 
-  <Card class="rounded-3xl border border-outline-soft bg-surface shadow-sm">
-    <div class="border-b border-outline-soft/70 px-6 py-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+  <Card class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm">
+    <div class="border-b border-outline-soft/60 px-6 py-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           {t("orders.recent")}
         </h2>
-        <span class="text-xs text-muted-foreground">
+        <span class="text-[12px] text-muted-foreground">
           {t("orders.itemsHeader")} • {orders.length}
         </span>
       </div>
-      <div class="mt-3 max-w-xl">
-        <div class="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{t("pages.registers.pickDate")}</div>
-        <div class="mt-2">
+      <div class="mt-4 max-w-xl">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+          {t("pages.registers.pickDate")}
+        </div>
+        <div class="mt-3">
           <DateRangePicker bind:start={startDate} bind:end={endDate} on:change={loadAll} />
         </div>
       </div>
@@ -120,13 +122,13 @@ function money(value: number) {
       <div bind:this={scrollRef} onscroll={recomputeWindow} style={`max-height:${VIEWPORT_HEIGHT}px; overflow-y:auto;`}>
         <Table class="min-w-full">
         <TableHeader>
-          <TableRow class="border-0 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            <TableHead class="rounded-l-2xl bg-surface-strong/60 pl-6">ID</TableHead>
+          <TableRow class="border-0 text-xs uppercase tracking-[0.22em] text-muted-foreground">
+            <TableHead class="rounded-l-xl bg-surface-strong/60 pl-6">ID</TableHead>
             <TableHead class="bg-surface-strong/60">{t("pages.ordersPage.date")}</TableHead>
             <TableHead class="bg-surface-strong/60 text-right">{t("orders.subtotal")}</TableHead>
             <TableHead class="bg-surface-strong/60 text-right">{t("orders.discount")}</TableHead>
             <TableHead class="bg-surface-strong/60 text-right">{t("orders.total")}</TableHead>
-            <TableHead class="rounded-r-2xl bg-surface-strong/60 text-right"></TableHead>
+            <TableHead class="rounded-r-xl bg-surface-strong/60 text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -151,11 +153,11 @@ function money(value: number) {
               <TableCell class="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger>
-                    <Button variant="ghost" size="icon" class="size-9 rounded-full border border-outline-soft">
+                    <Button variant="ghost" size="icon" class="size-9 rounded-lg border border-outline-soft/70">
                       <Eye class="size-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent class="w-[30rem] rounded-3xl border border-outline-soft bg-surface-strong/80 backdrop-blur-xl">
+                  <DropdownMenuContent class="w-[30rem] rounded-2xl border border-outline-soft/60 bg-surface-strong/80 backdrop-blur">
                     <OrderDetails order={order} />
                   </DropdownMenuContent>
                 </DropdownMenu>

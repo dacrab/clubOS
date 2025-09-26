@@ -362,12 +362,12 @@ function getTreatTotalForSession(sessionId: string): number {
     ]}
   />
 
-  <Card class="rounded-3xl border border-outline-soft bg-surface shadow-sm">
-    <div class="border-b border-outline-soft/70 px-6 py-4">
-      <div class="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+  <Card class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm">
+    <div class="border-b border-outline-soft/60 px-6 py-4">
+      <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
         {t("pages.registers.pickDate")}
       </div>
-      <div class="mt-2 max-w-xl">
+      <div class="mt-3 max-w-xl">
         <DateRangePicker bind:start={startDate} bind:end={endDate} on:change={load} />
       </div>
     </div>
@@ -376,8 +376,8 @@ function getTreatTotalForSession(sessionId: string): number {
       <div bind:this={scrollRef} onscroll={recomputeWindow} style={`max-height:${VIEWPORT_HEIGHT}px; overflow-y:auto;`}>
         <Table class="min-w-full">
         <TableHeader>
-          <TableRow class="border-0 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            <TableHead class="rounded-l-2xl bg-surface-strong/60">
+          <TableRow class="border-0 text-xs uppercase tracking-[0.22em] text-muted-foreground">
+            <TableHead class="rounded-l-xl bg-surface-strong/60">
               {t("pages.registers.id")}
             </TableHead>
             <TableHead class="bg-surface-strong/60">
@@ -392,7 +392,7 @@ function getTreatTotalForSession(sessionId: string): number {
             <TableHead class="bg-surface-strong/60 text-right">
               {t("orders.discount")}
             </TableHead>
-            <TableHead class="rounded-r-2xl bg-surface-strong/60 text-right">
+            <TableHead class="rounded-r-xl bg-surface-strong/60 text-right">
               {t("pages.registers.treats")}
             </TableHead>
           </TableRow>
@@ -410,8 +410,8 @@ function getTreatTotalForSession(sessionId: string): number {
             {/if}
             {#each sessions.slice(startIndex, endIndex) as session}
               {@const isOpen = !session.closed_at}
-              <TableRow 
-                class={`cursor-pointer border-b border-outline-soft/40 ${isOpen ? 'bg-primary/5' : ''}`} 
+              <TableRow
+                class={`cursor-pointer border-b border-outline-soft/40 transition-colors ${isOpen ? 'bg-primary/5' : 'hover:bg-surface-strong/40'}`}
                 onclick={() => toggleSession(session.id)}
               >
                 <TableCell class="text-muted-foreground">
@@ -463,7 +463,7 @@ function getTreatTotalForSession(sessionId: string): number {
                   <TableCell colspan={6} class="bg-surface-strong/40 p-0">
                     {#if expanded[session.id]}
                       <div class="px-6 py-4">
-                        <div class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                        <div class="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                           {t("orders.recent")} • 
                           {t("orders.coupons")}: {getCouponsCountForSession(session.id)} • 
                           {t("orders.treatsWord")}: {getTreatsCountForSession(session.id)}
@@ -499,7 +499,7 @@ function getTreatTotalForSession(sessionId: string): number {
                                       <span class="text-foreground">{item.product_name}</span>
                                       <span>×{item.quantity}</span>
                                       {#if item.is_treat}
-                                        <span class="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
+                                        <span class="rounded-lg bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
                                           {t("orders.free")}
                                         </span>
                                       {/if}

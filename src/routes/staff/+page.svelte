@@ -60,15 +60,15 @@ async function onCloseRegister() {
     icon={ShoppingCart}
   />
 
-  <div class="grid gap-6 lg:grid-cols-2">
-    <Card class="rounded-3xl border border-outline-soft bg-surface shadow-sm">
-      <div class="flex flex-col gap-6 p-6">
-        <div class="flex items-center gap-3">
-          <span class="grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary">
-            <ShoppingCart class="size-6" />
+  <div class="grid gap-5 lg:grid-cols-2">
+    <Card class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm">
+      <div class="flex flex-col gap-5 px-6 py-6">
+        <div class="flex items-start gap-4">
+          <span class="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
+            <ShoppingCart class="size-5" />
           </span>
-          <div class="flex flex-col">
-            <span class="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <div class="flex flex-col gap-1">
+            <span class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
               {t("dashboard.staff.pos")}
             </span>
             <p class="text-sm text-muted-foreground">
@@ -76,17 +76,17 @@ async function onCloseRegister() {
             </p>
           </div>
         </div>
-        <Button href="/orders" size="lg" class="h-14 rounded-full text-base font-semibold">
-          <ShoppingCart class="mr-3 h-5 w-5" />
+        <Button href="/orders" size="lg" class="h-12 rounded-lg text-base font-semibold">
+          <ShoppingCart class="mr-2.5 h-5 w-5" />
           {t("orders.new")}
         </Button>
       </div>
     </Card>
 
-    <Card class="rounded-3xl border border-outline-soft bg-surface shadow-sm">
-      <div class="flex flex-col gap-6 p-6">
+    <Card class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm">
+      <div class="flex flex-col gap-4 px-6 py-6">
         <div class="flex flex-col gap-1">
-          <span class="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <span class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             {t("dashboard.staff.register")}
           </span>
           <p class="text-sm text-muted-foreground">
@@ -98,9 +98,9 @@ async function onCloseRegister() {
           onclick={() => (showCloseDialog = true)}
           disabled={closing}
           variant="destructive"
-          class="h-12 rounded-full text-base font-semibold"
+          class="h-12 rounded-lg text-base font-semibold"
         >
-          <LogOut class="mr-3 h-4 w-4" />
+          <LogOut class="mr-2.5 h-4 w-4" />
           {closing ? t("dashboard.admin.closing") : t("dashboard.staff.closeRegister")}
         </Button>
       </div>
@@ -108,8 +108,8 @@ async function onCloseRegister() {
   </div>
 
   {#if showCloseDialog}
-    <div class="fixed inset-0 z-50 grid place-items-center bg-black/50 px-4 py-12">
-      <div class="w-full max-w-lg rounded-3xl border border-outline-soft bg-card p-6 shadow-xl">
+    <div class="fixed inset-0 z-50 grid place-items-center bg-black/55 px-4 py-12">
+      <div class="w-full max-w-lg rounded-2xl border border-outline-soft/70 bg-card px-6 py-6 shadow-xl">
         <h2 class="text-lg font-semibold text-foreground">
           {t("dashboard.staff.closePromptTitle")}
         </h2>
@@ -121,7 +121,7 @@ async function onCloseRegister() {
             <span class="font-medium text-foreground">{t("common.name")}</span>
             <input
               id="staffName"
-              class="w-full rounded-xl border border-outline-soft bg-background px-3 py-2"
+              class="w-full rounded-lg border border-outline-soft/70 bg-background px-3 py-2"
               bind:value={staffName}
               placeholder={t("dashboard.staff.required")}
             />
@@ -130,7 +130,7 @@ async function onCloseRegister() {
             <span class="font-medium text-foreground">Final cash (€)</span>
             <input
               id="finalCash"
-              class="w-full rounded-xl border border-outline-soft bg-background px-3 py-2"
+              class="w-full rounded-lg border border-outline-soft/70 bg-background px-3 py-2"
               type="number"
               step="0.01"
               min="0"
@@ -142,19 +142,19 @@ async function onCloseRegister() {
             <span class="font-medium text-foreground">{t("common.notes")}</span>
             <textarea
               id="notes"
-              class="min-h-24 w-full rounded-xl border border-outline-soft bg-background px-3 py-2"
+              class="min-h-24 w-full rounded-lg border border-outline-soft/70 bg-background px-3 py-2"
               bind:value={notes}
               placeholder={t("dashboard.staff.optional")}
             ></textarea>
           </label>
         </div>
         <div class="mt-6 flex justify-end gap-2">
-          <Button type="button" variant="ghost" class="rounded-full" onclick={() => (showCloseDialog = false)}>
+          <Button type="button" variant="ghost" class="rounded-lg" onclick={() => (showCloseDialog = false)}>
             {t("common.cancel")}
           </Button>
           <Button
             type="button"
-            class="rounded-full"
+            class="rounded-lg"
             onclick={onCloseRegister}
             disabled={closing || !staffName.trim() || finalCash === ""}
           >

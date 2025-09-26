@@ -64,19 +64,19 @@ async function onSaveUser(user: any) {
 
 <PageContent>
   <PageHeader title={t("pages.users.title")} icon={Users}>
-    <Button type="button" class="rounded-full" onclick={openNewUserDialog}>
+    <Button type="button" class="rounded-lg" onclick={openNewUserDialog}>
       {t("pages.users.add")}
     </Button>
   </PageHeader>
 
-  <Card class="rounded-3xl border border-outline-soft bg-surface shadow-sm">
+  <Card class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm">
     <div class="overflow-x-auto">
       <Table class="min-w-full">
         <TableHeader>
-          <TableRow class="border-0 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            <TableHead class="rounded-l-2xl bg-surface-strong/60">{t("common.username")}</TableHead>
+          <TableRow class="border-0 text-xs uppercase tracking-[0.22em] text-muted-foreground">
+            <TableHead class="rounded-l-xl bg-surface-strong/60">{t("common.username")}</TableHead>
             <TableHead class="bg-surface-strong/60">{t("common.role")}</TableHead>
-            <TableHead class="rounded-r-2xl bg-surface-strong/60 text-right">{t("common.actions")}</TableHead>
+            <TableHead class="rounded-r-xl bg-surface-strong/60 text-right">{t("common.actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -106,7 +106,7 @@ async function onSaveUser(user: any) {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  class="rounded-full border border-outline-soft"
+                  class="rounded-lg border border-outline-soft/70"
                   onclick={() => editUser(user)}
                   aria-label={t("common.edit")}
                 >

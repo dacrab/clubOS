@@ -134,7 +134,7 @@ $effect(() => {
         </div>
       </div>
       <div class="flex gap-2 justify-end">
-        <Button variant="outline" onclick={clear}>{t('common.clear')}</Button>
+        <Button variant="ghost" onclick={clear}>{t('common.clear')}</Button>
         <Button onclick={save}>{form.id ? t('common.save') : t('common.add')}</Button>
       </div>
       <div class="border-t pt-3">

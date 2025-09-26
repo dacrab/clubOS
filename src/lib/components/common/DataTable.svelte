@@ -34,7 +34,7 @@ let {
 } = $props();
 </script>
 
-<div class={`data-table ${dense ? "data-table--dense" : ""}`}>
+<div class={`data-table rounded-2xl border border-outline-soft/60 bg-surface-soft/60 px-4 py-4 ${dense ? "data-table--dense" : ""}`}>
   <Table class={`data-table__table ${zebra ? "data-table__table--zebra" : ""}`}>
     {#if caption}
       <caption class="data-table__caption">{caption}</caption>

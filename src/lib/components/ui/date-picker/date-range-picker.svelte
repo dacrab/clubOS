@@ -1,22 +1,59 @@
 <script lang="ts">
-import { createEventDispatcher } from "svelte";
+import flatpickr from "flatpickr";
+import { createEventDispatcher, onDestroy, onMount } from "svelte";
 import { Input } from "$lib/components/ui/input";
-import { locale, t } from "$lib/i18n";
+import { t } from "$lib/i18n";
+import "flatpickr/dist/flatpickr.min.css";
 
+// Types
 type Range = { start: string; end: string };
+type PresetId = "all" | "today" | "yesterday" | "last7" | "last30";
+type PresetLabelKey =
+  | "date.all"
+  | "date.today"
+  | "date.yesterday"
+  | "date.last7"
+  | "date.last30";
 
+// Props and bindings
 let { start = $bindable("") as string, end = $bindable("") as string } =
   $props<{ start: string; end: string }>();
 
+// Event dispatcher
 const dispatch = createEventDispatcher<{ change: Range }>();
 
-function setRange(next: Range) {
-  const changed = start !== next.start || end !== next.end;
-  start = next.start;
-  end = next.end;
-  if (changed) dispatch("change", next);
-}
+// Constants
+const CENTURY_OFFSET = 100;
+const YEAR_2000 = 2000;
+const LAST_7_DAYS_OFFSET = -6;
+const LAST_30_DAYS_OFFSET = -29;
 
+const presets: { id: PresetId; labelKey: PresetLabelKey }[] = [
+  { id: "all", labelKey: "date.all" },
+  { id: "today", labelKey: "date.today" },
+  { id: "yesterday", labelKey: "date.yesterday" },
+  { id: "last7", labelKey: "date.last7" },
+  { id: "last30", labelKey: "date.last30" },
+];
+
+// State variables
+let startInput = $state<HTMLInputElement | null>(null);
+let endInput = $state<HTMLInputElement | null>(null);
+let fpStart: flatpickr.Instance | null = null;
+let fpEnd: flatpickr.Instance | null = null;
+
+// Derived state
+const activePresetId = $derived(
+  (() => {
+    for (const p of presets) {
+      const r = getPresetRange(p.id);
+      if (start === r.start && end === r.end) return p.id as PresetId;
+    }
+    return null as PresetId | null;
+  })()
+);
+
+// Date utility functions
 function todayISO(): string {
   const d = new Date();
   const yyyy = d.getFullYear();
@@ -34,25 +71,31 @@ function shiftDays(days: number): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-type PresetId = "all" | "today" | "yesterday" | "last7" | "last30";
-type PresetLabelKey =
-  | "date.all"
-  | "date.today"
-  | "date.yesterday"
-  | "date.last7"
-  | "date.last30";
+function isoToDMY(iso: string): string {
+  if (!iso) return "";
+  const [yyyy, mm, dd] = iso.split("-");
+  const yy = String(Number(yyyy) % CENTURY_OFFSET).padStart(2, "0");
+  return `${dd}-${mm}-${yy}`;
+}
 
-const presets: { id: PresetId; labelKey: PresetLabelKey }[] = [
-  { id: "all", labelKey: "date.all" },
-  { id: "today", labelKey: "date.today" },
-  { id: "yesterday", labelKey: "date.yesterday" },
-  { id: "last7", labelKey: "date.last7" },
-  { id: "last30", labelKey: "date.last30" },
-];
+function dmyToISO(dmy: string): string {
+  if (!dmy) return "";
+  const [dd, mm, y] = dmy.split("-");
+  const yPart = y ?? "";
+  const yyyy = yPart.length === 2 ? String(YEAR_2000 + Number(yPart)) : yPart;
+  if (!(yyyy && mm && dd)) return "";
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+// Range functions
+function setRange(next: Range) {
+  const changed = start !== next.start || end !== next.end;
+  start = next.start;
+  end = next.end;
+  if (changed) dispatch("change", next);
+}
 
 function getPresetRange(id: PresetId): Range {
-  const LAST_7_DAYS_OFFSET = -6;
-  const LAST_30_DAYS_OFFSET = -29;
   if (id === "all") return { start: "", end: "" };
   if (id === "today") return { start: todayISO(), end: todayISO() };
   if (id === "yesterday") return { start: shiftDays(-1), end: shiftDays(-1) };
@@ -62,25 +105,70 @@ function getPresetRange(id: PresetId): Range {
   return { start: shiftDays(LAST_30_DAYS_OFFSET), end: todayISO() };
 }
 
-const activePresetId = $derived(
-  (() => {
-    for (const p of presets) {
-      const r = getPresetRange(p.id);
-      if (start === r.start && end === r.end) return p.id as PresetId;
-    }
-    return null as PresetId | null;
-  })()
-);
+// Flatpickr initialization
+onMount(() => {
+  if (startInput) {
+    fpStart = (flatpickr as any)(startInput, {
+      dateFormat: "d-m-y",
+      allowInput: true,
+      defaultDate: start ? new Date(dmyToISO(isoToDMY(start))) : undefined,
+      onChange: (_selectedDates: Date[], dateStr: string) => {
+        setRange({ start: dmyToISO(dateStr), end });
+      },
+    });
+  }
+
+  if (endInput) {
+    fpEnd = (flatpickr as any)(endInput, {
+      dateFormat: "d-m-y",
+      allowInput: true,
+      defaultDate: end ? new Date(dmyToISO(isoToDMY(end))) : undefined,
+      onChange: (_selectedDates: Date[], dateStr: string) => {
+        setRange({ start, end: dmyToISO(dateStr) });
+      },
+    });
+  }
+});
+
+onDestroy(() => {
+  fpStart?.destroy();
+  fpEnd?.destroy();
+});
+
+// Effects for syncing external updates
+$effect(() => {
+  if (fpStart && start) {
+    fpStart.setDate(new Date(dmyToISO(isoToDMY(start))), false);
+  }
+});
+
+$effect(() => {
+  if (fpEnd && end) {
+    fpEnd.setDate(new Date(dmyToISO(isoToDMY(end))), false);
+  }
+});
 </script>
 
 <div class="flex flex-col gap-2">
   <div class="grid gap-2 sm:grid-cols-2">
-    <div class="rounded-2xl border border-outline-soft bg-background px-3 py-2 opacity-100 disabled:opacity-60">
-      <Input type="date" bind:value={start} class="w-44" aria-label="Start date" lang={$locale === 'el' ? 'el-GR' : 'en-GB'} />
-    </div>
-    <div class="rounded-2xl border border-outline-soft bg-background px-3 py-2 opacity-100 disabled:opacity-60">
-      <Input type="date" bind:value={end} class="w-44" aria-label="End date" lang={$locale === 'el' ? 'el-GR' : 'en-GB'} />
-    </div>
+    <Input
+      type="text"
+      bind:ref={startInput}
+      placeholder="dd-mm-yy"
+      class="h-11 w-full rounded-2xl border border-outline-soft bg-background px-3 cursor-pointer"
+      aria-label="Start date"
+      autocomplete="off"
+      readonly
+    />
+    <Input
+      type="text"
+      bind:ref={endInput}
+      placeholder="dd-mm-yy"
+      class="h-11 w-full rounded-2xl border border-outline-soft bg-background px-3 cursor-pointer"
+      aria-label="End date"
+      autocomplete="off"
+      readonly
+    />
   </div>
   <div class="flex flex-wrap gap-2" role="group" aria-label={t("date")}> 
     {#each presets as p}
@@ -95,5 +183,3 @@ const activePresetId = $derived(
     {/each}
   </div>
 </div>
-
-
