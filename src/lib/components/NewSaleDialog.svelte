@@ -102,17 +102,33 @@ async function submit() {
 }
 
 async function loadCategories() {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id ?? "";
+  const { data: memberships } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("user_id", userId);
+  const tenantId = memberships?.[0]?.tenant_id;
   const { data } = await supabase
     .from("categories")
     .select("id,name,parent_id")
+    .eq("tenant_id", tenantId)
     .order("name");
   categories = (data ?? []) as any;
 }
 async function loadProductsIfNeeded() {
   if ((products?.length ?? 0) > 0) return; // external products provided
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id ?? "";
+  const { data: memberships } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("user_id", userId);
+  const tenantId = memberships?.[0]?.tenant_id;
   const { data } = await supabase
     .from("products")
     .select("id,name,price,category_id,image_url")
+    .eq("tenant_id", tenantId)
     .order("name");
   internalProducts = (data ?? []) as any;
 }

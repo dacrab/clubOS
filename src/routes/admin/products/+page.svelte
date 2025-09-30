@@ -75,14 +75,18 @@ $effect(() => {
 });
 
 async function loadLists() {
+  const tenantId = $currentUser?.tenantIds?.[0];
+  if (!tenantId) return;
   const { data: pcats } = await supabase
     .from("categories")
     .select("id,name")
+    .eq("tenant_id", tenantId)
     .order("name");
   categories = (pcats as any) ?? [];
   const { data: prods } = await supabase
     .from("products")
     .select("id,name,price,stock_quantity,category_id,image_url")
+    .eq("tenant_id", tenantId)
     .order("name");
   products = (prods as any) ?? [];
   // reset virtual window
@@ -99,7 +103,10 @@ async function onCreate(payload: {
   category_id: string | null;
 }): Promise<void> {
   const toast = (await import("svelte-sonner")).toast;
-  const { error } = await supabase.from("products").insert(payload);
+  const tenantId = $currentUser?.tenantIds?.[0];
+  const { error } = await supabase
+    .from("products")
+    .insert({ ...payload, tenant_id: tenantId });
   if (error) {
     toast.error(error.message);
     return;
@@ -134,7 +141,14 @@ async function onSave(payload: {
 }
 
 async function onUploadImage(file: File, productId: string) {
-  const path = `product-${productId}-${Date.now()}-${file.name}`;
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id ?? "";
+  const { data: memberships } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("user_id", userId);
+  const tenantId = memberships?.[0]?.tenant_id as string;
+  const path = `tenant-${tenantId}/product-${productId}-${Date.now()}-${file.name}`;
   const { error: upErr } = await supabase.storage
     .from("product-images")
     .upload(path, file, { upsert: true });

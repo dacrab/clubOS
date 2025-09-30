@@ -44,6 +44,13 @@ let orders: OrderDetails[] = $state([]);
 const ORDER_ID_PREFIX_LEN = 8;
 
 async function load() {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id ?? "";
+  const { data: memberships } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("user_id", userId);
+  const tenantId = memberships?.[0]?.tenant_id;
   const { data } = await supabase
     .from("orders")
     .select(`
@@ -67,6 +74,7 @@ async function load() {
         )
       `)
     .order("created_at", { ascending: false })
+    .eq("tenant_id", tenantId)
     .limit(limit);
 
   orders =

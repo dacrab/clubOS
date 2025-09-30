@@ -70,9 +70,17 @@ $effect(() => {
 });
 
 async function load() {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id ?? "";
+  const { data: memberships } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("user_id", userId);
+  const tenantId = memberships?.[0]?.tenant_id;
   const { data } = await supabase
     .from("football_bookings")
     .select("*")
+    .eq("tenant_id", tenantId)
     .order("booking_datetime");
   list = ((data as any) ?? []) as Booking[];
 }
@@ -95,6 +103,12 @@ async function create() {
     num_players: Number(form.num_players || 0),
     notes: form.notes || null,
     created_by: user.id,
+    tenant_id: (
+      await supabase
+        .from("tenant_members")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+    ).data?.[0]?.tenant_id,
   };
   const { error } = await supabase.from("football_bookings").insert(payload);
   if (!error) {

@@ -46,6 +46,18 @@ export const POST: RequestHandler = async ({ request }) => {
   if (error) {
     return new Response(error.message, { status: 400 });
   }
+  // Add the new user to the same tenant(s) as the admin creating them (simple: first tenant)
+  const { data: adminTenants } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("user_id", admin.id);
+  const tenantId = adminTenants?.[0]?.tenant_id as string | undefined;
+  if (tenantId && data.user?.id) {
+    await supabaseAdmin.from("tenant_members").insert({
+      tenant_id: tenantId,
+      user_id: data.user.id,
+    });
+  }
   return Response.json({ id: data.user?.id });
 };
 

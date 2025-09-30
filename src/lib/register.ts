@@ -3,9 +3,17 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export async function getOpenSession(
   supabase: SupabaseClient
 ): Promise<string | null> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id ?? "";
+  const { data: memberships } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("user_id", userId);
+  const tenantId = memberships?.[0]?.tenant_id;
   const { data, error } = await supabase
     .from("register_sessions")
     .select("id, closed_at")
+    .eq("tenant_id", tenantId)
     .order("opened_at", { ascending: false })
     .limit(1);
   if (error) {
@@ -26,9 +34,14 @@ export async function ensureOpenSession(
   if (existing) {
     return existing;
   }
+  const { data: memberships } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("user_id", userId);
+  const tenantId = memberships?.[0]?.tenant_id;
   const { data, error } = await supabase
     .from("register_sessions")
-    .insert({ opened_by: userId })
+    .insert({ opened_by: userId, tenant_id: tenantId })
     .select()
     .single();
   if (error) {

@@ -59,9 +59,17 @@ $effect(() => {
 });
 
 async function load() {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id ?? "";
+  const { data: memberships } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("user_id", userId);
+  const tenantId = memberships?.[0]?.tenant_id;
   const { data } = await supabase
     .from("appointments")
     .select("*")
+    .eq("tenant_id", tenantId)
     .order("appointment_date");
   list = ((data as any) ?? []).map((a: any) => ({
     ...a,
@@ -83,6 +91,12 @@ async function create() {
       `${form.appointment_date}T${form.appointment_time || "00:00"}`
     ),
     created_by: user.id,
+    tenant_id: (
+      await supabase
+        .from("tenant_members")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+    ).data?.[0]?.tenant_id,
   };
   const { error } = await supabase.from("appointments").insert(payload);
   if (!error) {

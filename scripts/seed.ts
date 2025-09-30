@@ -48,21 +48,67 @@ async function createUser(
   return user;
 }
 
-async function seedCategories(adminId: string) {
+async function ensureTenant(name: string): Promise<string> {
+  const { data: existing } = await supabase
+    .from("tenants")
+    .select("id")
+    .eq("name", name)
+    .limit(1)
+    .maybeSingle();
+  if (existing?.id) {
+    return existing.id as string;
+  }
+  const { data, error } = await supabase
+    .from("tenants")
+    .insert({ name })
+    .select("id")
+    .single();
+  if (error) {
+    throw new Error(`Failed to create tenant: ${error.message}`);
+  }
+  return (data as { id: string }).id;
+}
+
+async function addMember(tenantId: string, userId: string) {
+  await supabase
+    .from("tenant_members")
+    .insert({ tenant_id: tenantId, user_id: userId })
+    .select()
+    .maybeSingle();
+}
+
+async function seedCategories(adminId: string, tenantId: string) {
   const categories = [
-    { name: "Καφέδες", description: "Όλα τα είδη καφέ", created_by: adminId },
+    {
+      name: "Καφέδες",
+      description: "Όλα τα είδη καφέ",
+      created_by: adminId,
+      tenant_id: tenantId,
+    },
     {
       name: "Ζεστοί Καφέδες",
       description: "Ζεστοί καφέδες",
       created_by: adminId,
+      tenant_id: tenantId,
     },
     {
       name: "Κρύοι Καφέδες",
       description: "Κρύοι καφέδες",
       created_by: adminId,
+      tenant_id: tenantId,
     },
-    { name: "Ροφήματα", description: "Διάφορα ροφήματα", created_by: adminId },
-    { name: "Σνακ", description: "Διάφορα σνακ", created_by: adminId },
+    {
+      name: "Ροφήματα",
+      description: "Διάφορα ροφήματα",
+      created_by: adminId,
+      tenant_id: tenantId,
+    },
+    {
+      name: "Σνακ",
+      description: "Διάφορα σνακ",
+      created_by: adminId,
+      tenant_id: tenantId,
+    },
   ];
 
   const { data, error } = await supabase
@@ -74,8 +120,10 @@ async function seedCategories(adminId: string) {
   }
 
   // Set parent relationships
-  const mainCategory = data.find((c) => c.name === "Καφέδες");
-  const coffeeSubcategories = data.filter(
+  type InsertedCategory = { id: string; name: string };
+  const insertedCategories = (data ?? []) as InsertedCategory[];
+  const mainCategory = insertedCategories.find((c) => c.name === "Καφέδες");
+  const coffeeSubcategories = insertedCategories.filter(
     (c) => c.name.includes("Καφέδες") && c.name !== "Καφέδες"
   );
 
@@ -96,10 +144,14 @@ async function seedCategories(adminId: string) {
   }
 
   console.log("Created categories");
-  return data;
+  return insertedCategories.map(({ id, name }) => ({ id, name }));
 }
 
-async function seedProducts(categories: Category[], adminId: string) {
+async function seedProducts(
+  categories: Category[],
+  adminId: string,
+  tenantId: string
+) {
   const hotCoffeeCategory = categories.find((c) => c.name === "Ζεστοί Καφέδες");
   const coldCoffeeCategory = categories.find((c) => c.name === "Κρύοι Καφέδες");
   const beverageCategory = categories.find((c) => c.name === "Ροφήματα");
@@ -113,6 +165,7 @@ async function seedProducts(categories: Category[], adminId: string) {
       stock_quantity: -1,
       category_id: hotCoffeeCategory?.id,
       created_by: adminId,
+      tenant_id: tenantId,
     },
     {
       name: "Cappuccino",
@@ -120,6 +173,7 @@ async function seedProducts(categories: Category[], adminId: string) {
       stock_quantity: -1,
       category_id: hotCoffeeCategory?.id,
       created_by: adminId,
+      tenant_id: tenantId,
     },
     {
       name: "Latte",
@@ -127,6 +181,7 @@ async function seedProducts(categories: Category[], adminId: string) {
       stock_quantity: -1,
       category_id: hotCoffeeCategory?.id,
       created_by: adminId,
+      tenant_id: tenantId,
     },
 
     // Cold Coffees
@@ -136,6 +191,7 @@ async function seedProducts(categories: Category[], adminId: string) {
       stock_quantity: -1,
       category_id: coldCoffeeCategory?.id,
       created_by: adminId,
+      tenant_id: tenantId,
     },
     {
       name: "Freddo Cappuccino",
@@ -143,6 +199,7 @@ async function seedProducts(categories: Category[], adminId: string) {
       stock_quantity: -1,
       category_id: coldCoffeeCategory?.id,
       created_by: adminId,
+      tenant_id: tenantId,
     },
     {
       name: "Iced Latte",
@@ -150,6 +207,7 @@ async function seedProducts(categories: Category[], adminId: string) {
       stock_quantity: -1,
       category_id: coldCoffeeCategory?.id,
       created_by: adminId,
+      tenant_id: tenantId,
     },
 
     // Beverages
@@ -159,6 +217,7 @@ async function seedProducts(categories: Category[], adminId: string) {
       stock_quantity: -1,
       category_id: beverageCategory?.id,
       created_by: adminId,
+      tenant_id: tenantId,
     },
     {
       name: "Τσάι",
@@ -166,6 +225,7 @@ async function seedProducts(categories: Category[], adminId: string) {
       stock_quantity: -1,
       category_id: beverageCategory?.id,
       created_by: adminId,
+      tenant_id: tenantId,
     },
     {
       name: "Χυμός Πορτοκάλι",
@@ -173,6 +233,7 @@ async function seedProducts(categories: Category[], adminId: string) {
       stock_quantity: -1,
       category_id: beverageCategory?.id,
       created_by: adminId,
+      tenant_id: tenantId,
     },
 
     // Snacks
@@ -182,6 +243,7 @@ async function seedProducts(categories: Category[], adminId: string) {
       stock_quantity: 20,
       category_id: snackCategory?.id,
       created_by: adminId,
+      tenant_id: tenantId,
     },
     {
       name: "Σάντουιτς",
@@ -189,6 +251,7 @@ async function seedProducts(categories: Category[], adminId: string) {
       stock_quantity: 15,
       category_id: snackCategory?.id,
       created_by: adminId,
+      tenant_id: tenantId,
     },
     {
       name: "Τοστ",
@@ -196,6 +259,7 @@ async function seedProducts(categories: Category[], adminId: string) {
       stock_quantity: 25,
       category_id: snackCategory?.id,
       created_by: adminId,
+      tenant_id: tenantId,
     },
   ];
 
@@ -208,13 +272,15 @@ async function seedProducts(categories: Category[], adminId: string) {
   }
 
   console.log("Created products");
-  return data;
+  type InsertedProduct = { id: string; name: string; price: number };
+  const insertedProducts = (data ?? []) as InsertedProduct[];
+  return insertedProducts.map(({ id, name, price }) => ({ id, name, price }));
 }
 
-async function seedRegisterSession(adminId: string) {
+async function seedRegisterSession(adminId: string, tenantId: string) {
   const { data, error } = await supabase
     .from("register_sessions")
-    .insert({ opened_by: adminId })
+    .insert({ opened_by: adminId, tenant_id: tenantId })
     .select()
     .single();
 
@@ -223,17 +289,22 @@ async function seedRegisterSession(adminId: string) {
   }
 
   console.log("Created register session");
-  return data;
+  return { id: (data as { id: string }).id };
 }
 
 async function seedOrders(
   session: RegisterSession,
   products: Product[],
-  staffId: string
+  staffId: string,
+  tenantId: string
 ) {
   const espresso = products.find((p) => p.name === "Espresso");
   const chocolate = products.find((p) => p.name === "Σοκολάτα");
   const croissant = products.find((p) => p.name === "Κρουασάν");
+
+  if (!(espresso && chocolate && croissant)) {
+    throw new Error("Required products missing for order items");
+  }
 
   // Create order
   // Subtotal is full value of items; treat shows original price but is discounted to free
@@ -254,6 +325,7 @@ async function seedOrders(
       total_amount: subtotal - discountAmount,
       coupon_count: couponCount,
       created_by: staffId,
+      tenant_id: tenantId,
     })
     .select()
     .single();
@@ -265,27 +337,27 @@ async function seedOrders(
   // Create order items
   const orderItems = [
     {
-      order_id: order.id,
-      product_id: espresso?.id,
+      order_id: (order as { id: string }).id,
+      product_id: espresso.id,
       quantity: 1,
-      unit_price: Number(espresso?.price ?? 0),
+      unit_price: Number(espresso.price ?? 0),
       line_total: 0,
       is_treat: true,
     },
     {
-      order_id: order.id,
-      product_id: chocolate?.id,
+      order_id: (order as { id: string }).id,
+      product_id: chocolate.id,
       quantity: 1,
-      unit_price: Number(chocolate?.price ?? 0),
-      line_total: Number(chocolate?.price ?? 0) * 1,
+      unit_price: Number(chocolate.price ?? 0),
+      line_total: Number(chocolate.price ?? 0) * 1,
       is_treat: false,
     },
     {
-      order_id: order.id,
-      product_id: croissant?.id,
+      order_id: (order as { id: string }).id,
+      product_id: croissant.id,
       quantity: 1,
-      unit_price: Number(croissant?.price ?? 0),
-      line_total: Number(croissant?.price ?? 0) * 1,
+      unit_price: Number(croissant.price ?? 0),
+      line_total: Number(croissant.price ?? 0) * 1,
       is_treat: false,
     },
   ];
@@ -313,7 +385,7 @@ const MILLISECONDS_IN_A_DAY =
 const TWO_DAYS = 2;
 const THREE_DAYS = 3;
 
-async function seedAppointments(staffId: string) {
+async function seedAppointments(staffId: string, tenantId: string) {
   const appointments = [
     {
       customer_name: "Μαρία Παπαδοπούλου",
@@ -323,6 +395,7 @@ async function seedAppointments(staffId: string) {
       num_adults: 2,
       notes: "Γενέθλια παιδιού",
       created_by: staffId,
+      tenant_id: tenantId,
     },
     {
       customer_name: "Γιώργος Δημητρίου",
@@ -334,6 +407,7 @@ async function seedAppointments(staffId: string) {
       num_adults: 3,
       notes: "Σχολική εκδρομή",
       created_by: staffId,
+      tenant_id: tenantId,
     },
   ];
 
@@ -345,7 +419,7 @@ async function seedAppointments(staffId: string) {
   console.log("Created appointments");
 }
 
-async function seedFootballBookings(staffId: string) {
+async function seedFootballBookings(staffId: string, tenantId: string) {
   const bookings = [
     {
       customer_name: "Νίκος Αντωνίου",
@@ -355,6 +429,7 @@ async function seedFootballBookings(staffId: string) {
       num_players: 10,
       notes: "Εβδομαδιαίο παιχνίδι",
       created_by: staffId,
+      tenant_id: tenantId,
     },
     {
       customer_name: "Κώστας Νικολάου",
@@ -364,6 +439,7 @@ async function seedFootballBookings(staffId: string) {
       num_players: 8,
       notes: "Φιλικό παιχνίδι",
       created_by: staffId,
+      tenant_id: tenantId,
     },
   ];
 
@@ -403,14 +479,24 @@ async function main() {
       throw new Error("Failed to create required users");
     }
 
-    // Seed data
-    const categories = await seedCategories(admin.id);
-    const products = await seedProducts(categories, admin.id);
-    const session = await seedRegisterSession(admin.id);
+    // Create tenant and memberships
+    const tenantId = await ensureTenant("Demo Club");
+    await addMember(tenantId, admin.id as string);
+    await addMember(tenantId, staff.id as string);
+    await addMember(tenantId, secretary.id as string);
 
-    await seedOrders(session, products, staff.id);
-    await seedAppointments(staff.id);
-    await seedFootballBookings(staff.id);
+    // Seed data
+    const categories = await seedCategories(admin.id as string, tenantId);
+    const products = await seedProducts(
+      categories,
+      admin.id as string,
+      tenantId
+    );
+    const session = await seedRegisterSession(admin.id as string, tenantId);
+
+    await seedOrders(session, products, staff.id as string, tenantId);
+    await seedAppointments(staff.id as string, tenantId);
+    await seedFootballBookings(staff.id as string, tenantId);
 
     console.log("Database seeding completed successfully!");
   } catch (error) {

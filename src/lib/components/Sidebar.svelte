@@ -159,35 +159,88 @@ function toggleTheme() {
 function setLocale(next: "en" | "el") {
   locale.set(next);
 }
+let collapsed = $state(false);
+
+$effect(() => {
+  // load preference
+  if (typeof window === "undefined") return;
+  const saved = window.localStorage.getItem("sidebar-collapsed");
+  collapsed = saved === "1";
+});
+
+async function toggleCollapsed() {
+  collapsed = !collapsed;
+  try {
+    window.localStorage.setItem("sidebar-collapsed", collapsed ? "1" : "0");
+  } catch (/** ignore storage quota or privacy mode */ _err) {
+    /* no-op */
+  }
+  // persist to user_preferences (best-effort)
+  const { data: sessionData } = await supabase.auth.getSession();
+  const uid = sessionData.session?.user.id;
+  if (!uid) return;
+  await supabase
+    .from("user_preferences")
+    .upsert(
+      { user_id: uid, collapsed_sidebar: collapsed },
+      { onConflict: "user_id" }
+    );
+}
 </script>
 
-<aside class="fixed left-0 top-0 z-30 flex h-full w-64 flex-col border-r border-sidebar-border/70 bg-sidebar/80 backdrop-blur">
+<aside
+  class={`fixed left-0 top-0 z-30 flex h-full ${collapsed ? "w-16" : "w-64"} flex-col border-r border-sidebar-border/70 bg-sidebar/80 backdrop-blur transition-[width] duration-200`}
+>
   <div class="flex flex-1 flex-col">
-    <div class="flex flex-col gap-6 px-6 pb-6 pt-10">
+    <div class="flex flex-col gap-6 px-4 pb-6 pt-10">
       <div class="flex items-center gap-3">
-        <span class="grid size-9 place-items-center rounded-2xl bg-primary/10 text-sm font-semibold text-primary">
+        <span
+          class="grid size-9 place-items-center rounded-2xl bg-primary/10 text-sm font-semibold text-primary"
+        >
           CO
         </span>
-        <div class="flex flex-col leading-tight">
-          <span class="text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground">
+        <div
+          class="flex flex-col leading-tight"
+          style={`display:${collapsed ? "none" : "flex"}`}
+        >
+          <span
+            class="text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground"
+          >
             clubOS
           </span>
           <span class="text-sm text-muted-foreground/80">
             {t("common.operatingSuite")}
           </span>
         </div>
+        <button
+          type="button"
+          class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg border border-outline-soft/60 text-muted-foreground hover:text-foreground"
+          onclick={toggleCollapsed}
+          aria-label={t("common.toggleSidebar")}
+        >
+          {#if collapsed}
+            <span class="i-lucide-chevron-right size-4">›</span>
+          {:else}
+            <span class="i-lucide-chevron-left size-4">‹</span>
+          {/if}
+        </button>
       </div>
-      <p class="text-[13px] leading-6 text-muted-foreground">
+      <p
+        class="text-[13px] leading-6 text-muted-foreground"
+        style={`display:${collapsed ? "none" : "block"}`}
+      >
         {t("common.tagline")}
       </p>
     </div>
 
-    <nav class="flex-1 overflow-y-auto px-4 pb-8 scrollbar-thin">
+    <nav class="flex-1 overflow-y-auto px-2 pb-8 scrollbar-thin">
       <div class="flex flex-col gap-7">
         {#each visibleSections as section}
           <div class="flex flex-col gap-2">
-            {#if section.heading || section.headingKey}
-              <span class="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+            {#if (section.heading || section.headingKey) && !collapsed}
+              <span
+                class="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground"
+              >
                 {section.headingKey ? t(section.headingKey) : section.heading}
               </span>
             {/if}
@@ -199,10 +252,14 @@ function setLocale(next: "en" | "el") {
                   class={`${linkBase} ${active ? activeLink : ""}`}
                   aria-current={active ? "page" : undefined}
                 >
-                  <span class={`${iconWrapper} ${active ? iconWrapperActive : ""}`}>
+                  <span
+                    class={`${iconWrapper} ${active ? iconWrapperActive : ""}`}
+                  >
                     <item.icon class="size-4" />
                   </span>
-                  <span class="truncate">{t(item.labelKey)}</span>
+                  {#if !collapsed}
+                    <span class="truncate">{t(item.labelKey)}</span>
+                  {/if}
                 </a>
               {/each}
             </div>
@@ -212,10 +269,14 @@ function setLocale(next: "en" | "el") {
     </nav>
   </div>
 
-  <div class="border-t border-sidebar-border/70 px-6 py-6">
+  <div class="border-t border-sidebar-border/70 px-4 py-6">
     <div class="flex flex-col gap-4">
-      <div class="flex items-center justify-between gap-3 rounded-xl border border-outline-soft/60 bg-sidebar-muted/30 px-4 py-3">
-        <div class="inline-flex items-center gap-1 rounded-full border border-outline-soft/50 bg-background/80 p-1 text-[11px] font-medium text-muted-foreground">
+      <div
+        class="flex items-center justify-between gap-3 rounded-xl border border-outline-soft/60 bg-sidebar-muted/30 px-2 py-2"
+      >
+        <div
+          class="inline-flex items-center gap-1 rounded-full border border-outline-soft/50 bg-background/80 p-1 text-[11px] font-medium text-muted-foreground"
+        >
           <button
             type="button"
             class={`rounded-full px-3 py-1 transition-colors ${
@@ -255,8 +316,10 @@ function setLocale(next: "en" | "el") {
           {/if}
         </button>
       </div>
-      {#if $currentUser}
-        <div class="rounded-xl border border-sidebar-border/60 bg-sidebar-muted/40 px-4 py-3">
+      {#if $currentUser && !collapsed}
+        <div
+          class="rounded-xl border border-sidebar-border/60 bg-sidebar-muted/40 px-4 py-3"
+        >
           <p class="text-sm font-semibold text-foreground">
             {userName || t("login.title")}
           </p>
@@ -271,7 +334,8 @@ function setLocale(next: "en" | "el") {
         onclick={logout}
       >
         <LogOut class="size-4" />
-        {t("nav.logout")}
+        {#if !collapsed}{t("nav.logout")}
+        {/if}
       </button>
     </div>
   </div>

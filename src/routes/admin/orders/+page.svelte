@@ -76,6 +76,14 @@ async function loadAll() {
       "id, created_at, subtotal, discount_amount, total_amount, coupon_count"
     )
     .order("created_at", { ascending: false });
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id ?? "";
+  const { data: memberships } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("user_id", userId);
+  const tenantId = memberships?.[0]?.tenant_id;
+  if (tenantId) query = query.eq("tenant_id", tenantId);
   if (startISO) query = query.gte("created_at", startISO);
   if (endISO) query = query.lte("created_at", endISO);
   const { data } = await query;

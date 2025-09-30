@@ -36,6 +36,7 @@ const translations = {
     dashboard: { en: "Dashboard", el: "Πίνακας Ελέγχου" },
     orders: { en: "Orders", el: "Παραγγελίες" },
     admin: { en: "Admin", el: "Διαχείριση" },
+    settings: { en: "Settings", el: "Ρυθμίσεις" },
     products: { en: "Products", el: "Προϊόντα" },
     categories: { en: "Categories", el: "Κατηγορίες" },
     users: { en: "Users", el: "Χρήστες" },
@@ -193,6 +194,10 @@ const translations = {
     description: { en: "Description", el: "Περιγραφή" },
     parent: { en: "Parent", el: "Γονική" },
     toggleTheme: { en: "Toggle theme", el: "Εναλλαγή θέματος" },
+    toggleSidebar: {
+      en: "Toggle sidebar",
+      el: "Άνοιγμα/Κλείσιμο πλαϊνού μενού",
+    },
     viewAll: { en: "View All", el: "Προβολή όλων" },
     clear: { en: "Clear", el: "Καθαρισμός" },
     uploadImage: { en: "Upload Image", el: "Μεταφόρτωση Εικόνας" },
@@ -206,6 +211,13 @@ const translations = {
     open: { en: "Open", el: "Ανοιχτό" },
   },
   pages: {
+    settings: {
+      inventory: { en: "Inventory", el: "Απόθεμα" },
+      lowStockThreshold: {
+        en: "Low stock threshold",
+        el: "Όριο χαμηλού αποθέματος",
+      },
+    },
     products: {
       title: { en: "All Products", el: "Όλα τα Προϊόντα" },
       add: { en: "Add Product", el: "Προσθήκη Προϊόντος" },

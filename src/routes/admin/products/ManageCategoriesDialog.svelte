@@ -72,11 +72,17 @@ async function save() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return;
+    const { data: memberships } = await supabase
+      .from("tenant_members")
+      .select("tenant_id")
+      .eq("user_id", user.id);
+    const tenantId = memberships?.[0]?.tenant_id;
     await supabase.from("categories").insert({
       name: form.name,
       description: form.description,
       parent_id: form.parent_id || null,
       created_by: user.id,
+      tenant_id: tenantId,
     });
   }
   await reload();
@@ -89,9 +95,17 @@ async function remove(id: string) {
 }
 
 async function reload() {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id ?? "";
+  const { data: memberships } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("user_id", userId);
+  const tenantId = memberships?.[0]?.tenant_id;
   const { data } = await supabase
     .from("categories")
     .select("id,name,description,parent_id")
+    .eq("tenant_id", tenantId)
     .order("name");
   categories = (data as any) ?? [];
 }

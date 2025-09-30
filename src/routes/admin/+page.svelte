@@ -95,6 +95,11 @@ async function createSale(payload: {
   const couponDiscount = Math.max(0, payload.couponCount) * 2;
   const discount_amount = couponDiscount + treatDiscount;
   const total_amount = Math.max(0, subtotal - discount_amount);
+  const { data: memberships } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("user_id", user.id);
+  const tenantId = memberships?.[0]?.tenant_id;
   const { data: inserted, error } = await supabase
     .from("orders")
     .insert({
@@ -104,6 +109,7 @@ async function createSale(payload: {
       total_amount,
       coupon_count: Math.max(0, payload.couponCount),
       created_by: user.id,
+      tenant_id: tenantId,
     })
     .select()
     .single();
@@ -136,6 +142,9 @@ async function createSale(payload: {
     <Button type="button" size="lg" class="gap-2 rounded-xl px-5" onclick={() => (showSale = true)}>
       <ShoppingCart class="h-4 w-4" />
       {t("orders.new")}
+    </Button>
+    <Button href="/admin/settings" variant="ghost" class="rounded-xl">
+      {t("nav.settings")}
     </Button>
   </PageHeader>
 
