@@ -2,51 +2,30 @@ import { writable } from "svelte/store";
 import { supabase } from "$lib/supabaseClient";
 
 export type TenantSettings = {
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  low_stock_threshold: number;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  allow_unlimited_stock: boolean;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  negative_stock_allowed: boolean;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  default_category_sort: "name" | "custom";
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  products_page_size: number;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  image_max_size_mb: number;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  coupons_value: number;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  allow_treats: boolean;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  require_open_register_for_sale: boolean;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  currency_code: string;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  tax_rate_percent: number;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  receipt_footer_text: string | null;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  booking_default_duration_min: number;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  football_fields_count: number;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  appointment_buffer_min: number;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  prevent_overlaps: boolean;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  theme_default: "system" | "light" | "dark";
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  default_locale: "en" | "el";
+  lowStockThreshold: number;
+  allowUnlimitedStock: boolean;
+  negativeStockAllowed: boolean;
+  defaultCategorySort: "name" | "custom";
+  productsPageSize: number;
+  imageMaxSizeMb: number;
+  couponsValue: number;
+  allowTreats: boolean;
+  requireOpenRegisterForSale: boolean;
+  currencyCode: string;
+  taxRatePercent: number;
+  receiptFooterText: string | null;
+  bookingDefaultDurationMin: number;
+  footballFieldsCount: number;
+  appointmentBufferMin: number;
+  preventOverlaps: boolean;
+  themeDefault: "system" | "light" | "dark";
+  defaultLocale: "en" | "el";
 };
 
 export type UserPreferences = {
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  collapsed_sidebar: boolean;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  dense_table_mode: boolean;
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  default_locale?: "en" | "el";
+  collapsedSidebar: boolean;
+  denseTableMode: boolean;
+  defaultLocale?: "en" | "el";
   theme?: "system" | "light" | "dark";
 };
 
@@ -56,49 +35,29 @@ export type MergedSettings = {
 };
 
 const DEFAULT_TENANT_SETTINGS: TenantSettings = {
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  low_stock_threshold: 3,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  allow_unlimited_stock: true,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  negative_stock_allowed: false,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  default_category_sort: "name",
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  products_page_size: 50,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  image_max_size_mb: 5,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  coupons_value: 2,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  allow_treats: true,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  require_open_register_for_sale: true,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  currency_code: "EUR",
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  tax_rate_percent: 0,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  receipt_footer_text: null,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  booking_default_duration_min: 60,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  football_fields_count: 2,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  appointment_buffer_min: 15,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  prevent_overlaps: true,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  theme_default: "system",
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  default_locale: "en",
+  lowStockThreshold: 3,
+  allowUnlimitedStock: true,
+  negativeStockAllowed: false,
+  defaultCategorySort: "name",
+  productsPageSize: 50,
+  imageMaxSizeMb: 5,
+  couponsValue: 2,
+  allowTreats: true,
+  requireOpenRegisterForSale: true,
+  currencyCode: "EUR",
+  taxRatePercent: 0,
+  receiptFooterText: null,
+  bookingDefaultDurationMin: 60,
+  footballFieldsCount: 2,
+  appointmentBufferMin: 15,
+  preventOverlaps: true,
+  themeDefault: "system",
+  defaultLocale: "en",
 };
 
 const DEFAULT_USER_PREFS: UserPreferences = {
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  collapsed_sidebar: false,
-  // biome-ignore lint/style/useNamingConvention: DB column names
-  dense_table_mode: false,
+  collapsedSidebar: false,
+  denseTableMode: false,
 };
 
 export const settingsStore = writable<MergedSettings>({
@@ -119,51 +78,108 @@ export async function loadSettings(): Promise<void> {
   const tenantId = memberships?.[0]?.tenant_id;
 
   type Row<T> = { data: T | null };
-  const [tenantRow, userRow] = await Promise.all([
-    tenantId
-      ? supabase
-          .from("tenant_settings")
-          .select(
-            "low_stock_threshold,allow_unlimited_stock,negative_stock_allowed,default_category_sort,products_page_size,image_max_size_mb,coupons_value,allow_treats,require_open_register_for_sale,currency_code,tax_rate_percent,receipt_footer_text,booking_default_duration_min,football_fields_count,appointment_buffer_min,prevent_overlaps,theme_default,default_locale"
-          )
-          .eq("tenant_id", tenantId)
-          .limit(1)
-          .maybeSingle()
-      : Promise.resolve<Row<Partial<TenantSettings>>>({ data: null }),
-    supabase
-      .from("user_preferences")
-      .select("collapsed_sidebar,dense_table_mode,default_locale,theme")
-      .eq("user_id", uid)
-      .maybeSingle(),
-  ]);
+  type DbTenantSettingsRow = {
+    lowStockThreshold: number;
+    allowUnlimitedStock: boolean;
+    negativeStockAllowed: boolean;
+    defaultCategorySort: "name" | "custom";
+    productsPageSize: number;
+    imageMaxSizeMb: number;
+    couponsValue: number;
+    allowTreats: boolean;
+    requireOpenRegisterForSale: boolean;
+    currencyCode: string;
+    taxRatePercent: number;
+    receiptFooterText: string | null;
+    bookingDefaultDurationMin: number;
+    footballFieldsCount: number;
+    appointmentBufferMin: number;
+    preventOverlaps: boolean;
+    themeDefault: "system" | "light" | "dark";
+    defaultLocale: "en" | "el";
+  };
+  type DbUserPreferencesRow = {
+    collapsedSidebar: boolean;
+    denseTableMode: boolean;
+    defaultLocale?: "en" | "el" | null;
+    theme?: "system" | "light" | "dark" | null;
+  };
+
+  const tRowPromise = tenantId
+    ? supabase
+        .from("tenant_settings")
+        .select(
+          "lowStockThreshold:low_stock_threshold,allowUnlimitedStock:allow_unlimited_stock,negativeStockAllowed:negative_stock_allowed,defaultCategorySort:default_category_sort,productsPageSize:products_page_size,imageMaxSizeMb:image_max_size_mb,couponsValue:coupons_value,allowTreats:allow_treats,requireOpenRegisterForSale:require_open_register_for_sale,currencyCode:currency_code,taxRatePercent:tax_rate_percent,receiptFooterText:receipt_footer_text,bookingDefaultDurationMin:booking_default_duration_min,footballFieldsCount:football_fields_count,appointmentBufferMin:appointment_buffer_min,preventOverlaps:prevent_overlaps,themeDefault:theme_default,defaultLocale:default_locale"
+        )
+        .eq("tenant_id", tenantId)
+        .limit(1)
+        .maybeSingle()
+    : Promise.resolve<Row<Partial<DbTenantSettingsRow>>>({ data: null });
+  const uRowPromise = supabase
+    .from("user_preferences")
+    .select(
+      "collapsedSidebar:collapsed_sidebar,denseTableMode:dense_table_mode,defaultLocale:default_locale,theme"
+    )
+    .eq("user_id", uid)
+    .maybeSingle();
+
+  const [tenantRow, userRow] = (await Promise.all([
+    tRowPromise,
+    uRowPromise,
+  ])) as [Row<Partial<DbTenantSettingsRow>>, Row<DbUserPreferencesRow>];
+
+  function mapTenantSettings(
+    row: Partial<DbTenantSettingsRow> | null
+  ): Partial<TenantSettings> {
+    if (!row) {
+      return {};
+    }
+    return row as Partial<TenantSettings>;
+  }
+
+  function mapUserPreferences(
+    row: Partial<DbUserPreferencesRow> | null
+  ): Partial<UserPreferences> {
+    if (!row) {
+      return {};
+    }
+    const mapped: Partial<UserPreferences> = {};
+    if (row.collapsedSidebar !== undefined) {
+      mapped.collapsedSidebar = row.collapsedSidebar;
+    }
+    if (row.denseTableMode !== undefined) {
+      mapped.denseTableMode = row.denseTableMode;
+    }
+    if (row.defaultLocale !== undefined && row.defaultLocale !== null) {
+      mapped.defaultLocale = row.defaultLocale;
+    }
+    if (row.theme !== undefined && row.theme !== null) {
+      mapped.theme = row.theme;
+    }
+    return mapped;
+  }
 
   const tenantSettings = {
     ...DEFAULT_TENANT_SETTINGS,
-    ...(tenantRow?.data ?? {}),
+    ...mapTenantSettings(tenantRow?.data ?? null),
   } as TenantSettings;
   const userPreferences = {
     ...DEFAULT_USER_PREFS,
-    ...(userRow?.data ?? {}),
+    ...mapUserPreferences(userRow?.data ?? null),
   } as UserPreferences;
 
   settingsStore.set({ tenant: tenantSettings, user: userPreferences });
 }
 
 export function getInventorySettings(s: MergedSettings = getSnapshot()): {
-  // biome-ignore lint/style/useNamingConvention: mirrors DB column names
-  low_stock_threshold: number;
-  // biome-ignore lint/style/useNamingConvention: mirrors DB column names
-  allow_unlimited_stock: boolean;
-  // biome-ignore lint/style/useNamingConvention: mirrors DB column names
-  negative_stock_allowed: boolean;
+  lowStockThreshold: number;
+  allowUnlimitedStock: boolean;
+  negativeStockAllowed: boolean;
 } {
   return {
-    // biome-ignore lint/style/useNamingConvention: mirrors DB column names
-    low_stock_threshold: s.tenant.low_stock_threshold,
-    // biome-ignore lint/style/useNamingConvention: mirrors DB column names
-    allow_unlimited_stock: s.tenant.allow_unlimited_stock,
-    // biome-ignore lint/style/useNamingConvention: mirrors DB column names
-    negative_stock_allowed: s.tenant.negative_stock_allowed,
+    lowStockThreshold: s.tenant.lowStockThreshold,
+    allowUnlimitedStock: s.tenant.allowUnlimitedStock,
+    negativeStockAllowed: s.tenant.negativeStockAllowed,
   };
 }
 

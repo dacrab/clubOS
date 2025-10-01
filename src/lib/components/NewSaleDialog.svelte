@@ -1,220 +1,218 @@
 <script lang="ts">
-  import { Dialog as DialogPrimitive } from "bits-ui";
-  import { Button } from "$lib/components/ui/button";
+import { Dialog as DialogPrimitive } from "bits-ui";
+import { Button } from "$lib/components/ui/button";
 
-  const DialogRoot = DialogPrimitive.Root;
+const DialogRoot = DialogPrimitive.Root;
 
-  import {
-    Filter,
-    Minus,
-    Plus,
-    ReceiptText,
-    ShoppingCart,
-    X,
-  } from "@lucide/svelte";
-  import {
-    DialogClose,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-  } from "$lib/components/ui/dialog";
-  import { t } from "$lib/i18n";
-  import { supabase } from "$lib/supabaseClient";
+import {
+  Filter,
+  Minus,
+  Plus,
+  ReceiptText,
+  ShoppingCart,
+  X,
+} from "@lucide/svelte";
+import {
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "$lib/components/ui/dialog";
+import { t } from "$lib/i18n";
+import { supabase } from "$lib/supabaseClient";
 
-  type Product = {
-    id: string;
-    name: string;
-    price: number;
-    category_id?: string | null;
-    image_url?: string | null;
-  };
-  type CartItem = {
-    id: string;
-    name: string;
-    price: number;
-    is_treat?: boolean;
-  };
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+  category_id?: string | null;
+  image_url?: string | null;
+};
+type CartItem = {
+  id: string;
+  name: string;
+  price: number;
+  is_treat?: boolean;
+};
 
-  let {
-    open = $bindable(false),
-    products = [] as Array<Product>,
-    onSubmit,
-  } = $props<{
-    open: boolean;
-    products?: Array<Product>;
-    onSubmit: (payload: {
-      items: Array<CartItem>;
-      paymentMethod: "cash";
-      couponCount: number;
-    }) => Promise<void>;
-  }>();
+let {
+  open = $bindable(false),
+  products = [] as Array<Product>,
+  onSubmit,
+} = $props<{
+  open: boolean;
+  products?: Array<Product>;
+  onSubmit: (payload: {
+    items: Array<CartItem>;
+    paymentMethod: "cash";
+    couponCount: number;
+  }) => Promise<void>;
+}>();
 
-  let cart: Array<CartItem> = $state([]);
-  let couponCount = $state(0);
-  let selectedCategory = $state<string | null>(null);
-  let categories: Array<{
-    id: string;
-    name: string;
-    parent_id: string | null;
-  }> = $state([]);
-  let internalProducts: Array<Product> = $state([]);
-  let tenantId: string | null = $state(null);
-  let facilityId: string | null = $state(null);
+let cart: Array<CartItem> = $state([]);
+let couponCount = $state(0);
+let selectedCategory = $state<string | null>(null);
+let categories: Array<{
+  id: string;
+  name: string;
+  parent_id: string | null;
+}> = $state([]);
+let internalProducts: Array<Product> = $state([]);
+let tenantId: string | null = $state(null);
+let facilityId: string | null = $state(null);
 
-  function addToCart(p: { id: string; name: string; price: number }) {
-    cart = [...cart, { ...p }];
-  }
-  function toggleTreat(index: number) {
-    if (index < 0 || index >= cart.length) return;
-    const next = [...cart];
-    const existing = next[index];
-    if (!existing) return;
-    next[index] = { ...existing, is_treat: !existing.is_treat };
-    cart = next;
-  }
-  function removeFromCart(index: number) {
-    if (index < 0 || index >= cart.length) return;
-    const next = [...cart];
-    next.splice(index, 1);
-    cart = next;
-  }
-  function clearCart() {
-    cart = [];
-    couponCount = 0;
-  }
-  function subtotal() {
-    return cart.reduce(
-      (acc, item) => acc + (item.is_treat ? 0 : Number(item.price)),
-      0,
-    );
-  }
-  function discount() {
-    return Math.max(0, couponCount) * 2;
-  }
-  function total() {
-    return Math.max(0, subtotal() - discount());
-  }
-
-  async function submit() {
-    try {
-      await onSubmit({ items: cart, paymentMethod: "cash", couponCount });
-      const { toast } = await import("svelte-sonner");
-      toast.success(t("orders.toast.success"));
-      clearCart();
-      // Keep dialog open after successful completion
-    } catch (error) {
-      const { toast } = await import("svelte-sonner");
-      const message =
-        error instanceof Error ? error.message : t("orders.toast.error");
-      toast.error(message);
-    }
-  }
-
-  async function loadCategories() {
-    await ensureFacilityContext();
-    if (!(tenantId && facilityId)) {
-      categories = [];
-      return;
-    }
-    const { data } = await supabase
-      .from("categories")
-      .select("id,name,parent_id")
-      .eq("tenant_id", tenantId)
-      .eq("facility_id", facilityId)
-      .order("name");
-    categories = ((data ?? []) as any) ?? [];
-  }
-  async function loadProductsIfNeeded() {
-    if ((products?.length ?? 0) > 0) return; // external products provided
-    await ensureFacilityContext();
-    if (!(tenantId && facilityId)) {
-      internalProducts = [];
-      return;
-    }
-    const { data } = await supabase
-      .from("products")
-      .select("id,name,price,category_id,image_url")
-      .eq("tenant_id", tenantId)
-      .eq("facility_id", facilityId)
-      .order("name");
-    internalProducts = ((data ?? []) as any) ?? [];
-  }
-  const allProducts = $derived<Array<Product>>(
-    (products?.length ?? 0) > 0
-      ? (products as Array<Product>)
-      : internalProducts,
+function addToCart(p: { id: string; name: string; price: number }) {
+  cart = [...cart, { ...p }];
+}
+function toggleTreat(index: number) {
+  if (index < 0 || index >= cart.length) return;
+  const next = [...cart];
+  const existing = next[index];
+  if (!existing) return;
+  next[index] = { ...existing, is_treat: !existing.is_treat };
+  cart = next;
+}
+function removeFromCart(index: number) {
+  if (index < 0 || index >= cart.length) return;
+  const next = [...cart];
+  next.splice(index, 1);
+  cart = next;
+}
+function clearCart() {
+  cart = [];
+  couponCount = 0;
+}
+function subtotal() {
+  return cart.reduce(
+    (acc, item) => acc + (item.is_treat ? 0 : Number(item.price)),
+    0
   );
-  const filteredProducts = $derived<Array<Product>>(
-    (() => {
-      if (!selectedCategory) return allProducts;
-      const descendantIds = new Set<string>();
-      function addChildren(parentId: string) {
-        for (const c of categories) {
-          if (c.parent_id === parentId) {
-            descendantIds.add(c.id);
-            addChildren(c.id);
-          }
+}
+function discount() {
+  return Math.max(0, couponCount) * 2;
+}
+function total() {
+  return Math.max(0, subtotal() - discount());
+}
+
+async function submit() {
+  try {
+    await onSubmit({ items: cart, paymentMethod: "cash", couponCount });
+    const { toast } = await import("svelte-sonner");
+    toast.success(t("orders.toast.success"));
+    clearCart();
+    // Keep dialog open after successful completion
+  } catch (error) {
+    const { toast } = await import("svelte-sonner");
+    const message =
+      error instanceof Error ? error.message : t("orders.toast.error");
+    toast.error(message);
+  }
+}
+
+async function loadCategories() {
+  await ensureFacilityContext();
+  if (!(tenantId && facilityId)) {
+    categories = [];
+    return;
+  }
+  const { data } = await supabase
+    .from("categories")
+    .select("id,name,parent_id")
+    .eq("tenant_id", tenantId)
+    .eq("facility_id", facilityId)
+    .order("name");
+  categories = ((data ?? []) as any) ?? [];
+}
+async function loadProductsIfNeeded() {
+  if ((products?.length ?? 0) > 0) return; // external products provided
+  await ensureFacilityContext();
+  if (!(tenantId && facilityId)) {
+    internalProducts = [];
+    return;
+  }
+  const { data } = await supabase
+    .from("products")
+    .select("id,name,price,category_id,image_url")
+    .eq("tenant_id", tenantId)
+    .eq("facility_id", facilityId)
+    .order("name");
+  internalProducts = ((data ?? []) as any) ?? [];
+}
+const allProducts = $derived<Array<Product>>(
+  (products?.length ?? 0) > 0 ? (products as Array<Product>) : internalProducts
+);
+const filteredProducts = $derived<Array<Product>>(
+  (() => {
+    if (!selectedCategory) return allProducts;
+    const descendantIds = new Set<string>();
+    function addChildren(parentId: string) {
+      for (const c of categories) {
+        if (c.parent_id === parentId) {
+          descendantIds.add(c.id);
+          addChildren(c.id);
         }
       }
-      descendantIds.add(selectedCategory);
-      addChildren(selectedCategory);
-      return allProducts.filter(
-        (p: Product) => !p.category_id || descendantIds.has(p.category_id),
-      );
-    })(),
-  );
+    }
+    descendantIds.add(selectedCategory);
+    addChildren(selectedCategory);
+    return allProducts.filter(
+      (p: Product) => !p.category_id || descendantIds.has(p.category_id)
+    );
+  })()
+);
 
-  $effect(() => {
-    if (open) {
-      loadCategories();
-      loadProductsIfNeeded();
-    }
-  });
-
-  async function ensureFacilityContext(): Promise<void> {
-    if (tenantId && facilityId) return;
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData.session?.user.id ?? "";
-    if (!userId) return;
-    // tenant
-    const { data: memberships } = await supabase
-      .from("tenant_members")
-      .select("tenant_id")
-      .eq("user_id", userId);
-    tenantId = (memberships?.[0]?.tenant_id as string | null) ?? null;
-    if (!tenantId) return;
-    // pick a facility in tenant
-    const { data: facs } = await supabase
-      .from("facilities")
-      .select("id")
-      .eq("tenant_id", tenantId)
-      .order("name")
-      .limit(1);
-    const fid = (facs?.[0]?.id as string | null) ?? null;
-    if (!fid) {
-      facilityId = null;
-      return;
-    }
-    // ensure membership (idempotent)
-    const { data: existing } = await supabase
-      .from("facility_members")
-      .select("facility_id")
-      .eq("facility_id", fid)
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (!existing) {
-      await supabase
-        .from("facility_members")
-        .upsert(
-          { facility_id: fid, user_id: userId },
-          { onConflict: "facility_id,user_id" },
-        );
-    }
-    facilityId = fid;
+$effect(() => {
+  if (open) {
+    loadCategories();
+    loadProductsIfNeeded();
   }
+});
 
-  // Simplified rendering without virtualization; CSS handles responsiveness
+async function ensureFacilityContext(): Promise<void> {
+  if (tenantId && facilityId) return;
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id ?? "";
+  if (!userId) return;
+  // tenant
+  const { data: memberships } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("user_id", userId);
+  tenantId = (memberships?.[0]?.tenant_id as string | null) ?? null;
+  if (!tenantId) return;
+  // pick a facility in tenant
+  const { data: facs } = await supabase
+    .from("facilities")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .order("name")
+    .limit(1);
+  const fid = (facs?.[0]?.id as string | null) ?? null;
+  if (!fid) {
+    facilityId = null;
+    return;
+  }
+  // ensure membership (idempotent)
+  const { data: existing } = await supabase
+    .from("facility_members")
+    .select("facility_id")
+    .eq("facility_id", fid)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!existing) {
+    await supabase
+      .from("facility_members")
+      .upsert(
+        { facility_id: fid, user_id: userId },
+        { onConflict: "facility_id,user_id" }
+      );
+  }
+  facilityId = fid;
+}
+
+// Simplified rendering without virtualization; CSS handles responsiveness
 </script>
 
 <DialogRoot bind:open>
