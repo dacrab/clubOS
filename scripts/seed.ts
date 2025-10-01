@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 type Category = { id: string; name: string };
 type Product = { id: string; name: string; price: number };
 type RegisterSession = { id: string };
+type Facility = { id: string };
 
 dotenv.config({ path: ".env.local" });
 
@@ -77,37 +78,75 @@ async function addMember(tenantId: string, userId: string) {
     .maybeSingle();
 }
 
-async function seedCategories(adminId: string, tenantId: string) {
+async function ensureFacility(tenantId: string): Promise<string> {
+  const { data: fac } = await supabase
+    .from("facilities")
+    .select("id, name")
+    .eq("tenant_id", tenantId)
+    .order("name")
+    .limit(1)
+    .maybeSingle();
+  if (fac?.id) return fac.id as string;
+  const { data, error } = await supabase
+    .from("facilities")
+    .insert({ tenant_id: tenantId, name: "Main Facility" })
+    .select("id")
+    .single();
+  if (error) throw new Error(`Failed to create facility: ${error.message}`);
+  return (data as Facility).id;
+}
+
+async function addFacilityMember(facilityId: string, userId: string) {
+  await supabase
+    .from("facility_members")
+    .upsert({ facility_id: facilityId, user_id: userId }, {
+      onConflict: "facility_id,user_id",
+    })
+    .select()
+    .maybeSingle();
+}
+
+async function seedCategories(adminId: string, tenantId: string, facilityId: string) {
   const categories = [
     {
       name: "Καφέδες",
       description: "Όλα τα είδη καφέ",
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
     {
       name: "Ζεστοί Καφέδες",
       description: "Ζεστοί καφέδες",
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
     {
       name: "Κρύοι Καφέδες",
       description: "Κρύοι καφέδες",
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
     {
       name: "Ροφήματα",
       description: "Διάφορα ροφήματα",
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
     {
       name: "Σνακ",
       description: "Διάφορα σνακ",
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
   ];
 
@@ -150,7 +189,8 @@ async function seedCategories(adminId: string, tenantId: string) {
 async function seedProducts(
   categories: Category[],
   adminId: string,
-  tenantId: string
+  tenantId: string,
+  facilityId: string
 ) {
   const hotCoffeeCategory = categories.find((c) => c.name === "Ζεστοί Καφέδες");
   const coldCoffeeCategory = categories.find((c) => c.name === "Κρύοι Καφέδες");
@@ -166,6 +206,8 @@ async function seedProducts(
       category_id: hotCoffeeCategory?.id,
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
     {
       name: "Cappuccino",
@@ -174,6 +216,8 @@ async function seedProducts(
       category_id: hotCoffeeCategory?.id,
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
     {
       name: "Latte",
@@ -182,6 +226,8 @@ async function seedProducts(
       category_id: hotCoffeeCategory?.id,
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
 
     // Cold Coffees
@@ -192,6 +238,8 @@ async function seedProducts(
       category_id: coldCoffeeCategory?.id,
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
     {
       name: "Freddo Cappuccino",
@@ -200,6 +248,8 @@ async function seedProducts(
       category_id: coldCoffeeCategory?.id,
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
     {
       name: "Iced Latte",
@@ -208,6 +258,8 @@ async function seedProducts(
       category_id: coldCoffeeCategory?.id,
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
 
     // Beverages
@@ -218,6 +270,8 @@ async function seedProducts(
       category_id: beverageCategory?.id,
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
     {
       name: "Τσάι",
@@ -226,6 +280,8 @@ async function seedProducts(
       category_id: beverageCategory?.id,
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
     {
       name: "Χυμός Πορτοκάλι",
@@ -234,6 +290,8 @@ async function seedProducts(
       category_id: beverageCategory?.id,
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
 
     // Snacks
@@ -244,6 +302,8 @@ async function seedProducts(
       category_id: snackCategory?.id,
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
     {
       name: "Σάντουιτς",
@@ -252,6 +312,8 @@ async function seedProducts(
       category_id: snackCategory?.id,
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
     {
       name: "Τοστ",
@@ -260,6 +322,8 @@ async function seedProducts(
       category_id: snackCategory?.id,
       created_by: adminId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
   ];
 
@@ -277,10 +341,10 @@ async function seedProducts(
   return insertedProducts.map(({ id, name, price }) => ({ id, name, price }));
 }
 
-async function seedRegisterSession(adminId: string, tenantId: string) {
+async function seedRegisterSession(adminId: string, tenantId: string, facilityId: string) {
   const { data, error } = await supabase
     .from("register_sessions")
-    .insert({ opened_by: adminId, tenant_id: tenantId })
+    .insert({ opened_by: adminId, tenant_id: tenantId, facility_id: facilityId })
     .select()
     .single();
 
@@ -296,7 +360,8 @@ async function seedOrders(
   session: RegisterSession,
   products: Product[],
   staffId: string,
-  tenantId: string
+  tenantId: string,
+  facilityId: string
 ) {
   const espresso = products.find((p) => p.name === "Espresso");
   const chocolate = products.find((p) => p.name === "Σοκολάτα");
@@ -326,6 +391,8 @@ async function seedOrders(
       coupon_count: couponCount,
       created_by: staffId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     })
     .select()
     .single();
@@ -385,7 +452,7 @@ const MILLISECONDS_IN_A_DAY =
 const TWO_DAYS = 2;
 const THREE_DAYS = 3;
 
-async function seedAppointments(staffId: string, tenantId: string) {
+async function seedAppointments(staffId: string, tenantId: string, facilityId: string) {
   const appointments = [
     {
       customer_name: "Μαρία Παπαδοπούλου",
@@ -396,6 +463,8 @@ async function seedAppointments(staffId: string, tenantId: string) {
       notes: "Γενέθλια παιδιού",
       created_by: staffId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
     {
       customer_name: "Γιώργος Δημητρίου",
@@ -408,6 +477,8 @@ async function seedAppointments(staffId: string, tenantId: string) {
       notes: "Σχολική εκδρομή",
       created_by: staffId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
   ];
 
@@ -419,7 +490,7 @@ async function seedAppointments(staffId: string, tenantId: string) {
   console.log("Created appointments");
 }
 
-async function seedFootballBookings(staffId: string, tenantId: string) {
+async function seedFootballBookings(staffId: string, tenantId: string, facilityId: string) {
   const bookings = [
     {
       customer_name: "Νίκος Αντωνίου",
@@ -430,6 +501,8 @@ async function seedFootballBookings(staffId: string, tenantId: string) {
       notes: "Εβδομαδιαίο παιχνίδι",
       created_by: staffId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
     {
       customer_name: "Κώστας Νικολάου",
@@ -440,6 +513,8 @@ async function seedFootballBookings(staffId: string, tenantId: string) {
       notes: "Φιλικό παιχνίδι",
       created_by: staffId,
       tenant_id: tenantId,
+      // biome-ignore lint/style/useNamingConvention: DB column name
+      facility_id: facilityId,
     },
   ];
 
@@ -485,18 +560,25 @@ async function main() {
     await addMember(tenantId, staff.id as string);
     await addMember(tenantId, secretary.id as string);
 
+    // Ensure facility and facility memberships
+    const facilityId = await ensureFacility(tenantId);
+    await addFacilityMember(facilityId, admin.id as string);
+    await addFacilityMember(facilityId, staff.id as string);
+    await addFacilityMember(facilityId, secretary.id as string);
+
     // Seed data
-    const categories = await seedCategories(admin.id as string, tenantId);
+    const categories = await seedCategories(admin.id as string, tenantId, facilityId);
     const products = await seedProducts(
       categories,
       admin.id as string,
-      tenantId
+      tenantId,
+      facilityId
     );
-    const session = await seedRegisterSession(admin.id as string, tenantId);
+    const session = await seedRegisterSession(admin.id as string, tenantId, facilityId);
 
-    await seedOrders(session, products, staff.id as string, tenantId);
-    await seedAppointments(staff.id as string, tenantId);
-    await seedFootballBookings(staff.id as string, tenantId);
+    await seedOrders(session, products, staff.id as string, tenantId, facilityId);
+    await seedAppointments(staff.id as string, tenantId, facilityId);
+    await seedFootballBookings(staff.id as string, tenantId, facilityId);
 
     console.log("Database seeding completed successfully!");
   } catch (error) {

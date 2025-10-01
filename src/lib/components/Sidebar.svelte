@@ -1,5 +1,7 @@
 <script lang="ts">
 import {
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   Home,
   LogOut,
@@ -9,6 +11,12 @@ import {
 } from "@lucide/svelte";
 import { createEventDispatcher } from "svelte";
 import { page } from "$app/stores";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "$lib/components/ui/dropdown-menu";
 import type { TranslationKey } from "$lib/i18n";
 import { locale, t } from "$lib/i18n";
 import { supabase } from "$lib/supabaseClient";
@@ -16,20 +24,14 @@ import { type AppUser, currentUser } from "$lib/user";
 
 type IconComponent = typeof Home;
 
-const { themeIcon = null } = $props<{
-  themeIcon?: IconComponent | null;
-}>();
+const { themeIcon = null } = $props<{ themeIcon?: IconComponent | null }>();
 
-const dispatch = createEventDispatcher<{
-  toggleTheme: undefined;
-}>();
+const dispatch = createEventDispatcher<{ toggleTheme: undefined }>();
 
 const userRole = $derived(
   ($currentUser?.role ?? null) as AppUser["role"] | null
 );
-
 const userName = $derived($currentUser?.username ?? $currentUser?.email ?? "");
-
 const userRoleLabel = $derived(
   userRole ? `${userRole[0]?.toUpperCase() ?? ""}${userRole.slice(1)}` : ""
 );
@@ -42,21 +44,14 @@ type NavItem = {
 };
 
 type NavSection = {
-  headingKey?: TranslationKey;
-  heading?: string;
+  headingKey: TranslationKey;
   items: NavItem[];
 };
 
 const navSections: NavSection[] = [
   {
-    headingKey: "nav.overview" as TranslationKey,
-    items: [
-      {
-        href: "/admin",
-        icon: Home,
-        labelKey: "nav.dashboard",
-      },
-    ],
+    headingKey: "nav.overview",
+    items: [{ href: "/admin", icon: Home, labelKey: "nav.dashboard" }],
   },
   {
     headingKey: "nav.admin",
@@ -113,15 +108,15 @@ function normalizePath(p: string): string {
   return n === "" ? "/" : n;
 }
 
+const currentPath = $derived(normalizePath($page.url.pathname));
+
 function isActive(path: string): boolean {
-  const current = normalizePath($page.url.pathname);
+  const current = currentPath;
   const href = normalizePath(path);
   const depth = href.split("/").filter(Boolean).length; // e.g. "/admin" -> 1, "/admin/products" -> 2
   if (depth <= 1) {
-    // Top-level entries (like "/admin") should only be active on exact match
     return current === href;
   }
-  // Leaf entries are active on exact match or when current is a subpath
   return current === href || current.startsWith(`${href}/`);
 }
 
@@ -131,8 +126,7 @@ async function logout(): Promise<void> {
 }
 
 function hasAccess(item: NavItem): boolean {
-  if (!item.roles || item.roles.length === 0) return true;
-  return item.roles.includes(userRole);
+  return !item.roles || item.roles.includes(userRole);
 }
 
 const visibleSections = $derived(
@@ -147,7 +141,7 @@ const visibleSections = $derived(
 const linkBase =
   "group flex items-center gap-3 h-10 rounded-xl px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground";
 const activeLink =
-  "text-foreground bg-sidebar-accent/60 hover:text-foreground hover:bg-sidebar-accent";
+  "text-foreground bg-sidebar-accent/60 hover:bg-sidebar-accent";
 const iconWrapper =
   "grid size-8 place-items-center rounded-lg border border-transparent bg-sidebar/40 text-muted-foreground transition-colors group-hover:border-primary/30 group-hover:text-primary";
 const iconWrapperActive = "border-primary/40 bg-primary/10 text-primary";
@@ -162,7 +156,6 @@ function setLocale(next: "en" | "el") {
 let collapsed = $state(false);
 
 $effect(() => {
-  // load preference
   if (typeof window === "undefined") return;
   const saved = window.localStorage.getItem("sidebar-collapsed");
   collapsed = saved === "1";
@@ -175,7 +168,6 @@ async function toggleCollapsed() {
   } catch (/** ignore storage quota or privacy mode */ _err) {
     /* no-op */
   }
-  // persist to user_preferences (best-effort)
   const { data: sessionData } = await supabase.auth.getSession();
   const uid = sessionData.session?.user.id;
   if (!uid) return;
@@ -212,18 +204,6 @@ async function toggleCollapsed() {
             {t("common.operatingSuite")}
           </span>
         </div>
-        <button
-          type="button"
-          class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg border border-outline-soft/60 text-muted-foreground hover:text-foreground"
-          onclick={toggleCollapsed}
-          aria-label={t("common.toggleSidebar")}
-        >
-          {#if collapsed}
-            <span class="i-lucide-chevron-right size-4">›</span>
-          {:else}
-            <span class="i-lucide-chevron-left size-4">‹</span>
-          {/if}
-        </button>
       </div>
       <p
         class="text-[13px] leading-6 text-muted-foreground"
@@ -237,11 +217,11 @@ async function toggleCollapsed() {
       <div class="flex flex-col gap-7">
         {#each visibleSections as section}
           <div class="flex flex-col gap-2">
-            {#if (section.heading || section.headingKey) && !collapsed}
+            {#if section.headingKey && !collapsed}
               <span
                 class="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground"
               >
-                {section.headingKey ? t(section.headingKey) : section.heading}
+                {t(section.headingKey)}
               </span>
             {/if}
             <div class="flex flex-col gap-1.5">
@@ -251,6 +231,7 @@ async function toggleCollapsed() {
                   href={item.href}
                   class={`${linkBase} ${active ? activeLink : ""}`}
                   aria-current={active ? "page" : undefined}
+                  title={collapsed ? t(item.labelKey) : undefined}
                 >
                   <span
                     class={`${iconWrapper} ${active ? iconWrapperActive : ""}`}
@@ -269,44 +250,75 @@ async function toggleCollapsed() {
     </nav>
   </div>
 
+  <!-- Collapse toggle moved near the bottom, above the divider and controls -->
+  <div class="px-4 pb-4 flex items-center gap-2">
+    <button
+      type="button"
+      class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-outline-soft/60 text-muted-foreground hover:text-foreground"
+      onclick={toggleCollapsed}
+      aria-label={t("common.toggleSidebar")}
+      title={collapsed ? t("common.toggleSidebar") : t("common.collapse")}
+    >
+      {#if collapsed}
+        <ChevronRight class="size-4" />
+      {:else}
+        <ChevronLeft class="size-4" />
+      {/if}
+    </button>
+    {#if !collapsed}
+      <span class="text-sm font-medium text-muted-foreground">
+        {t("common.collapse")}
+      </span>
+    {/if}
+  </div>
+
   <div class="border-t border-sidebar-border/70 px-4 py-6">
     <div class="flex flex-col gap-4">
       <div
-        class="flex items-center justify-between gap-3 rounded-xl border border-outline-soft/60 bg-sidebar-muted/30 px-2 py-2"
+        class={`rounded-xl border border-outline-soft/60 bg-sidebar-muted/30 px-2 py-2 overflow-hidden ${
+          collapsed
+            ? "flex flex-col items-center gap-2"
+            : "flex items-center justify-between gap-3"
+        }`}
       >
-        <div
-          class="inline-flex items-center gap-1 rounded-full border border-outline-soft/50 bg-background/80 p-1 text-[11px] font-medium text-muted-foreground"
-        >
-          <button
-            type="button"
-            class={`rounded-full px-3 py-1 transition-colors ${
-              $locale === "en"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
+        <!-- Compact language selector showing current locale; opens a dropdown to change -->
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            class={`${
+              collapsed
+                ? "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-outline-soft/50 bg-background/80 text-[11px] font-semibold text-muted-foreground outline-hidden transition-colors hover:border-primary/30 hover:text-primary"
+                : "inline-flex h-8 items-center justify-center rounded-full border border-outline-soft/50 bg-background/80 px-3 text-[11px] font-medium text-muted-foreground outline-hidden transition-colors hover:border-primary/30 hover:text-primary"
             }`}
-            aria-pressed={$locale === "en"}
-            onclick={() => setLocale("en")}
+            aria-label={t("common.changeLanguage")}
+            title={collapsed ? t("common.changeLanguage") : undefined}
           >
-            EN
-          </button>
-          <button
-            type="button"
-            class={`rounded-full px-3 py-1 transition-colors ${
-              $locale === "el"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-            aria-pressed={$locale === "el"}
-            onclick={() => setLocale("el")}
+            {($locale || "en").toUpperCase()}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align={collapsed ? "center" : "start"}
+            class="w-40"
           >
-            EL
-          </button>
-        </div>
+            <DropdownMenuItem onclick={() => setLocale("en")}>
+              EN — English
+            </DropdownMenuItem>
+            <DropdownMenuItem onclick={() => setLocale("el")}>
+              EL — Ελληνικά
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {#if !collapsed}
+          <span
+            class="flex-1 text-center text-[11px] font-medium text-muted-foreground"
+          >
+            {t("common.quickSettings")}
+          </span>
+        {/if}
         <button
           type="button"
-          class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-outline-soft/60 bg-background/90 text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
+          class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-outline-soft/60 bg-background/90 text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
           onclick={toggleTheme}
           aria-label={t("common.toggleTheme")}
+          title={collapsed ? t("common.toggleTheme") : undefined}
         >
           {#if themeIcon}
             {@const ThemeGlyph = themeIcon}

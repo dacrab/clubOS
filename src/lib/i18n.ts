@@ -198,6 +198,7 @@ const translations = {
       en: "Toggle sidebar",
       el: "Άνοιγμα/Κλείσιμο πλαϊνού μενού",
     },
+    collapse: { en: "Collapse", el: "Σύμπτυξη" },
     viewAll: { en: "View All", el: "Προβολή όλων" },
     clear: { en: "Clear", el: "Καθαρισμός" },
     uploadImage: { en: "Upload Image", el: "Μεταφόρτωση Εικόνας" },
@@ -209,6 +210,8 @@ const translations = {
     },
     operatingSuite: { en: "Operating Suite", el: "Σουίτα Λειτουργιών" },
     open: { en: "Open", el: "Ανοιχτό" },
+    changeLanguage: { en: "Change language", el: "Αλλαγή γλώσσας" },
+    quickSettings: { en: "Quick settings", el: "Γρήγορες ρυθμίσεις" },
   },
   pages: {
     settings: {
