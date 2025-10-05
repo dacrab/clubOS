@@ -17,7 +17,7 @@
     "db:restart": "supabase db stop && supabase db start"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.4",
+    "@biomejs/biome": "2.2.5",
     "@internationalized/date": "^3.8.1",
     "@lucide/svelte": "^0.544.0",
     "@sveltejs/adapter-vercel": "^5.6.3",
