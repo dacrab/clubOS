@@ -23,5 +23,5 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 #Supabase
-supabase/.temp
-supabase/.brances
+supabase/.temp/
+supabase/.branches/
