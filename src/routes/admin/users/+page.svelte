@@ -41,48 +41,73 @@ async function loadUsers() {
   users = data ?? [];
 }
 
+async function getAuthToken(): Promise<string | null> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  return sessionData.session?.access_token ?? null;
+}
+
+async function errorToast(message: string) {
+  const { toast } = await import("svelte-sonner");
+  toast.error(message);
+}
+
+async function patchUser(payload: any, token: string) {
+  return fetch("/api/admin/users", {
+    method: "PATCH",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+async function postUser(payload: any, token: string) {
+  return fetch("/api/admin/users", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
 async function onSaveUser(user: any) {
+  const token = await getAuthToken();
+  if (!token) {
+    await errorToast("Not authenticated");
+    return;
+  }
+
   if (user.id) {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData.session?.access_token;
-    if (!token) {
-      const { toast } = await import("svelte-sonner");
-      toast.error("Not authenticated");
-      return;
-    }
     const payload = {
       id: user.id,
       role: user.role,
       username: user.username,
-      // send password only if provided
       ...(user.password ? { password: user.password } : {}),
       ...(typeof user.active === "boolean" ? { active: user.active } : {}),
     };
-    const res = await fetch("/api/admin/users", {
-      method: "PATCH",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
+    const res = await patchUser(payload, token);
     if (!res.ok) {
-      const { toast } = await import("svelte-sonner");
-      toast.error(await res.text());
+      await errorToast(await res.text());
       return;
     }
   } else {
-    const { error } = await supabase.auth.signUp({
+    const createPayload = {
       email: `${user.username}@example.com`,
       password: user.password,
-      options: { data: { username: user.username, role: user.role } },
-    });
-    if (error) {
-      const { toast } = await import("svelte-sonner");
-      toast.error(error.message);
+      role: user.role,
+      username: user.username,
+      active: typeof user.active === "boolean" ? user.active : true,
+    };
+    const res = await postUser(createPayload, token);
+    if (!res.ok) {
+      await errorToast(await res.text());
       return;
     }
   }
+
   await loadUsers();
 }
 </script>

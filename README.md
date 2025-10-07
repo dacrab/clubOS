@@ -20,7 +20,6 @@ Modern POS and club management UI built with SvelteKit 5 runes, Supabase, Tailwi
 
 ### Monorepo Structure (app)
 - `src/lib/supabaseClient.ts` – client SDK
-- `src/lib/server/supabaseAdmin.ts` – server admin SDK (service role; server-only)
 - `src/lib/user.ts` – session store and profile loader
 - `src/routes` – SvelteKit routes (pages + API)
   - `admin/*` – admin dashboards (products, orders, registers, users)
@@ -43,8 +42,9 @@ Create `.env.local` with (client values are public):
 ```bash
 PUBLIC_SUPABASE_URL=...           # Project URL
 PUBLIC_SUPABASE_ANON_KEY=...
-SUPABASE_URL=...                  # server only
-SUPABASE_SERVICE_ROLE_KEY=...     # server only
+# Optional for local scripts (not required by the app at runtime)
+SUPABASE_URL=...                  # used by scripts/seed.ts
+SUPABASE_SERVICE_ROLE_KEY=...     # used by scripts/seed.ts
 ```
 
 3) Supabase (optional local stack)
@@ -76,7 +76,7 @@ bun run test      # vitest
 - `src/routes/admin/products/+page.svelte` – list, create, edit products, image upload to Supabase Storage
 - `src/routes/admin/orders/+page.svelte` – date-range filters, items per order, money formatting
 - `src/routes/admin/registers/+page.svelte` – sessions insights and stats
-- `src/routes/api/admin/users/+server.ts` – protected admin endpoints
+- `src/routes/api/admin/users/+server.ts` – protected admin endpoints (proxy to Edge Functions)
 
 ### UI Conventions
 - Import UI via barrels, e.g.:
@@ -88,7 +88,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$
 
 ### Environment Rules
 - Client: `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY` via `$env/static/public` or `$env/dynamic/public`.
-- Server: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` via `$env/dynamic/private`.
+- App runtime: no service role required. Admin operations are performed in Supabase Edge Functions with `verify_jwt`.
+- Local scripts only: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` are used by `scripts/seed.ts`.
 - Never expose the service role key in client code.
 
 ### GitHub Actions
@@ -117,7 +118,8 @@ supabase db reset
 ```
 
 ### Deployment
-- Adapter: `@sveltejs/adapter-vercel` (configurable). Provide `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY` as env vars. For server actions/endpoints, set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` as private env vars.
+- Adapter: `@sveltejs/adapter-vercel` (configurable). Provide `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY` as env vars.
+- Admin actions run via Supabase Edge Functions (`admin-create-user`, `admin-update-user`, `admin-delete-user`) with `verify_jwt`. Configure their environment in the Supabase project (they use the project’s service role internally; not required in your app host).
 
 ### Notes
 - Test credentials in examples are placeholders used for demos and are flagged by scanners; they are intentionally non-sensitive.
