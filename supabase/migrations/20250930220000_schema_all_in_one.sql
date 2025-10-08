@@ -4,7 +4,6 @@ BEGIN;
 SET client_min_messages TO WARNING;
 
 -- Extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Enums
@@ -188,7 +187,7 @@ ALTER TABLE public.football_bookings ENABLE ROW LEVEL SECURITY;
 -- RLS policies
 CREATE POLICY users_read ON public.users FOR SELECT TO authenticated USING (true);
 CREATE POLICY users_update ON public.users FOR UPDATE TO authenticated USING (id = (select auth.uid()) OR (SELECT role FROM public.users WHERE id = (select auth.uid())) = 'admin');
-CREATE POLICY users_insert ON public.users FOR INSERT TO public WITH CHECK (true);
+-- Insertions into public.users are handled by the auth.users trigger; do not grant broad INSERT.
 
 CREATE POLICY tenants_read ON public.tenants FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.tenant_members tm WHERE tm.user_id = (select auth.uid()) AND tm.tenant_id = tenants.id));
 CREATE POLICY tenant_members_select ON public.tenant_members FOR SELECT TO authenticated USING (user_id = (select auth.uid()));
@@ -238,7 +237,7 @@ DECLARE v_username text; v_role public.user_role := 'staff'; BEGIN
   INSERT INTO public.users (id, username, role) VALUES (NEW.id, v_username, v_role) ON CONFLICT (id) DO NOTHING;
   RETURN NEW; EXCEPTION WHEN OTHERS THEN RETURN NEW; END; $$;
 
-CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 CREATE OR REPLACE FUNCTION public.update_updated_at()
 RETURNS trigger LANGUAGE plpgsql SET search_path = '' AS $$
