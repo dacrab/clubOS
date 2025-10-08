@@ -5,6 +5,7 @@ type Category = { id: string; name: string };
 type Product = { id: string; name: string; price: number };
 type RegisterSession = { id: string };
 type Facility = { id: string };
+type TenantSettings = { id: string };
 
 dotenv.config({ path: ".env.local" });
 
@@ -120,6 +121,42 @@ async function addFacilityMember(facilityId: string, userId: string) {
       }
     )
     .select()
+    .maybeSingle();
+}
+
+async function ensureTenantSettings(
+  tenantId: string,
+  facilityId: string
+): Promise<string> {
+  const { data: existing } = await supabase
+    .from("tenant_settings")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("facility_id", facilityId)
+    .limit(1)
+    .maybeSingle();
+  if (existing?.id) return (existing as { id: string }).id;
+
+  const { data, error } = await supabase
+    .from("tenant_settings")
+    .upsert(
+      {
+        tenant_id: tenantId,
+        facility_id: facilityId,
+      },
+      { onConflict: "tenant_id,facility_id" }
+    )
+    .select("id")
+    .single();
+  if (error) throw new Error(`Failed to ensure tenant settings: ${error.message}`);
+  return (data as TenantSettings).id;
+}
+
+async function ensureUserPreferences(userId: string) {
+  await supabase
+    .from("user_preferences")
+    .upsert({ user_id: userId }, { onConflict: "user_id" })
+    .select("user_id")
     .maybeSingle();
 }
 
@@ -599,6 +636,14 @@ async function main() {
     await addFacilityMember(facilityId, admin.id as string);
     await addFacilityMember(facilityId, staff.id as string);
     await addFacilityMember(facilityId, secretary.id as string);
+
+    // Ensure settings and preferences
+    await ensureTenantSettings(tenantId, facilityId);
+    await Promise.all([
+      ensureUserPreferences(admin.id as string),
+      ensureUserPreferences(staff.id as string),
+      ensureUserPreferences(secretary.id as string),
+    ]);
 
     // Seed data
     const categories = await seedCategories(
