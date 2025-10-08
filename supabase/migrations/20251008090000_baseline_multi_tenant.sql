@@ -422,15 +422,40 @@ CREATE POLICY tenant_settings_select ON public.tenant_settings FOR SELECT TO aut
     WHERE tm.user_id = (select auth.uid()) AND tm.tenant_id = tenant_settings.tenant_id
   ));
 
-CREATE POLICY tenant_settings_write ON public.tenant_settings FOR ALL TO authenticated
-  USING ((SELECT role FROM public.users WHERE id = (select auth.uid())) = 'admin' AND EXISTS (
+-- Split write access by action to avoid multiple permissive SELECT policies
+CREATE POLICY tenant_settings_insert ON public.tenant_settings FOR INSERT TO authenticated
+  WITH CHECK (
+    (SELECT role FROM public.users WHERE id = (select auth.uid())) = 'admin'
+    AND EXISTS (
       SELECT 1 FROM public.tenant_members tm
       WHERE tm.user_id = (select auth.uid()) AND tm.tenant_id = tenant_settings.tenant_id
-    ))
-  WITH CHECK ((SELECT role FROM public.users WHERE id = (select auth.uid())) = 'admin' AND EXISTS (
+    )
+  );
+
+CREATE POLICY tenant_settings_update ON public.tenant_settings FOR UPDATE TO authenticated
+  USING (
+    (SELECT role FROM public.users WHERE id = (select auth.uid())) = 'admin'
+    AND EXISTS (
       SELECT 1 FROM public.tenant_members tm
       WHERE tm.user_id = (select auth.uid()) AND tm.tenant_id = tenant_settings.tenant_id
-    ));
+    )
+  )
+  WITH CHECK (
+    (SELECT role FROM public.users WHERE id = (select auth.uid())) = 'admin'
+    AND EXISTS (
+      SELECT 1 FROM public.tenant_members tm
+      WHERE tm.user_id = (select auth.uid()) AND tm.tenant_id = tenant_settings.tenant_id
+    )
+  );
+
+CREATE POLICY tenant_settings_delete ON public.tenant_settings FOR DELETE TO authenticated
+  USING (
+    (SELECT role FROM public.users WHERE id = (select auth.uid())) = 'admin'
+    AND EXISTS (
+      SELECT 1 FROM public.tenant_members tm
+      WHERE tm.user_id = (select auth.uid()) AND tm.tenant_id = tenant_settings.tenant_id
+    )
+  );
 
 -- User preferences RLS
 CREATE POLICY user_preferences_rw ON public.user_preferences FOR ALL TO authenticated
