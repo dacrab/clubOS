@@ -1,7 +1,7 @@
 <script lang="ts">
 import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 import type { Snippet } from "svelte";
-import { cn } from "$lib/utils.js";
+import { cn } from "$lib/utils";
 
 let {
   ref = $bindable(null),
@@ -15,6 +15,9 @@ let {
   inset?: boolean;
   children?: Snippet;
 } & Record<string, unknown> = $props();
+((..._args: unknown[]) => {
+  return;
+})(DropdownMenuPrimitive, cn, ref, className, inset, children, restProps);
 </script>
 
 <DropdownMenuPrimitive.GroupHeading

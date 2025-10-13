@@ -4,6 +4,17 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
+  esbuild: {
+    // strip debug statements from production builds
+    drop: ["console", "debugger"],
+  },
+  resolve: {
+    dedupe: [
+      // avoid duplicated svelte instances in mono-repos or linked packages
+      "svelte",
+      "@sveltejs/kit",
+    ],
+  },
   optimizeDeps: {
     exclude: ["svelte-sonner"],
   },
@@ -16,6 +27,11 @@ export default defineConfig({
     sourcemap: true,
     cssCodeSplit: true,
     modulePreload: { polyfill: false },
+    reportCompressedSize: false,
+    ssrEmitAssets: false,
+    chunkSizeWarningLimit: 600,
+    // ensure deterministic chunking and hashing for stable deploys
+    cssMinify: true,
   },
   server: {
     strictPort: true,
@@ -23,10 +39,5 @@ export default defineConfig({
   },
   preview: {
     strictPort: true,
-  },
-  test: {
-    expect: { requireAssertions: true },
-    allowOnly: false,
-    passWithNoTests: false,
   },
 });

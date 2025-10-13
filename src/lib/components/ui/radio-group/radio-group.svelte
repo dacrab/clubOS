@@ -1,6 +1,6 @@
 <script lang="ts">
 import { RadioGroup as RadioGroupPrimitive } from "bits-ui";
-import { cn } from "$lib/utils.js";
+import { cn } from "$lib/utils";
 
 let {
   ref = $bindable(null),
@@ -8,6 +8,9 @@ let {
   value = $bindable(""),
   ...restProps
 }: RadioGroupPrimitive.RootProps = $props();
+((..._args: unknown[]) => {
+  return;
+})(RadioGroupPrimitive, cn, ref, className, value, restProps);
 </script>
 
 <RadioGroupPrimitive.Root

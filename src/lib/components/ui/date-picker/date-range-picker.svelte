@@ -1,9 +1,14 @@
 <script lang="ts">
 import flatpickr from "flatpickr";
 import { createEventDispatcher, onDestroy, onMount } from "svelte";
-import { Input } from "$lib/components/ui/input";
-import { t } from "$lib/i18n";
+import Input from "$lib/components/ui/input/input.svelte";
+import { locale as appLocale, t } from "$lib/i18n";
 import "flatpickr/dist/flatpickr.min.css";
+import { get } from "svelte/store";
+
+((..._args: unknown[]) => {
+  return;
+})(Input, t);
 
 // Types
 type Range = { start: string; end: string };
@@ -37,17 +42,30 @@ const presets: { id: PresetId; labelKey: PresetLabelKey }[] = [
 ];
 
 // State variables
+type FlatpickrLike = {
+  destroy: () => void;
+  setDate: (date: Date, triggerChange?: boolean) => void;
+  set?: (option: string, value: unknown) => void;
+};
+type FlatpickrOptionsApprox = {
+  dateFormat?: string;
+  allowInput?: boolean;
+  defaultDate?: Date;
+  onChange?: (_selectedDates: Date[], dateStr: string) => void;
+};
 let startInput = $state<HTMLInputElement | null>(null);
 let endInput = $state<HTMLInputElement | null>(null);
-let fpStart: flatpickr.Instance | null = null;
-let fpEnd: flatpickr.Instance | null = null;
+let fpStart: FlatpickrLike | null = null;
+let fpEnd: FlatpickrLike | null = null;
 
 // Derived state
 const activePresetId = $derived(
   (() => {
     for (const p of presets) {
       const r = getPresetRange(p.id);
-      if (start === r.start && end === r.end) return p.id as PresetId;
+      if (start === r.start && end === r.end) {
+        return p.id as PresetId;
+      }
     }
     return null as PresetId | null;
   })()
@@ -72,18 +90,24 @@ function shiftDays(days: number): string {
 }
 
 function isoToDMY(iso: string): string {
-  if (!iso) return "";
+  if (!iso) {
+    return "";
+  }
   const [yyyy, mm, dd] = iso.split("-");
   const yy = String(Number(yyyy) % CENTURY_OFFSET).padStart(2, "0");
   return `${dd}-${mm}-${yy}`;
 }
 
 function dmyToISO(dmy: string): string {
-  if (!dmy) return "";
+  if (!dmy) {
+    return "";
+  }
   const [dd, mm, y] = dmy.split("-");
   const yPart = y ?? "";
   const yyyy = yPart.length === 2 ? String(YEAR_2000 + Number(yPart)) : yPart;
-  if (!(yyyy && mm && dd)) return "";
+  if (!(yyyy && mm && dd)) {
+    return "";
+  }
   return `${yyyy}-${mm}-${dd}`;
 }
 
@@ -92,15 +116,24 @@ function setRange(next: Range) {
   const changed = start !== next.start || end !== next.end;
   start = next.start;
   end = next.end;
-  if (changed) dispatch("change", next);
+  if (changed) {
+    dispatch("change", next);
+  }
 }
 
 function getPresetRange(id: PresetId): Range {
-  if (id === "all") return { start: "", end: "" };
-  if (id === "today") return { start: todayISO(), end: todayISO() };
-  if (id === "yesterday") return { start: shiftDays(-1), end: shiftDays(-1) };
-  if (id === "last7")
+  if (id === "all") {
+    return { start: "", end: "" };
+  }
+  if (id === "today") {
+    return { start: todayISO(), end: todayISO() };
+  }
+  if (id === "yesterday") {
+    return { start: shiftDays(-1), end: shiftDays(-1) };
+  }
+  if (id === "last7") {
     return { start: shiftDays(LAST_7_DAYS_OFFSET), end: todayISO() };
+  }
   // id === "last30"
   return { start: shiftDays(LAST_30_DAYS_OFFSET), end: todayISO() };
 }
@@ -108,25 +141,141 @@ function getPresetRange(id: PresetId): Range {
 // Flatpickr initialization
 onMount(() => {
   if (startInput) {
-    fpStart = (flatpickr as any)(startInput, {
+    const localeOpt: unknown =
+      get(appLocale) === "el"
+        ? {
+            weekdays: {
+              shorthand: ["Κυρ", "Δευ", "Τρί", "Τετ", "Πέμ", "Παρ", "Σάβ"],
+              longhand: [
+                "Κυριακή",
+                "Δευτέρα",
+                "Τρίτη",
+                "Τετάρτη",
+                "Πέμπτη",
+                "Παρασκευή",
+                "Σάββατο",
+              ],
+            },
+            months: {
+              shorthand: [
+                "Ιαν",
+                "Φεβ",
+                "Μαρ",
+                "Απρ",
+                "Μαΐ",
+                "Ιουν",
+                "Ιουλ",
+                "Αυγ",
+                "Σεπ",
+                "Οκτ",
+                "Νοε",
+                "Δεκ",
+              ],
+              longhand: [
+                "Ιανουάριος",
+                "Φεβρουάριος",
+                "Μάρτιος",
+                "Απρίλιος",
+                "Μάιος",
+                "Ιούνιος",
+                "Ιούλιος",
+                "Αύγουστος",
+                "Σεπτέμβριος",
+                "Οκτώβριος",
+                "Νοέμβριος",
+                "Δεκέμβριος",
+              ],
+            },
+            firstDayOfWeek: 1,
+            rangeSeparator: " έως ",
+            weekAbbreviation: "Εβδ.",
+            scrollTitle: "Κύλιση για αλλαγή",
+            toggleTitle: "Πάτα για εμφάνιση",
+            amPM: ["ΠΜ", "ΜΜ"],
+            time_24hr: true,
+          }
+        : undefined;
+    const base: FlatpickrOptionsApprox = {
       dateFormat: "d-m-y",
       allowInput: true,
-      defaultDate: start ? new Date(dmyToISO(isoToDMY(start))) : undefined,
+      locale: localeOpt,
       onChange: (_selectedDates: Date[], dateStr: string) => {
         setRange({ start: dmyToISO(dateStr), end });
       },
-    });
+    } as FlatpickrOptionsApprox & { locale?: unknown };
+    const opts: FlatpickrOptionsApprox = start
+      ? { ...base, defaultDate: new Date(dmyToISO(isoToDMY(start))) }
+      : base;
+    fpStart = flatpickr(startInput, opts) as unknown as FlatpickrLike;
   }
 
   if (endInput) {
-    fpEnd = (flatpickr as any)(endInput, {
+    const localeOpt: unknown =
+      get(appLocale) === "el"
+        ? {
+            weekdays: {
+              shorthand: ["Κυρ", "Δευ", "Τρί", "Τετ", "Πέμ", "Παρ", "Σάβ"],
+              longhand: [
+                "Κυριακή",
+                "Δευτέρα",
+                "Τρίτη",
+                "Τετάρτη",
+                "Πέμπτη",
+                "Παρασκευή",
+                "Σάββατο",
+              ],
+            },
+            months: {
+              shorthand: [
+                "Ιαν",
+                "Φεβ",
+                "Μαρ",
+                "Απρ",
+                "Μαΐ",
+                "Ιουν",
+                "Ιουλ",
+                "Αυγ",
+                "Σεπ",
+                "Οκτ",
+                "Νοε",
+                "Δεκ",
+              ],
+              longhand: [
+                "Ιανουάριος",
+                "Φεβρουάριος",
+                "Μάρτιος",
+                "Απρίλιος",
+                "Μάιος",
+                "Ιούνιος",
+                "Ιούλιος",
+                "Αύγουστος",
+                "Σεπτέμβριος",
+                "Οκτώβριος",
+                "Νοέμβριος",
+                "Δεκέμβριος",
+              ],
+            },
+            firstDayOfWeek: 1,
+            rangeSeparator: " έως ",
+            weekAbbreviation: "Εβδ.",
+            scrollTitle: "Κύλιση για αλλαγή",
+            toggleTitle: "Πάτα για εμφάνιση",
+            amPM: ["ΠΜ", "ΜΜ"],
+            time_24hr: true,
+          }
+        : undefined;
+    const base: FlatpickrOptionsApprox = {
       dateFormat: "d-m-y",
       allowInput: true,
-      defaultDate: end ? new Date(dmyToISO(isoToDMY(end))) : undefined,
+      locale: localeOpt,
       onChange: (_selectedDates: Date[], dateStr: string) => {
         setRange({ start, end: dmyToISO(dateStr) });
       },
-    });
+    } as FlatpickrOptionsApprox & { locale?: unknown };
+    const opts: FlatpickrOptionsApprox = end
+      ? { ...base, defaultDate: new Date(dmyToISO(isoToDMY(end))) }
+      : base;
+    fpEnd = flatpickr(endInput, opts) as unknown as FlatpickrLike;
   }
 });
 
@@ -147,6 +296,67 @@ $effect(() => {
     fpEnd.setDate(new Date(dmyToISO(isoToDMY(end))), false);
   }
 });
+
+// React to locale changes
+$effect(() => {
+  const lng = get(appLocale);
+  const localeOpt: unknown =
+    lng === "el"
+      ? {
+          weekdays: {
+            shorthand: ["Κυρ", "Δευ", "Τρί", "Τετ", "Πέμ", "Παρ", "Σάβ"],
+            longhand: [
+              "Κυριακή",
+              "Δευτέρα",
+              "Τρίτη",
+              "Τετάρτη",
+              "Πέμπτη",
+              "Παρασκευή",
+              "Σάββατο",
+            ],
+          },
+          months: {
+            shorthand: [
+              "Ιαν",
+              "Φεβ",
+              "Μαρ",
+              "Απρ",
+              "Μαΐ",
+              "Ιουν",
+              "Ιουλ",
+              "Αυγ",
+              "Σεπ",
+              "Οκτ",
+              "Νοε",
+              "Δεκ",
+            ],
+            longhand: [
+              "Ιανουάριος",
+              "Φεβρουάριος",
+              "Μάρτιος",
+              "Απρίλιος",
+              "Μάιος",
+              "Ιούνιος",
+              "Ιούλιος",
+              "Αύγουστος",
+              "Σεπτέμβριος",
+              "Οκτώβριος",
+              "Νοέμβριος",
+              "Δεκέμβριος",
+            ],
+          },
+          firstDayOfWeek: 1,
+          rangeSeparator: " έως ",
+          weekAbbreviation: "Εβδ.",
+          scrollTitle: "Κύλιση για αλλαγή",
+          toggleTitle: "Πάτα για εμφάνιση",
+          amPM: ["ΠΜ", "ΜΜ"],
+          time_24hr: true,
+        }
+      : undefined;
+  fpStart?.set?.("locale", localeOpt);
+  fpEnd?.set?.("locale", localeOpt);
+});
 </script>
 
 <div class="flex flex-col gap-2">
@@ -154,23 +364,23 @@ $effect(() => {
     <Input
       type="text"
       bind:ref={startInput}
-      placeholder="dd-mm-yy"
+      placeholder={t("date.rangePlaceholderStart")}
       class="h-11 w-full rounded-2xl border border-outline-soft bg-background px-3 cursor-pointer"
-      aria-label="Start date"
+      aria-label={t("date.rangePlaceholderStart")}
       autocomplete="off"
       readonly
     />
     <Input
       type="text"
       bind:ref={endInput}
-      placeholder="dd-mm-yy"
+      placeholder={t("date.rangePlaceholderEnd")}
       class="h-11 w-full rounded-2xl border border-outline-soft bg-background px-3 cursor-pointer"
-      aria-label="End date"
+      aria-label={t("date.rangePlaceholderEnd")}
       autocomplete="off"
       readonly
     />
   </div>
-  <div class="flex flex-wrap gap-2" role="group" aria-label={t("date")}> 
+  <div class="flex flex-wrap gap-2" role="group" aria-label={t("date")}>
     {#each presets as p}
       <button
         type="button"

@@ -1,11 +1,11 @@
 <script lang="ts">
 import { Candy, ClipboardList, Clock3, TicketPercent } from "@lucide/svelte";
-import PageContent from "$lib/components/common/PageContent.svelte";
-import PageHeader from "$lib/components/common/PageHeader.svelte";
-import StatsCards from "$lib/components/common/StatsCards.svelte";
 import { Badge } from "$lib/components/ui/badge";
 import { Card } from "$lib/components/ui/card";
-import { DateRangePicker } from "$lib/components/ui/date-picker";
+import DateRangePicker from "$lib/components/ui/date-picker/date-range-picker.svelte";
+import PageContent from "$lib/components/ui/page/page-content.svelte";
+import PageHeader from "$lib/components/ui/page/page-header.svelte";
+import StatsCards from "$lib/components/ui/stats-cards.svelte";
 import {
   Table,
   TableBody,
@@ -15,11 +15,15 @@ import {
   TableRow,
 } from "$lib/components/ui/table";
 import { t } from "$lib/i18n";
-import { supabase } from "$lib/supabaseClient";
+import {
+  discountsForSession,
+  ordersTotalForSession,
+} from "$lib/registers/stats";
+import { supabase } from "$lib/supabase-client";
 import { currentUser, loadCurrentUser } from "$lib/user";
 import { formatDateTime } from "$lib/utils";
+import { computeWindow } from "$lib/virtualization/window";
 
-// Types
 type SessionRow = {
   id: string;
   opened_at: string;
@@ -60,29 +64,33 @@ let sessions: SessionRow[] = $state([]);
 let closingsBySession: Record<string, ClosingRow> = $state({});
 let ordersBySession: Record<string, OrderRow[]> = $state({});
 let itemsByOrder: Record<string, OrderItemRow[]> = $state({});
-let expanded: Record<string, boolean> = $state({});
-// Virtualization state for sessions table
-let scrollRef: HTMLDivElement | null = null;
+const expanded: Record<string, boolean> = $state({});
+
+// Virtualization
+let scrollRef: HTMLDivElement | null = $state(null);
 const ROW_HEIGHT = 60;
 const VIEW_BUFFER_ROWS = 6;
 const VIEWPORT_HEIGHT = 560;
 let startIndex = $state(0);
 let endIndex = $state(0);
-let topPad = $derived(startIndex * ROW_HEIGHT);
-let bottomPad = $derived(
+const topPad = $derived(startIndex * ROW_HEIGHT);
+const bottomPad = $derived(
   Math.max(0, (sessions.length - endIndex) * ROW_HEIGHT)
 );
 
 function recomputeWindow() {
   const scrollTop = scrollRef?.scrollTop ?? 0;
-  const visibleCount =
-    Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
-  const first = Math.max(
-    0,
-    Math.floor(scrollTop / ROW_HEIGHT) - Math.ceil(VIEW_BUFFER_ROWS / 2)
+  const { startIndex: s, endIndex: e } = computeWindow(
+    scrollTop,
+    sessions.length,
+    {
+      rowHeight: ROW_HEIGHT,
+      viewBufferRows: VIEW_BUFFER_ROWS,
+      viewportHeight: VIEWPORT_HEIGHT,
+    }
   );
-  startIndex = first;
-  endIndex = Math.min(sessions.length, first + visibleCount);
+  startIndex = s;
+  endIndex = e;
 }
 
 // Date selection
@@ -90,17 +98,17 @@ let startDate = $state<string>("");
 let endDate = $state<string>("");
 
 // Computed stats
-let totalSessions = $derived(sessions.length);
-let openSessions = $derived(
+const totalSessions = $derived(sessions.length);
+const openSessions = $derived(
   sessions.filter((session) => !session.closed_at).length
 );
-let totalOrdersAmount = $derived(
+const totalOrdersAmount = $derived(
   sessions.reduce((sum, s) => sum + getOrdersTotalForSession(s.id), 0)
 );
-let totalDiscountAmountEffective = $derived(
+const totalDiscountAmountEffective = $derived(
   sessions.reduce((sum, s) => sum + getDiscountsForSession(s.id), 0)
 );
-let totalTreatAmountEffective = $derived(
+const totalTreatAmountEffective = $derived(
   sessions.reduce((sum, s) => sum + getTreatTotalForSession(s.id), 0)
 );
 
@@ -120,13 +128,15 @@ $effect(() => {
   });
 });
 
-// Data loading functions
+// Data loading
 async function load() {
   await loadSessions();
-  await loadClosings();
-  await loadOrders();
+  await Promise.all([loadClosings(), loadOrders()]);
   await loadOrderItems();
-  // reset virtual window
+  resetVirtualWindow();
+}
+
+function resetVirtualWindow() {
   startIndex = 0;
   const visibleCount =
     Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
@@ -153,7 +163,6 @@ async function loadSessions() {
   }
 
   const { data } = await query;
-
   sessions = data ?? [];
 }
 
@@ -196,7 +205,9 @@ async function loadOrders() {
   const bySession: Record<string, OrderRow[]> = {};
   for (const order of data ?? []) {
     const sessionId = order.session_id;
-    if (!bySession[sessionId]) bySession[sessionId] = [];
+    if (!bySession[sessionId]) {
+      bySession[sessionId] = [];
+    }
     bySession[sessionId].push({
       id: order.id,
       created_at: order.created_at,
@@ -228,10 +239,14 @@ async function loadOrderItems() {
 
   const map: Record<string, OrderItemRow[]> = {};
   for (const item of data ?? []) {
-    if (item.is_deleted) continue;
+    if (item.is_deleted) {
+      continue;
+    }
 
     const orderId = item.order_id;
-    if (!map[orderId]) map[orderId] = [];
+    if (!map[orderId]) {
+      map[orderId] = [];
+    }
 
     const prod = item.products as unknown;
     const productName = Array.isArray(prod)
@@ -250,7 +265,7 @@ async function loadOrderItems() {
   itemsByOrder = map;
 }
 
-// Utility functions
+// Utilities
 function formatCurrency(value: number | null | undefined): string {
   return `€${Number(value ?? 0).toFixed(2)}`;
 }
@@ -284,22 +299,14 @@ function closedBy(sessionId: string): string | null {
 
 function getOrdersTotalForSession(sessionId: string): number {
   const closing = closingsBySession[sessionId];
-  if (typeof closing?.orders_total === "number")
-    return Number(closing.orders_total);
   const orders = ordersBySession[sessionId] ?? [];
-  let sum = 0;
-  for (const o of orders) sum += Number(o.total_amount ?? 0);
-  return sum;
+  return ordersTotalForSession(closing, orders);
 }
 
 function getDiscountsForSession(sessionId: string): number {
   const closing = closingsBySession[sessionId];
-  if (typeof closing?.total_discounts === "number")
-    return Number(closing.total_discounts);
   const orders = ordersBySession[sessionId] ?? [];
-  let sum = 0;
-  for (const o of orders) sum += Number(o.discount_amount ?? 0);
-  return sum;
+  return discountsForSession(closing, orders);
 }
 
 function getTreatTotalForSession(sessionId: string): number {
@@ -308,15 +315,20 @@ function getTreatTotalForSession(sessionId: string): number {
     return Number(closing.treat_total);
   }
   const orders = ordersBySession[sessionId] ?? [];
-  let sum = 0;
-  for (const o of orders) {
-    for (const it of itemsByOrder[o.id] ?? []) {
-      if (it.is_treat) {
-        sum += Number(it.unit_price ?? 0) * Number(it.quantity ?? 0);
-      }
-    }
-  }
-  return sum;
+  return orders.reduce((sum, o) => {
+    const items = itemsByOrder[o.id] ?? [];
+    return (
+      sum +
+      items.reduce((itemSum, it) => {
+        if (it.is_treat) {
+          return (
+            itemSum + Number(it.unit_price ?? 0) * Number(it.quantity ?? 0)
+          );
+        }
+        return itemSum;
+      }, 0)
+    );
+  }, 0);
 }
 </script>
 
@@ -362,177 +374,240 @@ function getTreatTotalForSession(sessionId: string): number {
     ]}
   />
 
-  <Card class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm">
+  <Card
+    class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm"
+  >
     <div class="border-b border-outline-soft/60 px-6 py-4">
-      <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+      <div
+        class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+      >
         {t("pages.registers.pickDate")}
       </div>
       <div class="mt-3 max-w-xl">
-        <DateRangePicker bind:start={startDate} bind:end={endDate} on:change={load} />
+        <DateRangePicker
+          bind:start={startDate}
+          bind:end={endDate}
+          on:change={load}
+        />
       </div>
     </div>
 
     <div class="overflow-x-auto">
-      <div bind:this={scrollRef} onscroll={recomputeWindow} style={`max-height:${VIEWPORT_HEIGHT}px; overflow-y:auto;`}>
+      <div
+        bind:this={scrollRef}
+        onscroll={recomputeWindow}
+        style={`max-height:${VIEWPORT_HEIGHT}px; overflow-y:auto;`}
+      >
         <Table class="min-w-full">
-        <TableHeader>
-          <TableRow class="border-0 text-xs uppercase tracking-[0.22em] text-muted-foreground">
-            <TableHead class="rounded-l-xl bg-surface-strong/60">
-              {t("pages.registers.id")}
-            </TableHead>
-            <TableHead class="bg-surface-strong/60">
-              {t("pages.registers.opened")}
-            </TableHead>
-            <TableHead class="bg-surface-strong/60">
-              {t("pages.registers.closed")}
-            </TableHead>
-            <TableHead class="bg-surface-strong/60 text-right">
-              {t("orders.total")}
-            </TableHead>
-            <TableHead class="bg-surface-strong/60 text-right">
-              {t("orders.discount")}
-            </TableHead>
-            <TableHead class="rounded-r-xl bg-surface-strong/60 text-right">
-              {t("pages.registers.treats")}
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {#if sessions.length === 0}
-            <TableRow>
-              <TableCell colspan={6} class="py-10 text-center text-sm text-muted-foreground">
-                {t("pages.registers.empty") ?? t("orders.none")}
-              </TableCell>
-            </TableRow>
-          {:else}
-            {#if topPad > 0}
-              <TableRow><TableCell colspan={6} style={`height:${topPad}px; padding:0; border:0;`}></TableCell></TableRow>
-            {/if}
-            {#each sessions.slice(startIndex, endIndex) as session}
-              {@const isOpen = !session.closed_at}
-              <TableRow
-                class={`cursor-pointer border-b border-outline-soft/40 transition-colors ${isOpen ? 'bg-primary/5' : 'hover:bg-surface-strong/40'}`}
-                onclick={() => toggleSession(session.id)}
+          <TableHeader>
+            <TableRow
+              class="border-0 text-xs uppercase tracking-[0.22em] text-muted-foreground"
+            >
+              <TableHead class="rounded-l-xl"
+                >{t("pages.registers.id")}</TableHead
               >
-                <TableCell class="text-muted-foreground">
-                  <div class="font-mono text-[11px] uppercase tracking-[0.24em]">
-                    #{session.id.slice(0, 8)}
-                  </div>
-                  {#if isOpen}
-                    <Badge class="ml-2 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-                      {t("common.open")}
-                    </Badge>
-                  {:else}
-                    <Badge variant="secondary" class="ml-2 rounded-full">
-                      Closed
-                    </Badge>
-                  {/if}
-                  <div class="mt-1 text-xs">
-                    {t("orders.coupons")}: {getCouponsCountForSession(session.id)} • 
-                    {t("orders.treatsWord")}: {getTreatsCountForSession(session.id)}
-                  </div>
-                </TableCell>
-                <TableCell class="text-sm text-foreground">
-                  {formatDateTime(session.opened_at)}
-                </TableCell>
-                <TableCell class="text-sm text-foreground">
-                  {#if session.closed_at}
-                    <div>{formatDateTime(session.closed_at)}</div>
-                    {#if closedBy(session.id)}
-                      <div class="text-xs text-muted-foreground">
-                        by {closedBy(session.id)}
-                      </div>
-                    {/if}
-                  {:else}
-                    —
-                  {/if}
-                </TableCell>
-                <TableCell class="text-right text-sm font-medium text-foreground">
-                  {formatCurrency(getOrdersTotalForSession(session.id))}
-                </TableCell>
-                <TableCell class="text-right text-sm font-medium text-foreground">
-                  {formatCurrency(getDiscountsForSession(session.id))}
-                </TableCell>
-                <TableCell class="text-right text-sm font-medium text-foreground">
-                  {formatCurrency(getTreatTotalForSession(session.id))}
+              <TableHead>{t("pages.registers.opened")}</TableHead>
+              <TableHead>{t("pages.registers.closed")}</TableHead>
+              <TableHead class="text-right">{t("orders.total")}</TableHead>
+              <TableHead class="text-right">{t("orders.discount")}</TableHead>
+              <TableHead class="rounded-r-xl text-right"
+                >{t("pages.registers.treats")}</TableHead
+              >
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {#if sessions.length === 0}
+              <TableRow>
+                <TableCell
+                  colspan={6}
+                  class="py-10 text-center text-sm text-muted-foreground"
+                >
+                  {t("pages.registers.empty") ?? t("orders.none")}
                 </TableCell>
               </TableRow>
-              
-              {#if (ordersBySession[session.id] ?? []).length > 0}
-                <TableRow class="border-b border-outline-soft/40">
-                  <TableCell colspan={6} class="bg-surface-strong/40 p-0">
-                    {#if expanded[session.id]}
-                      <div class="px-6 py-4">
-                        <div class="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                          {t("orders.recent")} • 
-                          {t("orders.coupons")}: {getCouponsCountForSession(session.id)} • 
-                          {t("orders.treatsWord")}: {getTreatsCountForSession(session.id)}
-                        </div>
-                        <div class="flex flex-col gap-2">
-                          {#each ordersBySession[session.id] ?? [] as order}
-                            <div class="rounded-xl border border-outline-soft/60 bg-surface px-3 py-2 text-sm">
-                              <div class="flex items-center justify-between gap-3">
-                                <div class="flex items-center gap-3">
-                                  <span class="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-                                    #{order.id.slice(0,8)}
-                                  </span>
-                                  <span class="text-xs text-muted-foreground">
-                                    {formatDateTime(order.created_at)}
-                                  </span>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                  <span class="text-xs text-muted-foreground">
-                                    {t("orders.coupons")}: {order.coupon_count}
-                                  </span>
-                                  <span class="text-xs text-muted-foreground">
-                                    {t("orders.discount")} -{formatCurrency(order.discount_amount)}
-                                  </span>
-                                  <span class="font-semibold">
-                                    {formatCurrency(order.total_amount)}
-                                  </span>
-                                </div>
-                              </div>
-                              <div class="mt-2 grid gap-1 text-xs text-muted-foreground">
-                                {#each itemsByOrder[order.id] ?? [] as item}
-                                  <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-2">
-                                      <span class="text-foreground">{item.product_name}</span>
-                                      <span>×{item.quantity}</span>
-                                      {#if item.is_treat}
-                                        <span class="rounded-lg bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
-                                          {t("orders.free")}
-                                        </span>
-                                      {/if}
-                                    </div>
-                                    <div>
-                                      {#if item.is_treat}
-                                        <span class="text-muted-foreground line-through">
-                                          {formatCurrency(item.unit_price)}
-                                        </span>
-                                        <span class="ml-2 text-foreground">€0.00</span>
-                                      {:else}
-                                        <span class="text-foreground">
-                                          {formatCurrency(item.line_total)}
-                                        </span>
-                                      {/if}
-                                    </div>
-                                  </div>
-                                {/each}
-                              </div>
-                            </div>
-                          {/each}
-                        </div>
-                      </div>
-                    {/if}
-                  </TableCell>
+            {:else}
+              {#if topPad > 0}
+                <TableRow>
+                  <TableCell
+                    colspan={6}
+                    style={`height:${topPad}px; padding:0; border:0;`}
+                  ></TableCell>
                 </TableRow>
               {/if}
-            {/each}
-            {#if bottomPad > 0}
-              <TableRow><TableCell colspan={6} style={`height:${bottomPad}px; padding:0; border:0;`}></TableCell></TableRow>
+              {#each sessions.slice(startIndex, endIndex) as session}
+                {@const isOpen = !session.closed_at}
+                <TableRow
+                  class={`cursor-pointer border-b border-outline-soft/40 transition-colors hover:bg-surface-strong/40 ${isOpen ? "bg-primary/5" : ""}`}
+                  onclick={() => toggleSession(session.id)}
+                >
+                  <TableCell class="text-muted-foreground">
+                    <div
+                      class="font-mono text-[11px] uppercase tracking-[0.24em]"
+                    >
+                      #{session.id.slice(0, 8)}
+                    </div>
+                    {#if isOpen}
+                      <Badge
+                        class="ml-2 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                      >
+                        {t("common.open")}
+                      </Badge>
+                    {:else}
+                      <Badge variant="secondary" class="ml-2 rounded-full"
+                        >Closed</Badge
+                      >
+                    {/if}
+                    <div class="mt-1 text-xs">
+                      {t("orders.coupons")}: {getCouponsCountForSession(
+                        session.id,
+                      )} •
+                      {t("orders.treatsWord")}: {getTreatsCountForSession(
+                        session.id,
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell class="text-sm text-foreground">
+                    {formatDateTime(session.opened_at)}
+                  </TableCell>
+                  <TableCell class="text-sm text-foreground">
+                    {#if session.closed_at}
+                      <div>{formatDateTime(session.closed_at)}</div>
+                      {#if closedBy(session.id)}
+                        <div class="text-xs text-muted-foreground">
+                          by {closedBy(session.id)}
+                        </div>
+                      {/if}
+                    {:else}
+                      —
+                    {/if}
+                  </TableCell>
+                  <TableCell
+                    class="text-right text-sm font-medium text-foreground"
+                  >
+                    {formatCurrency(getOrdersTotalForSession(session.id))}
+                  </TableCell>
+                  <TableCell
+                    class="text-right text-sm font-medium text-foreground"
+                  >
+                    {formatCurrency(getDiscountsForSession(session.id))}
+                  </TableCell>
+                  <TableCell
+                    class="text-right text-sm font-medium text-foreground"
+                  >
+                    {formatCurrency(getTreatTotalForSession(session.id))}
+                  </TableCell>
+                </TableRow>
+
+                {#if (ordersBySession[session.id] ?? []).length > 0}
+                  <TableRow class="border-b border-outline-soft/40">
+                    <TableCell colspan={6} class="bg-surface-strong/40 p-0">
+                      {#if expanded[session.id]}
+                        <div class="px-6 py-4">
+                          <div
+                            class="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+                          >
+                            {t("orders.recent")} •
+                            {t("orders.coupons")}: {getCouponsCountForSession(
+                              session.id,
+                            )} •
+                            {t("orders.treatsWord")}: {getTreatsCountForSession(
+                              session.id,
+                            )}
+                          </div>
+                          <div class="flex flex-col gap-2">
+                            {#each ordersBySession[session.id] ?? [] as order}
+                              <div
+                                class="rounded-xl border border-outline-soft/60 bg-surface px-3 py-2 text-sm"
+                              >
+                                <div
+                                  class="flex items-center justify-between gap-3"
+                                >
+                                  <div class="flex items-center gap-3">
+                                    <span
+                                      class="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground"
+                                    >
+                                      #{order.id.slice(0, 8)}
+                                    </span>
+                                    <span class="text-xs text-muted-foreground">
+                                      {formatDateTime(order.created_at)}
+                                    </span>
+                                  </div>
+                                  <div class="flex items-center gap-3">
+                                    <span class="text-xs text-muted-foreground">
+                                      {t("orders.coupons")}: {order.coupon_count}
+                                    </span>
+                                    <span class="text-xs text-muted-foreground">
+                                      {t("orders.discount")} -{formatCurrency(
+                                        order.discount_amount,
+                                      )}
+                                    </span>
+                                    <span class="font-semibold"
+                                      >{formatCurrency(
+                                        order.total_amount,
+                                      )}</span
+                                    >
+                                  </div>
+                                </div>
+                                <div
+                                  class="mt-2 grid gap-1 text-xs text-muted-foreground"
+                                >
+                                  {#each itemsByOrder[order.id] ?? [] as item}
+                                    <div
+                                      class="flex items-center justify-between"
+                                    >
+                                      <div class="flex items-center gap-2">
+                                        <span class="text-foreground"
+                                          >{item.product_name}</span
+                                        >
+                                        <span>×{item.quantity}</span>
+                                        {#if item.is_treat}
+                                          <span
+                                            class="rounded-lg bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300"
+                                          >
+                                            {t("orders.free")}
+                                          </span>
+                                        {/if}
+                                      </div>
+                                      <div>
+                                        {#if item.is_treat}
+                                          <span
+                                            class="text-muted-foreground line-through"
+                                          >
+                                            {formatCurrency(item.unit_price)}
+                                          </span>
+                                          <span class="ml-2 text-foreground"
+                                            >€0.00</span
+                                          >
+                                        {:else}
+                                          <span class="text-foreground"
+                                            >{formatCurrency(
+                                              item.line_total,
+                                            )}</span
+                                          >
+                                        {/if}
+                                      </div>
+                                    </div>
+                                  {/each}
+                                </div>
+                              </div>
+                            {/each}
+                          </div>
+                        </div>
+                      {/if}
+                    </TableCell>
+                  </TableRow>
+                {/if}
+              {/each}
+              {#if bottomPad > 0}
+                <TableRow>
+                  <TableCell
+                    colspan={6}
+                    style={`height:${bottomPad}px; padding:0; border:0;`}
+                  ></TableCell>
+                </TableRow>
+              {/if}
             {/if}
-          {/if}
-        </TableBody>
+          </TableBody>
         </Table>
       </div>
     </div>

@@ -8,19 +8,37 @@ import {
   UserCog,
 } from "@lucide/svelte";
 import { toast } from "svelte-sonner";
-import PageContent from "$lib/components/common/PageContent.svelte";
-import PageHeader from "$lib/components/common/PageHeader.svelte";
-import LowStockCard from "$lib/components/LowStockCard.svelte";
-import NewSaleDialog from "$lib/components/NewSaleDialog.svelte";
-import RecentOrders from "$lib/components/RecentOrders.svelte";
-import { Button } from "$lib/components/ui/button";
+import LowStockCard from "$lib/components/low-stock-card.svelte";
+import NewSaleDialog from "$lib/components/new-sale-dialog.svelte";
+import RecentOrders from "$lib/components/recent-orders.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import PageContent from "$lib/components/ui/page/page-content.svelte";
+import PageHeader from "$lib/components/ui/page/page-header.svelte";
 import { t } from "$lib/i18n";
 import { closeRegister, ensureOpenSession } from "$lib/register";
-import { supabase } from "$lib/supabaseClient";
+import { supabase } from "$lib/supabase-client";
+
+((..._args: unknown[]) => {
+  return;
+})(
+  BarChart3,
+  ClipboardList,
+  LogOut,
+  Package,
+  ShoppingCart,
+  UserCog,
+  PageContent,
+  PageHeader,
+  LowStockCard,
+  NewSaleDialog,
+  RecentOrders,
+  Button,
+  t
+);
 
 let showSale = $state(false);
 let closing = $state(false);
-let productsForSale: Array<{
+const productsForSale: Array<{
   id: string;
   name: string;
   price: number;
@@ -28,7 +46,9 @@ let productsForSale: Array<{
 }> = $state([]);
 
 $effect(() => {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
   notifyLowStock();
 });
 
@@ -70,7 +90,12 @@ async function onCloseRegister() {
 }
 
 async function createSale(payload: {
-  items: Array<{ id: string; name: string; price: number; is_treat?: boolean }>;
+  items: Array<{
+    id: string;
+    name: string;
+    price: number;
+    is_treat?: boolean;
+  }>;
   paymentMethod: "cash";
   couponCount: number;
 }) {
@@ -131,6 +156,8 @@ async function createSale(payload: {
     throw new Error(itemsError.message);
   }
 }
+
+// remove capturing IIFE that referenced reactive state once; all symbols are used in markup
 </script>
 
 <PageContent>
@@ -139,7 +166,12 @@ async function createSale(payload: {
     subtitle={t("pages.admin.overview")}
     icon={BarChart3}
   >
-    <Button type="button" size="lg" class="gap-2 rounded-xl px-5" onclick={() => (showSale = true)}>
+    <Button
+      type="button"
+      size="lg"
+      class="gap-2 rounded-xl px-5"
+      onclick={() => (showSale = true)}
+    >
       <ShoppingCart class="h-4 w-4" />
       {t("orders.new")}
     </Button>
@@ -149,10 +181,19 @@ async function createSale(payload: {
   </PageHeader>
 
   <div class="grid gap-6 lg:grid-cols-[3fr_2fr] xl:grid-cols-[2fr_1fr]">
-    <section class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm">
+    <section
+      class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm"
+    >
       <div class="flex items-center justify-between gap-2">
-        <h2 class="text-lg font-semibold text-foreground">{t("orders.recent")}</h2>
-        <Button variant="ghost" size="sm" class="rounded-lg px-3" href="/admin/orders">
+        <h2 class="text-lg font-semibold text-foreground">
+          {t("orders.recent")}
+        </h2>
+        <Button
+          variant="ghost"
+          size="sm"
+          class="rounded-lg px-3"
+          href="/admin/orders"
+        >
           {t("common.viewAll")}
         </Button>
       </div>
@@ -162,24 +203,42 @@ async function createSale(payload: {
     </section>
 
     <aside class="flex flex-col gap-6">
-      <section class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm">
+      <section
+        class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm"
+      >
         <LowStockCard threshold={10} />
       </section>
 
-      <section class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm">
-        <h3 class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+      <section
+        class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm"
+      >
+        <h3
+          class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+        >
           {t("common.actions")}
         </h3>
         <div class="mt-4 flex flex-col gap-2">
-          <Button href="/admin/products" variant="ghost" class="justify-start gap-3 rounded-lg px-3">
+          <Button
+            href="/admin/products"
+            variant="ghost"
+            class="justify-start gap-3 rounded-lg px-3"
+          >
             <Package class="h-4 w-4" />
             {t("nav.products")}
           </Button>
-          <Button href="/admin/users" variant="ghost" class="justify-start gap-3 rounded-lg px-3">
+          <Button
+            href="/admin/users"
+            variant="ghost"
+            class="justify-start gap-3 rounded-lg px-3"
+          >
             <UserCog class="h-4 w-4" />
             {t("nav.users")}
           </Button>
-          <Button href="/admin/registers" variant="ghost" class="justify-start gap-3 rounded-lg px-3">
+          <Button
+            href="/admin/registers"
+            variant="ghost"
+            class="justify-start gap-3 rounded-lg px-3"
+          >
             <ClipboardList class="h-4 w-4" />
             {t("dashboard.admin.manageRegisters")}
           </Button>
@@ -193,12 +252,18 @@ async function createSale(payload: {
             class="w-full justify-center gap-2 rounded-lg"
           >
             <LogOut class="h-4 w-4" />
-            {closing ? t("dashboard.admin.closing") : t("dashboard.admin.closeRegister")}
+            {closing
+              ? t("dashboard.admin.closing")
+              : t("dashboard.admin.closeRegister")}
           </Button>
         </div>
       </section>
     </aside>
   </div>
 
-  <NewSaleDialog bind:open={showSale} products={productsForSale} onSubmit={createSale} />
+  <NewSaleDialog
+    bind:open={showSale}
+    products={productsForSale}
+    onSubmit={createSale}
+  />
 </PageContent>

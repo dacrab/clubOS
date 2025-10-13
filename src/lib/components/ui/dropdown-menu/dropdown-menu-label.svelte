@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { HTMLAttributes } from "svelte/elements";
-import { cn, type WithElementRef } from "$lib/utils.js";
+import type { WithElementRef } from "$lib/utils";
+import { cn } from "$lib/utils";
 
 let {
   ref = $bindable(null),
@@ -11,6 +12,9 @@ let {
 }: WithElementRef<HTMLAttributes<HTMLDivElement>> & {
   inset?: boolean;
 } = $props();
+((..._args: unknown[]) => {
+  return;
+})(ref, className, inset, children, restProps, cn);
 </script>
 
 <div

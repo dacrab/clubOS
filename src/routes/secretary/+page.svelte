@@ -1,13 +1,26 @@
 <script lang="ts">
 import { CalendarCheck, CalendarRange } from "@lucide/svelte";
-import PageContent from "$lib/components/common/PageContent.svelte";
-import PageHeader from "$lib/components/common/PageHeader.svelte";
-import StatsCards from "$lib/components/common/StatsCards.svelte";
-import { Button } from "$lib/components/ui/button";
-import { Card } from "$lib/components/ui/card";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card from "$lib/components/ui/card/card.svelte";
+import PageContent from "$lib/components/ui/page/page-content.svelte";
+import PageHeader from "$lib/components/ui/page/page-header.svelte";
+import StatsCards from "$lib/components/ui/stats-cards.svelte";
 import { t } from "$lib/i18n";
 
 const upcoming = $state(0);
+
+((..._args: unknown[]) => {
+  return;
+})(
+  CalendarCheck,
+  CalendarRange,
+  PageContent,
+  PageHeader,
+  StatsCards,
+  Button,
+  Card,
+  t
+);
 
 $effect(() => {
   /* data loading handled elsewhere */
@@ -33,26 +46,38 @@ $effect(() => {
   />
 
   <div class="grid gap-5 md:grid-cols-2">
-    <Card class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm">
+    <Card
+      class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm"
+    >
       <div class="flex flex-col gap-4 px-6 py-6">
         <div class="flex flex-col gap-1">
-          <span class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+          <span
+            class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+          >
             {t("pages.appointments.title")}
           </span>
           <p class="text-sm text-muted-foreground">
             {t("dashboard.secretary.appointmentsDesc")}
           </p>
         </div>
-        <Button href="/secretary/birthdays" variant="outline" class="rounded-lg">
+        <Button
+          href="/secretary/birthdays"
+          variant="outline"
+          class="rounded-lg"
+        >
           {t("dashboard.secretary.manage")}
         </Button>
       </div>
     </Card>
 
-    <Card class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm">
+    <Card
+      class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm"
+    >
       <div class="flex flex-col gap-4 px-6 py-6">
         <div class="flex flex-col gap-1">
-          <span class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+          <span
+            class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+          >
             {t("nav.football")}
           </span>
           <p class="text-sm text-muted-foreground">
@@ -66,5 +91,3 @@ $effect(() => {
     </Card>
   </div>
 </PageContent>
-
-

@@ -1,0 +1,2 @@
+export const PUBLIC_SUPABASE_URL = "http://localhost:54321";
+export const PUBLIC_SUPABASE_ANON_KEY = "test_anon_key";

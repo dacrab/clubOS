@@ -1,6 +1,7 @@
 <script lang="ts">
 import "../app.css";
 import { MonitorCog, Moon, Sun } from "@lucide/svelte";
+import type { ComponentType } from "svelte";
 import { Toaster } from "svelte-sonner";
 import { page } from "$app/stores";
 import favicon from "$lib/assets/favicon.svg";
@@ -13,7 +14,7 @@ type ThemeChoice = "light" | "dark" | "system";
 
 let theme = $state<ThemeChoice>("system");
 const isLoginPage = $derived($page.url.pathname === "/");
-let SidebarComp = $state<any>(null);
+let SidebarComp = $state<ComponentType | null>(null);
 let systemPrefersDark: MediaQueryList | null = null;
 
 const shellClass = $derived(
@@ -33,7 +34,9 @@ const contentWrapperClass = $derived(
 );
 
 function resolvedTheme(next: ThemeChoice): "light" | "dark" {
-  if (typeof window === "undefined") return next === "dark" ? "dark" : "light";
+  if (typeof window === "undefined") {
+    return next === "dark" ? "dark" : "light";
+  }
   const prefersDark =
     systemPrefersDark?.matches ??
     window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -41,13 +44,18 @@ function resolvedTheme(next: ThemeChoice): "light" | "dark" {
 }
 
 function applyTheme(next: ThemeChoice) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
   theme = next;
   window.localStorage.setItem("theme", next);
   const root = document.documentElement;
   const resolved = resolvedTheme(next);
-  if (resolved === "dark") root.classList.add("dark");
-  else root.classList.remove("dark");
+  if (resolved === "dark") {
+    root.classList.add("dark");
+  } else {
+    root.classList.remove("dark");
+  }
 }
 
 function cycleTheme() {
@@ -62,18 +70,22 @@ type IconComponent = typeof Sun;
 
 function themeIcon(): IconComponent {
   const current = resolvedTheme(theme);
-  if (theme === "system") return MonitorCog as IconComponent;
+  if (theme === "system") {
+    return MonitorCog as IconComponent;
+  }
   return (current === "dark" ? Moon : Sun) as IconComponent;
 }
 
 const ThemeIcon = $derived(themeIcon());
 
 $effect(() => {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
   if (!isLoginPage) {
     loadCurrentUser();
     (async () => {
-      const mod = await import("$lib/components/Sidebar.svelte");
+      const mod = await import("$lib/components/sidebar.svelte");
       SidebarComp = mod.default;
     })();
   }
@@ -89,8 +101,11 @@ $effect(() => {
   const onChange = (event: MediaQueryListEvent) => {
     if (theme === "system") {
       const root = document.documentElement;
-      if (event.matches) root.classList.add("dark");
-      else root.classList.remove("dark");
+      if (event.matches) {
+        root.classList.add("dark");
+      } else {
+        root.classList.remove("dark");
+      }
     }
   };
   mq.addEventListener?.("change", onChange);
@@ -99,8 +114,8 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
-	<title>clubOS</title>
+  <link rel="icon" href={favicon} />
+  <title>clubOS</title>
 </svelte:head>
 
 <div class={shellClass}>
@@ -114,7 +129,9 @@ $effect(() => {
     <div class="flex flex-1 flex-col">
       {#if isLoginPage}
         <div class="flex justify-end px-4 pt-6">
-          <div class="flex items-center gap-2 rounded-full border border-outline-soft/70 bg-background/80 p-1">
+          <div
+            class="flex items-center gap-2 rounded-full border border-outline-soft/70 bg-background/80 p-1"
+          >
             <button
               type="button"
               class={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
@@ -156,7 +173,7 @@ $effect(() => {
       {/if}
       <main class={mainClass}>
         <div class={contentWrapperClass}>
-        {@render children()}
+          {@render children()}
         </div>
       </main>
     </div>

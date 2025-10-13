@@ -7,7 +7,13 @@
         "src/lib/**/*.{ts,svelte}",
         "scripts/**/*.ts"
       ],
-      "project": ["src/**/*.{ts,svelte}", "scripts/**/*.ts"],
+      "project": [
+        "src/**/*.{ts,svelte}",
+        "scripts/**/*.ts",
+        "svelte.config.js",
+        "vite.config.ts",
+        "vitest.config.ts"
+      ],
       "ignoreDependencies": ["tailwindcss-animate"],
       "ignoreBinaries": ["supabase"],
       "ignore": [

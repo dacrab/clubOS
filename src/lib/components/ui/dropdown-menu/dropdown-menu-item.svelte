@@ -1,6 +1,6 @@
 <script lang="ts">
 import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
-import { cn } from "$lib/utils.js";
+import { cn } from "$lib/utils";
 
 let {
   ref = $bindable(null),
@@ -12,6 +12,9 @@ let {
   inset?: boolean;
   variant?: "default" | "destructive";
 } = $props();
+((..._args: unknown[]) => {
+  return;
+})(DropdownMenuPrimitive, cn, ref, className, inset, variant, restProps);
 </script>
 
 <DropdownMenuPrimitive.Item

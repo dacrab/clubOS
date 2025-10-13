@@ -392,11 +392,8 @@ const translations = {
   login: {
     title: { en: "Management System", el: "Σύστημα Διαχείρισης" },
     subtitle: { en: "Sign in to continue", el: "Συνδεθείτε για να συνεχίσετε" },
-    usernameLabel: { en: "Username", el: "Όνομα Χρήστη" },
-    usernamePlaceholder: {
-      en: "Enter username",
-      el: "Εισάγετε το όνομα χρήστη",
-    },
+    emailLabel: { en: "Email", el: "Email" },
+    emailPlaceholder: { en: "Enter your email", el: "Εισάγετε το email σας" },
     passwordLabel: { en: "Password", el: "Κωδικός" },
     passwordPlaceholder: {
       en: "Enter your password",
@@ -409,8 +406,32 @@ const translations = {
     quickLogin: { en: "Quick login", el: "Γρήγορη σύνδεση" },
     seeded: { en: "Demo users", el: "Χρήστες demo" },
     missingCredentials: {
-      en: "Please enter your username and password",
-      el: "Παρακαλώ εισάγετε όνομα χρήστη και κωδικό",
+      en: "Please enter your email and password",
+      el: "Παρακαλώ εισάγετε email και κωδικό",
+    },
+    forgotPassword: { en: "Forgot password?", el: "Ξεχάσατε τον κωδικό;" },
+    enterEmailFirst: {
+      en: "Enter your email first",
+      el: "Εισάγετε πρώτα το email σας",
+    },
+    resetEmailSent: {
+      en: "Password reset email sent",
+      el: "Στάλθηκε email επαναφοράς κωδικού",
+    },
+    resetEmailFailed: {
+      en: "Failed to send reset email",
+      el: "Αποτυχία αποστολής email επαναφοράς",
+    },
+  },
+  reset: {
+    updated: { en: "Password updated", el: "Ο κωδικός ενημερώθηκε" },
+    missingFields: {
+      en: "Enter password and confirmation",
+      el: "Εισάγετε κωδικό και επιβεβαίωση",
+    },
+    mismatch: {
+      en: "Passwords do not match",
+      el: "Οι κωδικοί δεν ταιριάζουν",
     },
   },
   theme: {
@@ -424,6 +445,10 @@ const translations = {
     yesterday: { en: "Yesterday", el: "Χθες" },
     last7: { en: "Last 7", el: "Τελευταίες 7" },
     last30: { en: "Last 30", el: "Τελευταίες 30" },
+    placeholderShort: { en: "dd-mm-yy", el: "ηη-μμ-εε" },
+    placeholder: { en: "Select date", el: "Επιλέξτε ημερομηνία" },
+    rangePlaceholderStart: { en: "Start date", el: "Ημ/νία αρχής" },
+    rangePlaceholderEnd: { en: "End date", el: "Ημ/νία λήξης" },
   },
   inventory: {
     lowStock: {

@@ -1,12 +1,15 @@
 <script lang="ts">
 import { Label as LabelPrimitive } from "bits-ui";
-import { cn } from "$lib/utils.js";
+import { cn } from "$lib/utils";
 
 let {
   ref = $bindable(null),
   class: className,
   ...restProps
 }: LabelPrimitive.RootProps = $props();
+((..._args: unknown[]) => {
+  return;
+})(LabelPrimitive, cn, ref, className, restProps);
 </script>
 
 <LabelPrimitive.Root

@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { HTMLAttributes } from "svelte/elements";
-import { cn, type WithElementRef } from "$lib/utils.js";
+import type { WithElementRef } from "$lib/utils";
+import { cn } from "$lib/utils";
 
 let {
   ref = $bindable(null),
@@ -8,14 +9,17 @@ let {
   children,
   ...restProps
 }: WithElementRef<HTMLAttributes<HTMLTableRowElement>> = $props();
+((..._args: unknown[]) => {
+  return;
+})(ref, className, children, restProps, cn);
 </script>
 
 <tr
 	bind:this={ref}
 	data-slot="table-row"
 	class={cn(
-		"hover:[&,&>svelte-css-wrapper]:[&>th,td]:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",
-		className
+		"data-[state=selected]:bg-muted border-b transition-colors",
+		className,
 	)}
 	{...restProps}
 >

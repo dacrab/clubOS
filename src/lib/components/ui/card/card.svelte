@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { HTMLAttributes } from "svelte/elements";
-import { cn, type WithElementRef } from "$lib/utils.js";
+import type { WithElementRef } from "$lib/utils";
+import { cn } from "$lib/utils";
 
 let {
   ref = $bindable(null),
@@ -8,6 +9,9 @@ let {
   children,
   ...restProps
 }: WithElementRef<HTMLAttributes<HTMLDivElement>> = $props();
+((..._args: unknown[]) => {
+  return;
+})(cn, ref, className, children, restProps);
 </script>
 
 <div
@@ -15,7 +19,7 @@ let {
 	data-slot="card"
 	class={cn(
 		"bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
-		className
+		className,
 	)}
 	{...restProps}
 >

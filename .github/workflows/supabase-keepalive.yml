@@ -16,6 +16,7 @@ jobs:
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
         run: |
           set -euo pipefail
+          bun --version || (curl -fsSL https://bun.sh/install | bash && echo "install bun in PATH for this step if needed")
           BASE_URL="${PUBLIC_SUPABASE_URL:-}"
           ANON="${PUBLIC_SUPABASE_ANON_KEY:-}"
           if [ -z "$BASE_URL" ]; then

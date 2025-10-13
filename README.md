@@ -42,9 +42,7 @@ Create `.env.local` with (client values are public):
 ```bash
 PUBLIC_SUPABASE_URL=...           # Project URL
 PUBLIC_SUPABASE_ANON_KEY=...
-# Optional for local scripts (not required by the app at runtime)
-SUPABASE_URL=...                  # used by scripts/seed.ts
-SUPABASE_SERVICE_ROLE_KEY=...     # used by scripts/seed.ts
+# No server-side service role keys are required by the app
 ```
 
 3) Supabase (optional local stack)
@@ -89,8 +87,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$
 ### Environment Rules
 - Client: `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY` via `$env/static/public` or `$env/dynamic/public`.
 - App runtime: no service role required. Admin operations are performed in Supabase Edge Functions with `verify_jwt`.
-- Local scripts only: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` are used by `scripts/seed.ts`.
-- Never expose the service role key in client code.
+- Seeding uses anon auth + Edge Functions (no service role). Ensure `SEED_*` env vars for credentials if needed.
+- Never expose service role keys in the app.
 
 ### GitHub Actions
 - `Supabase Keepalive` – pings `PUBLIC_SUPABASE_URL` every 6 days to prevent cold power-off.

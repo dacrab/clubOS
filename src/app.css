@@ -18,7 +18,8 @@
   --popover: color-mix(in oklch, white 96%, var(--background) 4%);
   --popover-foreground: var(--foreground);
   --primary: oklch(0.59 0.12 245);
-  --primary-foreground: oklch(0.18 0.006 245);
+  /* Ensure button text has strong contrast on primary bg in light mode */
+  --primary-foreground: oklch(0.98 0.004 245);
   --secondary: oklch(0.92 0.008 245);
   --secondary-foreground: oklch(0.32 0.01 245);
   --destructive: oklch(0.63 0.18 25);
@@ -57,7 +58,8 @@
   --popover: color-mix(in oklch, var(--background) 65%, black 35%);
   --popover-foreground: var(--foreground);
   --primary: oklch(0.72 0.1 245);
-  --primary-foreground: oklch(0.16 0.01 245);
+  /* Ensure button text has strong contrast on primary bg in dark mode */
+  --primary-foreground: oklch(0.98 0.004 245);
   --secondary: oklch(0.3 0.008 245);
   --secondary-foreground: oklch(0.82 0.012 245);
   --destructive: oklch(0.58 0.16 25);

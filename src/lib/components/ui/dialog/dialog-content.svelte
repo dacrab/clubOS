@@ -1,9 +1,15 @@
 <script lang="ts">
 import { X } from "@lucide/svelte";
-import { Dialog as DialogPrimitive } from "bits-ui";
+import {
+  Dialog as DialogPrimitive,
+  Dialog as DialogPrimitiveNS,
+} from "bits-ui";
 import type { Snippet } from "svelte";
-import { cn, type WithoutChildrenOrChild } from "$lib/utils.js";
-import { DialogOverlay, DialogPortal } from "./index.js";
+import type { WithoutChildrenOrChild } from "$lib/utils";
+import { cn } from "$lib/utils";
+import DialogOverlay from "./dialog-overlay.svelte";
+
+const DialogPortal = DialogPrimitiveNS.Portal;
 
 let {
   ref = $bindable(null),
@@ -19,6 +25,22 @@ let {
   showCloseButton?: boolean;
   size?: "md" | "xl" | "fullscreen";
 } = $props();
+((..._args: unknown[]) => {
+  return;
+})(
+  X,
+  DialogPrimitive,
+  cn,
+  DialogOverlay,
+  DialogPortal,
+  ref,
+  className,
+  portalProps,
+  children,
+  showCloseButton,
+  size,
+  restProps
+);
 </script>
 
 <DialogPortal {...portalProps}>

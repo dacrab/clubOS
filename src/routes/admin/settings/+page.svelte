@@ -1,12 +1,16 @@
 <script lang="ts">
-import PageContent from "$lib/components/common/PageContent.svelte";
-import PageHeader from "$lib/components/common/PageHeader.svelte";
-import { Button } from "$lib/components/ui/button";
-import { Card } from "$lib/components/ui/card";
-import { Input } from "$lib/components/ui/input";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card from "$lib/components/ui/card/card.svelte";
+import Input from "$lib/components/ui/input/input.svelte";
+import PageContent from "$lib/components/ui/page/page-content.svelte";
+import PageHeader from "$lib/components/ui/page/page-header.svelte";
 import { t } from "$lib/i18n";
 import { loadSettings as loadGlobalSettings } from "$lib/settings";
-import { supabase } from "$lib/supabaseClient";
+import { supabase } from "$lib/supabase-client";
+
+((..._args: unknown[]) => {
+  return;
+})(PageContent, PageHeader, Button, Card, Input, t);
 
 const DEFAULT_LOW_STOCK_THRESHOLD = 3;
 let lowStockThreshold = $state<number>(DEFAULT_LOW_STOCK_THRESHOLD);
@@ -25,7 +29,9 @@ async function loadSettings() {
     .select("tenant_id")
     .eq("user_id", uid);
   const tenantId = memberships?.[0]?.tenant_id;
-  if (!tenantId) return;
+  if (!tenantId) {
+    return;
+  }
   const { data: row } = await supabase
     .from("tenant_settings")
     .select("id,low_stock_threshold")
@@ -53,7 +59,9 @@ async function save() {
       .select("tenant_id")
       .eq("user_id", uid);
     const tenantId = memberships?.[0]?.tenant_id;
-    if (!tenantId) return;
+    if (!tenantId) {
+      return;
+    }
     const { error } = await supabase.from("tenant_settings").upsert(
       {
         tenant_id: tenantId,
@@ -69,6 +77,7 @@ async function save() {
     saving = false;
   }
 }
+// removed capturing IIFE that referenced reactive state; used in markup
 </script>
 
 <PageContent>

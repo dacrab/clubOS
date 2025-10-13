@@ -1,7 +1,7 @@
 <script lang="ts">
 import { Select as SelectPrimitive } from "bits-ui";
 import type { Snippet } from "svelte";
-import { cn } from "$lib/utils.js";
+import { cn } from "$lib/utils";
 
 let {
   ref = $bindable(null),
@@ -12,6 +12,9 @@ let {
   string,
   unknown
 > = $props();
+((..._args: unknown[]) => {
+  return;
+})(SelectPrimitive, cn, ref, className, children, restProps);
 </script>
 
 <SelectPrimitive.GroupHeading

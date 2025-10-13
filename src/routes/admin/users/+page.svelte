@@ -1,25 +1,31 @@
 <script lang="ts">
 import { Pencil, Shield, Users } from "@lucide/svelte";
-import PageContent from "$lib/components/common/PageContent.svelte";
-import PageHeader from "$lib/components/common/PageHeader.svelte";
-import { Button } from "$lib/components/ui/button";
-import { Card } from "$lib/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "$lib/components/ui/table";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card from "$lib/components/ui/card/card.svelte";
+import PageContent from "$lib/components/ui/page/page-content.svelte";
+import PageHeader from "$lib/components/ui/page/page-header.svelte";
+import Table from "$lib/components/ui/table/table.svelte";
+import TableBody from "$lib/components/ui/table/table-body.svelte";
+import TableCell from "$lib/components/ui/table/table-cell.svelte";
+import TableHead from "$lib/components/ui/table/table-head.svelte";
+import TableHeader from "$lib/components/ui/table/table-header.svelte";
+import TableRow from "$lib/components/ui/table/table-row.svelte";
 import { t } from "$lib/i18n";
-import { supabase } from "$lib/supabaseClient";
+import { supabase } from "$lib/supabase-client";
 import { loadCurrentUser } from "$lib/user";
-import UserDialog from "./UserDialog.svelte";
+import UserDialog from "./user-dialog.svelte";
 
-let users = $state<any[]>([]);
+type AdminUser = {
+  id?: string;
+  username?: string;
+  role?: "admin" | "staff" | "secretary" | string;
+  email?: string;
+  active?: boolean;
+  password?: string;
+};
+let users = $state<AdminUser[]>([]);
 let showUserDialog = $state(false);
-let selectedUser = $state<any>(null);
+let selectedUser = $state<AdminUser | null>(null);
 
 $effect(() => {
   loadCurrentUser();
@@ -31,13 +37,45 @@ function openNewUserDialog() {
   showUserDialog = true;
 }
 
-function editUser(user: any) {
+function editUser(user: AdminUser) {
   selectedUser = user;
   showUserDialog = true;
 }
 
 async function loadUsers() {
-  const { data } = await supabase.from("users").select("*");
+  const { data: sessionData } = await supabase.auth.getSession();
+  const uid = sessionData.session?.user.id;
+  if (!uid) {
+    users = [];
+    return;
+  }
+  // Find the admin's primary tenant (first membership)
+  const { data: tm } = await supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("user_id", uid)
+    .order("tenant_id")
+    .limit(1);
+  const tenantId = tm?.[0]?.tenant_id as string | undefined;
+  if (!tenantId) {
+    users = [];
+    return;
+  }
+  // Load user ids that belong to this tenant, then fetch users with IN() to avoid join RLS issues
+  const { data: memberRows } = await supabase
+    .from("tenant_members")
+    .select("user_id")
+    .eq("tenant_id", tenantId);
+  const ids = (memberRows ?? []).map((r: { user_id: string }) => r.user_id);
+  if (ids.length === 0) {
+    users = [];
+    return;
+  }
+  const { data } = await supabase
+    .from("users")
+    .select("id, username, role")
+    .in("id", ids)
+    .order("username");
   users = data ?? [];
 }
 
@@ -51,7 +89,7 @@ async function errorToast(message: string) {
   toast.error(message);
 }
 
-async function patchUser(payload: any, token: string) {
+function patchUser(payload: AdminUser, token: string) {
   return fetch("/api/admin/users", {
     method: "PATCH",
     headers: {
@@ -62,7 +100,7 @@ async function patchUser(payload: any, token: string) {
   });
 }
 
-async function postUser(payload: any, token: string) {
+function postUser(payload: AdminUser, token: string) {
   return fetch("/api/admin/users", {
     method: "POST",
     headers: {
@@ -73,7 +111,27 @@ async function postUser(payload: any, token: string) {
   });
 }
 
-async function onSaveUser(user: any) {
+function buildPatchPayload(user: AdminUser): AdminUser {
+  return {
+    ...(user.id ? { id: user.id } : {}),
+    ...(user.role ? { role: user.role } : {}),
+    ...(user.username ? { username: user.username } : {}),
+    ...(user.password ? { password: user.password } : {}),
+    ...(typeof user.active === "boolean" ? { active: user.active } : {}),
+  };
+}
+
+function buildCreatePayload(user: AdminUser): AdminUser & { email: string } {
+  return {
+    email: `${user.username ?? ""}@example.com`,
+    ...(user.password ? { password: user.password } : {}),
+    ...(user.role ? { role: user.role } : {}),
+    ...(user.username ? { username: user.username } : {}),
+    active: typeof user.active === "boolean" ? user.active : true,
+  };
+}
+
+async function onSaveUser(user: AdminUser) {
   const token = await getAuthToken();
   if (!token) {
     await errorToast("Not authenticated");
@@ -81,26 +139,14 @@ async function onSaveUser(user: any) {
   }
 
   if (user.id) {
-    const payload = {
-      id: user.id,
-      role: user.role,
-      username: user.username,
-      ...(user.password ? { password: user.password } : {}),
-      ...(typeof user.active === "boolean" ? { active: user.active } : {}),
-    };
+    const payload = buildPatchPayload(user);
     const res = await patchUser(payload, token);
     if (!res.ok) {
       await errorToast(await res.text());
       return;
     }
   } else {
-    const createPayload = {
-      email: `${user.username}@example.com`,
-      password: user.password,
-      role: user.role,
-      username: user.username,
-      active: typeof user.active === "boolean" ? user.active : true,
-    };
+    const createPayload = buildCreatePayload(user);
     const res = await postUser(createPayload, token);
     if (!res.ok) {
       await errorToast(await res.text());
@@ -110,9 +156,35 @@ async function onSaveUser(user: any) {
 
   await loadUsers();
 }
+((..._args: unknown[]) => {
+  return;
+})(
+  Pencil,
+  Shield,
+  Users,
+  PageContent,
+  PageHeader,
+  Button,
+  Card,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  t,
+  UserDialog,
+  openNewUserDialog,
+  editUser,
+  onSaveUser
+);
 </script>
 
-<UserDialog bind:open={showUserDialog} user={selectedUser} onSave={onSaveUser} />
+<UserDialog
+  bind:open={showUserDialog}
+  user={selectedUser}
+  onSave={onSaveUser}
+/>
 
 <PageContent>
   <PageHeader title={t("pages.users.title")} icon={Users}>
@@ -121,14 +193,20 @@ async function onSaveUser(user: any) {
     </Button>
   </PageHeader>
 
-  <Card class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm">
+  <Card
+    class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm"
+  >
     <div class="overflow-x-auto">
       <Table class="min-w-full">
         <TableHeader>
-          <TableRow class="border-0 text-xs uppercase tracking-[0.22em] text-muted-foreground">
-            <TableHead class="rounded-l-xl bg-surface-strong/60">{t("common.username")}</TableHead>
-            <TableHead class="bg-surface-strong/60">{t("common.role")}</TableHead>
-            <TableHead class="rounded-r-xl bg-surface-strong/60 text-right">{t("common.actions")}</TableHead>
+          <TableRow
+            class="border-0 text-xs uppercase tracking-[0.22em] text-muted-foreground"
+          >
+            <TableHead class="rounded-l-xl">{t("common.username")}</TableHead>
+            <TableHead>{t("common.role")}</TableHead>
+            <TableHead class="rounded-r-xl text-right"
+              >{t("common.actions")}</TableHead
+            >
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -136,19 +214,25 @@ async function onSaveUser(user: any) {
             <TableRow class="border-b border-outline-soft/40 text-sm">
               <TableCell>
                 <div class="flex items-center gap-3 text-foreground">
-                  <span class="grid size-9 place-items-center rounded-full border border-outline-soft/60 bg-surface-strong text-sm font-semibold uppercase">
+                  <span
+                    class="grid size-9 place-items-center rounded-full border border-outline-soft/60 bg-surface-strong text-sm font-semibold uppercase"
+                  >
                     {user.username?.slice(0, 2) ?? "--"}
                   </span>
                   <div class="flex flex-col text-sm">
                     <span class="font-medium">{user.username}</span>
                     {#if user.email}
-                      <span class="text-xs text-muted-foreground">{user.email}</span>
+                      <span class="text-xs text-muted-foreground"
+                        >{user.email}</span
+                      >
                     {/if}
                   </div>
                 </div>
               </TableCell>
               <TableCell class="capitalize">
-                <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                <div
+                  class="flex items-center gap-2 text-sm text-muted-foreground"
+                >
                   <Shield class="size-4" />
                   {user.role}
                 </div>
@@ -172,5 +256,3 @@ async function onSaveUser(user: any) {
     </div>
   </Card>
 </PageContent>
-
-
