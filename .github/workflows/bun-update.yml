@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v5
 
       - name: Setup Bun
@@ -27,16 +27,13 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install deps
-        run: bun install
-
-      - name: Update deps (bun)
+      - name: Update dependencies
         run: bun update
 
       - name: Generate lockfile
         run: bun install --frozen-lockfile=false
 
-      - name: Run checks (non-blocking)
+      - name: Run checks
         run: bun run check
         continue-on-error: true
 
