@@ -37,7 +37,7 @@ jobs:
           bun run check || true
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           branch: chore/bun-update
           title: 'chore(deps): bun update'
