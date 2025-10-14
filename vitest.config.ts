@@ -25,6 +25,7 @@ export default defineConfig({
       $lib: resolve(process.cwd(), "./src/lib"),
       $app: resolve(process.cwd(), "./.svelte-kit/runtime/app"),
       "$env/static/public": resolve(process.cwd(), "./vitest-env-public.ts"),
+      "$env/dynamic/public": resolve(process.cwd(), "./vitest-env-public.ts"),
     },
   },
 });
