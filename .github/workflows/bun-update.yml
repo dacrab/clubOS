@@ -6,6 +6,10 @@ on:
     - cron: "30 1 * * 0"
   workflow_dispatch:
 
+concurrency:
+  group: bun-update-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   pull-requests: write
@@ -13,6 +17,7 @@ permissions:
 jobs:
   update-deps:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -32,14 +37,14 @@ jobs:
         run: bun install --frozen-lockfile=false
 
       - name: Run checks (non-blocking)
-        run: |
-          set +e
-          bun run check || true
+        run: bun run check
+        continue-on-error: true
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
           branch: chore/bun-update
+          branch-suffix: timestamp
           title: 'chore(deps): bun update'
           commit-message: 'chore(deps): bun update'
           body: |
@@ -50,5 +55,6 @@ jobs:
             - Executed `bun run check` (non-blocking)
           labels: dependencies
           signoff: true
+          delete-branch: true
 
 
