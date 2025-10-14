@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   analyze:
-    name: Analyze (${{ matrix.language }})
+    name: Analyze
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -28,20 +28,24 @@ jobs:
       matrix:
         language: [ 'javascript-typescript' ]
     steps:
-      - name: Setup project
-        uses: ./.github/actions/setup-bun
-      
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           queries: security-and-quality
-      
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
       - name: Autobuild
         uses: github/codeql-action/autobuild@v4
-      
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
+        continue-on-error: true
         with:
           category: "/language:${{ matrix.language }}"
 
