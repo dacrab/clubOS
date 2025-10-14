@@ -19,18 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+      - name: Setup project
+        uses: ./.github/actions/setup-bun
 
       - name: Update dependencies
         run: bun update
 
-      - name: Generate lockfile
+      - name: Regenerate lockfile
         run: bun install --frozen-lockfile=false
 
       - name: Run checks
@@ -47,9 +42,12 @@ jobs:
           body: |
             Automated dependency update via `bun update`.
 
-            - Ran `bun install && bun update`
-            - Generated fresh `bun.lock` file
+            **Changes:**
+            - Ran `bun update` to update all dependencies
+            - Regenerated `bun.lock` file
             - Executed `bun run check` (non-blocking)
+
+            Please review the updated dependencies and test before merging.
           labels: dependencies
           signoff: true
           delete-branch: true
