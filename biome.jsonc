@@ -76,6 +76,12 @@
       }
     },
     {
+      "includes": ["supabase/functions/**/*.ts"],
+      "javascript": {
+        "globals": ["Deno"]
+      }
+    },
+    {
       "includes": ["**/index.ts"],
       "linter": {
         "rules": {

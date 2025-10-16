@@ -4,11 +4,10 @@ declare module "npm:@supabase/supabase-js@2" {
   export * from "@supabase/supabase-js";
 }
 
-// Minimal Deno globals used by our functions
-declare namespace Deno {
-  function serve(handler: (req: Request) => Response | Promise<Response>): void;
-  namespace env {
-    function get(name: string): string | undefined;
-  }
-}
-
+// Minimal Deno globals used by our functions (avoid TS namespaces)
+declare const Deno: {
+  serve: (handler: (req: Request) => Response | Promise<Response>) => void;
+  env: {
+    get: (name: string) => string | undefined;
+  };
+};
