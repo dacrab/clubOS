@@ -29,7 +29,17 @@
     "noUnusedParameters": true,
     "noPropertyAccessFromIndexSignature": true,
     "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["svelte", "node"]
-  }
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "svelte",
+      "node"
+    ]
+  },
+  "exclude": [
+    "supabase/functions/**"
+  ]
 }

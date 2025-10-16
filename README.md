@@ -1,55 +1,46 @@
-## ClubOS (SvelteKit)
+# ClubOS (SvelteKit)
 
-Modern POS and club management UI built with SvelteKit 5 runes, Supabase, Tailwind, and a11y-first UI primitives.
+Modern POS and club management UI built with SvelteKit 5 runes, Supabase, Tailwind CSS v4, and a11y‑first UI primitives.
 
-### Features
+## Features
 - **Auth & Users**: Supabase Auth with `users` profile table and roles: `admin`, `staff`, `secretary`.
-- **Products & Categories**: CRUD, images in Supabase Storage, low‑stock indicators.
+- **Products & Categories**: CRUD, low‑stock indicators, hierarchical categories.
 - **Registers & Orders**: Register sessions, orders, order items, discounts/treats, daily summaries.
-- **Secretary tools**: Birthdays, football field bookings.
-- **Admin area**: Manage users, products, categories, registers, and orders.
-- **Internationalization**: `src/lib/i18n.ts` with `t()` utilities.
-- **Beautiful UI**: Shadcn-inspired Svelte components exported via barrels under `src/lib/components/ui/*`.
-- **Strict typing & linting**: TypeScript strictest options, Biome, Knip, and svelte-check.
+- **Secretary tools**: Birthdays/appointments, football field bookings.
+- **Admin**: Manage users, products, categories, registers, and orders.
+- **Internationalization**: `src/lib/i18n.ts` with `t()`/`tt()` utilities and `en`/`el` locales.
+- **Beautiful UI**: Shadcn‑inspired Svelte components exported via barrels under `src/lib/components/ui/*`.
+- **Strict typing & linting**: TypeScript strictest options, Biome (Ultracite), Knip, svelte-check, Vitest.
 
-### Tech Stack
+## Tech Stack
 - SvelteKit 2, Svelte 5 runes (`$state`, `$derived`, `$bindable`)
 - Supabase (Auth, Database, Storage)
-- Tailwind CSS v4 + Tailwind Variants
-- Biome (Ultracite rules), Knip, Vitest
+- Tailwind CSS v4 + Tailwind Variants + tailwind-merge
+- Tooling: Biome (Ultracite rules), Knip, Vitest
 
-### Monorepo Structure (app)
-- `src/lib/supabaseClient.ts` – client SDK
-- `src/lib/user.ts` – session store and profile loader
-- `src/routes` – SvelteKit routes (pages + API)
-  - `admin/*` – admin dashboards (products, orders, registers, users)
-  - `dashboard/*`, `staff/*`, `secretary/*` – role-specific pages
-  - `api/admin/users/+server.ts` – admin user management endpoints
-- `supabase/*` – local Supabase config and migrations
-
-### Local Development
-Prereqs: Bun (or Node), Supabase CLI, Git.
+## Getting Started
+Prerequisites: Bun 1.1+ (or Node 20+), Supabase CLI, Git.
 
 1) Clone and install
 ```bash
-git clone https://github.com/dacrab/clubOS.git
-cd clubOS
+git clone https://github.com/dacrab/clubOS-svelte.git
+cd clubOS-svelte
 bun install
 ```
 
 2) Environment
-Create `.env.local` with (client values are public):
+Copy example env and edit:
 ```bash
-PUBLIC_SUPABASE_URL=...           # Project URL
-PUBLIC_SUPABASE_ANON_KEY=...
-# No server-side service role keys are required by the app
+cp .env.example .env.local
 ```
 
-3) Supabase (optional local stack)
+Keys used by the app: `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`. Local-only: `SUPABASE_SERVICE_ROLE_KEY` (for `bun run db:seed`).
+
+3) Optional: local Supabase
 ```bash
 supabase start
-supabase db reset   # loads schema and seeds as configured
-bun run db:seed
+supabase db reset      # loads schema from supabase/migrations
+bun run db:seed        # seeds demo tenant, users, categories, products, orders
 ```
 
 4) Run the app
@@ -57,106 +48,130 @@ bun run db:seed
 bun run dev
 ```
 
-5) Quality
+5) Quality & tests
 ```bash
-bun run check     # types + svelte-check + biome + knip
-bun run test      # vitest
+bun run check          # svelte-check + biome + knip
+bun run test           # vitest
 ```
 
-### Database Schema (high level)
-- `users` (id, username, role) – synced from `auth.users` via trigger
-- `categories`, `products` (image_url in storage), indexes for perf
-- `register_sessions`, `orders`, `order_items`, `register_closings`
-- `appointments`, `football_bookings`
-- RLS policies for authenticated users; admin-only writes where needed
+## Scripts
+```bash
+bun run dev            # start dev server
+bun run build          # production build
+bun run preview        # preview production build
+bun run check          # typecheck + svelte-check + biome + knip
+bun run check:watch    # watch mode (svelte-check + ultracite fix)
+bun run test           # run unit tests (vitest)
+bun run db:seed        # seed database (requires service role key locally)
+bun run db:reset       # supabase db reset + seed
+bun run db:restart     # supabase stop && supabase start
+```
 
-### Important Files
-- `src/routes/admin/products/+page.svelte` – list, create, edit products, image upload to Supabase Storage
-- `src/routes/admin/orders/+page.svelte` – date-range filters, items per order, money formatting
-- `src/routes/admin/registers/+page.svelte` – sessions insights and stats
-- `src/routes/api/admin/users/+server.ts` – protected admin endpoints (proxy to Edge Functions)
+## Edge Functions (local testing)
+```bash
+# Start local Supabase (if not already)
+supabase start
 
-### UI Conventions
-- Import UI via barrels, e.g.:
+# Serve all functions with JWT verification enabled (recommended)
+supabase functions serve
+
+# Endpoints become available at:
+# http://127.0.0.1:54321/functions/v1/<function-name>
+
+# Example probe (unauthenticated should return 401)
+curl -i $PUBLIC_SUPABASE_URL/functions/v1/admin-users
+```
+
+Notes:
+- Functions import dependencies via `npm:` specifiers and are isolated under `supabase/functions/**`.
+- App TypeScript excludes Edge Functions; a local `supabase/functions/tsconfig.json` scopes editor types for the functions only.
+- Provide a real user access token (JWT) for authenticated paths. Use your seeded admin credentials to obtain a token via GoTrue, then call functions with `Authorization: Bearer`.
+
+### Get an admin JWT locally (no UI)
+Add these to `.env.local`:
+```bash
+# Already present for the app
+PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
+
+# For function testing (from scripts/seed.ts defaults)
+FUNCTION_ADMIN_EMAIL=admin@example.com
+FUNCTION_ADMIN_PASSWORD=admin123
+```
+
+Then fetch a JWT and call a function:
+```bash
+# Get access token from local GoTrue
+export FUNCTION_ADMIN_JWT=$(curl -s \
+  -X POST "$PUBLIC_SUPABASE_URL/auth/v1/token?grant_type=password" \
+  -H "apikey: $PUBLIC_SUPABASE_ANON_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"'"$FUNCTION_ADMIN_EMAIL"'","password":"'"$FUNCTION_ADMIN_PASSWORD"'"}' \
+  | jq -r '.access_token')
+
+# Call a protected function
+curl -i \
+  -H "Authorization: Bearer $FUNCTION_ADMIN_JWT" \
+  "$PUBLIC_SUPABASE_URL/functions/v1/admin-users"
+```
+
+## Project Structure (high level)
+- `src/lib/supabase-client.ts` – Supabase client (browser) via `$env/dynamic/public`.
+- `src/lib/user.ts` – current user store and profile/tenant loader.
+- `src/lib/i18n.ts` – i18n utilities and translations (`en`, `el`).
+- `src/lib/components/ui/**` – reusable UI; import from barrels.
+- `src/routes/**` – SvelteKit routes (pages + endpoints): `admin/*`, `staff/*`, `secretary/*`, `reset/*`, `api/*`.
+- `scripts/seed.ts` – idempotent database seeding (service role key, local only).
+- `scripts/supabase-keepalive.sh` – pings Supabase to avoid free‑tier pause.
+- `supabase/**` – CLI config and migrations.
+- Config: `svelte.config.js`, `vite.config.ts`, `biome.jsonc`, `knip.json`, `tsconfig.json`.
+
+## Conventions
+- **Runes**: Use `$state` for local mutable state, `$derived` for pure computed values, `$bindable` for two‑way bindable props.
+- **UI barrels**: Prefer barrel imports for shared UI:
 ```ts
 import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
 import { Button } from "$lib/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$lib/components/ui/table";
 ```
+- **Aliases**: `$lib/*`, `$app/*`, `$env/*` (see `knip.json`). Avoid namespace imports.
+- **Accessibility**: Follow Ultracite a11y rules (SVG `title`, button `type`, valid ARIA only, no positive `tabIndex`).
+- **TypeScript**: Strictest settings enabled (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`, etc.). Use `import type` for types.
 
-### Environment Rules
-- Client: `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY` via `$env/static/public` or `$env/dynamic/public`.
-- App runtime: no service role required. Admin operations are performed in Supabase Edge Functions with `verify_jwt`.
-- Seeding uses anon auth + Edge Functions (no service role). Ensure `SEED_*` env vars for credentials if needed.
-- Never expose service role keys in the app.
+## Environment
+- Runtime (client): `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY` are required. The app throws if missing.
+- Local tooling only: `SUPABASE_SERVICE_ROLE_KEY` is used by `scripts/seed.ts` to bypass RLS for seeding. Never expose this key to browsers or deploy hosts.
+- SvelteKit CSP: production CSP is strict (`script-src 'self'`, `style-src 'self'`). Add hosts explicitly if you embed external resources.
 
-### GitHub Actions
-- `Supabase Keepalive` – pings `PUBLIC_SUPABASE_URL` every 6 days to prevent cold power-off.
-- `GitGuardian Secrets Scan` – scans commits for secrets (configured as non-blocking with `--exit-zero`).
-- `CodeQL` – code scanning workflow; set repo Settings → Security → enable Code Scanning default setup for full effect.
-- `Dependabot` – weekly updates for npm and GitHub Actions.
+## Database (high level)
+- Core tables: `users`, `categories`, `products`, `register_sessions`, `orders`, `order_items`, `tenant_members`, `facilities`, `appointments`, `football_bookings`, `tenant_settings`, `user_preferences`.
+- RLS: default authenticated access; admin‑level writes where appropriate.
+- Seeding: creates a demo tenant/facility, admin/staff/secretary users, categories/products, an open register session, sample order, appointments, and football bookings.
 
-Required repository secrets:
-- `PUBLIC_SUPABASE_URL` (keepalive)
-- `GITGUARDIAN_API_KEY` (secrets scan)
+## Testing
+- Unit tests with Vitest: `bun run test`.
+- Example test setup files: `vitest-env-public.ts`, `vitest-setup-client.ts`.
 
-### Accessibility & Quality
-- Ultracite a11y rules enforced (buttons with `type`, SVG with `title`, no invalid ARIA, etc.)
-- TypeScript strictest options (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`, ...)
+## CI/CD
+Workflows in `.github/workflows`:
+- `ci.yml` – install, typecheck, lint, tests.
+- `codeql.yml` – code scanning.
+- `dependabot.yml` – dependency updates (Actions + npm).
+- `supabase-keepalive.yml` – pings Supabase to prevent free‑tier pause.
 
-### Common Tasks
-```bash
-bun run check          # typecheck + lint + knip
-npx ultracite fix      # auto-fix formatting & lint issues
-bun knip               # find unused code
+Recommended repository secrets:
+- `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY` (keepalive)
+- `GITGUARDIAN_API_KEY` (if using a secrets scan workflow)
 
-# Supabase helpers
-bun run db:seed
-supabase db reset
-```
+## Deployment
+- Adapter: `@sveltejs/adapter-vercel`.
+- Set `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY` on the host.
+- Ensure CSP allows any required external resources.
 
-### Deployment
-- Adapter: `@sveltejs/adapter-vercel` (configurable). Provide `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY` as env vars.
-- Admin actions run via Supabase Edge Functions (`admin-create-user`, `admin-update-user`, `admin-delete-user`) with `verify_jwt`. Configure their environment in the Supabase project (they use the project’s service role internally; not required in your app host).
+## Troubleshooting
+- "Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_ANON_KEY": set both in `.env.local` (dev) or host env (prod).
+- CSP blocks fonts/scripts in production: update `svelte.config.js` CSP directives.
+- Local Supabase ports: dev CSP already allows `127.0.0.1:54321` and Vite HMR; ensure CLI is running.
 
-### Notes
-- Test credentials in examples are placeholders used for demos and are flagged by scanners; they are intentionally non-sensitive.
-
-# sv
-
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
-
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
-
-```sh
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+---
+This repository enforces strict a11y and code quality via Ultracite + Biome and strict TypeScript. Prefer barrel imports and typed-only imports for a clean, tree‑shakable surface.
