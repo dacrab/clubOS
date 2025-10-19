@@ -18,7 +18,8 @@ CREATE TABLE public.users (
 CREATE TABLE public.tenants (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL UNIQUE,
-  created_at timestamptz DEFAULT now()
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
 );
 
 CREATE TABLE public.tenant_members (
@@ -32,7 +33,8 @@ CREATE TABLE public.facilities (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
   name text NOT NULL,
-  created_at timestamptz DEFAULT now()
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
 );
 
 CREATE TABLE public.facility_members (
@@ -51,6 +53,7 @@ CREATE TABLE public.categories (
   description text,
   parent_id uuid REFERENCES public.categories(id) ON DELETE SET NULL,
   created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by uuid NOT NULL REFERENCES public.users(id) ON DELETE RESTRICT,
   CHECK (id != parent_id)
 );
@@ -93,6 +96,7 @@ CREATE TABLE public.orders (
   total_amount decimal(10,2) NOT NULL CHECK (total_amount >= 0),
   coupon_count integer DEFAULT 0 CHECK (coupon_count >= 0),
   created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by uuid NOT NULL REFERENCES public.users(id) ON DELETE RESTRICT,
   CHECK (total_amount = subtotal - discount_amount)
 );
@@ -109,6 +113,7 @@ CREATE TABLE public.order_items (
   deleted_at timestamptz,
   deleted_by uuid REFERENCES public.users(id) ON DELETE SET NULL,
   created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   CHECK ((is_treat = true AND line_total = 0) OR (is_treat = false AND line_total = unit_price * quantity)),
   CHECK ((is_deleted = false AND deleted_at IS NULL AND deleted_by IS NULL) OR (is_deleted = true AND deleted_at IS NOT NULL AND deleted_by IS NOT NULL))
 );
@@ -139,6 +144,7 @@ CREATE TABLE public.appointments (
   notes text,
   status text DEFAULT 'confirmed' CHECK (status IN ('confirmed','cancelled','completed')),
   created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by uuid NOT NULL REFERENCES public.users(id) ON DELETE RESTRICT
 );
 
@@ -154,6 +160,7 @@ CREATE TABLE public.football_bookings (
   notes text,
   status text DEFAULT 'confirmed' CHECK (status IN ('confirmed','cancelled','completed')),
   created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   created_by uuid NOT NULL REFERENCES public.users(id) ON DELETE RESTRICT,
   UNIQUE (field_number, booking_datetime)
 );
@@ -208,6 +215,18 @@ CREATE INDEX IF NOT EXISTS idx_order_items_product ON public.order_items(product
 CREATE INDEX IF NOT EXISTS idx_order_items_active ON public.order_items(is_deleted) WHERE is_deleted = false;
 CREATE INDEX IF NOT EXISTS idx_appointments_date ON public.appointments(appointment_date);
 CREATE INDEX IF NOT EXISTS idx_football_datetime ON public.football_bookings(booking_datetime);
+-- Common tenant scoping for facilities
+CREATE INDEX IF NOT EXISTS idx_facilities_tenant ON public.facilities(tenant_id);
+-- Cover common foreign-key lookups for better join performance
+CREATE INDEX IF NOT EXISTS idx_categories_created_by ON public.categories(created_by);
+CREATE INDEX IF NOT EXISTS idx_products_created_by ON public.products(created_by);
+CREATE INDEX IF NOT EXISTS idx_register_sessions_opened_by ON public.register_sessions(opened_by);
+CREATE INDEX IF NOT EXISTS idx_orders_created_by ON public.orders(created_by);
+CREATE INDEX IF NOT EXISTS idx_appointments_created_by ON public.appointments(created_by);
+CREATE INDEX IF NOT EXISTS idx_football_bookings_created_by ON public.football_bookings(created_by);
+-- Support lookups by user_id on membership junctions (PK is (tenant_id,user_id)/(facility_id,user_id))
+CREATE INDEX IF NOT EXISTS idx_tenant_members_user ON public.tenant_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_facility_members_user ON public.facility_members(user_id);
 
 -- Tenant/facility indexes
 CREATE INDEX IF NOT EXISTS idx_categories_tenant_facility ON public.categories(tenant_id, facility_id);
@@ -393,6 +412,13 @@ CREATE TRIGGER register_sessions_updated_at BEFORE UPDATE ON public.register_ses
 CREATE TRIGGER register_closings_updated_at BEFORE UPDATE ON public.register_closings FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 CREATE TRIGGER tenant_settings_updated_at BEFORE UPDATE ON public.tenant_settings FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 CREATE TRIGGER user_preferences_updated_at BEFORE UPDATE ON public.user_preferences FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+CREATE TRIGGER tenants_updated_at BEFORE UPDATE ON public.tenants FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+CREATE TRIGGER facilities_updated_at BEFORE UPDATE ON public.facilities FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+CREATE TRIGGER categories_updated_at BEFORE UPDATE ON public.categories FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+CREATE TRIGGER orders_updated_at BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+CREATE TRIGGER order_items_updated_at BEFORE UPDATE ON public.order_items FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+CREATE TRIGGER appointments_updated_at BEFORE UPDATE ON public.appointments FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+CREATE TRIGGER football_bookings_updated_at BEFORE UPDATE ON public.football_bookings FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
 -- Data integrity functions
 CREATE OR REPLACE FUNCTION public.assert_same_tenant_category_parent()
