@@ -34,7 +34,7 @@ Copy example env and edit:
 cp .env.example .env.local
 ```
 
-Keys used by the app: `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`. Local-only: `SUPABASE_SERVICE_ROLE_KEY` (for `bun run db:seed`).
+Keys used by the app: `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or legacy `PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`). Local-only: `SUPABASE_SERVICE_ROLE_KEY` (for `bun run db:seed`).
 
 3) Optional: local Supabase
 ```bash
@@ -90,7 +90,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$
 - **TypeScript**: Strictest settings enabled (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`, etc.). Use `import type` for types.
 
 ## Environment
-- Runtime (client): `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY` are required. The app throws if missing.
+- Runtime (client): `PUBLIC_SUPABASE_URL` and one of `PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` are required. The app throws if missing.
+- Server/admin: use `SUPABASE_SERVICE_ROLE_KEY`. On hosted projects, prefer an `sb_secret_...` key. For local Supabase CLI, you must use the legacy JWT `service_role` key (the `sb_secret_...` key is not supported by the local Auth server for admin endpoints).
 - Local tooling only: `SUPABASE_SERVICE_ROLE_KEY` is used by `scripts/seed.ts` to bypass RLS for seeding. Never expose this key to browsers or deploy hosts.
 - SvelteKit CSP: production CSP is strict (`script-src 'self'`, `style-src 'self'`). Add hosts explicitly if you embed external resources.
 
@@ -114,12 +115,12 @@ Recommended repository secrets:
 
 ## Deployment
 - Adapter: `@sveltejs/adapter-vercel`.
-- Set `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY` on the host.
+- Set `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` on the host.
 - Ensure CSP allows any required external resources.
  - Scheduled keep‑alive: `vercel.json` defines a cron to hit `/api/keep-alive` every 6 days at 03:17 UTC.
 
 ## Troubleshooting
-- "Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_ANON_KEY": set both in `.env.local` (dev) or host env (prod).
+- "Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY": set both in `.env.local` (dev) or host env (prod).
 - CSP blocks fonts/scripts in production: update `svelte.config.js` CSP directives.
 - Local Supabase ports: dev CSP already allows `127.0.0.1:54321` and Vite HMR; ensure CLI is running.
 
