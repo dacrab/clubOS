@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RequestHandler } from "@sveltejs/kit";
 import { json } from "@sveltejs/kit";
 import { KEEP_ALIVE_CONFIG } from "$lib/config/keep-alive-config";
@@ -5,7 +6,6 @@ import {
   generateRandomString,
   pingEndpoint,
 } from "$lib/server/keep-alive-helper";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 
 type InsertDeleteStatus = "success" | "skipped" | "failed";
@@ -27,13 +27,18 @@ async function selectRandom(
   return { count: Array.isArray(response.data) ? response.data.length : 0 };
 }
 
+type InsertDeleteOptions = {
+  admin: SupabaseClient;
+  runInsertDelete: boolean;
+  table: string;
+  searchColumn: string;
+  randomString: string;
+};
+
 async function maybeInsertDelete(
-  admin: SupabaseClient,
-  runInsertDelete: boolean,
-  table: string,
-  searchColumn: string,
-  randomString: string
+  options: InsertDeleteOptions
 ): Promise<{ insert: InsertDeleteStatus; delete: InsertDeleteStatus }> {
+  const { admin, runInsertDelete, table, searchColumn, randomString } = options;
   if (!runInsertDelete) {
     return { insert: "skipped", delete: "skipped" };
   }
@@ -89,20 +94,25 @@ export const GET: RequestHandler = async () => {
   } = {};
 
   try {
-    const selectResult = await selectRandom(admin, table, searchColumn, randomString);
+    const selectResult = await selectRandom(
+      admin,
+      table,
+      searchColumn,
+      randomString
+    );
     if (selectResult.error) {
       database.error = selectResult.error;
     } else {
       database.selectCount = selectResult.count;
     }
 
-    const insertDelete = await maybeInsertDelete(
+    const insertDelete = await maybeInsertDelete({
       admin,
       runInsertDelete,
       table,
       searchColumn,
-      randomString
-    );
+      randomString,
+    });
     database.insert = insertDelete.insert;
     database.delete = insertDelete.delete;
 

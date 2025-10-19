@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import { env as privateEnv } from "$env/dynamic/private";
 
 let cachedClient: SupabaseClient | undefined;
