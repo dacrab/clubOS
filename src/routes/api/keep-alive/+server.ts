@@ -5,16 +5,18 @@ import {
   generateRandomString,
   pingEndpoint,
 } from "$lib/server/keep-alive-helper";
-import { supabaseAdmin } from "$lib/server/supabase-admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 
 type InsertDeleteStatus = "success" | "skipped" | "failed";
 
 async function selectRandom(
+  admin: SupabaseClient,
   table: string,
   searchColumn: string,
   randomString: string
 ): Promise<{ count: number; error?: string }> {
-  const response = await supabaseAdmin
+  const response = await admin
     .from(table)
     .select(searchColumn)
     .eq(searchColumn, randomString)
@@ -26,6 +28,7 @@ async function selectRandom(
 }
 
 async function maybeInsertDelete(
+  admin: SupabaseClient,
   runInsertDelete: boolean,
   table: string,
   searchColumn: string,
@@ -35,14 +38,14 @@ async function maybeInsertDelete(
     return { insert: "skipped", delete: "skipped" };
   }
 
-  const insertResponse = await supabaseAdmin
+  const insertResponse = await admin
     .from(table)
     .insert({ [searchColumn]: randomString });
   const insert: InsertDeleteStatus = insertResponse.error
     ? "failed"
     : "success";
 
-  const deleteResponse = await supabaseAdmin
+  const deleteResponse = await admin
     .from(table)
     .delete()
     .eq(searchColumn, randomString);
@@ -52,6 +55,7 @@ async function maybeInsertDelete(
 }
 
 async function maybeList(
+  admin: SupabaseClient,
   listCount: number,
   table: string,
   searchColumn: string
@@ -59,7 +63,7 @@ async function maybeList(
   if (listCount <= 0) {
     return;
   }
-  const listResponse = await supabaseAdmin
+  const listResponse = await admin
     .from(table)
     .select(searchColumn)
     .limit(listCount);
@@ -74,6 +78,7 @@ export const GET: RequestHandler = async () => {
     KEEP_ALIVE_CONFIG;
 
   const randomString = generateRandomString();
+  const admin = getSupabaseAdmin();
 
   const database: {
     selectCount?: number;
@@ -84,7 +89,7 @@ export const GET: RequestHandler = async () => {
   } = {};
 
   try {
-    const selectResult = await selectRandom(table, searchColumn, randomString);
+    const selectResult = await selectRandom(admin, table, searchColumn, randomString);
     if (selectResult.error) {
       database.error = selectResult.error;
     } else {
@@ -92,6 +97,7 @@ export const GET: RequestHandler = async () => {
     }
 
     const insertDelete = await maybeInsertDelete(
+      admin,
       runInsertDelete,
       table,
       searchColumn,
@@ -100,7 +106,7 @@ export const GET: RequestHandler = async () => {
     database.insert = insertDelete.insert;
     database.delete = insertDelete.delete;
 
-    const list = await maybeList(listCount, table, searchColumn);
+    const list = await maybeList(admin, listCount, table, searchColumn);
     if (list) {
       database.list = list;
     }
