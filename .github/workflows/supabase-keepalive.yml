@@ -1,9 +1,10 @@
-name: Supabase Keepalive
+name: Supabase Keepalive (disabled - replaced by Vercel cron)
+
+# This workflow is intentionally disabled. The project now uses Vercel Cron
+# to hit the SvelteKit /api/keep-alive endpoint. You can still run this
+# manually if needed via the "Run workflow" button.
 
 on:
-  schedule:
-    # Every 6 days at 03:17 UTC (prevents free-tier project pausing)
-    - cron: "17 3 */6 * *"
   workflow_dispatch:
 
 concurrency:
@@ -18,10 +19,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
       
-      - name: Ping Supabase instance
-        env:
-          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
-          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
-        run: bash scripts/supabase-keepalive.sh
+      - name: Skip (workflow disabled)
+        run: echo "Supabase keepalive workflow disabled; using Vercel cron instead."
 
 

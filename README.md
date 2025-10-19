@@ -74,7 +74,6 @@ bun run db:restart     # supabase stop && supabase start
 - `src/lib/components/ui/**` – reusable UI; import from barrels.
 - `src/routes/**` – SvelteKit routes (pages + endpoints): `admin/*`, `staff/*`, `secretary/*`, `reset/*`, `api/*`.
 - `scripts/seed.ts` – idempotent database seeding (service role key, local only).
-- `scripts/supabase-keepalive.sh` – pings Supabase to avoid free‑tier pause.
 - `supabase/**` – CLI config and migrations.
 - Config: `svelte.config.js`, `vite.config.ts`, `biome.jsonc`, `knip.json`, `tsconfig.json`.
 
@@ -109,16 +108,15 @@ Workflows in `.github/workflows`:
 - `ci.yml` – install, typecheck, lint, tests.
 - `codeql.yml` – code scanning.
 - `dependabot.yml` – dependency updates (Actions + npm).
-- `supabase-keepalive.yml` – pings Supabase to prevent free‑tier pause.
 
 Recommended repository secrets:
-- `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY` (keepalive)
 - `GITGUARDIAN_API_KEY` (if using a secrets scan workflow)
 
 ## Deployment
 - Adapter: `@sveltejs/adapter-vercel`.
 - Set `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY` on the host.
 - Ensure CSP allows any required external resources.
+ - Scheduled keep‑alive: `vercel.json` defines a cron to hit `/api/keep-alive` every 6 days at 03:17 UTC.
 
 ## Troubleshooting
 - "Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_ANON_KEY": set both in `.env.local` (dev) or host env (prod).
