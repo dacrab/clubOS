@@ -14,7 +14,5 @@ export const KEEP_ALIVE_CONFIG: KeepAliveConfig = {
   // Number of rows to list in the response (0 to skip)
   listCount: 0,
   // Add any other project endpoints to ping (must call their DB)
-  otherEndpoints: []
+  otherEndpoints: [],
 };
-
-

@@ -1,82 +1,119 @@
-import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
-import { supabaseAdmin } from "$lib/server/supabaseAdmin";
+import { json } from "@sveltejs/kit";
 import { KEEP_ALIVE_CONFIG } from "$lib/config/keep-alive-config";
-import { generateRandomString, pingEndpoint } from "$lib/server/keep-alive-helper";
+import {
+  generateRandomString,
+  pingEndpoint,
+} from "$lib/server/keep-alive-helper";
+import { supabaseAdmin } from "$lib/server/supabase-admin";
+
+type InsertDeleteStatus = "success" | "skipped" | "failed";
+
+async function selectRandom(
+  table: string,
+  searchColumn: string,
+  randomString: string
+): Promise<{ count: number; error?: string }> {
+  const response = await supabaseAdmin
+    .from(table)
+    .select(searchColumn)
+    .eq(searchColumn, randomString)
+    .limit(1);
+  if (response.error) return { count: 0, error: response.error.message };
+  return { count: Array.isArray(response.data) ? response.data.length : 0 };
+}
+
+async function maybeInsertDelete(
+  runInsertDelete: boolean,
+  table: string,
+  searchColumn: string,
+  randomString: string
+): Promise<{ insert: InsertDeleteStatus; delete: InsertDeleteStatus }> {
+  if (!runInsertDelete) return { insert: "skipped", delete: "skipped" };
+
+  const insertResponse = await supabaseAdmin
+    .from(table)
+    .insert({ [searchColumn]: randomString });
+  const insert: InsertDeleteStatus = insertResponse.error ? "failed" : "success";
+
+  const deleteResponse = await supabaseAdmin
+    .from(table)
+    .delete()
+    .eq(searchColumn, randomString);
+  const del: InsertDeleteStatus = deleteResponse.error ? "failed" : "success";
+
+  return { insert, delete: del };
+}
+
+async function maybeList(
+  listCount: number,
+  table: string,
+  searchColumn: string
+): Promise<unknown[] | undefined> {
+  if (listCount <= 0) return undefined;
+  const listResponse = await supabaseAdmin
+    .from(table)
+    .select(searchColumn)
+    .limit(listCount);
+  if (listResponse.error) return undefined;
+  return listResponse.data as unknown[];
+}
 
 export const GET: RequestHandler = async () => {
-  const { table, searchColumn, runInsertDelete, listCount, otherEndpoints } = KEEP_ALIVE_CONFIG;
+  const { table, searchColumn, runInsertDelete, listCount, otherEndpoints } =
+    KEEP_ALIVE_CONFIG;
 
   const randomString = generateRandomString();
 
   const database: {
     selectCount?: number;
-    insert?: "success" | "skipped" | "failed";
-    delete?: "success" | "skipped" | "failed";
+    insert?: InsertDeleteStatus;
+    delete?: InsertDeleteStatus;
     list?: unknown[];
     error?: string;
   } = {};
 
   try {
-    // 1) Simple read to keep DB active
-    const selectResponse = await supabaseAdmin
-      .from(table)
-      .select(searchColumn)
-      .eq(searchColumn, randomString)
-      .limit(1);
-
-    if (selectResponse.error) {
-      database.error = selectResponse.error.message;
+    const selectResult = await selectRandom(table, searchColumn, randomString);
+    if (selectResult.error) {
+      database.error = selectResult.error;
     } else {
-      database.selectCount = Array.isArray(selectResponse.data) ? selectResponse.data.length : 0;
+      database.selectCount = selectResult.count;
     }
 
-    // 2) Optional insert/delete to exercise writes
-    if (runInsertDelete) {
-      const insertResponse = await supabaseAdmin
-        .from(table)
-        .insert({ [searchColumn]: randomString });
+    const insertDelete = await maybeInsertDelete(
+      runInsertDelete,
+      table,
+      searchColumn,
+      randomString
+    );
+    database.insert = insertDelete.insert;
+    database.delete = insertDelete.delete;
 
-      database.insert = insertResponse.error ? "failed" : "success";
-
-      const deleteResponse = await supabaseAdmin
-        .from(table)
-        .delete()
-        .eq(searchColumn, randomString);
-
-      database.delete = deleteResponse.error ? "failed" : "success";
-    } else {
-      database.insert = "skipped";
-      database.delete = "skipped";
-    }
-
-    // 3) Optional list of recent entries
-    if (listCount > 0) {
-      const listResponse = await supabaseAdmin
-        .from(table)
-        .select(searchColumn)
-        .limit(listCount);
-      if (!listResponse.error) database.list = listResponse.data as unknown[];
+    const list = await maybeList(listCount, table, searchColumn);
+    if (list) {
+      database.list = list;
     }
   } catch (error) {
-    database.error = error instanceof Error ? error.message : "Unknown database error";
+    database.error =
+      error instanceof Error ? error.message : "Unknown database error";
   }
 
   // 4) Ping other endpoints in parallel
-  const endpointResults = await Promise.all(otherEndpoints.map((url) => pingEndpoint(url)));
+  const endpointResults = await Promise.all(
+    otherEndpoints.map((url) => pingEndpoint(url))
+  );
 
   const body = {
     message: "Keep-alive executed",
     database,
-    otherEndpoints: endpointResults
+    otherEndpoints: endpointResults,
   };
 
   return json(body, {
     headers: {
       "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-      Pragma: "no-cache"
-    }
+      Pragma: "no-cache",
+    },
   });
 };
-
-
