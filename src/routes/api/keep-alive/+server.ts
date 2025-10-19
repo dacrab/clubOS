@@ -19,7 +19,9 @@ async function selectRandom(
     .select(searchColumn)
     .eq(searchColumn, randomString)
     .limit(1);
-  if (response.error) return { count: 0, error: response.error.message };
+  if (response.error) {
+    return { count: 0, error: response.error.message };
+  }
   return { count: Array.isArray(response.data) ? response.data.length : 0 };
 }
 
@@ -29,12 +31,16 @@ async function maybeInsertDelete(
   searchColumn: string,
   randomString: string
 ): Promise<{ insert: InsertDeleteStatus; delete: InsertDeleteStatus }> {
-  if (!runInsertDelete) return { insert: "skipped", delete: "skipped" };
+  if (!runInsertDelete) {
+    return { insert: "skipped", delete: "skipped" };
+  }
 
   const insertResponse = await supabaseAdmin
     .from(table)
     .insert({ [searchColumn]: randomString });
-  const insert: InsertDeleteStatus = insertResponse.error ? "failed" : "success";
+  const insert: InsertDeleteStatus = insertResponse.error
+    ? "failed"
+    : "success";
 
   const deleteResponse = await supabaseAdmin
     .from(table)
@@ -50,12 +56,16 @@ async function maybeList(
   table: string,
   searchColumn: string
 ): Promise<unknown[] | undefined> {
-  if (listCount <= 0) return undefined;
+  if (listCount <= 0) {
+    return;
+  }
   const listResponse = await supabaseAdmin
     .from(table)
     .select(searchColumn)
     .limit(listCount);
-  if (listResponse.error) return undefined;
+  if (listResponse.error) {
+    return;
+  }
   return listResponse.data as unknown[];
 }
 
