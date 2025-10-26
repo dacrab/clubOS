@@ -3,12 +3,12 @@ import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	...restProps
 }: DropdownMenuPrimitive.SubContentProps = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(DropdownMenuPrimitive, cn, ref, className, restProps);
 </script>
 

@@ -10,20 +10,20 @@ import { t } from "$lib/i18n";
 const upcoming = $state(0);
 
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  CalendarCheck,
-  CalendarRange,
-  PageContent,
-  PageHeader,
-  StatsCards,
-  Button,
-  Card,
-  t
+	CalendarCheck,
+	CalendarRange,
+	PageContent,
+	PageHeader,
+	StatsCards,
+	Button,
+	Card,
+	t,
 );
 
 $effect(() => {
-  /* data loading handled elsewhere */
+	/* data loading handled elsewhere */
 });
 </script>
 

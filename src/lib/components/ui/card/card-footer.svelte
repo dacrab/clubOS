@@ -4,13 +4,13 @@ import type { WithElementRef } from "$lib/utils";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  children,
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	children,
+	...restProps
 }: WithElementRef<HTMLAttributes<HTMLDivElement>> = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(cn, ref, className, children, restProps);
 </script>
 

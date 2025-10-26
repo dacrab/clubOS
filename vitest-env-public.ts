@@ -4,6 +4,6 @@ export const PUBLIC_SUPABASE_ANON_KEY = "test_anon_key";
 
 // Export as env object for $env/dynamic/public compatibility
 export const env = {
-  PUBLIC_SUPABASE_URL,
-  PUBLIC_SUPABASE_ANON_KEY,
+	PUBLIC_SUPABASE_URL,
+	PUBLIC_SUPABASE_ANON_KEY,
 };

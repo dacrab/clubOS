@@ -3,13 +3,13 @@ import { Tabs as TabsPrimitive } from "bits-ui";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  value = $bindable(""),
-  class: className,
-  ...restProps
+	ref = $bindable(null),
+	value = $bindable(""),
+	class: className,
+	...restProps
 }: TabsPrimitive.RootProps = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(TabsPrimitive, cn, ref, value, className, restProps);
 </script>
 

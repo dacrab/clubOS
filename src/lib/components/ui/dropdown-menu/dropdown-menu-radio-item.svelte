@@ -5,21 +5,21 @@ import type { WithoutChild } from "$lib/utils";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  children: childrenProp,
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	children: childrenProp,
+	...restProps
 }: WithoutChild<DropdownMenuPrimitive.RadioItemProps> = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  CircleIcon,
-  DropdownMenuPrimitive,
-  cn,
-  ref,
-  className,
-  childrenProp,
-  restProps
+	CircleIcon,
+	DropdownMenuPrimitive,
+	cn,
+	ref,
+	className,
+	childrenProp,
+	restProps,
 );
 </script>
 

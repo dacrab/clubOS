@@ -17,48 +17,48 @@ let notes = $state("");
 let finalCash = $state("");
 
 $effect(() => {
-  loadCurrentUser().then(() => {
-    const user = get(currentUser);
-    if (!user) {
-      window.location.href = "/login";
-      return;
-    }
-    if (user.role !== "staff") {
-      window.location.href = "/dashboard";
-    }
-  });
+	loadCurrentUser().then(() => {
+		const user = get(currentUser);
+		if (!user) {
+			window.location.href = "/login";
+			return;
+		}
+		if (user.role !== "staff") {
+			window.location.href = "/dashboard";
+		}
+	});
 });
 
 async function onCloseRegister() {
-  if (!staffName.trim()) {
-    return;
-  }
+	if (!staffName.trim()) {
+		return;
+	}
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    window.location.href = "/login";
-    return;
-  }
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+	if (!user) {
+		window.location.href = "/login";
+		return;
+	}
 
-  const sessionId = await ensureOpenSession(supabase, user.id);
-  closing = true;
+	const sessionId = await ensureOpenSession(supabase, user.id);
+	closing = true;
 
-  try {
-    await closeRegister(supabase, sessionId, {
-      staff_name: staffName,
-      notes,
-      final_cash: Number(finalCash || 0),
-    });
+	try {
+		await closeRegister(supabase, sessionId, {
+			staff_name: staffName,
+			notes,
+			final_cash: Number(finalCash || 0),
+		});
 
-    showCloseDialog = false;
-    staffName = "";
-    notes = "";
-    finalCash = "";
-  } finally {
-    closing = false;
-  }
+		showCloseDialog = false;
+		staffName = "";
+		notes = "";
+		finalCash = "";
+	} finally {
+		closing = false;
+	}
 }
 </script>
 

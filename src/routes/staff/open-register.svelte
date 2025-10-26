@@ -8,23 +8,23 @@ let openingCash = $state("");
 let saving = $state(false);
 
 async function openNow() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    window.location.href = "/login";
-    return;
-  }
-  saving = true;
-  try {
-    const sessionId = await ensureOpenSession(supabase, user.id);
-    await supabase
-      .from("register_sessions")
-      .update({ notes: { opening_cash: Number(openingCash || 0) } })
-      .eq("id", sessionId);
-  } finally {
-    saving = false;
-  }
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+	if (!user) {
+		window.location.href = "/login";
+		return;
+	}
+	saving = true;
+	try {
+		const sessionId = await ensureOpenSession(supabase, user.id);
+		await supabase
+			.from("register_sessions")
+			.update({ notes: { opening_cash: Number(openingCash || 0) } })
+			.eq("id", sessionId);
+	} finally {
+		saving = false;
+	}
 }
 </script>
 

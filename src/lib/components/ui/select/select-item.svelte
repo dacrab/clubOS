@@ -5,25 +5,25 @@ import type { WithoutChild } from "$lib/utils";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  value,
-  label,
-  children: childrenProp,
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	value,
+	label,
+	children: childrenProp,
+	...restProps
 }: WithoutChild<SelectPrimitive.ItemProps> = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  CheckIcon,
-  SelectPrimitive,
-  cn,
-  ref,
-  className,
-  value,
-  label,
-  childrenProp,
-  restProps
+	CheckIcon,
+	SelectPrimitive,
+	cn,
+	ref,
+	className,
+	value,
+	label,
+	childrenProp,
+	restProps,
 );
 </script>
 

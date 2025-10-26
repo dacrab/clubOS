@@ -4,19 +4,19 @@ import type { Snippet } from "svelte";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  inset = false,
-  children,
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	inset = false,
+	children,
+	...restProps
 }: {
-  ref?: HTMLElement | null;
-  class?: string;
-  inset?: boolean;
-  children?: Snippet;
+	ref?: HTMLElement | null;
+	class?: string;
+	inset?: boolean;
+	children?: Snippet;
 } & Record<string, unknown> = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(DropdownMenuPrimitive, cn, ref, className, inset, children, restProps);
 </script>
 

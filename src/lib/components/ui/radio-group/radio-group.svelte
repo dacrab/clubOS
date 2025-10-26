@@ -3,13 +3,13 @@ import { RadioGroup as RadioGroupPrimitive } from "bits-ui";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  value = $bindable(""),
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	value = $bindable(""),
+	...restProps
 }: RadioGroupPrimitive.RootProps = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(RadioGroupPrimitive, cn, ref, className, value, restProps);
 </script>
 

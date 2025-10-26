@@ -3,17 +3,17 @@ import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  inset,
-  variant = "default",
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	inset,
+	variant = "default",
+	...restProps
 }: DropdownMenuPrimitive.ItemProps & {
-  inset?: boolean;
-  variant?: "default" | "destructive";
+	inset?: boolean;
+	variant?: "default" | "destructive";
 } = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(DropdownMenuPrimitive, cn, ref, className, inset, variant, restProps);
 </script>
 

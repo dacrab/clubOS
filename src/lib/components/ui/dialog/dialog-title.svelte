@@ -3,12 +3,12 @@ import { Dialog as DialogPrimitive } from "bits-ui";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	...restProps
 }: DialogPrimitive.TitleProps = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(DialogPrimitive, cn, ref, className, restProps);
 </script>
 

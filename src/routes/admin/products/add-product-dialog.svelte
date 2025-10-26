@@ -21,65 +21,65 @@ import Switch from "$lib/components/ui/switch/switch.svelte";
 import { t } from "$lib/i18n";
 
 let {
-  open = $bindable(false),
-  categories = [] as Array<{ id: string; name: string }>,
-  onCreate,
+	open = $bindable(false),
+	categories = [] as Array<{ id: string; name: string }>,
+	onCreate,
 } = $props<{
-  open: boolean;
-  categories: Array<{ id: string; name: string }>;
-  onCreate: (payload: {
-    name: string;
-    price: number;
-    stock_quantity: number;
-    category_id: string | null;
-  }) => Promise<void>;
+	open: boolean;
+	categories: Array<{ id: string; name: string }>;
+	onCreate: (payload: {
+		name: string;
+		price: number;
+		stock_quantity: number;
+		category_id: string | null;
+	}) => Promise<void>;
 }>();
 
 let form = $state({
-  name: "",
-  price: 0,
-  stock_quantity: 0,
-  category_id: "",
-  unlimited: false,
+	name: "",
+	price: 0,
+	stock_quantity: 0,
+	category_id: "",
+	unlimited: false,
 });
 
 async function save() {
-  await onCreate({
-    name: form.name,
-    price: Number(form.price),
-    stock_quantity: Number(form.unlimited ? -1 : form.stock_quantity),
-    category_id: form.category_id || null,
-  });
-  form = {
-    name: "",
-    price: 0,
-    stock_quantity: 0,
-    category_id: "",
-    unlimited: false,
-  };
-  open = false;
+	await onCreate({
+		name: form.name,
+		price: Number(form.price),
+		stock_quantity: Number(form.unlimited ? -1 : form.stock_quantity),
+		category_id: form.category_id || null,
+	});
+	form = {
+		name: "",
+		price: 0,
+		stock_quantity: 0,
+		category_id: "",
+		unlimited: false,
+	};
+	open = false;
 }
 
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  Dialog,
-  Button,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  Input,
-  Label,
-  Switch,
-  t,
-  open,
-  categories,
-  save
+	Dialog,
+	Button,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	Input,
+	Label,
+	Switch,
+	t,
+	open,
+	categories,
+	save,
 );
 </script>
 

@@ -1,65 +1,65 @@
 <script lang="ts">
 import {
-  Filter,
-  Minus,
-  Plus,
-  ReceiptText,
-  ShoppingCart,
-  X,
+	Filter,
+	Minus,
+	Plus,
+	ReceiptText,
+	ShoppingCart,
+	X,
 } from "@lucide/svelte";
 import { Dialog as DialogPrimitive } from "bits-ui";
 import { collectWithDescendants } from "$lib/categories/tree";
 import { Button } from "$lib/components/ui/button";
 import {
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+	DialogClose,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
 } from "$lib/components/ui/dialog";
 import { t } from "$lib/i18n";
 import {
-  subtotal as calcSubtotal,
-  discountAmount,
-  totalAmount,
+	subtotal as calcSubtotal,
+	discountAmount,
+	totalAmount,
 } from "$lib/orders/calc";
 import { supabase } from "$lib/supabase-client";
 
 const DialogRoot = DialogPrimitive.Root;
 
 type Product = {
-  id: string;
-  name: string;
-  price: number;
-  category_id?: string | null;
-  image_url?: string | null;
+	id: string;
+	name: string;
+	price: number;
+	category_id?: string | null;
+	image_url?: string | null;
 };
 
 type CartItem = {
-  id: string;
-  name: string;
-  price: number;
-  is_treat?: boolean;
+	id: string;
+	name: string;
+	price: number;
+	is_treat?: boolean;
 };
 
 type Category = {
-  id: string;
-  name: string;
-  parent_id: string | null;
+	id: string;
+	name: string;
+	parent_id: string | null;
 };
 
 let {
-  open = $bindable(false),
-  products = [] as Product[],
-  onSubmit,
+	open = $bindable(false),
+	products = [] as Product[],
+	onSubmit,
 } = $props<{
-  open: boolean;
-  products?: Product[];
-  onSubmit: (payload: {
-    items: CartItem[];
-    paymentMethod: "cash";
-    couponCount: number;
-  }) => Promise<void>;
+	open: boolean;
+	products?: Product[];
+	onSubmit: (payload: {
+		items: CartItem[];
+		paymentMethod: "cash";
+		couponCount: number;
+	}) => Promise<void>;
 }>();
 
 let cart: CartItem[] = $state([]);
@@ -71,180 +71,180 @@ let tenantId: string | null = $state(null);
 let facilityId: string | null = $state(null);
 
 function addToCart(product: Product) {
-  cart = [...cart, { ...product }];
+	cart = [...cart, { ...product }];
 }
 
 function toggleTreat(index: number) {
-  if (index < 0 || index >= cart.length) {
-    return;
-  }
+	if (index < 0 || index >= cart.length) {
+		return;
+	}
 
-  const updatedCart = [...cart];
-  const item = updatedCart[index];
-  if (item) {
-    updatedCart[index] = { ...item, is_treat: !item.is_treat };
-    cart = updatedCart;
-  }
+	const updatedCart = [...cart];
+	const item = updatedCart[index];
+	if (item) {
+		updatedCart[index] = { ...item, is_treat: !item.is_treat };
+		cart = updatedCart;
+	}
 }
 
 function removeFromCart(index: number) {
-  if (index < 0 || index >= cart.length) {
-    return;
-  }
+	if (index < 0 || index >= cart.length) {
+		return;
+	}
 
-  const updatedCart = [...cart];
-  updatedCart.splice(index, 1);
-  cart = updatedCart;
+	const updatedCart = [...cart];
+	updatedCart.splice(index, 1);
+	cart = updatedCart;
 }
 
 function clearCart() {
-  cart = [];
-  couponCount = 0;
+	cart = [];
+	couponCount = 0;
 }
 
 function subtotal() {
-  return calcSubtotal(cart);
+	return calcSubtotal(cart);
 }
 
 function discount() {
-  return discountAmount(couponCount);
+	return discountAmount(couponCount);
 }
 
 function total() {
-  return totalAmount(cart, couponCount);
+	return totalAmount(cart, couponCount);
 }
 
 async function submit() {
-  try {
-    await onSubmit({ items: cart, paymentMethod: "cash", couponCount });
-    const { toast } = await import("svelte-sonner");
-    toast.success(t("orders.toast.success"));
-    clearCart();
-  } catch (error) {
-    const { toast } = await import("svelte-sonner");
-    const message =
-      error instanceof Error ? error.message : t("orders.toast.error");
-    toast.error(message);
-  }
+	try {
+		await onSubmit({ items: cart, paymentMethod: "cash", couponCount });
+		const { toast } = await import("svelte-sonner");
+		toast.success(t("orders.toast.success"));
+		clearCart();
+	} catch (error) {
+		const { toast } = await import("svelte-sonner");
+		const message =
+			error instanceof Error ? error.message : t("orders.toast.error");
+		toast.error(message);
+	}
 }
 
 async function ensureFacilityContext(): Promise<void> {
-  if (tenantId && facilityId) {
-    return;
-  }
+	if (tenantId && facilityId) {
+		return;
+	}
 
-  const { data: sessionData } = await supabase.auth.getSession();
-  const userId = sessionData.session?.user.id;
-  if (!userId) {
-    return;
-  }
+	const { data: sessionData } = await supabase.auth.getSession();
+	const userId = sessionData.session?.user.id;
+	if (!userId) {
+		return;
+	}
 
-  // Get tenant
-  const { data: memberships } = await supabase
-    .from("tenant_members")
-    .select("tenant_id")
-    .eq("user_id", userId);
+	// Get tenant
+	const { data: memberships } = await supabase
+		.from("tenant_members")
+		.select("tenant_id")
+		.eq("user_id", userId);
 
-  tenantId = memberships?.[0]?.tenant_id ?? null;
-  if (!tenantId) {
-    return;
-  }
+	tenantId = memberships?.[0]?.tenant_id ?? null;
+	if (!tenantId) {
+		return;
+	}
 
-  // Get facility
-  const { data: facilities } = await supabase
-    .from("facilities")
-    .select("id")
-    .eq("tenant_id", tenantId)
-    .order("name")
-    .limit(1);
+	// Get facility
+	const { data: facilities } = await supabase
+		.from("facilities")
+		.select("id")
+		.eq("tenant_id", tenantId)
+		.order("name")
+		.limit(1);
 
-  const facilityIdValue = facilities?.[0]?.id ?? null;
-  if (!facilityIdValue) {
-    return;
-  }
+	const facilityIdValue = facilities?.[0]?.id ?? null;
+	if (!facilityIdValue) {
+		return;
+	}
 
-  // Ensure membership
-  const { data: existing } = await supabase
-    .from("facility_members")
-    .select("facility_id")
-    .eq("facility_id", facilityIdValue)
-    .eq("user_id", userId)
-    .maybeSingle();
+	// Ensure membership
+	const { data: existing } = await supabase
+		.from("facility_members")
+		.select("facility_id")
+		.eq("facility_id", facilityIdValue)
+		.eq("user_id", userId)
+		.maybeSingle();
 
-  if (!existing) {
-    await supabase
-      .from("facility_members")
-      .upsert(
-        { facility_id: facilityIdValue, user_id: userId },
-        { onConflict: "facility_id,user_id" }
-      );
-  }
+	if (!existing) {
+		await supabase
+			.from("facility_members")
+			.upsert(
+				{ facility_id: facilityIdValue, user_id: userId },
+				{ onConflict: "facility_id,user_id" },
+			);
+	}
 
-  facilityId = facilityIdValue;
+	facilityId = facilityIdValue;
 }
 
 async function loadCategories() {
-  await ensureFacilityContext();
-  if (!(tenantId && facilityId)) {
-    categories = [];
-    return;
-  }
+	await ensureFacilityContext();
+	if (!(tenantId && facilityId)) {
+		categories = [];
+		return;
+	}
 
-  const { data } = await supabase
-    .from("categories")
-    .select("id,name,parent_id")
-    .eq("tenant_id", tenantId)
-    .eq("facility_id", facilityId)
-    .order("name");
+	const { data } = await supabase
+		.from("categories")
+		.select("id,name,parent_id")
+		.eq("tenant_id", tenantId)
+		.eq("facility_id", facilityId)
+		.order("name");
 
-  categories = (data ?? []) as Category[];
+	categories = (data ?? []) as Category[];
 }
 
 async function loadProducts() {
-  if (products.length > 0) {
-    return; // External products provided
-  }
+	if (products.length > 0) {
+		return; // External products provided
+	}
 
-  await ensureFacilityContext();
-  if (!(tenantId && facilityId)) {
-    internalProducts = [];
-    return;
-  }
+	await ensureFacilityContext();
+	if (!(tenantId && facilityId)) {
+		internalProducts = [];
+		return;
+	}
 
-  const { data } = await supabase
-    .from("products")
-    .select("id,name,price,category_id,image_url")
-    .eq("tenant_id", tenantId)
-    .eq("facility_id", facilityId)
-    .order("name");
+	const { data } = await supabase
+		.from("products")
+		.select("id,name,price,category_id,image_url")
+		.eq("tenant_id", tenantId)
+		.eq("facility_id", facilityId)
+		.order("name");
 
-  internalProducts = (data ?? []) as Product[];
+	internalProducts = (data ?? []) as Product[];
 }
 
 const allProducts: Product[] = $derived(
-  products.length > 0 ? products : internalProducts
+	products.length > 0 ? products : internalProducts,
 );
 
 const filteredProducts: Product[] = $derived(
-  (() => {
-    if (!selectedCategory) {
-      return allProducts;
-    }
+	(() => {
+		if (!selectedCategory) {
+			return allProducts;
+		}
 
-    const descendantIds = collectWithDescendants(categories, selectedCategory);
+		const descendantIds = collectWithDescendants(categories, selectedCategory);
 
-    return allProducts.filter(
-      (product) =>
-        !product.category_id || descendantIds.has(product.category_id)
-    );
-  })()
+		return allProducts.filter(
+			(product) =>
+				!product.category_id || descendantIds.has(product.category_id),
+		);
+	})(),
 );
 
 $effect(() => {
-  if (open) {
-    loadCategories();
-    loadProducts();
-  }
+	if (open) {
+		loadCategories();
+		loadProducts();
+	}
 });
 </script>
 

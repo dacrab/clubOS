@@ -2,13 +2,13 @@
 import { Popover as PopoverPrimitive } from "bits-ui";
 
 const {
-  children,
-  class: className = "",
-  ...props
+	children,
+	class: className = "",
+	...props
 } = $props<{
-  children: unknown;
-  class?: string;
-  [key: string]: unknown;
+	children: unknown;
+	class?: string;
+	[key: string]: unknown;
 }>();
 
 const Content = PopoverPrimitive.Content;

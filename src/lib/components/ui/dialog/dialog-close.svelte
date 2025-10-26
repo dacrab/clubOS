@@ -2,9 +2,9 @@
 import { Dialog as DialogPrimitive } from "bits-ui";
 
 let { ref = $bindable(null), ...restProps }: DialogPrimitive.CloseProps =
-  $props();
+	$props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(DialogPrimitive, ref, restProps);
 </script>
 

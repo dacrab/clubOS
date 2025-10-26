@@ -1,18 +1,18 @@
 <script lang="ts">
 const {
-  title,
-  subtitle,
-  icon: Icon,
-  children,
-  class: className = "",
-  ...props
+	title,
+	subtitle,
+	icon: Icon,
+	children,
+	class: className = "",
+	...props
 } = $props<{
-  title: string;
-  subtitle?: string;
-  icon?: unknown;
-  children?: unknown;
-  class?: string;
-  [key: string]: unknown;
+	title: string;
+	subtitle?: string;
+	icon?: unknown;
+	children?: unknown;
+	class?: string;
+	[key: string]: unknown;
 }>();
 </script>
 

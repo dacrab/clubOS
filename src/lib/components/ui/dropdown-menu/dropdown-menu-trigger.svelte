@@ -2,11 +2,11 @@
 import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 
 let {
-  ref = $bindable(null),
-  ...restProps
+	ref = $bindable(null),
+	...restProps
 }: DropdownMenuPrimitive.TriggerProps = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(DropdownMenuPrimitive, ref, restProps);
 </script>
 

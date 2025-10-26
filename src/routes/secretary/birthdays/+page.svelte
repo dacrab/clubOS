@@ -5,25 +5,25 @@ import { Button } from "$lib/components/ui/button";
 import { Card } from "$lib/components/ui/card";
 import { DateInput } from "$lib/components/ui/date-input";
 import {
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogRoot,
-  DialogTitle,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogRoot,
+	DialogTitle,
 } from "$lib/components/ui/dialog";
 import { Input } from "$lib/components/ui/input";
 import { PageContent, PageHeader } from "$lib/components/ui/page";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
 } from "$lib/components/ui/select";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
 } from "$lib/components/ui/tabs";
 import { Textarea } from "$lib/components/ui/textarea";
 import { t } from "$lib/i18n";
@@ -32,19 +32,19 @@ import { currentUser, loadCurrentUser } from "$lib/user";
 import { formatDateTime } from "$lib/utils";
 
 type AppointmentDB = {
-  id: string;
-  status: "confirmed" | "cancelled" | "completed";
-  appointment_date: string;
-  customer_name: string;
-  contact_info: string;
-  num_children: number;
-  num_adults: number;
-  notes: string | null;
+	id: string;
+	status: "confirmed" | "cancelled" | "completed";
+	appointment_date: string;
+	customer_name: string;
+	contact_info: string;
+	num_children: number;
+	num_adults: number;
+	notes: string | null;
 };
 
 type Appointment = Omit<AppointmentDB, "notes"> & {
-  notes: string;
-  display_date?: string;
+	notes: string;
+	display_date?: string;
 };
 
 let activeTab = $state<"create" | "upcoming">("create");
@@ -56,127 +56,127 @@ let editDate = $state("");
 let editTime = $state("");
 
 let form = $state({
-  customer_name: "",
-  contact_info: "",
-  appointment_date: "",
-  appointment_time: "",
-  num_children: 1,
-  num_adults: 0,
-  notes: "",
+	customer_name: "",
+	contact_info: "",
+	appointment_date: "",
+	appointment_time: "",
+	num_children: 1,
+	num_adults: 0,
+	notes: "",
 });
 
 $effect(() => {
-  loadCurrentUser().then(() => {
-    const u = get(currentUser);
-    if (!u) {
-      window.location.href = "/login";
-      return;
-    }
-    if (u.role !== "secretary" && u.role !== "admin") {
-      window.location.href = "/dashboard";
-    }
-    load();
-  });
+	loadCurrentUser().then(() => {
+		const u = get(currentUser);
+		if (!u) {
+			window.location.href = "/login";
+			return;
+		}
+		if (u.role !== "secretary" && u.role !== "admin") {
+			window.location.href = "/dashboard";
+		}
+		load();
+	});
 });
 
 async function load() {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const userId = sessionData.session?.user.id ?? "";
+	const { data: sessionData } = await supabase.auth.getSession();
+	const userId = sessionData.session?.user.id ?? "";
 
-  const { data: memberships } = await supabase
-    .from("tenant_members")
-    .select("tenant_id")
-    .eq("user_id", userId);
+	const { data: memberships } = await supabase
+		.from("tenant_members")
+		.select("tenant_id")
+		.eq("user_id", userId);
 
-  const tenantId = memberships?.[0]?.tenant_id;
+	const tenantId = memberships?.[0]?.tenant_id;
 
-  const { data } = await supabase
-    .from("appointments")
-    .select("*")
-    .eq("tenant_id", tenantId)
-    .order("appointment_date");
+	const { data } = await supabase
+		.from("appointments")
+		.select("*")
+		.eq("tenant_id", tenantId)
+		.order("appointment_date");
 
-  const rows = (data ?? []) as AppointmentDB[];
-  list = rows.map((a) => ({
-    ...a,
-    notes: a.notes ?? "",
-    display_date: formatDateTime(a.appointment_date),
-  }));
+	const rows = (data ?? []) as AppointmentDB[];
+	list = rows.map((a) => ({
+		...a,
+		notes: a.notes ?? "",
+		display_date: formatDateTime(a.appointment_date),
+	}));
 }
 
 async function create() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    window.location.href = "/login";
-    return;
-  }
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+	if (!user) {
+		window.location.href = "/login";
+		return;
+	}
 
-  const { data: membership } = await supabase
-    .from("tenant_members")
-    .select("tenant_id")
-    .eq("user_id", user.id);
+	const { data: membership } = await supabase
+		.from("tenant_members")
+		.select("tenant_id")
+		.eq("user_id", user.id);
 
-  const payload = {
-    ...form,
-    appointment_date: new Date(
-      `${form.appointment_date}T${form.appointment_time || "00:00"}`
-    ),
-    created_by: user.id,
-    tenant_id: membership?.[0]?.tenant_id,
-  };
+	const payload = {
+		...form,
+		appointment_date: new Date(
+			`${form.appointment_date}T${form.appointment_time || "00:00"}`,
+		),
+		created_by: user.id,
+		tenant_id: membership?.[0]?.tenant_id,
+	};
 
-  const { error } = await supabase.from("appointments").insert(payload);
-  if (!error) {
-    resetForm();
-    load();
-  }
+	const { error } = await supabase.from("appointments").insert(payload);
+	if (!error) {
+		resetForm();
+		load();
+	}
 }
 
 function resetForm() {
-  form = {
-    customer_name: "",
-    contact_info: "",
-    appointment_date: "",
-    appointment_time: "",
-    num_children: 1,
-    num_adults: 0,
-    notes: "",
-  };
+	form = {
+		customer_name: "",
+		contact_info: "",
+		appointment_date: "",
+		appointment_time: "",
+		num_children: 1,
+		num_adults: 0,
+		notes: "",
+	};
 }
 
 function openEdit(appointment: Appointment) {
-  editing = { ...appointment, notes: appointment.notes ?? "" };
-  const d = new Date(appointment.appointment_date);
-  const pad = (n: number) => String(n).padStart(2, "0");
+	editing = { ...appointment, notes: appointment.notes ?? "" };
+	const d = new Date(appointment.appointment_date);
+	const pad = (n: number) => String(n).padStart(2, "0");
 
-  editDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  editTime = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  editStatus = (appointment?.status as typeof editStatus) ?? "confirmed";
-  showEdit = true;
+	editDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+	editTime = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+	editStatus = (appointment?.status as typeof editStatus) ?? "confirmed";
+	showEdit = true;
 }
 
 async function saveEdit() {
-  if (!editing) {
-    return;
-  }
+	if (!editing) {
+		return;
+	}
 
-  await supabase
-    .from("appointments")
-    .update({
-      status: editStatus,
-      customer_name: editing.customer_name,
-      contact_info: editing.contact_info,
-      appointment_date: new Date(`${editDate}T${editTime || "00:00"}`),
-      num_children: Number(editing.num_children ?? 0),
-      num_adults: Number(editing.num_adults ?? 0),
-      notes: editing.notes ?? null,
-    })
-    .eq("id", editing.id);
+	await supabase
+		.from("appointments")
+		.update({
+			status: editStatus,
+			customer_name: editing.customer_name,
+			contact_info: editing.contact_info,
+			appointment_date: new Date(`${editDate}T${editTime || "00:00"}`),
+			num_children: Number(editing.num_children ?? 0),
+			num_adults: Number(editing.num_adults ?? 0),
+			notes: editing.notes ?? null,
+		})
+		.eq("id", editing.id);
 
-  await load();
-  showEdit = false;
+	await load();
+	showEdit = false;
 }
 </script>
 

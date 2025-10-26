@@ -23,127 +23,127 @@ import { supabase } from "$lib/supabase-client";
 const Dialog = DialogPrimitive.Root;
 const Select = SelectPrimitive.Root;
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(Dialog);
 
 export type Category = {
-  id: string;
-  name: string;
-  description?: string | null;
-  parent_id?: string | null;
+	id: string;
+	name: string;
+	description?: string | null;
+	parent_id?: string | null;
 };
 
 let { open = $bindable(false), categories = $bindable([] as Category[]) } =
-  $props<{
-    open: boolean;
-    categories: Category[];
-  }>();
+	$props<{
+		open: boolean;
+		categories: Category[];
+	}>();
 
 let form = $state({ id: "", name: "", description: "", parent_id: "" });
 
 function edit(cat: Category) {
-  form = {
-    id: cat.id,
-    name: cat.name,
-    description: cat.description || "",
-    parent_id: cat.parent_id || "",
-  };
+	form = {
+		id: cat.id,
+		name: cat.name,
+		description: cat.description || "",
+		parent_id: cat.parent_id || "",
+	};
 }
 
 function clear() {
-  form = { id: "", name: "", description: "", parent_id: "" };
+	form = { id: "", name: "", description: "", parent_id: "" };
 }
 
 async function save() {
-  if (form.id) {
-    await supabase
-      .from("categories")
-      .update({
-        name: form.name,
-        description: form.description,
-        parent_id: form.parent_id || null,
-      })
-      .eq("id", form.id);
-  } else {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return;
-    }
-    const { data: memberships } = await supabase
-      .from("tenant_members")
-      .select("tenant_id")
-      .eq("user_id", user.id);
-    const tenantId = memberships?.[0]?.tenant_id;
-    await supabase.from("categories").insert({
-      name: form.name,
-      description: form.description,
-      parent_id: form.parent_id || null,
-      created_by: user.id,
-      tenant_id: tenantId,
-    });
-  }
-  await reload();
-  clear();
+	if (form.id) {
+		await supabase
+			.from("categories")
+			.update({
+				name: form.name,
+				description: form.description,
+				parent_id: form.parent_id || null,
+			})
+			.eq("id", form.id);
+	} else {
+		const {
+			data: { user },
+		} = await supabase.auth.getUser();
+		if (!user) {
+			return;
+		}
+		const { data: memberships } = await supabase
+			.from("tenant_members")
+			.select("tenant_id")
+			.eq("user_id", user.id);
+		const tenantId = memberships?.[0]?.tenant_id;
+		await supabase.from("categories").insert({
+			name: form.name,
+			description: form.description,
+			parent_id: form.parent_id || null,
+			created_by: user.id,
+			tenant_id: tenantId,
+		});
+	}
+	await reload();
+	clear();
 }
 
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  Button,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Input,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  t,
-  categories,
-  edit,
-  save
+	Button,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	Input,
+	Label,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+	t,
+	categories,
+	edit,
+	save,
 );
 
 async function remove(id: string) {
-  await supabase.from("categories").delete().eq("id", id);
-  await reload();
+	await supabase.from("categories").delete().eq("id", id);
+	await reload();
 }
 
 // Mark functions used only in markup
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(remove);
 
 async function reload() {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const userId = sessionData.session?.user.id ?? "";
-  const { data: memberships } = await supabase
-    .from("tenant_members")
-    .select("tenant_id")
-    .eq("user_id", userId);
-  const tenantId = memberships?.[0]?.tenant_id;
-  const { data } = await supabase
-    .from("categories")
-    .select("id,name,description,parent_id")
-    .eq("tenant_id", tenantId)
-    .order("name");
-  categories = (data ?? []) as Category[];
+	const { data: sessionData } = await supabase.auth.getSession();
+	const userId = sessionData.session?.user.id ?? "";
+	const { data: memberships } = await supabase
+		.from("tenant_members")
+		.select("tenant_id")
+		.eq("user_id", userId);
+	const tenantId = memberships?.[0]?.tenant_id;
+	const { data } = await supabase
+		.from("categories")
+		.select("id,name,description,parent_id")
+		.eq("tenant_id", tenantId)
+		.order("name");
+	categories = (data ?? []) as Category[];
 }
 
 $effect(() => {
-  if (open) {
-    reload();
-  }
+	if (open) {
+		reload();
+	}
 });
 </script>
 

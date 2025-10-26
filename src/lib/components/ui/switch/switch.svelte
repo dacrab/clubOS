@@ -4,13 +4,13 @@ import type { WithoutChildrenOrChild } from "$lib/utils";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  checked = $bindable(false),
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	checked = $bindable(false),
+	...restProps
 }: WithoutChildrenOrChild<SwitchPrimitive.RootProps> = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(SwitchPrimitive, cn, ref, className, checked, restProps);
 </script>
 

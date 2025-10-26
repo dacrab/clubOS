@@ -4,14 +4,14 @@ import type { WithElementRef } from "$lib/utils";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  value = $bindable(),
-  class: className,
-  children,
-  ...restProps
+	ref = $bindable(null),
+	value = $bindable(),
+	class: className,
+	children,
+	...restProps
 }: WithElementRef<HTMLTextareaAttributes> & { value?: string } = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(ref, value, className, children, restProps, cn);
 </script>
 

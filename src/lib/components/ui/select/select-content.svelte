@@ -6,28 +6,28 @@ import SelectScrollDownButton from "./select-scroll-down-button.svelte";
 import SelectScrollUpButton from "./select-scroll-up-button.svelte";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  sideOffset = 4,
-  portalProps,
-  children,
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	sideOffset = 4,
+	portalProps,
+	children,
+	...restProps
 }: WithoutChild<SelectPrimitive.ContentProps> & {
-  portalProps?: SelectPrimitive.PortalProps;
+	portalProps?: SelectPrimitive.PortalProps;
 } = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  SelectPrimitive,
-  SelectScrollDownButton,
-  SelectScrollUpButton,
-  cn,
-  ref,
-  className,
-  sideOffset,
-  portalProps,
-  children,
-  restProps
+	SelectPrimitive,
+	SelectScrollDownButton,
+	SelectScrollUpButton,
+	cn,
+	ref,
+	className,
+	sideOffset,
+	portalProps,
+	children,
+	restProps,
 );
 </script>
 

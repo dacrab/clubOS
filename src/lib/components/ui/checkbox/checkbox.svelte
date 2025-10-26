@@ -6,24 +6,24 @@ import type { WithoutChildrenOrChild } from "$lib/utils";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  checked = $bindable(false),
-  indeterminate = $bindable(false),
-  class: className,
-  ...restProps
+	ref = $bindable(null),
+	checked = $bindable(false),
+	indeterminate = $bindable(false),
+	class: className,
+	...restProps
 }: WithoutChildrenOrChild<CheckboxPrimitive.RootProps> = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  cn,
-  CheckIcon,
-  MinusIcon,
-  CheckboxPrimitive,
-  ref,
-  checked,
-  indeterminate,
-  className,
-  restProps
+	cn,
+	CheckIcon,
+	MinusIcon,
+	CheckboxPrimitive,
+	ref,
+	checked,
+	indeterminate,
+	className,
+	restProps,
 );
 </script>
 

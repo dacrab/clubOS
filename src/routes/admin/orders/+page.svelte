@@ -22,12 +22,12 @@ import OrderDetails from "./order-details.svelte";
 const DropdownMenu = DropdownMenuPrimitive.Root;
 
 type OrderRow = {
-  id: string;
-  created_at: string;
-  subtotal: number;
-  discount_amount: number;
-  total_amount: number;
-  coupon_count: number;
+	id: string;
+	created_at: string;
+	subtotal: number;
+	discount_amount: number;
+	total_amount: number;
+	coupon_count: number;
 };
 
 let orders: OrderRow[] = $state([]);
@@ -40,19 +40,19 @@ let startIndex = $state(0);
 let endIndex = $state(0);
 const topPad = $derived(startIndex * ROW_HEIGHT);
 const bottomPad = $derived(
-  Math.max(0, (orders.length - endIndex) * ROW_HEIGHT)
+	Math.max(0, (orders.length - endIndex) * ROW_HEIGHT),
 );
 
 function recomputeWindow() {
-  const scrollTop = scrollRef?.scrollTop ?? 0;
-  const visibleCount =
-    Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
-  const first = Math.max(
-    0,
-    Math.floor(scrollTop / ROW_HEIGHT) - Math.ceil(VIEW_BUFFER_ROWS / 2)
-  );
-  startIndex = first;
-  endIndex = Math.min(orders.length, first + visibleCount);
+	const scrollTop = scrollRef?.scrollTop ?? 0;
+	const visibleCount =
+		Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
+	const first = Math.max(
+		0,
+		Math.floor(scrollTop / ROW_HEIGHT) - Math.ceil(VIEW_BUFFER_ROWS / 2),
+	);
+	startIndex = first;
+	endIndex = Math.min(orders.length, first + visibleCount);
 }
 
 // Date range (default: today)
@@ -60,74 +60,74 @@ let startDate = $state<string>("");
 let endDate = $state<string>("");
 
 $effect(() => {
-  loadAll();
+	loadAll();
 });
 
 async function loadAll() {
-  const startISO = startDate
-    ? new Date(`${startDate}T00:00:00`).toISOString()
-    : null;
-  const endISO = endDate ? new Date(`${endDate}T23:59:59`).toISOString() : null;
-  let query = supabase
-    .from("orders")
-    .select(
-      "id, created_at, subtotal, discount_amount, total_amount, coupon_count"
-    )
-    .order("created_at", { ascending: false });
-  const { data: sessionData } = await supabase.auth.getSession();
-  const userId = sessionData.session?.user.id ?? "";
-  const { data: memberships } = await supabase
-    .from("tenant_members")
-    .select("tenant_id")
-    .eq("user_id", userId);
-  const tenantId = memberships?.[0]?.tenant_id;
-  if (tenantId) {
-    query = query.eq("tenant_id", tenantId);
-  }
-  if (startISO) {
-    query = query.gte("created_at", startISO);
-  }
-  if (endISO) {
-    query = query.lte("created_at", endISO);
-  }
-  const { data } = await query;
-  orders = (data as OrderRow[] | null) ?? [];
-  // reset window on data change
-  startIndex = 0;
-  const visibleCount =
-    Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
-  endIndex = Math.min(orders.length, visibleCount);
+	const startISO = startDate
+		? new Date(`${startDate}T00:00:00`).toISOString()
+		: null;
+	const endISO = endDate ? new Date(`${endDate}T23:59:59`).toISOString() : null;
+	let query = supabase
+		.from("orders")
+		.select(
+			"id, created_at, subtotal, discount_amount, total_amount, coupon_count",
+		)
+		.order("created_at", { ascending: false });
+	const { data: sessionData } = await supabase.auth.getSession();
+	const userId = sessionData.session?.user.id ?? "";
+	const { data: memberships } = await supabase
+		.from("tenant_members")
+		.select("tenant_id")
+		.eq("user_id", userId);
+	const tenantId = memberships?.[0]?.tenant_id;
+	if (tenantId) {
+		query = query.eq("tenant_id", tenantId);
+	}
+	if (startISO) {
+		query = query.gte("created_at", startISO);
+	}
+	if (endISO) {
+		query = query.lte("created_at", endISO);
+	}
+	const { data } = await query;
+	orders = (data as OrderRow[] | null) ?? [];
+	// reset window on data change
+	startIndex = 0;
+	const visibleCount =
+		Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
+	endIndex = Math.min(orders.length, visibleCount);
 }
 
 function money(value: number) {
-  return `€${Number(value).toFixed(2)}`;
+	return `€${Number(value).toFixed(2)}`;
 }
 
 // Mark markup-only usages for Biome
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  Eye,
-  ReceiptText,
-  DropdownMenu,
-  PageContent,
-  PageHeader,
-  Button,
-  Card,
-  DateRangePicker,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  t,
-  formatDateTime,
-  OrderDetails,
-  recomputeWindow,
-  money
+	Eye,
+	ReceiptText,
+	DropdownMenu,
+	PageContent,
+	PageHeader,
+	Button,
+	Card,
+	DateRangePicker,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+	t,
+	formatDateTime,
+	OrderDetails,
+	recomputeWindow,
+	money,
 );
 </script>
 

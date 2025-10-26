@@ -2,13 +2,13 @@
 import { Dialog as DialogPrimitive } from "bits-ui";
 
 let {
-  open = $bindable(false),
-  children,
-  ...props
+	open = $bindable(false),
+	children,
+	...props
 } = $props<{
-  open?: boolean;
-  children: unknown;
-  [key: string]: unknown;
+	open?: boolean;
+	children: unknown;
+	[key: string]: unknown;
 }>();
 
 const Root = DialogPrimitive.Root;

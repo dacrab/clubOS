@@ -4,21 +4,21 @@ import { supabase } from "$lib/supabase-client";
 import { formatDateTime } from "$lib/utils";
 
 type OrderRow = {
-  id: string;
-  created_at: string;
-  subtotal: number;
-  discount_amount: number;
-  total_amount: number;
-  coupon_count: number;
+	id: string;
+	created_at: string;
+	subtotal: number;
+	discount_amount: number;
+	total_amount: number;
+	coupon_count: number;
 };
 
 type OrderItemRow = {
-  id: string;
-  quantity: number;
-  unit_price: number;
-  line_total: number;
-  is_treat: boolean;
-  product_name: string;
+	id: string;
+	quantity: number;
+	unit_price: number;
+	line_total: number;
+	is_treat: boolean;
+	product_name: string;
 };
 
 const { order } = $props<{ order: OrderRow }>();
@@ -26,48 +26,48 @@ const { order } = $props<{ order: OrderRow }>();
 let items: OrderItemRow[] = $state([]);
 
 $effect(() => {
-  // Load items when order changes
-  loadItems().then(() => {
-    /* no-op */
-  });
+	// Load items when order changes
+	loadItems().then(() => {
+		/* no-op */
+	});
 });
 
 async function loadItems() {
-  const { data } = await supabase
-    .from("order_items")
-    .select(
-      "id, order_id, quantity, unit_price, line_total, is_treat, is_deleted, products(name)"
-    )
-    .eq("order_id", order.id);
+	const { data } = await supabase
+		.from("order_items")
+		.select(
+			"id, order_id, quantity, unit_price, line_total, is_treat, is_deleted, products(name)",
+		)
+		.eq("order_id", order.id);
 
-  const list: OrderItemRow[] = [];
-  for (const item of data ?? []) {
-    if ((item as { is_deleted?: boolean }).is_deleted) {
-      continue;
-    }
-    const prod = (item as unknown as { products?: unknown }).products;
-    const productName = Array.isArray(prod)
-      ? String((prod as Array<{ name?: string }>)[0]?.name ?? "")
-      : String((prod as { name?: string } | null)?.name ?? "");
-    list.push({
-      id: String((item as { id: string }).id),
-      quantity: Number((item as { quantity?: number }).quantity ?? 0),
-      unit_price: Number((item as { unit_price?: number }).unit_price ?? 0),
-      line_total: Number((item as { line_total?: number }).line_total ?? 0),
-      is_treat: Boolean((item as { is_treat?: boolean }).is_treat ?? false),
-      product_name: productName,
-    });
-  }
-  items = list;
+	const list: OrderItemRow[] = [];
+	for (const item of data ?? []) {
+		if ((item as { is_deleted?: boolean }).is_deleted) {
+			continue;
+		}
+		const prod = (item as unknown as { products?: unknown }).products;
+		const productName = Array.isArray(prod)
+			? String((prod as Array<{ name?: string }>)[0]?.name ?? "")
+			: String((prod as { name?: string } | null)?.name ?? "");
+		list.push({
+			id: String((item as { id: string }).id),
+			quantity: Number((item as { quantity?: number }).quantity ?? 0),
+			unit_price: Number((item as { unit_price?: number }).unit_price ?? 0),
+			line_total: Number((item as { line_total?: number }).line_total ?? 0),
+			is_treat: Boolean((item as { is_treat?: boolean }).is_treat ?? false),
+			product_name: productName,
+		});
+	}
+	items = list;
 }
 
 function money(value: number) {
-  return `€${Number(value).toFixed(2)}`;
+	return `€${Number(value).toFixed(2)}`;
 }
 
 // Mark markup-only usages for Biome
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(t, formatDateTime, money);
 </script>
 

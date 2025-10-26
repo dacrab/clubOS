@@ -4,13 +4,13 @@ import type { WithElementRef } from "$lib/utils";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  children,
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	children,
+	...restProps
 }: WithElementRef<HTMLTdAttributes> = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(ref, className, children, restProps, cn);
 </script>
 

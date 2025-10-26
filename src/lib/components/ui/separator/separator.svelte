@@ -3,12 +3,12 @@ import { Separator as SeparatorPrimitive } from "bits-ui";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	...restProps
 }: SeparatorPrimitive.RootProps = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(SeparatorPrimitive, cn, ref, className, restProps);
 </script>
 

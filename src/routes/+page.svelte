@@ -5,10 +5,10 @@ import { goto } from "$app/navigation";
 import { Button } from "$lib/components/ui/button";
 import { Card, CardContent } from "$lib/components/ui/card";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
 } from "$lib/components/ui/dropdown-menu";
 import { Input } from "$lib/components/ui/input";
 import { Label } from "$lib/components/ui/label";
@@ -22,124 +22,124 @@ let errorMessage = $state("");
 let showPassword = $state(false);
 
 const seededUsers = [
-  {
-    label: "Admin",
-    email: "admin@example.com",
-    username: "admin",
-    password: "admin123",
-  },
-  {
-    label: "Staff",
-    email: "staff@example.com",
-    username: "staff",
-    password: "staff123",
-  },
-  {
-    label: "Secretary",
-    email: "secretary@example.com",
-    username: "secretary",
-    password: "secretary123",
-  },
+	{
+		label: "Admin",
+		email: "admin@example.com",
+		username: "admin",
+		password: "admin123",
+	},
+	{
+		label: "Staff",
+		email: "staff@example.com",
+		username: "staff",
+		password: "staff123",
+	},
+	{
+		label: "Secretary",
+		email: "secretary@example.com",
+		username: "secretary",
+		password: "secretary123",
+	},
 ];
 
 const roleToPath = {
-  admin: "/admin",
-  staff: "/staff",
-  secretary: "/secretary",
+	admin: "/admin",
+	staff: "/staff",
+	secretary: "/secretary",
 };
 
 function quickFill(emailAddr: string, pwd: string) {
-  email = emailAddr;
-  password = pwd;
+	email = emailAddr;
+	password = pwd;
 }
 
 async function resolveRedirectTarget(): Promise<string> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
 
-  if (!user) {
-    return "/";
-  }
+	if (!user) {
+		return "/";
+	}
 
-  const metaRole = user.user_metadata?.["role"] as
-    | keyof typeof roleToPath
-    | undefined;
-  if (metaRole && roleToPath[metaRole]) {
-    return roleToPath[metaRole];
-  }
+	const metaRole = user.user_metadata?.["role"] as
+		| keyof typeof roleToPath
+		| undefined;
+	if (metaRole && roleToPath[metaRole]) {
+		return roleToPath[metaRole];
+	}
 
-  try {
-    const { data: profile } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
+	try {
+		const { data: profile } = await supabase
+			.from("users")
+			.select("role")
+			.eq("id", user.id)
+			.maybeSingle();
 
-    const role = profile?.role as keyof typeof roleToPath;
-    return role ? (roleToPath[role] ?? "/") : "/";
-  } catch {
-    return "/";
-  }
+		const role = profile?.role as keyof typeof roleToPath;
+		return role ? (roleToPath[role] ?? "/") : "/";
+	} catch {
+		return "/";
+	}
 }
 
 async function signIn(e?: Event) {
-  e?.preventDefault();
-  errorMessage = "";
+	e?.preventDefault();
+	errorMessage = "";
 
-  if (!(email && password)) {
-    errorMessage = t("login.missingCredentials");
-    toast.error(errorMessage);
-    return;
-  }
+	if (!(email && password)) {
+		errorMessage = t("login.missingCredentials");
+		toast.error(errorMessage);
+		return;
+	}
 
-  loading = true;
+	loading = true;
 
-  try {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+	try {
+		const { error } = await supabase.auth.signInWithPassword({
+			email,
+			password,
+		});
 
-    if (error) {
-      errorMessage = error.message;
-      toast.error(t("login.error"));
-      return;
-    }
+		if (error) {
+			errorMessage = error.message;
+			toast.error(t("login.error"));
+			return;
+		}
 
-    toast.success(t("login.success"));
-    const target = await resolveRedirectTarget();
-    await goto(target);
-  } catch {
-    toast.error(t("login.error"));
-  } finally {
-    loading = false;
-  }
+		toast.success(t("login.success"));
+		const target = await resolveRedirectTarget();
+		await goto(target);
+	} catch {
+		toast.error(t("login.error"));
+	} finally {
+		loading = false;
+	}
 }
 
 async function sendResetEmail() {
-  errorMessage = "";
+	errorMessage = "";
 
-  if (!email) {
-    toast.error(t("login.enterEmailFirst"));
-    return;
-  }
+	if (!email) {
+		toast.error(t("login.enterEmailFirst"));
+		return;
+	}
 
-  try {
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/reset`,
-    });
+	try {
+		const origin = typeof window !== "undefined" ? window.location.origin : "";
+		const { error } = await supabase.auth.resetPasswordForEmail(email, {
+			redirectTo: `${origin}/reset`,
+		});
 
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+		if (error) {
+			toast.error(error.message);
+			return;
+		}
 
-    toast.success(t("login.resetEmailSent"));
-  } catch {
-    toast.error(t("login.resetEmailFailed"));
-  }
+		toast.success(t("login.resetEmailSent"));
+	} catch {
+		toast.error(t("login.resetEmailFailed"));
+	}
 }
 </script>
 

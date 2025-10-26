@@ -5,12 +5,12 @@ import type { WithoutChildrenOrChild } from "$lib/utils";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	...restProps
 }: WithoutChildrenOrChild<RadioGroupPrimitive.ItemProps> = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(CircleIcon, RadioGroupPrimitive, cn, ref, className, restProps);
 </script>
 

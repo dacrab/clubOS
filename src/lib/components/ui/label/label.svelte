@@ -3,12 +3,12 @@ import { Label as LabelPrimitive } from "bits-ui";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	...restProps
 }: LabelPrimitive.RootProps = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(LabelPrimitive, cn, ref, className, restProps);
 </script>
 

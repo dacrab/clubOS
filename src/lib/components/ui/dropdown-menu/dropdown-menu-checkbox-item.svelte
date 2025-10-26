@@ -7,28 +7,28 @@ import type { WithoutChildrenOrChild } from "$lib/utils";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  checked = $bindable(false),
-  indeterminate = $bindable(false),
-  class: className,
-  children: childrenProp,
-  ...restProps
+	ref = $bindable(null),
+	checked = $bindable(false),
+	indeterminate = $bindable(false),
+	class: className,
+	children: childrenProp,
+	...restProps
 }: WithoutChildrenOrChild<DropdownMenuPrimitive.CheckboxItemProps> & {
-  children?: Snippet<[]>;
+	children?: Snippet<[]>;
 } = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  CheckIcon,
-  MinusIcon,
-  DropdownMenuPrimitive,
-  cn,
-  ref,
-  checked,
-  indeterminate,
-  className,
-  childrenProp,
-  restProps
+	CheckIcon,
+	MinusIcon,
+	DropdownMenuPrimitive,
+	cn,
+	ref,
+	checked,
+	indeterminate,
+	className,
+	childrenProp,
+	restProps,
 );
 </script>
 

@@ -1,11 +1,11 @@
 <script lang="ts">
 import {
-  BarChart3,
-  ClipboardList,
-  LogOut,
-  Package,
-  ShoppingCart,
-  UserCog,
+	BarChart3,
+	ClipboardList,
+	LogOut,
+	Package,
+	ShoppingCart,
+	UserCog,
 } from "@lucide/svelte";
 import { toast } from "svelte-sonner";
 import LowStockCard from "$lib/components/low-stock-card.svelte";
@@ -19,142 +19,142 @@ import { closeRegister, ensureOpenSession } from "$lib/register";
 import { supabase } from "$lib/supabase-client";
 
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  BarChart3,
-  ClipboardList,
-  LogOut,
-  Package,
-  ShoppingCart,
-  UserCog,
-  PageContent,
-  PageHeader,
-  LowStockCard,
-  NewSaleDialog,
-  RecentOrders,
-  Button,
-  t
+	BarChart3,
+	ClipboardList,
+	LogOut,
+	Package,
+	ShoppingCart,
+	UserCog,
+	PageContent,
+	PageHeader,
+	LowStockCard,
+	NewSaleDialog,
+	RecentOrders,
+	Button,
+	t,
 );
 
 let showSale = $state(false);
 let closing = $state(false);
 const productsForSale: Array<{
-  id: string;
-  name: string;
-  price: number;
-  category_id?: string | null;
+	id: string;
+	name: string;
+	price: number;
+	category_id?: string | null;
 }> = $state([]);
 
 $effect(() => {
-  if (typeof window === "undefined") {
-    return;
-  }
-  notifyLowStock();
+	if (typeof window === "undefined") {
+		return;
+	}
+	notifyLowStock();
 });
 
 async function notifyLowStock() {
-  const THRESHOLD = 3;
-  const SAMPLE = 5;
-  const { data } = await supabase
-    .from("products")
-    .select("name, stock_quantity")
-    .lte("stock_quantity", THRESHOLD)
-    .neq("stock_quantity", -1)
-    .order("stock_quantity", { ascending: true })
-    .limit(SAMPLE);
-  const low =
-    (data as Array<{ name: string; stock_quantity: number }> | null) ?? [];
-  if (low.length > 0) {
-    const names = low
-      .map((item) => `${item.name} (${item.stock_quantity})`)
-      .join(", ");
-    toast.warning(`Low stock: ${names}`);
-  }
+	const THRESHOLD = 3;
+	const SAMPLE = 5;
+	const { data } = await supabase
+		.from("products")
+		.select("name, stock_quantity")
+		.lte("stock_quantity", THRESHOLD)
+		.neq("stock_quantity", -1)
+		.order("stock_quantity", { ascending: true })
+		.limit(SAMPLE);
+	const low =
+		(data as Array<{ name: string; stock_quantity: number }> | null) ?? [];
+	if (low.length > 0) {
+		const names = low
+			.map((item) => `${item.name} (${item.stock_quantity})`)
+			.join(", ");
+		toast.warning(`Low stock: ${names}`);
+	}
 }
 
 async function onCloseRegister() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    window.location.href = "/login";
-    return;
-  }
-  const sessionId = await ensureOpenSession(supabase, user.id);
-  closing = true;
-  try {
-    await closeRegister(supabase, sessionId, null);
-  } finally {
-    closing = false;
-  }
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+	if (!user) {
+		window.location.href = "/login";
+		return;
+	}
+	const sessionId = await ensureOpenSession(supabase, user.id);
+	closing = true;
+	try {
+		await closeRegister(supabase, sessionId, null);
+	} finally {
+		closing = false;
+	}
 }
 
 async function createSale(payload: {
-  items: Array<{
-    id: string;
-    name: string;
-    price: number;
-    is_treat?: boolean;
-  }>;
-  paymentMethod: "cash";
-  couponCount: number;
+	items: Array<{
+		id: string;
+		name: string;
+		price: number;
+		is_treat?: boolean;
+	}>;
+	paymentMethod: "cash";
+	couponCount: number;
 }) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    window.location.href = "/login";
-    return;
-  }
-  const sessionId = await ensureOpenSession(supabase, user.id);
-  // Subtotal includes full value of all items
-  const subtotal = payload.items.reduce(
-    (acc, item) => acc + Number(item.price),
-    0
-  );
-  // Treat discount equals sum of original prices for treated items
-  const treatDiscount = payload.items.reduce(
-    (acc, item) => acc + (item.is_treat ? Number(item.price) : 0),
-    0
-  );
-  const couponDiscount = Math.max(0, payload.couponCount) * 2;
-  const discount_amount = couponDiscount + treatDiscount;
-  const total_amount = Math.max(0, subtotal - discount_amount);
-  const { data: memberships } = await supabase
-    .from("tenant_members")
-    .select("tenant_id")
-    .eq("user_id", user.id);
-  const tenantId = memberships?.[0]?.tenant_id;
-  const { data: inserted, error } = await supabase
-    .from("orders")
-    .insert({
-      session_id: sessionId,
-      subtotal,
-      discount_amount,
-      total_amount,
-      coupon_count: Math.max(0, payload.couponCount),
-      created_by: user.id,
-      tenant_id: tenantId,
-    })
-    .select()
-    .single();
-  if (error || !inserted) {
-    throw new Error(error?.message || "Failed to create order");
-  }
-  const items = payload.items.map((product) => ({
-    order_id: inserted.id,
-    product_id: product.id,
-    quantity: 1,
-    unit_price: Number(product.price),
-    line_total: product.is_treat ? 0 : Number(product.price),
-    is_treat: Boolean(product.is_treat),
-  }));
-  const { error: itemsError } = await supabase
-    .from("order_items")
-    .insert(items);
-  if (itemsError) {
-    throw new Error(itemsError.message);
-  }
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+	if (!user) {
+		window.location.href = "/login";
+		return;
+	}
+	const sessionId = await ensureOpenSession(supabase, user.id);
+	// Subtotal includes full value of all items
+	const subtotal = payload.items.reduce(
+		(acc, item) => acc + Number(item.price),
+		0,
+	);
+	// Treat discount equals sum of original prices for treated items
+	const treatDiscount = payload.items.reduce(
+		(acc, item) => acc + (item.is_treat ? Number(item.price) : 0),
+		0,
+	);
+	const couponDiscount = Math.max(0, payload.couponCount) * 2;
+	const discount_amount = couponDiscount + treatDiscount;
+	const total_amount = Math.max(0, subtotal - discount_amount);
+	const { data: memberships } = await supabase
+		.from("tenant_members")
+		.select("tenant_id")
+		.eq("user_id", user.id);
+	const tenantId = memberships?.[0]?.tenant_id;
+	const { data: inserted, error } = await supabase
+		.from("orders")
+		.insert({
+			session_id: sessionId,
+			subtotal,
+			discount_amount,
+			total_amount,
+			coupon_count: Math.max(0, payload.couponCount),
+			created_by: user.id,
+			tenant_id: tenantId,
+		})
+		.select()
+		.single();
+	if (error || !inserted) {
+		throw new Error(error?.message || "Failed to create order");
+	}
+	const items = payload.items.map((product) => ({
+		order_id: inserted.id,
+		product_id: product.id,
+		quantity: 1,
+		unit_price: Number(product.price),
+		line_total: product.is_treat ? 0 : Number(product.price),
+		is_treat: Boolean(product.is_treat),
+	}));
+	const { error: itemsError } = await supabase
+		.from("order_items")
+		.insert(items);
+	if (itemsError) {
+		throw new Error(itemsError.message);
+	}
 }
 
 // remove capturing IIFE that referenced reactive state once; all symbols are used in markup

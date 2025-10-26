@@ -16,167 +16,167 @@ import { loadCurrentUser } from "$lib/user";
 import UserDialog from "./user-dialog.svelte";
 
 type AdminUser = {
-  id?: string;
-  username?: string;
-  role?: "admin" | "staff" | "secretary" | string;
-  email?: string;
-  active?: boolean;
-  password?: string;
+	id?: string;
+	username?: string;
+	role?: "admin" | "staff" | "secretary" | string;
+	email?: string;
+	active?: boolean;
+	password?: string;
 };
 let users = $state<AdminUser[]>([]);
 let showUserDialog = $state(false);
 let selectedUser = $state<AdminUser | null>(null);
 
 $effect(() => {
-  loadCurrentUser();
-  loadUsers();
+	loadCurrentUser();
+	loadUsers();
 });
 
 function openNewUserDialog() {
-  selectedUser = null;
-  showUserDialog = true;
+	selectedUser = null;
+	showUserDialog = true;
 }
 
 function editUser(user: AdminUser) {
-  selectedUser = user;
-  showUserDialog = true;
+	selectedUser = user;
+	showUserDialog = true;
 }
 
 async function loadUsers() {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const uid = sessionData.session?.user.id;
-  if (!uid) {
-    users = [];
-    return;
-  }
-  // Find the admin's primary tenant (first membership)
-  const { data: tm } = await supabase
-    .from("tenant_members")
-    .select("tenant_id")
-    .eq("user_id", uid)
-    .order("tenant_id")
-    .limit(1);
-  const tenantId = tm?.[0]?.tenant_id as string | undefined;
-  if (!tenantId) {
-    users = [];
-    return;
-  }
-  // Load user ids that belong to this tenant, then fetch users with IN() to avoid join RLS issues
-  const { data: memberRows } = await supabase
-    .from("tenant_members")
-    .select("user_id")
-    .eq("tenant_id", tenantId);
-  const ids = (memberRows ?? []).map((r: { user_id: string }) => r.user_id);
-  if (ids.length === 0) {
-    users = [];
-    return;
-  }
-  const { data } = await supabase
-    .from("users")
-    .select("id, username, role")
-    .in("id", ids)
-    .order("username");
-  users = data ?? [];
+	const { data: sessionData } = await supabase.auth.getSession();
+	const uid = sessionData.session?.user.id;
+	if (!uid) {
+		users = [];
+		return;
+	}
+	// Find the admin's primary tenant (first membership)
+	const { data: tm } = await supabase
+		.from("tenant_members")
+		.select("tenant_id")
+		.eq("user_id", uid)
+		.order("tenant_id")
+		.limit(1);
+	const tenantId = tm?.[0]?.tenant_id as string | undefined;
+	if (!tenantId) {
+		users = [];
+		return;
+	}
+	// Load user ids that belong to this tenant, then fetch users with IN() to avoid join RLS issues
+	const { data: memberRows } = await supabase
+		.from("tenant_members")
+		.select("user_id")
+		.eq("tenant_id", tenantId);
+	const ids = (memberRows ?? []).map((r: { user_id: string }) => r.user_id);
+	if (ids.length === 0) {
+		users = [];
+		return;
+	}
+	const { data } = await supabase
+		.from("users")
+		.select("id, username, role")
+		.in("id", ids)
+		.order("username");
+	users = data ?? [];
 }
 
 async function getAuthToken(): Promise<string | null> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  return sessionData.session?.access_token ?? null;
+	const { data: sessionData } = await supabase.auth.getSession();
+	return sessionData.session?.access_token ?? null;
 }
 
 async function errorToast(message: string) {
-  const { toast } = await import("svelte-sonner");
-  toast.error(message);
+	const { toast } = await import("svelte-sonner");
+	toast.error(message);
 }
 
 function patchUser(payload: AdminUser, token: string) {
-  return fetch("/api/admin/users", {
-    method: "PATCH",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  });
+	return fetch("/api/admin/users", {
+		method: "PATCH",
+		headers: {
+			"content-type": "application/json",
+			authorization: `Bearer ${token}`,
+		},
+		body: JSON.stringify(payload),
+	});
 }
 
 function postUser(payload: AdminUser, token: string) {
-  return fetch("/api/admin/users", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  });
+	return fetch("/api/admin/users", {
+		method: "POST",
+		headers: {
+			"content-type": "application/json",
+			authorization: `Bearer ${token}`,
+		},
+		body: JSON.stringify(payload),
+	});
 }
 
 function buildPatchPayload(user: AdminUser): AdminUser {
-  return {
-    ...(user.id ? { id: user.id } : {}),
-    ...(user.role ? { role: user.role } : {}),
-    ...(user.username ? { username: user.username } : {}),
-    ...(user.password ? { password: user.password } : {}),
-    ...(typeof user.active === "boolean" ? { active: user.active } : {}),
-  };
+	return {
+		...(user.id ? { id: user.id } : {}),
+		...(user.role ? { role: user.role } : {}),
+		...(user.username ? { username: user.username } : {}),
+		...(user.password ? { password: user.password } : {}),
+		...(typeof user.active === "boolean" ? { active: user.active } : {}),
+	};
 }
 
 function buildCreatePayload(user: AdminUser): AdminUser & { email: string } {
-  return {
-    email: `${user.username ?? ""}@example.com`,
-    ...(user.password ? { password: user.password } : {}),
-    ...(user.role ? { role: user.role } : {}),
-    ...(user.username ? { username: user.username } : {}),
-    active: typeof user.active === "boolean" ? user.active : true,
-  };
+	return {
+		email: `${user.username ?? ""}@example.com`,
+		...(user.password ? { password: user.password } : {}),
+		...(user.role ? { role: user.role } : {}),
+		...(user.username ? { username: user.username } : {}),
+		active: typeof user.active === "boolean" ? user.active : true,
+	};
 }
 
 async function onSaveUser(user: AdminUser) {
-  const token = await getAuthToken();
-  if (!token) {
-    await errorToast("Not authenticated");
-    return;
-  }
+	const token = await getAuthToken();
+	if (!token) {
+		await errorToast("Not authenticated");
+		return;
+	}
 
-  if (user.id) {
-    const payload = buildPatchPayload(user);
-    const res = await patchUser(payload, token);
-    if (!res.ok) {
-      await errorToast(await res.text());
-      return;
-    }
-  } else {
-    const createPayload = buildCreatePayload(user);
-    const res = await postUser(createPayload, token);
-    if (!res.ok) {
-      await errorToast(await res.text());
-      return;
-    }
-  }
+	if (user.id) {
+		const payload = buildPatchPayload(user);
+		const res = await patchUser(payload, token);
+		if (!res.ok) {
+			await errorToast(await res.text());
+			return;
+		}
+	} else {
+		const createPayload = buildCreatePayload(user);
+		const res = await postUser(createPayload, token);
+		if (!res.ok) {
+			await errorToast(await res.text());
+			return;
+		}
+	}
 
-  await loadUsers();
+	await loadUsers();
 }
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  Pencil,
-  Shield,
-  Users,
-  PageContent,
-  PageHeader,
-  Button,
-  Card,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  t,
-  UserDialog,
-  openNewUserDialog,
-  editUser,
-  onSaveUser
+	Pencil,
+	Shield,
+	Users,
+	PageContent,
+	PageHeader,
+	Button,
+	Card,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+	t,
+	UserDialog,
+	openNewUserDialog,
+	editUser,
+	onSaveUser,
 );
 </script>
 

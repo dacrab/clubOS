@@ -9,7 +9,7 @@ import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabase-client";
 
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(Card, CardHeader, CardTitle, CardDescription, CardContent, Badge, t);
 
 const DEFAULT_LOW_STOCK_THRESHOLD = 3;
@@ -17,50 +17,50 @@ const DEFAULT_LOW_STOCK_THRESHOLD = 3;
 const props = $props<{ threshold?: number }>();
 let threshold = $state<number>(props.threshold ?? DEFAULT_LOW_STOCK_THRESHOLD);
 let items: Array<{ id: string; name: string; stock_quantity: number }> = $state(
-  []
+	[],
 );
 
 async function load() {
-  // Load threshold from tenant_settings (fallback to prop/default)
-  try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const uid = sessionData.session?.user.id;
-    if (uid) {
-      const { data: memberships } = await supabase
-        .from("tenant_members")
-        .select("tenant_id")
-        .eq("user_id", uid);
-      const tenantId = memberships?.[0]?.tenant_id;
-      if (tenantId) {
-        const { data: settings } = await supabase
-          .from("tenant_settings")
-          .select("low_stock_threshold")
-          .eq("tenant_id", tenantId)
-          .limit(1)
-          .maybeSingle();
-        if (settings && settings.low_stock_threshold != null) {
-          threshold = Number(settings.low_stock_threshold);
-        }
-      }
-    }
-  } catch (/** intentionally ignore: fallback to default threshold */ _err) {
-    /* no-op */
-  }
-  const { data } = await supabase
-    .from("products")
-    .select("id,name,stock_quantity")
-    .order("stock_quantity", { ascending: true })
-    .lte("stock_quantity", threshold)
-    .neq("stock_quantity", -1);
-  items = (data ?? []) as Array<{
-    id: string;
-    name: string;
-    stock_quantity: number;
-  }>;
+	// Load threshold from tenant_settings (fallback to prop/default)
+	try {
+		const { data: sessionData } = await supabase.auth.getSession();
+		const uid = sessionData.session?.user.id;
+		if (uid) {
+			const { data: memberships } = await supabase
+				.from("tenant_members")
+				.select("tenant_id")
+				.eq("user_id", uid);
+			const tenantId = memberships?.[0]?.tenant_id;
+			if (tenantId) {
+				const { data: settings } = await supabase
+					.from("tenant_settings")
+					.select("low_stock_threshold")
+					.eq("tenant_id", tenantId)
+					.limit(1)
+					.maybeSingle();
+				if (settings && settings.low_stock_threshold != null) {
+					threshold = Number(settings.low_stock_threshold);
+				}
+			}
+		}
+	} catch (/** intentionally ignore: fallback to default threshold */ _err) {
+		/* no-op */
+	}
+	const { data } = await supabase
+		.from("products")
+		.select("id,name,stock_quantity")
+		.order("stock_quantity", { ascending: true })
+		.lte("stock_quantity", threshold)
+		.neq("stock_quantity", -1);
+	items = (data ?? []) as Array<{
+		id: string;
+		name: string;
+		stock_quantity: number;
+	}>;
 }
 
 $effect(() => {
-  load();
+	load();
 });
 </script>
 

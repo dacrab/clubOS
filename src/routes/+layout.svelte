@@ -18,98 +18,98 @@ let SidebarComp = $state<ComponentType | null>(null);
 let systemPrefersDark: MediaQueryList | null = null;
 
 const shellClass = $derived(
-  "min-h-screen bg-background text-foreground transition-colors duration-200"
+	"min-h-screen bg-background text-foreground transition-colors duration-200",
 );
 
 const mainClass = $derived(
-  isLoginPage
-    ? "flex flex-1 items-center justify-center px-4 pb-16 pt-8 sm:px-6"
-    : "flex flex-1 flex-col px-6 pb-12 pt-6 md:px-10"
+	isLoginPage
+		? "flex flex-1 items-center justify-center px-4 pb-16 pt-8 sm:px-6"
+		: "flex flex-1 flex-col px-6 pb-12 pt-6 md:px-10",
 );
 
 const contentWrapperClass = $derived(
-  isLoginPage
-    ? "w-full max-w-md"
-    : "mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8"
+	isLoginPage
+		? "w-full max-w-md"
+		: "mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8",
 );
 
 function resolvedTheme(next: ThemeChoice): "light" | "dark" {
-  if (typeof window === "undefined") {
-    return next === "dark" ? "dark" : "light";
-  }
-  const prefersDark =
-    systemPrefersDark?.matches ??
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
-  return next === "system" ? (prefersDark ? "dark" : "light") : next;
+	if (typeof window === "undefined") {
+		return next === "dark" ? "dark" : "light";
+	}
+	const prefersDark =
+		systemPrefersDark?.matches ??
+		window.matchMedia("(prefers-color-scheme: dark)").matches;
+	return next === "system" ? (prefersDark ? "dark" : "light") : next;
 }
 
 function applyTheme(next: ThemeChoice) {
-  if (typeof window === "undefined") {
-    return;
-  }
-  theme = next;
-  window.localStorage.setItem("theme", next);
-  const root = document.documentElement;
-  const resolved = resolvedTheme(next);
-  if (resolved === "dark") {
-    root.classList.add("dark");
-  } else {
-    root.classList.remove("dark");
-  }
+	if (typeof window === "undefined") {
+		return;
+	}
+	theme = next;
+	window.localStorage.setItem("theme", next);
+	const root = document.documentElement;
+	const resolved = resolvedTheme(next);
+	if (resolved === "dark") {
+		root.classList.add("dark");
+	} else {
+		root.classList.remove("dark");
+	}
 }
 
 function cycleTheme() {
-  const order: ThemeChoice[] = ["light", "dark", "system"];
-  const index = order.indexOf(theme);
-  const nextIndex = index === -1 ? 0 : (index + 1) % order.length;
-  const next = order[nextIndex] ?? "system";
-  applyTheme(next);
+	const order: ThemeChoice[] = ["light", "dark", "system"];
+	const index = order.indexOf(theme);
+	const nextIndex = index === -1 ? 0 : (index + 1) % order.length;
+	const next = order[nextIndex] ?? "system";
+	applyTheme(next);
 }
 
 type IconComponent = typeof Sun;
 
 function themeIcon(): IconComponent {
-  const current = resolvedTheme(theme);
-  if (theme === "system") {
-    return MonitorCog as IconComponent;
-  }
-  return (current === "dark" ? Moon : Sun) as IconComponent;
+	const current = resolvedTheme(theme);
+	if (theme === "system") {
+		return MonitorCog as IconComponent;
+	}
+	return (current === "dark" ? Moon : Sun) as IconComponent;
 }
 
 const ThemeIcon = $derived(themeIcon());
 
 $effect(() => {
-  if (typeof window === "undefined") {
-    return;
-  }
-  if (!isLoginPage) {
-    loadCurrentUser();
-    (async () => {
-      const mod = await import("$lib/components/sidebar.svelte");
-      SidebarComp = mod.default;
-    })();
-  }
-  const stored = window.localStorage.getItem("theme");
-  if (stored === "light" || stored === "dark" || stored === "system") {
-    theme = stored;
-  } else {
-    theme = "system";
-  }
-  const mq = window.matchMedia("(prefers-color-scheme: dark)");
-  systemPrefersDark = mq;
-  applyTheme(theme);
-  const onChange = (event: MediaQueryListEvent) => {
-    if (theme === "system") {
-      const root = document.documentElement;
-      if (event.matches) {
-        root.classList.add("dark");
-      } else {
-        root.classList.remove("dark");
-      }
-    }
-  };
-  mq.addEventListener?.("change", onChange);
-  return () => mq.removeEventListener?.("change", onChange);
+	if (typeof window === "undefined") {
+		return;
+	}
+	if (!isLoginPage) {
+		loadCurrentUser();
+		(async () => {
+			const mod = await import("$lib/components/sidebar.svelte");
+			SidebarComp = mod.default;
+		})();
+	}
+	const stored = window.localStorage.getItem("theme");
+	if (stored === "light" || stored === "dark" || stored === "system") {
+		theme = stored;
+	} else {
+		theme = "system";
+	}
+	const mq = window.matchMedia("(prefers-color-scheme: dark)");
+	systemPrefersDark = mq;
+	applyTheme(theme);
+	const onChange = (event: MediaQueryListEvent) => {
+		if (theme === "system") {
+			const root = document.documentElement;
+			if (event.matches) {
+				root.classList.add("dark");
+			} else {
+				root.classList.remove("dark");
+			}
+		}
+	};
+	mq.addEventListener?.("change", onChange);
+	return () => mq.removeEventListener?.("change", onChange);
 });
 </script>
 

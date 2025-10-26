@@ -3,34 +3,34 @@ import { Calendar } from "@lucide/svelte";
 import { Button } from "$lib/components/ui/button";
 import { Calendar as CalendarComponent } from "$lib/components/ui/calendar";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
 } from "$lib/components/ui/popover";
 
 let {
-  value = $bindable(""),
-  class: className = "",
-  ...props
+	value = $bindable(""),
+	class: className = "",
+	...props
 } = $props<{
-  value: string;
-  class?: string;
-  [key: string]: unknown;
+	value: string;
+	class?: string;
+	[key: string]: unknown;
 }>();
 
 let open = $state(false);
 let calendarValue = $state(new Date());
 
 $effect(() => {
-  if (value) {
-    calendarValue = new Date(value);
-  }
+	if (value) {
+		calendarValue = new Date(value);
+	}
 });
 
 $effect(() => {
-  if (calendarValue) {
-    value = calendarValue.toISOString().split("T")[0];
-  }
+	if (calendarValue) {
+		value = calendarValue.toISOString().split("T")[0];
+	}
 });
 </script>
 

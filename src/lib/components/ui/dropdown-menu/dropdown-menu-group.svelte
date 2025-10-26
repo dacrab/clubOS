@@ -2,9 +2,9 @@
 import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 
 let { ref = $bindable(null), ...restProps }: DropdownMenuPrimitive.GroupProps =
-  $props();
+	$props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(DropdownMenuPrimitive, ref, restProps);
 </script>
 

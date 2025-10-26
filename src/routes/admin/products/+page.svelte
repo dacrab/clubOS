@@ -19,12 +19,12 @@ import EditProductDialog from "./edit-product-dialog.svelte";
 import ManageCategoriesDialog from "./manage-categories-dialog.svelte";
 
 type Product = {
-  id: string;
-  name: string;
-  price: number;
-  stock_quantity: number;
-  category_id: string | null;
-  image_url?: string | null;
+	id: string;
+	name: string;
+	price: number;
+	stock_quantity: number;
+	category_id: string | null;
+	image_url?: string | null;
 };
 type Category = { id: string; name: string };
 let products: Product[] = $state([] as Product[]);
@@ -37,19 +37,19 @@ let startIndex = $state(0);
 let endIndex = $state(0);
 const topPad = $derived(startIndex * ROW_HEIGHT);
 const bottomPad = $derived(
-  Math.max(0, (products.length - endIndex) * ROW_HEIGHT)
+	Math.max(0, (products.length - endIndex) * ROW_HEIGHT),
 );
 
 function recomputeWindow() {
-  const scrollTop = scrollRef?.scrollTop ?? 0;
-  const visibleCount =
-    Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
-  const first = Math.max(
-    0,
-    Math.floor(scrollTop / ROW_HEIGHT) - Math.ceil(VIEW_BUFFER_ROWS / 2)
-  );
-  startIndex = first;
-  endIndex = Math.min(products.length, first + visibleCount);
+	const scrollTop = scrollRef?.scrollTop ?? 0;
+	const visibleCount =
+		Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
+	const first = Math.max(
+		0,
+		Math.floor(scrollTop / ROW_HEIGHT) - Math.ceil(VIEW_BUFFER_ROWS / 2),
+	);
+	startIndex = first;
+	endIndex = Math.min(products.length, first + visibleCount);
 }
 let categories: Category[] = $state([] as Category[]);
 let search = $state("");
@@ -60,157 +60,157 @@ let showCategories = $state(false);
 let selected: Product | null = $state(null);
 
 $effect(() => {
-  if (typeof window === "undefined") {
-    return;
-  }
-  loadCurrentUser().then(() => {
-    const u = $currentUser;
-    if (!u) {
-      window.location.href = "/login";
-      return;
-    }
-    if (u.role !== "admin") {
-      window.location.href = "/dashboard";
-    }
-    loadLists();
-  });
+	if (typeof window === "undefined") {
+		return;
+	}
+	loadCurrentUser().then(() => {
+		const u = $currentUser;
+		if (!u) {
+			window.location.href = "/login";
+			return;
+		}
+		if (u.role !== "admin") {
+			window.location.href = "/dashboard";
+		}
+		loadLists();
+	});
 });
 
 async function loadLists() {
-  const tenantId = $currentUser?.tenantIds?.[0];
-  if (!tenantId) {
-    return;
-  }
-  const { data: pcats } = await supabase
-    .from("categories")
-    .select("id,name")
-    .eq("tenant_id", tenantId)
-    .order("name");
-  categories = (pcats as Category[] | null) ?? [];
-  const { data: prods } = await supabase
-    .from("products")
-    .select("id,name,price,stock_quantity,category_id,image_url")
-    .eq("tenant_id", tenantId)
-    .order("name");
-  products = (prods as Product[] | null) ?? [];
-  // reset virtual window
-  startIndex = 0;
-  const visibleCount =
-    Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
-  endIndex = Math.min(products.length, visibleCount);
+	const tenantId = $currentUser?.tenantIds?.[0];
+	if (!tenantId) {
+		return;
+	}
+	const { data: pcats } = await supabase
+		.from("categories")
+		.select("id,name")
+		.eq("tenant_id", tenantId)
+		.order("name");
+	categories = (pcats as Category[] | null) ?? [];
+	const { data: prods } = await supabase
+		.from("products")
+		.select("id,name,price,stock_quantity,category_id,image_url")
+		.eq("tenant_id", tenantId)
+		.order("name");
+	products = (prods as Product[] | null) ?? [];
+	// reset virtual window
+	startIndex = 0;
+	const visibleCount =
+		Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
+	endIndex = Math.min(products.length, visibleCount);
 }
 
 async function onCreate(payload: {
-  name: string;
-  price: number;
-  stock_quantity: number;
-  category_id: string | null;
+	name: string;
+	price: number;
+	stock_quantity: number;
+	category_id: string | null;
 }): Promise<void> {
-  const toast = (await import("svelte-sonner")).toast;
-  const tenantId = $currentUser?.tenantIds?.[0];
-  const { error } = await supabase
-    .from("products")
-    .insert({ ...payload, tenant_id: tenantId });
-  if (error) {
-    toast.error(error.message);
-    return;
-  }
-  toast.success(t("common.save"));
-  await loadLists();
+	const toast = (await import("svelte-sonner")).toast;
+	const tenantId = $currentUser?.tenantIds?.[0];
+	const { error } = await supabase
+		.from("products")
+		.insert({ ...payload, tenant_id: tenantId });
+	if (error) {
+		toast.error(error.message);
+		return;
+	}
+	toast.success(t("common.save"));
+	await loadLists();
 }
 
 async function onSave(payload: {
-  id: string;
-  name: string;
-  price: number;
-  stock_quantity: number;
-  category_id: string | null;
+	id: string;
+	name: string;
+	price: number;
+	stock_quantity: number;
+	category_id: string | null;
 }): Promise<void> {
-  const toast = (await import("svelte-sonner")).toast;
-  const { error } = await supabase
-    .from("products")
-    .update({
-      name: payload.name,
-      price: Number(payload.price),
-      stock_quantity: Number(payload.stock_quantity),
-      category_id: payload.category_id,
-    })
-    .eq("id", payload.id);
-  if (error) {
-    toast.error(error.message);
-    return;
-  }
-  toast.success(t("common.save"));
-  await loadLists();
+	const toast = (await import("svelte-sonner")).toast;
+	const { error } = await supabase
+		.from("products")
+		.update({
+			name: payload.name,
+			price: Number(payload.price),
+			stock_quantity: Number(payload.stock_quantity),
+			category_id: payload.category_id,
+		})
+		.eq("id", payload.id);
+	if (error) {
+		toast.error(error.message);
+		return;
+	}
+	toast.success(t("common.save"));
+	await loadLists();
 }
 
 async function onUploadImage(file: File, productId: string) {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const userId = sessionData.session?.user.id ?? "";
-  const { data: memberships } = await supabase
-    .from("tenant_members")
-    .select("tenant_id")
-    .eq("user_id", userId);
-  const tenantId = memberships?.[0]?.tenant_id as string;
-  const path = `tenant-${tenantId}/product-${productId}-${Date.now()}-${file.name}`;
-  const { error: upErr } = await supabase.storage
-    .from("product-images")
-    .upload(path, file, { upsert: true });
-  if (upErr) {
-    return;
-  }
-  const { data: pub } = supabase.storage
-    .from("product-images")
-    .getPublicUrl(path);
-  const url = pub.publicUrl;
-  await supabase
-    .from("products")
-    .update({ image_url: url })
-    .eq("id", productId);
-  await loadLists();
+	const { data: sessionData } = await supabase.auth.getSession();
+	const userId = sessionData.session?.user.id ?? "";
+	const { data: memberships } = await supabase
+		.from("tenant_members")
+		.select("tenant_id")
+		.eq("user_id", userId);
+	const tenantId = memberships?.[0]?.tenant_id as string;
+	const path = `tenant-${tenantId}/product-${productId}-${Date.now()}-${file.name}`;
+	const { error: upErr } = await supabase.storage
+		.from("product-images")
+		.upload(path, file, { upsert: true });
+	if (upErr) {
+		return;
+	}
+	const { data: pub } = supabase.storage
+		.from("product-images")
+		.getPublicUrl(path);
+	const url = pub.publicUrl;
+	await supabase
+		.from("products")
+		.update({ image_url: url })
+		.eq("id", productId);
+	await loadLists();
 }
 
 function filtered() {
-  const s = search.trim().toLowerCase();
-  if (!s) {
-    return products;
-  }
-  return products.filter((p) => p.name.toLowerCase().includes(s));
+	const s = search.trim().toLowerCase();
+	if (!s) {
+		return products;
+	}
+	return products.filter((p) => p.name.toLowerCase().includes(s));
 }
 
 function openEdit(p: Product) {
-  selected = p;
-  showEdit = true;
+	selected = p;
+	showEdit = true;
 }
 
 // Mark markup-only usages for Biome
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  Package,
-  Pencil,
-  PageContent,
-  PageHeader,
-  SearchBar,
-  Button,
-  Card,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  t,
-  onCreate,
-  onSave,
-  onUploadImage,
-  filtered,
-  AddProductDialog,
-  EditProductDialog,
-  ManageCategoriesDialog,
-  recomputeWindow,
-  currentUser,
-  openEdit
+	Package,
+	Pencil,
+	PageContent,
+	PageHeader,
+	SearchBar,
+	Button,
+	Card,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+	t,
+	onCreate,
+	onSave,
+	onUploadImage,
+	filtered,
+	AddProductDialog,
+	EditProductDialog,
+	ManageCategoriesDialog,
+	recomputeWindow,
+	currentUser,
+	openEdit,
 );
 </script>
 

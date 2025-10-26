@@ -7,17 +7,17 @@ import PageContent from "$lib/components/ui/page/page-content.svelte";
 import PageHeader from "$lib/components/ui/page/page-header.svelte";
 import StatsCards from "$lib/components/ui/stats-cards.svelte";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
 } from "$lib/components/ui/table";
 import { t } from "$lib/i18n";
 import {
-  discountsForSession,
-  ordersTotalForSession,
+	discountsForSession,
+	ordersTotalForSession,
 } from "$lib/registers/stats";
 import { supabase } from "$lib/supabase-client";
 import { currentUser, loadCurrentUser } from "$lib/user";
@@ -25,38 +25,38 @@ import { formatDateTime } from "$lib/utils";
 import { computeWindow } from "$lib/virtualization/window";
 
 type SessionRow = {
-  id: string;
-  opened_at: string;
-  opened_by: string;
-  closed_at: string | null;
-  notes: { opening_cash?: number } | null;
+	id: string;
+	opened_at: string;
+	opened_by: string;
+	closed_at: string | null;
+	notes: { opening_cash?: number } | null;
 };
 
 type ClosingRow = {
-  session_id: string;
-  orders_total?: number;
-  treat_total: number;
-  total_discounts: number;
-  treat_count?: number;
-  notes: Record<string, unknown> | null;
+	session_id: string;
+	orders_total?: number;
+	treat_total: number;
+	total_discounts: number;
+	treat_count?: number;
+	notes: Record<string, unknown> | null;
 };
 
 type OrderRow = {
-  id: string;
-  created_at: string;
-  subtotal: number;
-  discount_amount: number;
-  total_amount: number;
-  coupon_count: number;
+	id: string;
+	created_at: string;
+	subtotal: number;
+	discount_amount: number;
+	total_amount: number;
+	coupon_count: number;
 };
 
 type OrderItemRow = {
-  id: string;
-  quantity: number;
-  unit_price: number;
-  line_total: number;
-  is_treat: boolean;
-  product_name: string;
+	id: string;
+	quantity: number;
+	unit_price: number;
+	line_total: number;
+	is_treat: boolean;
+	product_name: string;
 };
 
 // State
@@ -75,22 +75,22 @@ let startIndex = $state(0);
 let endIndex = $state(0);
 const topPad = $derived(startIndex * ROW_HEIGHT);
 const bottomPad = $derived(
-  Math.max(0, (sessions.length - endIndex) * ROW_HEIGHT)
+	Math.max(0, (sessions.length - endIndex) * ROW_HEIGHT),
 );
 
 function recomputeWindow() {
-  const scrollTop = scrollRef?.scrollTop ?? 0;
-  const { startIndex: s, endIndex: e } = computeWindow(
-    scrollTop,
-    sessions.length,
-    {
-      rowHeight: ROW_HEIGHT,
-      viewBufferRows: VIEW_BUFFER_ROWS,
-      viewportHeight: VIEWPORT_HEIGHT,
-    }
-  );
-  startIndex = s;
-  endIndex = e;
+	const scrollTop = scrollRef?.scrollTop ?? 0;
+	const { startIndex: s, endIndex: e } = computeWindow(
+		scrollTop,
+		sessions.length,
+		{
+			rowHeight: ROW_HEIGHT,
+			viewBufferRows: VIEW_BUFFER_ROWS,
+			viewportHeight: VIEWPORT_HEIGHT,
+		},
+	);
+	startIndex = s;
+	endIndex = e;
 }
 
 // Date selection
@@ -100,235 +100,235 @@ let endDate = $state<string>("");
 // Computed stats
 const totalSessions = $derived(sessions.length);
 const openSessions = $derived(
-  sessions.filter((session) => !session.closed_at).length
+	sessions.filter((session) => !session.closed_at).length,
 );
 const totalOrdersAmount = $derived(
-  sessions.reduce((sum, s) => sum + getOrdersTotalForSession(s.id), 0)
+	sessions.reduce((sum, s) => sum + getOrdersTotalForSession(s.id), 0),
 );
 const totalDiscountAmountEffective = $derived(
-  sessions.reduce((sum, s) => sum + getDiscountsForSession(s.id), 0)
+	sessions.reduce((sum, s) => sum + getDiscountsForSession(s.id), 0),
 );
 const totalTreatAmountEffective = $derived(
-  sessions.reduce((sum, s) => sum + getTreatTotalForSession(s.id), 0)
+	sessions.reduce((sum, s) => sum + getTreatTotalForSession(s.id), 0),
 );
 
 // Initialize
 $effect(() => {
-  loadCurrentUser().then(() => {
-    const user = $currentUser;
-    if (!user) {
-      window.location.href = "/login";
-      return;
-    }
-    if (user.role !== "admin") {
-      window.location.href = "/dashboard";
-      return;
-    }
-    load();
-  });
+	loadCurrentUser().then(() => {
+		const user = $currentUser;
+		if (!user) {
+			window.location.href = "/login";
+			return;
+		}
+		if (user.role !== "admin") {
+			window.location.href = "/dashboard";
+			return;
+		}
+		load();
+	});
 });
 
 // Data loading
 async function load() {
-  await loadSessions();
-  await Promise.all([loadClosings(), loadOrders()]);
-  await loadOrderItems();
-  resetVirtualWindow();
+	await loadSessions();
+	await Promise.all([loadClosings(), loadOrders()]);
+	await loadOrderItems();
+	resetVirtualWindow();
 }
 
 function resetVirtualWindow() {
-  startIndex = 0;
-  const visibleCount =
-    Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
-  endIndex = Math.min(sessions.length, visibleCount);
+	startIndex = 0;
+	const visibleCount =
+		Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
+	endIndex = Math.min(sessions.length, visibleCount);
 }
 
 async function loadSessions() {
-  const startISO = startDate
-    ? new Date(`${startDate}T00:00:00`).toISOString()
-    : null;
-  const endISO = endDate ? new Date(`${endDate}T23:59:59`).toISOString() : null;
+	const startISO = startDate
+		? new Date(`${startDate}T00:00:00`).toISOString()
+		: null;
+	const endISO = endDate ? new Date(`${endDate}T23:59:59`).toISOString() : null;
 
-  let query = supabase
-    .from("register_sessions")
-    .select("id, opened_at, opened_by, closed_at, notes")
-    .order("opened_at", { ascending: false });
+	let query = supabase
+		.from("register_sessions")
+		.select("id, opened_at, opened_by, closed_at, notes")
+		.order("opened_at", { ascending: false });
 
-  if (startISO || endISO) {
-    const s = startISO ?? "1970-01-01T00:00:00.000Z";
-    const e = endISO ?? "9999-12-31T23:59:59.999Z";
-    query = query.or(
-      `and(opened_at.gte.${s},opened_at.lte.${e}),and(opened_at.lt.${e},closed_at.gte.${s}),and(opened_at.lte.${e},closed_at.is.null)`
-    );
-  }
+	if (startISO || endISO) {
+		const s = startISO ?? "1970-01-01T00:00:00.000Z";
+		const e = endISO ?? "9999-12-31T23:59:59.999Z";
+		query = query.or(
+			`and(opened_at.gte.${s},opened_at.lte.${e}),and(opened_at.lt.${e},closed_at.gte.${s}),and(opened_at.lte.${e},closed_at.is.null)`,
+		);
+	}
 
-  const { data } = await query;
-  sessions = data ?? [];
+	const { data } = await query;
+	sessions = data ?? [];
 }
 
 async function loadClosings() {
-  if (sessions.length === 0) {
-    closingsBySession = {};
-    return;
-  }
+	if (sessions.length === 0) {
+		closingsBySession = {};
+		return;
+	}
 
-  const sessionIds = sessions.map((session) => session.id);
-  const { data } = await supabase
-    .from("register_closings")
-    .select(
-      "session_id, orders_total, treat_total, treat_count, total_discounts, notes"
-    )
-    .in("session_id", sessionIds);
+	const sessionIds = sessions.map((session) => session.id);
+	const { data } = await supabase
+		.from("register_closings")
+		.select(
+			"session_id, orders_total, treat_total, treat_count, total_discounts, notes",
+		)
+		.in("session_id", sessionIds);
 
-  const map: Record<string, ClosingRow> = {};
-  for (const closing of data ?? []) {
-    map[closing.session_id] = closing;
-  }
-  closingsBySession = map;
+	const map: Record<string, ClosingRow> = {};
+	for (const closing of data ?? []) {
+		map[closing.session_id] = closing;
+	}
+	closingsBySession = map;
 }
 
 async function loadOrders() {
-  if (sessions.length === 0) {
-    ordersBySession = {};
-    return;
-  }
+	if (sessions.length === 0) {
+		ordersBySession = {};
+		return;
+	}
 
-  const sessionIds = sessions.map((session) => session.id);
-  const { data } = await supabase
-    .from("orders")
-    .select(
-      "id, created_at, subtotal, discount_amount, total_amount, coupon_count, session_id"
-    )
-    .in("session_id", sessionIds)
-    .order("created_at", { ascending: false });
+	const sessionIds = sessions.map((session) => session.id);
+	const { data } = await supabase
+		.from("orders")
+		.select(
+			"id, created_at, subtotal, discount_amount, total_amount, coupon_count, session_id",
+		)
+		.in("session_id", sessionIds)
+		.order("created_at", { ascending: false });
 
-  const bySession: Record<string, OrderRow[]> = {};
-  for (const order of data ?? []) {
-    const sessionId = order.session_id;
-    if (!bySession[sessionId]) {
-      bySession[sessionId] = [];
-    }
-    bySession[sessionId].push({
-      id: order.id,
-      created_at: order.created_at,
-      subtotal: order.subtotal ?? 0,
-      discount_amount: order.discount_amount ?? 0,
-      total_amount: order.total_amount ?? 0,
-      coupon_count: order.coupon_count ?? 0,
-    });
-  }
-  ordersBySession = bySession;
+	const bySession: Record<string, OrderRow[]> = {};
+	for (const order of data ?? []) {
+		const sessionId = order.session_id;
+		if (!bySession[sessionId]) {
+			bySession[sessionId] = [];
+		}
+		bySession[sessionId].push({
+			id: order.id,
+			created_at: order.created_at,
+			subtotal: order.subtotal ?? 0,
+			discount_amount: order.discount_amount ?? 0,
+			total_amount: order.total_amount ?? 0,
+			coupon_count: order.coupon_count ?? 0,
+		});
+	}
+	ordersBySession = bySession;
 }
 
 async function loadOrderItems() {
-  const orderIds = Object.values(ordersBySession).flatMap(
-    (orders) => orders?.map((o) => o.id) ?? []
-  );
+	const orderIds = Object.values(ordersBySession).flatMap(
+		(orders) => orders?.map((o) => o.id) ?? [],
+	);
 
-  if (orderIds.length === 0) {
-    itemsByOrder = {};
-    return;
-  }
+	if (orderIds.length === 0) {
+		itemsByOrder = {};
+		return;
+	}
 
-  const { data } = await supabase
-    .from("order_items")
-    .select(
-      "id, order_id, quantity, unit_price, line_total, is_treat, is_deleted, products(name)"
-    )
-    .in("order_id", orderIds);
+	const { data } = await supabase
+		.from("order_items")
+		.select(
+			"id, order_id, quantity, unit_price, line_total, is_treat, is_deleted, products(name)",
+		)
+		.in("order_id", orderIds);
 
-  const map: Record<string, OrderItemRow[]> = {};
-  for (const item of data ?? []) {
-    if (item.is_deleted) {
-      continue;
-    }
+	const map: Record<string, OrderItemRow[]> = {};
+	for (const item of data ?? []) {
+		if (item.is_deleted) {
+			continue;
+		}
 
-    const orderId = item.order_id;
-    if (!map[orderId]) {
-      map[orderId] = [];
-    }
+		const orderId = item.order_id;
+		if (!map[orderId]) {
+			map[orderId] = [];
+		}
 
-    const prod = item.products as unknown;
-    const productName = Array.isArray(prod)
-      ? String((prod as Array<{ name?: string }>)[0]?.name ?? "")
-      : String((prod as { name?: string } | null)?.name ?? "");
+		const prod = item.products as unknown;
+		const productName = Array.isArray(prod)
+			? String((prod as Array<{ name?: string }>)[0]?.name ?? "")
+			: String((prod as { name?: string } | null)?.name ?? "");
 
-    map[orderId].push({
-      id: item.id,
-      quantity: item.quantity ?? 0,
-      unit_price: item.unit_price ?? 0,
-      line_total: item.line_total ?? 0,
-      is_treat: item.is_treat ?? false,
-      product_name: productName,
-    });
-  }
-  itemsByOrder = map;
+		map[orderId].push({
+			id: item.id,
+			quantity: item.quantity ?? 0,
+			unit_price: item.unit_price ?? 0,
+			line_total: item.line_total ?? 0,
+			is_treat: item.is_treat ?? false,
+			product_name: productName,
+		});
+	}
+	itemsByOrder = map;
 }
 
 // Utilities
 function formatCurrency(value: number | null | undefined): string {
-  return `€${Number(value ?? 0).toFixed(2)}`;
+	return `€${Number(value ?? 0).toFixed(2)}`;
 }
 
 function toggleSession(id: string) {
-  expanded[id] = !expanded[id];
+	expanded[id] = !expanded[id];
 }
 
 function getCouponsCountForSession(sessionId: string): number {
-  return (ordersBySession[sessionId] ?? []).reduce(
-    (sum, order) => sum + order.coupon_count,
-    0
-  );
+	return (ordersBySession[sessionId] ?? []).reduce(
+		(sum, order) => sum + order.coupon_count,
+		0,
+	);
 }
 
 function getTreatsCountForSession(sessionId: string): number {
-  const orders = ordersBySession[sessionId] ?? [];
-  return orders.reduce((count, order) => {
-    const items = itemsByOrder[order.id] ?? [];
-    return count + items.filter((item) => item.is_treat).length;
-  }, 0);
+	const orders = ordersBySession[sessionId] ?? [];
+	return orders.reduce((count, order) => {
+		const items = itemsByOrder[order.id] ?? [];
+		return count + items.filter((item) => item.is_treat).length;
+	}, 0);
 }
 
 function closedBy(sessionId: string): string | null {
-  const notes = closingsBySession[sessionId]?.notes as
-    | { closed_by?: string }
-    | undefined;
-  const val = notes?.closed_by;
-  return val ? String(val) : null;
+	const notes = closingsBySession[sessionId]?.notes as
+		| { closed_by?: string }
+		| undefined;
+	const val = notes?.closed_by;
+	return val ? String(val) : null;
 }
 
 function getOrdersTotalForSession(sessionId: string): number {
-  const closing = closingsBySession[sessionId];
-  const orders = ordersBySession[sessionId] ?? [];
-  return ordersTotalForSession(closing, orders);
+	const closing = closingsBySession[sessionId];
+	const orders = ordersBySession[sessionId] ?? [];
+	return ordersTotalForSession(closing, orders);
 }
 
 function getDiscountsForSession(sessionId: string): number {
-  const closing = closingsBySession[sessionId];
-  const orders = ordersBySession[sessionId] ?? [];
-  return discountsForSession(closing, orders);
+	const closing = closingsBySession[sessionId];
+	const orders = ordersBySession[sessionId] ?? [];
+	return discountsForSession(closing, orders);
 }
 
 function getTreatTotalForSession(sessionId: string): number {
-  const closing = closingsBySession[sessionId];
-  if (closing && typeof closing.treat_total === "number") {
-    return Number(closing.treat_total);
-  }
-  const orders = ordersBySession[sessionId] ?? [];
-  return orders.reduce((sum, o) => {
-    const items = itemsByOrder[o.id] ?? [];
-    return (
-      sum +
-      items.reduce((itemSum, it) => {
-        if (it.is_treat) {
-          return (
-            itemSum + Number(it.unit_price ?? 0) * Number(it.quantity ?? 0)
-          );
-        }
-        return itemSum;
-      }, 0)
-    );
-  }, 0);
+	const closing = closingsBySession[sessionId];
+	if (closing && typeof closing.treat_total === "number") {
+		return Number(closing.treat_total);
+	}
+	const orders = ordersBySession[sessionId] ?? [];
+	return orders.reduce((sum, o) => {
+		const items = itemsByOrder[o.id] ?? [];
+		return (
+			sum +
+			items.reduce((itemSum, it) => {
+				if (it.is_treat) {
+					return (
+						itemSum + Number(it.unit_price ?? 0) * Number(it.quantity ?? 0)
+					);
+				}
+				return itemSum;
+			}, 0)
+		);
+	}, 0);
 }
 </script>
 

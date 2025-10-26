@@ -4,16 +4,16 @@ import type { Snippet } from "svelte";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  children,
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	children,
+	...restProps
 }: { ref?: HTMLElement | null; class?: string; children?: Snippet } & Record<
-  string,
-  unknown
+	string,
+	unknown
 > = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(SelectPrimitive, cn, ref, className, children, restProps);
 </script>
 

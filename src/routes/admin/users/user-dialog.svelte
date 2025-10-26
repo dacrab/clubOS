@@ -17,69 +17,69 @@ import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
 import { t } from "$lib/i18n";
 
 type AdminUser = {
-  id?: string;
-  username?: string;
-  role?: "admin" | "staff" | "secretary" | string;
-  email?: string;
-  active?: boolean;
-  password?: string;
+	id?: string;
+	username?: string;
+	role?: "admin" | "staff" | "secretary" | string;
+	email?: string;
+	active?: boolean;
+	password?: string;
 };
 
 let {
-  open = $bindable(),
-  user = null as AdminUser | null,
-  onSave,
+	open = $bindable(),
+	user = null as AdminUser | null,
+	onSave,
 } = $props<{
-  open: boolean;
-  user: AdminUser | null;
-  onSave: (u: AdminUser) => Promise<void>;
+	open: boolean;
+	user: AdminUser | null;
+	onSave: (u: AdminUser) => Promise<void>;
 }>();
 
 const form = $state({
-  username: "",
-  password: "",
-  role: "staff" as "admin" | "staff" | "secretary",
-  active: true,
+	username: "",
+	password: "",
+	role: "staff" as "admin" | "staff" | "secretary",
+	active: true,
 });
 
 $effect(() => {
-  if (user) {
-    form.username = user.username || "";
-    form.role = user.role || "staff";
-    form.active = user.active ?? true;
-    form.password = "";
-  } else {
-    form.username = "";
-    form.password = "";
-    form.role = "staff";
-    form.active = true;
-  }
+	if (user) {
+		form.username = user.username || "";
+		form.role = user.role || "staff";
+		form.active = user.active ?? true;
+		form.password = "";
+	} else {
+		form.username = "";
+		form.password = "";
+		form.role = "staff";
+		form.active = true;
+	}
 });
 
 async function save() {
-  await onSave({ ...user, ...form });
-  open = false;
+	await onSave({ ...user, ...form });
+	open = false;
 }
 const Select = SelectPrimitive.Root;
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Input,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  Button,
-  t,
-  save,
-  open,
-  user
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	Input,
+	Label,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	Button,
+	t,
+	save,
+	open,
+	user,
 );
 </script>
 

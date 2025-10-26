@@ -3,26 +3,26 @@ import { Button } from "$lib/components/ui/button";
 import { Card } from "$lib/components/ui/card";
 import { DateInput } from "$lib/components/ui/date-input";
 import {
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogRoot,
-  DialogTitle,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogRoot,
+	DialogTitle,
 } from "$lib/components/ui/dialog";
 import { Input } from "$lib/components/ui/input";
 import { Label } from "$lib/components/ui/label";
 import { PageContent, PageHeader } from "$lib/components/ui/page";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
 } from "$lib/components/ui/select";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
 } from "$lib/components/ui/tabs";
 import { Textarea } from "$lib/components/ui/textarea";
 import { t } from "$lib/i18n";
@@ -31,27 +31,27 @@ import { currentUser, loadCurrentUser } from "$lib/user";
 import { formatDateTime } from "$lib/utils";
 
 type Booking = {
-  id: string;
-  status: "confirmed" | "cancelled" | "completed";
-  field_number: number;
-  booking_datetime: string;
-  customer_name: string;
-  contact_info: string;
-  num_players: number;
-  notes: string | null;
+	id: string;
+	status: "confirmed" | "cancelled" | "completed";
+	field_number: number;
+	booking_datetime: string;
+	customer_name: string;
+	contact_info: string;
+	num_players: number;
+	notes: string | null;
 };
 
 type EditableBooking = Booking & { notes: string };
 
 let list: Booking[] = $state([]);
 let form = $state({
-  customer_name: "",
-  contact_info: "",
-  booking_date: "",
-  booking_time: "",
-  field_number: 1,
-  num_players: 10,
-  notes: "",
+	customer_name: "",
+	contact_info: "",
+	booking_date: "",
+	booking_time: "",
+	field_number: 1,
+	num_players: 10,
+	notes: "",
 });
 
 let activeTab = $state<"create" | "upcoming">("create");
@@ -62,107 +62,107 @@ let editDate = $state("");
 let editTime = $state("");
 
 $effect(() => {
-  loadCurrentUser().then(() => {
-    const u = $currentUser;
-    if (!u) {
-      window.location.href = "/login";
-      return;
-    }
-    if (u.role !== "secretary" && u.role !== "admin") {
-      window.location.href = "/dashboard";
-    }
-    load();
-  });
+	loadCurrentUser().then(() => {
+		const u = $currentUser;
+		if (!u) {
+			window.location.href = "/login";
+			return;
+		}
+		if (u.role !== "secretary" && u.role !== "admin") {
+			window.location.href = "/dashboard";
+		}
+		load();
+	});
 });
 
 async function load() {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const userId = sessionData.session?.user.id ?? "";
-  const { data: memberships } = await supabase
-    .from("tenant_members")
-    .select("tenant_id")
-    .eq("user_id", userId);
-  const tenantId = memberships?.[0]?.tenant_id;
-  const { data } = await supabase
-    .from("football_bookings")
-    .select("*")
-    .eq("tenant_id", tenantId)
-    .order("booking_datetime");
-  list = (data ?? []) as Booking[];
+	const { data: sessionData } = await supabase.auth.getSession();
+	const userId = sessionData.session?.user.id ?? "";
+	const { data: memberships } = await supabase
+		.from("tenant_members")
+		.select("tenant_id")
+		.eq("user_id", userId);
+	const tenantId = memberships?.[0]?.tenant_id;
+	const { data } = await supabase
+		.from("football_bookings")
+		.select("*")
+		.eq("tenant_id", tenantId)
+		.order("booking_datetime");
+	list = (data ?? []) as Booking[];
 }
 
 async function create() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    window.location.href = "/login";
-    return;
-  }
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+	if (!user) {
+		window.location.href = "/login";
+		return;
+	}
 
-  const { data: membership } = await supabase
-    .from("tenant_members")
-    .select("tenant_id")
-    .eq("user_id", user.id);
+	const { data: membership } = await supabase
+		.from("tenant_members")
+		.select("tenant_id")
+		.eq("user_id", user.id);
 
-  const payload = {
-    customer_name: form.customer_name,
-    contact_info: form.contact_info,
-    booking_datetime: new Date(
-      `${form.booking_date}T${form.booking_time || "00:00"}`
-    ),
-    field_number: Number(form.field_number || 1),
-    num_players: Number(form.num_players || 0),
-    notes: form.notes || null,
-    created_by: user.id,
-    tenant_id: membership?.[0]?.tenant_id,
-  };
+	const payload = {
+		customer_name: form.customer_name,
+		contact_info: form.contact_info,
+		booking_datetime: new Date(
+			`${form.booking_date}T${form.booking_time || "00:00"}`,
+		),
+		field_number: Number(form.field_number || 1),
+		num_players: Number(form.num_players || 0),
+		notes: form.notes || null,
+		created_by: user.id,
+		tenant_id: membership?.[0]?.tenant_id,
+	};
 
-  const { error } = await supabase.from("football_bookings").insert(payload);
-  if (!error) {
-    form = {
-      customer_name: "",
-      contact_info: "",
-      booking_date: "",
-      booking_time: "",
-      field_number: 1,
-      num_players: 10,
-      notes: "",
-    };
-    load();
-  }
+	const { error } = await supabase.from("football_bookings").insert(payload);
+	if (!error) {
+		form = {
+			customer_name: "",
+			contact_info: "",
+			booking_date: "",
+			booking_time: "",
+			field_number: 1,
+			num_players: 10,
+			notes: "",
+		};
+		load();
+	}
 }
 
 function openEdit(booking: Booking) {
-  editing = { ...booking, notes: booking.notes ?? "" };
-  const date = new Date(booking.booking_datetime);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  editDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-  editTime = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
-  editStatus = booking.status;
-  showEdit = true;
+	editing = { ...booking, notes: booking.notes ?? "" };
+	const date = new Date(booking.booking_datetime);
+	const pad = (n: number) => String(n).padStart(2, "0");
+	editDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+	editTime = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+	editStatus = booking.status;
+	showEdit = true;
 }
 
 async function saveEdit() {
-  if (!editing) {
-    return;
-  }
+	if (!editing) {
+		return;
+	}
 
-  await supabase
-    .from("football_bookings")
-    .update({
-      status: editStatus,
-      customer_name: editing.customer_name,
-      contact_info: editing.contact_info,
-      booking_datetime: new Date(`${editDate}T${editTime || "00:00"}`),
-      field_number: Number(editing.field_number || 1),
-      num_players: Number(editing.num_players || 0),
-      notes: editing.notes || null,
-    })
-    .eq("id", editing.id);
+	await supabase
+		.from("football_bookings")
+		.update({
+			status: editStatus,
+			customer_name: editing.customer_name,
+			contact_info: editing.contact_info,
+			booking_datetime: new Date(`${editDate}T${editTime || "00:00"}`),
+			field_number: Number(editing.field_number || 1),
+			num_players: Number(editing.num_players || 0),
+			notes: editing.notes || null,
+		})
+		.eq("id", editing.id);
 
-  await load();
-  showEdit = false;
+	await load();
+	showEdit = false;
 }
 </script>
 

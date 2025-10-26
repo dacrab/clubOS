@@ -1,22 +1,22 @@
 <script lang="ts">
 import {
-  ChevronLeft,
-  ChevronRight,
-  ClipboardList,
-  Home,
-  LogOut,
-  Package,
-  ReceiptText,
-  Settings,
-  UserCog,
+	ChevronLeft,
+	ChevronRight,
+	ClipboardList,
+	Home,
+	LogOut,
+	Package,
+	ReceiptText,
+	Settings,
+	UserCog,
 } from "@lucide/svelte";
 import { createEventDispatcher } from "svelte";
 import { page } from "$app/stores";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
 } from "$lib/components/ui/dropdown-menu";
 import type { TranslationKey } from "$lib/i18n";
 import { locale, t } from "$lib/i18n";
@@ -30,167 +30,167 @@ const { themeIcon = null } = $props<{ themeIcon?: IconComponent | null }>();
 const dispatch = createEventDispatcher<{ toggleTheme: undefined }>();
 
 const userRole = $derived(
-  ($currentUser?.role ?? null) as AppUser["role"] | null
+	($currentUser?.role ?? null) as AppUser["role"] | null,
 );
 const userName = $derived($currentUser?.username ?? $currentUser?.email ?? "");
 const userRoleLabel = $derived(
-  userRole ? `${userRole[0]?.toUpperCase() ?? ""}${userRole.slice(1)}` : ""
+	userRole ? `${userRole[0]?.toUpperCase() ?? ""}${userRole.slice(1)}` : "",
 );
 
 type NavItem = {
-  href: string;
-  icon: typeof Home;
-  labelKey: TranslationKey;
-  roles?: Array<AppUser["role"] | null>;
+	href: string;
+	icon: typeof Home;
+	labelKey: TranslationKey;
+	roles?: Array<AppUser["role"] | null>;
 };
 
 type NavSection = {
-  headingKey: TranslationKey;
-  items: NavItem[];
+	headingKey: TranslationKey;
+	items: NavItem[];
 };
 
 const navSections: NavSection[] = [
-  {
-    headingKey: "nav.overview",
-    items: [{ href: "/admin", icon: Home, labelKey: "nav.dashboard" }],
-  },
-  {
-    headingKey: "nav.admin",
-    items: [
-      {
-        href: "/admin/products",
-        icon: Package,
-        labelKey: "nav.products",
-        roles: ["admin"],
-      },
-      {
-        href: "/admin/users",
-        icon: UserCog,
-        labelKey: "nav.users",
-        roles: ["admin"],
-      },
-      {
-        href: "/admin/orders",
-        icon: ReceiptText,
-        labelKey: "nav.orders",
-        roles: ["admin"],
-      },
-      {
-        href: "/admin/registers",
-        icon: ClipboardList,
-        labelKey: "nav.registers",
-        roles: ["admin"],
-      },
-      {
-        href: "/admin/settings",
-        icon: Settings,
-        labelKey: "nav.settings",
-        roles: ["admin"],
-      },
-    ],
-  },
-  {
-    headingKey: "nav.bookings",
-    items: [
-      {
-        href: "/secretary/birthdays",
-        icon: ClipboardList,
-        labelKey: "pages.appointments.title",
-        roles: ["admin", "secretary"],
-      },
-      {
-        href: "/secretary/football",
-        icon: ClipboardList,
-        labelKey: "nav.football",
-        roles: ["admin", "secretary"],
-      },
-    ],
-  },
+	{
+		headingKey: "nav.overview",
+		items: [{ href: "/admin", icon: Home, labelKey: "nav.dashboard" }],
+	},
+	{
+		headingKey: "nav.admin",
+		items: [
+			{
+				href: "/admin/products",
+				icon: Package,
+				labelKey: "nav.products",
+				roles: ["admin"],
+			},
+			{
+				href: "/admin/users",
+				icon: UserCog,
+				labelKey: "nav.users",
+				roles: ["admin"],
+			},
+			{
+				href: "/admin/orders",
+				icon: ReceiptText,
+				labelKey: "nav.orders",
+				roles: ["admin"],
+			},
+			{
+				href: "/admin/registers",
+				icon: ClipboardList,
+				labelKey: "nav.registers",
+				roles: ["admin"],
+			},
+			{
+				href: "/admin/settings",
+				icon: Settings,
+				labelKey: "nav.settings",
+				roles: ["admin"],
+			},
+		],
+	},
+	{
+		headingKey: "nav.bookings",
+		items: [
+			{
+				href: "/secretary/birthdays",
+				icon: ClipboardList,
+				labelKey: "pages.appointments.title",
+				roles: ["admin", "secretary"],
+			},
+			{
+				href: "/secretary/football",
+				icon: ClipboardList,
+				labelKey: "nav.football",
+				roles: ["admin", "secretary"],
+			},
+		],
+	},
 ];
 
 const TRAILING_SLASH_RE = /\/+$/;
 
 function normalizePath(p: string): string {
-  const n = p.replace(TRAILING_SLASH_RE, "");
-  return n === "" ? "/" : n;
+	const n = p.replace(TRAILING_SLASH_RE, "");
+	return n === "" ? "/" : n;
 }
 
 const currentPath = $derived(normalizePath($page.url.pathname));
 
 function isActive(path: string): boolean {
-  const current = currentPath;
-  const href = normalizePath(path);
-  const depth = href.split("/").filter(Boolean).length;
-  if (depth <= 1) {
-    return current === href;
-  }
-  return current === href || current.startsWith(`${href}/`);
+	const current = currentPath;
+	const href = normalizePath(path);
+	const depth = href.split("/").filter(Boolean).length;
+	if (depth <= 1) {
+		return current === href;
+	}
+	return current === href || current.startsWith(`${href}/`);
 }
 
 async function logout(): Promise<void> {
-  await supabase.auth.signOut();
-  window.location.href = "/";
+	await supabase.auth.signOut();
+	window.location.href = "/";
 }
 
 function hasAccess(item: NavItem): boolean {
-  return !item.roles || item.roles.includes(userRole);
+	return !item.roles || item.roles.includes(userRole);
 }
 
 const visibleSections = $derived(
-  navSections
-    .map((section) => ({
-      ...section,
-      items: section.items.filter(hasAccess),
-    }))
-    .filter((section) => section.items.length > 0)
+	navSections
+		.map((section) => ({
+			...section,
+			items: section.items.filter(hasAccess),
+		}))
+		.filter((section) => section.items.length > 0),
 );
 
 const linkBase =
-  "group flex items-center gap-3 h-10 rounded-xl px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground";
+	"group flex items-center gap-3 h-10 rounded-xl px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground";
 const activeLink =
-  "text-foreground bg-sidebar-accent/60 hover:bg-sidebar-accent";
+	"text-foreground bg-sidebar-accent/60 hover:bg-sidebar-accent";
 const iconWrapper =
-  "grid size-8 place-items-center rounded-lg border border-transparent bg-sidebar/40 text-muted-foreground transition-colors group-hover:border-primary/30 group-hover:text-primary";
+	"grid size-8 place-items-center rounded-lg border border-transparent bg-sidebar/40 text-muted-foreground transition-colors group-hover:border-primary/30 group-hover:text-primary";
 const iconWrapperActive = "border-primary/40 bg-primary/10 text-primary";
 
 function toggleTheme() {
-  dispatch("toggleTheme");
+	dispatch("toggleTheme");
 }
 
 function setLocale(next: "en" | "el") {
-  locale.set(next);
+	locale.set(next);
 }
 
 let collapsed = $state(false);
 
 $effect(() => {
-  if (typeof window === "undefined") {
-    return;
-  }
-  const saved = window.localStorage.getItem("sidebar-collapsed");
-  collapsed = saved === "1";
+	if (typeof window === "undefined") {
+		return;
+	}
+	const saved = window.localStorage.getItem("sidebar-collapsed");
+	collapsed = saved === "1";
 });
 
 async function toggleCollapsed() {
-  collapsed = !collapsed;
-  try {
-    window.localStorage.setItem("sidebar-collapsed", collapsed ? "1" : "0");
-  } catch {
-    // ignore storage quota or privacy mode
-  }
+	collapsed = !collapsed;
+	try {
+		window.localStorage.setItem("sidebar-collapsed", collapsed ? "1" : "0");
+	} catch {
+		// ignore storage quota or privacy mode
+	}
 
-  const { data: sessionData } = await supabase.auth.getSession();
-  const uid = sessionData.session?.user.id;
-  if (!uid) {
-    return;
-  }
+	const { data: sessionData } = await supabase.auth.getSession();
+	const uid = sessionData.session?.user.id;
+	if (!uid) {
+		return;
+	}
 
-  await supabase
-    .from("user_preferences")
-    .upsert(
-      { user_id: uid, collapsed_sidebar: collapsed },
-      { onConflict: "user_id" }
-    );
+	await supabase
+		.from("user_preferences")
+		.upsert(
+			{ user_id: uid, collapsed_sidebar: collapsed },
+			{ onConflict: "user_id" },
+		);
 }
 </script>
 

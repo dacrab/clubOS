@@ -2,9 +2,9 @@
 import { Eye, Printer, Receipt } from "@lucide/svelte";
 import { Button } from "$lib/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
 } from "$lib/components/ui/dropdown-menu";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabase-client";
@@ -12,45 +12,45 @@ import { formatDateTime, openPrintWindow } from "$lib/utils";
 
 // Types
 type OrderItem = {
-  id: string;
-  quantity: number;
-  unit_price: number;
-  line_total: number;
-  is_treat: boolean;
-  product: {
-    id: string;
-    name: string;
-    price: number;
-  };
+	id: string;
+	quantity: number;
+	unit_price: number;
+	line_total: number;
+	is_treat: boolean;
+	product: {
+		id: string;
+		name: string;
+		price: number;
+	};
 };
 
 type OrderDetails = {
-  id: string;
-  total_amount: number;
-  subtotal: number;
-  discount_amount: number;
-  coupon_count: number;
-  created_at: string;
-  items: OrderItem[];
+	id: string;
+	total_amount: number;
+	subtotal: number;
+	discount_amount: number;
+	coupon_count: number;
+	created_at: string;
+	items: OrderItem[];
 };
 
 type RawOrder = {
-  id: string;
-  total_amount: number;
-  subtotal: number;
-  discount_amount: number;
-  coupon_count: number;
-  created_at: string;
-  order_items?: Array<{
-    id: string;
-    quantity: number;
-    unit_price: number;
-    line_total: number;
-    is_treat: boolean;
-    products:
-      | { id: string; name: string; price: number }
-      | { id: string; name: string; price: number }[];
-  }>;
+	id: string;
+	total_amount: number;
+	subtotal: number;
+	discount_amount: number;
+	coupon_count: number;
+	created_at: string;
+	order_items?: Array<{
+		id: string;
+		quantity: number;
+		unit_price: number;
+		line_total: number;
+		is_treat: boolean;
+		products:
+			| { id: string; name: string; price: number }
+			| { id: string; name: string; price: number }[];
+	}>;
 };
 
 // Constants
@@ -67,22 +67,22 @@ let orders: OrderDetails[] = $state([]);
 
 // Utility functions
 function formatMoney(v: number): string {
-  return `€${Number(v).toFixed(2)}`;
+	return `€${Number(v).toFixed(2)}`;
 }
 
 function renderReceipt(order: OrderDetails): string {
-  const lines = order.items
-    .map(
-      (item) => `
+	const lines = order.items
+		.map(
+			(item) => `
     <tr>
       <td>${item.product.name}${item.is_treat ? ' <span class="muted">(free)</span>' : ""}</td>
       <td style="text-align:right">${formatMoney(item.line_total)}</td>
     </tr>
-  `
-    )
-    .join("");
+  `,
+		)
+		.join("");
 
-  return `
+	return `
     <h1>clubOS ${t("orders.receiptTitle")}</h1>
     <div class="muted">#${order.id.slice(0, ORDER_ID_PREFIX_LEN)} — ${formatDateTime(order.created_at)}</div>
     <hr />
@@ -97,27 +97,27 @@ function renderReceipt(order: OrderDetails): string {
 }
 
 function printReceipt(order: OrderDetails): void {
-  const html = renderReceipt(order);
-  openPrintWindow(html);
+	const html = renderReceipt(order);
+	openPrintWindow(html);
 }
 
 // Data loading
 async function loadOrders(): Promise<void> {
-  try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData.session?.user.id ?? "";
+	try {
+		const { data: sessionData } = await supabase.auth.getSession();
+		const userId = sessionData.session?.user.id ?? "";
 
-    const { data: memberships } = await supabase
-      .from("tenant_members")
-      .select("tenant_id")
-      .eq("user_id", userId);
+		const { data: memberships } = await supabase
+			.from("tenant_members")
+			.select("tenant_id")
+			.eq("user_id", userId);
 
-    const tenantId = memberships?.[0]?.tenant_id;
+		const tenantId = memberships?.[0]?.tenant_id;
 
-    const { data } = await supabase
-      .from("orders")
-      .select(
-        `
+		const { data } = await supabase
+			.from("orders")
+			.select(
+				`
         id,
         total_amount,
         subtotal,
@@ -136,45 +136,45 @@ async function loadOrders(): Promise<void> {
             price
           )
         )
-      `
-      )
-      .order("created_at", { ascending: false })
-      .eq("tenant_id", tenantId)
-      .limit(limit);
+      `,
+			)
+			.order("created_at", { ascending: false })
+			.eq("tenant_id", tenantId)
+			.limit(limit);
 
-    const rawOrders = (data ?? []) as RawOrder[];
+		const rawOrders = (data ?? []) as RawOrder[];
 
-    orders = rawOrders.map((order) => ({
-      id: order.id,
-      total_amount: order.total_amount,
-      subtotal: order.subtotal,
-      discount_amount: order.discount_amount,
-      coupon_count: order.coupon_count,
-      created_at: order.created_at,
-      items:
-        order.order_items?.map((item) => ({
-          id: item.id,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          line_total: item.line_total,
-          is_treat: item.is_treat,
-          product: (Array.isArray(item.products)
-            ? item.products[0]
-            : item.products) ?? {
-            id: item.id,
-            name: "Unknown",
-            price: 0,
-          },
-        })) ?? [],
-    }));
-  } catch (_error) {
-    orders = [];
-  }
+		orders = rawOrders.map((order) => ({
+			id: order.id,
+			total_amount: order.total_amount,
+			subtotal: order.subtotal,
+			discount_amount: order.discount_amount,
+			coupon_count: order.coupon_count,
+			created_at: order.created_at,
+			items:
+				order.order_items?.map((item) => ({
+					id: item.id,
+					quantity: item.quantity,
+					unit_price: item.unit_price,
+					line_total: item.line_total,
+					is_treat: item.is_treat,
+					product: (Array.isArray(item.products)
+						? item.products[0]
+						: item.products) ?? {
+						id: item.id,
+						name: "Unknown",
+						price: 0,
+					},
+				})) ?? [],
+		}));
+	} catch (_error) {
+		orders = [];
+	}
 }
 
 // Effects
 $effect(() => {
-  loadOrders();
+	loadOrders();
 });
 </script>
 

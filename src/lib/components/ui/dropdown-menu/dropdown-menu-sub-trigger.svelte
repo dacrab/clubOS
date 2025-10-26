@@ -4,25 +4,25 @@ import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  inset,
-  children,
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	inset,
+	children,
+	...restProps
 }: DropdownMenuPrimitive.SubTriggerProps & {
-  inset?: boolean;
+	inset?: boolean;
 } = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  ChevronRightIcon,
-  DropdownMenuPrimitive,
-  cn,
-  ref,
-  className,
-  inset,
-  children,
-  restProps
+	ChevronRightIcon,
+	DropdownMenuPrimitive,
+	cn,
+	ref,
+	className,
+	inset,
+	children,
+	restProps,
 );
 </script>
 

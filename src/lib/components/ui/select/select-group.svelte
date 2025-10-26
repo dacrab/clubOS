@@ -2,9 +2,9 @@
 import { Select as SelectPrimitive } from "bits-ui";
 
 let { ref = $bindable(null), ...restProps }: SelectPrimitive.GroupProps =
-  $props();
+	$props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(SelectPrimitive, ref, restProps);
 </script>
 

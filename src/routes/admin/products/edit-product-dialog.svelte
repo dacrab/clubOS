@@ -22,97 +22,97 @@ import Switch from "$lib/components/ui/switch/switch.svelte";
 import { t } from "$lib/i18n";
 
 let {
-  open = $bindable(false),
-  product = null as unknown,
-  categories = [] as Array<{ id: string; name: string }>,
-  onSave,
-  onUploadImage,
+	open = $bindable(false),
+	product = null as unknown,
+	categories = [] as Array<{ id: string; name: string }>,
+	onSave,
+	onUploadImage,
 } = $props<{
-  open: boolean;
-  product: unknown | null;
-  categories: Array<{ id: string; name: string }>;
-  onSave: (payload: {
-    id: string;
-    name: string;
-    price: number;
-    stock_quantity: number;
-    category_id: string | null;
-  }) => Promise<void>;
-  onUploadImage: (file: File, productId: string) => Promise<void>;
+	open: boolean;
+	product: unknown | null;
+	categories: Array<{ id: string; name: string }>;
+	onSave: (payload: {
+		id: string;
+		name: string;
+		price: number;
+		stock_quantity: number;
+		category_id: string | null;
+	}) => Promise<void>;
+	onUploadImage: (file: File, productId: string) => Promise<void>;
 }>();
 
 let form = $state({
-  id: "",
-  name: "",
-  price: 0,
-  stock_quantity: 0,
-  category_id: "",
-  image_url: "",
-  unlimited: false,
+	id: "",
+	name: "",
+	price: 0,
+	stock_quantity: 0,
+	category_id: "",
+	image_url: "",
+	unlimited: false,
 });
 
 $effect(() => {
-  if (product) {
-    form = {
-      id: product.id,
-      name: product.name,
-      price: Number(product.price),
-      stock_quantity: Number(product.stock_quantity),
-      category_id: product.category_id || "",
-      image_url: product.image_url || "",
-      unlimited: product.stock_quantity === -1,
-    };
-  }
+	if (product) {
+		form = {
+			id: product.id,
+			name: product.name,
+			price: Number(product.price),
+			stock_quantity: Number(product.stock_quantity),
+			category_id: product.category_id || "",
+			image_url: product.image_url || "",
+			unlimited: product.stock_quantity === -1,
+		};
+	}
 });
 
 async function save() {
-  await onSave({
-    id: form.id,
-    name: form.name,
-    price: Number(form.price),
-    stock_quantity: Number(form.unlimited ? -1 : form.stock_quantity),
-    category_id: form.category_id || null,
-  });
-  open = false;
+	await onSave({
+		id: form.id,
+		name: form.name,
+		price: Number(form.price),
+		stock_quantity: Number(form.unlimited ? -1 : form.stock_quantity),
+		category_id: form.category_id || null,
+	});
+	open = false;
 }
 
 async function selectImage(e: Event) {
-  const input = e.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (!(file && form.id)) {
-    return;
-  }
-  await onUploadImage(file, form.id);
+	const input = e.target as HTMLInputElement;
+	const file = input.files?.[0];
+	if (!(file && form.id)) {
+		return;
+	}
+	await onUploadImage(file, form.id);
 }
 
 let fileInput: HTMLInputElement | null = $state(null);
 function triggerFile() {
-  fileInput?.click();
+	fileInput?.click();
 }
 
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  Dialog,
-  Button,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Input,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  Switch,
-  ImagePlus,
-  t,
-  open,
-  categories,
-  save,
-  selectImage,
-  triggerFile
+	Dialog,
+	Button,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	Input,
+	Label,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	Switch,
+	ImagePlus,
+	t,
+	open,
+	categories,
+	save,
+	selectImage,
+	triggerFile,
 );
 </script>
 

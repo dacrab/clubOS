@@ -4,25 +4,25 @@ import Badge from "$lib/components/ui/badge/badge.svelte";
 import Input from "$lib/components/ui/input/input.svelte";
 
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(Search, Badge, Input);
 
 let {
-  value = $bindable(""),
-  placeholder = "Search...",
-  label,
-  count,
-  badge,
+	value = $bindable(""),
+	placeholder = "Search...",
+	label,
+	count,
+	badge,
 } = $props<{
-  value: string;
-  placeholder?: string;
-  label?: string;
-  count?: number;
-  badge?: string;
+	value: string;
+	placeholder?: string;
+	label?: string;
+	count?: number;
+	badge?: string;
 }>();
 // Mark as used for Biome (used in Svelte markup)
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(value, placeholder, label, count, badge);
 </script>
 

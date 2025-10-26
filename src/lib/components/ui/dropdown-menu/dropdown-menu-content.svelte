@@ -3,24 +3,24 @@ import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  sideOffset = 4,
-  portalProps,
-  class: className,
-  ...restProps
+	ref = $bindable(null),
+	sideOffset = 4,
+	portalProps,
+	class: className,
+	...restProps
 }: DropdownMenuPrimitive.ContentProps & {
-  portalProps?: DropdownMenuPrimitive.PortalProps;
+	portalProps?: DropdownMenuPrimitive.PortalProps;
 } = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  DropdownMenuPrimitive,
-  cn,
-  ref,
-  sideOffset,
-  portalProps,
-  className,
-  restProps
+	DropdownMenuPrimitive,
+	cn,
+	ref,
+	sideOffset,
+	portalProps,
+	className,
+	restProps,
 );
 </script>
 

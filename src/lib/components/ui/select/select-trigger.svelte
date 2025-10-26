@@ -5,25 +5,25 @@ import type { WithoutChild } from "$lib/utils";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  children,
-  size = "default",
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	children,
+	size = "default",
+	...restProps
 }: WithoutChild<SelectPrimitive.TriggerProps> & {
-  size?: "sm" | "default";
+	size?: "sm" | "default";
 } = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  ChevronDownIcon,
-  SelectPrimitive,
-  cn,
-  ref,
-  className,
-  children,
-  size,
-  restProps
+	ChevronDownIcon,
+	SelectPrimitive,
+	cn,
+	ref,
+	className,
+	children,
+	size,
+	restProps,
 );
 </script>
 

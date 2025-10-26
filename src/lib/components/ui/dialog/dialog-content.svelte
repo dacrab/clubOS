@@ -1,8 +1,8 @@
 <script lang="ts">
 import { X } from "@lucide/svelte";
 import {
-  Dialog as DialogPrimitive,
-  Dialog as DialogPrimitiveNS,
+	Dialog as DialogPrimitive,
+	Dialog as DialogPrimitiveNS,
 } from "bits-ui";
 import type { Snippet } from "svelte";
 import type { WithoutChildrenOrChild } from "$lib/utils";
@@ -12,34 +12,34 @@ import DialogOverlay from "./dialog-overlay.svelte";
 const DialogPortal = DialogPrimitiveNS.Portal;
 
 let {
-  ref = $bindable(null),
-  class: className,
-  portalProps,
-  children,
-  showCloseButton = true,
-  size = "md",
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	portalProps,
+	children,
+	showCloseButton = true,
+	size = "md",
+	...restProps
 }: WithoutChildrenOrChild<DialogPrimitive.ContentProps> & {
-  portalProps?: DialogPrimitive.PortalProps;
-  children: Snippet;
-  showCloseButton?: boolean;
-  size?: "md" | "xl" | "fullscreen";
+	portalProps?: DialogPrimitive.PortalProps;
+	children: Snippet;
+	showCloseButton?: boolean;
+	size?: "md" | "xl" | "fullscreen";
 } = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(
-  X,
-  DialogPrimitive,
-  cn,
-  DialogOverlay,
-  DialogPortal,
-  ref,
-  className,
-  portalProps,
-  children,
-  showCloseButton,
-  size,
-  restProps
+	X,
+	DialogPrimitive,
+	cn,
+	DialogOverlay,
+	DialogPortal,
+	ref,
+	className,
+	portalProps,
+	children,
+	showCloseButton,
+	size,
+	restProps,
 );
 </script>
 

@@ -5,12 +5,12 @@ import type { WithoutChildrenOrChild } from "$lib/utils";
 import { cn } from "$lib/utils";
 
 let {
-  ref = $bindable(null),
-  class: className,
-  ...restProps
+	ref = $bindable(null),
+	class: className,
+	...restProps
 }: WithoutChildrenOrChild<SelectPrimitive.ScrollDownButtonProps> = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(ChevronDownIcon, SelectPrimitive, cn, ref, className, restProps);
 </script>
 

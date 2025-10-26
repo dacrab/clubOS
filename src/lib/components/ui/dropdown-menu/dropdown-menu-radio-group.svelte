@@ -2,12 +2,12 @@
 import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 
 let {
-  ref = $bindable<HTMLElement | null>(null),
-  value = $bindable<string>(""),
-  ...restProps
+	ref = $bindable<HTMLElement | null>(null),
+	value = $bindable<string>(""),
+	...restProps
 }: DropdownMenuPrimitive.RadioGroupProps = $props();
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(DropdownMenuPrimitive, ref, value, restProps);
 </script>
 

@@ -2,13 +2,13 @@
 import { Select as SelectPrimitive } from "bits-ui";
 
 let {
-  value = $bindable(),
-  children,
-  ...props
+	value = $bindable(),
+	children,
+	...props
 } = $props<{
-  value?: unknown;
-  children: unknown;
-  [key: string]: unknown;
+	value?: unknown;
+	children: unknown;
+	[key: string]: unknown;
 }>();
 
 const Root = SelectPrimitive.Root;

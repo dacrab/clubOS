@@ -2,33 +2,33 @@
 import { Card, CardContent } from "$lib/components/ui/card";
 
 type StatItem = {
-  title: string;
-  value: string;
-  accent?: "blue" | "green" | "yellow" | "red" | "purple" | "neutral";
-  icon?: unknown;
+	title: string;
+	value: string;
+	accent?: "blue" | "green" | "yellow" | "red" | "purple" | "neutral";
+	icon?: unknown;
 };
 
 const { items = [] as StatItem[] } = $props<{
-  items?: StatItem[];
+	items?: StatItem[];
 }>();
 
 function getAccentClass(accent?: string) {
-  switch (accent) {
-    case "blue":
-      return "bg-blue-500/10 text-blue-600";
-    case "green":
-      return "bg-green-500/10 text-green-600";
-    case "yellow":
-      return "bg-yellow-500/10 text-yellow-600";
-    case "red":
-      return "bg-red-500/10 text-red-600";
-    case "purple":
-      return "bg-purple-500/10 text-purple-600";
-    case "neutral":
-      return "bg-gray-500/10 text-gray-600";
-    default:
-      return "bg-primary/10 text-primary";
-  }
+	switch (accent) {
+		case "blue":
+			return "bg-blue-500/10 text-blue-600";
+		case "green":
+			return "bg-green-500/10 text-green-600";
+		case "yellow":
+			return "bg-yellow-500/10 text-yellow-600";
+		case "red":
+			return "bg-red-500/10 text-red-600";
+		case "purple":
+			return "bg-purple-500/10 text-purple-600";
+		case "neutral":
+			return "bg-gray-500/10 text-gray-600";
+		default:
+			return "bg-primary/10 text-primary";
+	}
 }
 </script>
 

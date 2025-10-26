@@ -15,33 +15,33 @@ let loading = $state(false);
 let errorMessage = $state("");
 
 async function updatePassword(e?: Event) {
-  e?.preventDefault();
-  errorMessage = "";
-  if (!(password && confirm)) {
-    errorMessage = t("reset.missingFields");
-    toast.error(errorMessage);
-    return;
-  }
-  if (password !== confirm) {
-    errorMessage = t("reset.mismatch");
-    toast.error(errorMessage);
-    return;
-  }
-  loading = true;
-  try {
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success(t("reset.updated"));
-    await goto("/");
-  } finally {
-    loading = false;
-  }
+	e?.preventDefault();
+	errorMessage = "";
+	if (!(password && confirm)) {
+		errorMessage = t("reset.missingFields");
+		toast.error(errorMessage);
+		return;
+	}
+	if (password !== confirm) {
+		errorMessage = t("reset.mismatch");
+		toast.error(errorMessage);
+		return;
+	}
+	loading = true;
+	try {
+		const { error } = await supabase.auth.updateUser({ password });
+		if (error) {
+			toast.error(error.message);
+			return;
+		}
+		toast.success(t("reset.updated"));
+		await goto("/");
+	} finally {
+		loading = false;
+	}
 }
 ((..._args: unknown[]) => {
-  return;
+	return;
 })(Button, Card, CardContent, Input, Label, t, updatePassword);
 </script>
 
