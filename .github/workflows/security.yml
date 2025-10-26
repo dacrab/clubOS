@@ -1,0 +1,31 @@
+name: Security
+
+on:
+  schedule:
+    # Weekly Sunday at 04:00 UTC
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  secrets-scan:
+    name: Secrets Scan (GitGuardian)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: GitGuardian Scan
+        uses: GitGuardian/ggshield/actions/secret@v1.43.0
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+        with:
+          args: --show-secrets

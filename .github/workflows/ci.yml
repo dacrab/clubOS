@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -25,7 +25,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.x
       
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -38,22 +38,4 @@ jobs:
       
       - name: Build
         run: bun run build
-
-  # Scan for secrets and sensitive data
-  secrets-scan:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-      
-      - name: GitGuardian Scan
-        uses: GitGuardian/ggshield/actions/secret@v1.43.0
-        env:
-          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
-        with:
-          args: --show-secrets --exit-zero
 
