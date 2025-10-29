@@ -1,15 +1,9 @@
 <script lang="ts">
-import { Eye, EyeOff, Lock } from "@lucide/svelte";
+import { Eye, EyeOff } from "@lucide/svelte";
 import { toast } from "svelte-sonner";
 import { goto } from "$app/navigation";
 import { Button } from "$lib/components/ui/button";
 import { Card, CardContent } from "$lib/components/ui/card";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "$lib/components/ui/dropdown-menu";
 import { Input } from "$lib/components/ui/input";
 import { Label } from "$lib/components/ui/label";
 import { t } from "$lib/i18n";
@@ -21,37 +15,11 @@ let loading = $state(false);
 let errorMessage = $state("");
 let showPassword = $state(false);
 
-const seededUsers = [
-	{
-		label: "Admin",
-		email: "admin@example.com",
-		username: "admin",
-		password: "admin123",
-	},
-	{
-		label: "Staff",
-		email: "staff@example.com",
-		username: "staff",
-		password: "staff123",
-	},
-	{
-		label: "Secretary",
-		email: "secretary@example.com",
-		username: "secretary",
-		password: "secretary123",
-	},
-];
-
 const roleToPath = {
 	admin: "/admin",
 	staff: "/staff",
 	secretary: "/secretary",
 };
-
-function quickFill(emailAddr: string, pwd: string) {
-	email = emailAddr;
-	password = pwd;
-}
 
 async function resolveRedirectTarget(): Promise<string> {
 	const {
@@ -77,9 +45,9 @@ async function resolveRedirectTarget(): Promise<string> {
 			.maybeSingle();
 
 		const role = profile?.role as keyof typeof roleToPath;
-		return role ? (roleToPath[role] ?? "/") : "/";
+		return role ? (roleToPath[role] ?? "/admin") : "/admin";
 	} catch {
-		return "/";
+		return "/admin";
 	}
 }
 
@@ -156,7 +124,7 @@ async function sendResetEmail() {
         CO
       </span>
       <div class="space-y-1.5">
-        <h1 class="text-3xl font-semibold tracking-tight text-foreground">
+        <h1 class="text-3xl font-semibold text-foreground">
           {t("login.title")}
         </h1>
         <p class="text-sm text-muted-foreground">{t("login.subtitle")}</p>
@@ -167,47 +135,6 @@ async function sendResetEmail() {
       class="rounded-2xl border border-outline-soft/70 bg-surface-strong/80 shadow-md backdrop-blur"
     >
       <CardContent class="space-y-6 p-8">
-        <div class="flex flex-col gap-4">
-          <div
-            class="flex items-center gap-3 rounded-full border border-outline-soft/80 bg-background/90 p-1 text-xs font-medium text-muted-foreground"
-          >
-            <Lock
-              class="ml-2 size-3.5 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <div class="flex flex-1 items-center justify-between gap-1">
-              <span class="text-[12px] text-muted-foreground/90"
-                >{t("login.quickLogin")}</span
-              >
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  type="button"
-                  class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  {t("login.seeded")}
-                </DropdownMenuTrigger>
-                <DropdownMenuContent class="w-40 rounded-xl">
-                  {#each seededUsers as userSeed}
-                    <DropdownMenuItem
-                      onclick={() =>
-                        quickFill(userSeed.email, userSeed.password)}
-                    >
-                      <div class="flex flex-col">
-                        <span class="text-sm font-medium text-foreground"
-                          >{userSeed.label}</span
-                        >
-                        <span class="text-xs text-muted-foreground"
-                          >{userSeed.username}</span
-                        >
-                      </div>
-                    </DropdownMenuItem>
-                  {/each}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
-
         <form onsubmit={signIn} class="flex flex-col gap-5">
           <div class="space-y-2">
             <Label class="text-[13px] font-medium text-muted-foreground/90">

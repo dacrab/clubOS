@@ -31,6 +31,7 @@ const config = {
 							"ws:",
 							"wss:",
 							"http://localhost:5173",
+							"http://localhost:4173",
 						],
 						"font-src": ["self", "https:", "data:"],
 						"frame-ancestors": ["none"],
@@ -41,9 +42,17 @@ const config = {
 						"base-uri": ["self"],
 						"object-src": ["none"],
 						"script-src": ["self"],
-						"style-src": ["self"],
+						// Allow Google Fonts stylesheet and inline styles used by SvelteKit/body wrapper
+						"style-src": ["self", "unsafe-inline", "https:"],
 						"img-src": ["self", "data:", "https:"],
-						"connect-src": ["self", "https:"],
+						// Allow HTTPS APIs such as Supabase; include wss for realtime and local CLI for preview
+						"connect-src": [
+							"self",
+							"https:",
+							"wss:",
+							"http://127.0.0.1:54321",
+							"http://localhost:54321",
+						],
 						"font-src": ["self", "https:", "data:"],
 						"frame-ancestors": ["none"],
 						"form-action": ["self"],

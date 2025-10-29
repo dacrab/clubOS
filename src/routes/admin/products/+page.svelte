@@ -11,6 +11,7 @@ import TableCell from "$lib/components/ui/table/table-cell.svelte";
 import TableHead from "$lib/components/ui/table/table-head.svelte";
 import TableHeader from "$lib/components/ui/table/table-header.svelte";
 import TableRow from "$lib/components/ui/table/table-row.svelte";
+import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabase-client";
 import { currentUser, loadCurrentUser } from "$lib/user";
@@ -77,21 +78,25 @@ $effect(() => {
 });
 
 async function loadLists() {
-	const tenantId = $currentUser?.tenantIds?.[0];
-	if (!tenantId) {
+	const facilityId = await resolveSelectedFacilityId(supabase);
+	if (!facilityId) {
+		categories = [];
+		products = [];
 		return;
 	}
-	const { data: pcats } = await supabase
-		.from("categories")
-		.select("id,name")
-		.eq("tenant_id", tenantId)
-		.order("name");
+	const [{ data: pcats }, { data: prods }] = await Promise.all([
+		supabase
+			.from("categories")
+			.select("id,name")
+			.eq("facility_id", facilityId)
+			.order("name"),
+		supabase
+			.from("products")
+			.select("id,name,price,stock_quantity,category_id,image_url")
+			.eq("facility_id", facilityId)
+			.order("name"),
+	]);
 	categories = (pcats as Category[] | null) ?? [];
-	const { data: prods } = await supabase
-		.from("products")
-		.select("id,name,price,stock_quantity,category_id,image_url")
-		.eq("tenant_id", tenantId)
-		.order("name");
 	products = (prods as Product[] | null) ?? [];
 	// reset virtual window
 	startIndex = 0;
@@ -108,9 +113,10 @@ async function onCreate(payload: {
 }): Promise<void> {
 	const toast = (await import("svelte-sonner")).toast;
 	const tenantId = $currentUser?.tenantIds?.[0];
+	const fid = await resolveSelectedFacilityId(supabase);
 	const { error } = await supabase
 		.from("products")
-		.insert({ ...payload, tenant_id: tenantId });
+		.insert({ ...payload, tenant_id: tenantId, facility_id: fid });
 	if (error) {
 		toast.error(error.message);
 		return;
@@ -245,7 +251,7 @@ function openEdit(p: Product) {
           <Table class="min-w-full">
             <TableHeader>
               <TableRow
-                class="border-0 text-xs uppercase tracking-[0.22em] text-muted-foreground"
+                class="border-0 text-xs uppercase text-muted-foreground"
               >
                 <TableHead class="w-[72px] rounded-l-xl"
                   >{t("common.image")}</TableHead

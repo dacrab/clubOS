@@ -5,6 +5,7 @@ import CardContent from "$lib/components/ui/card/card-content.svelte";
 import CardDescription from "$lib/components/ui/card/card-description.svelte";
 import CardHeader from "$lib/components/ui/card/card-header.svelte";
 import CardTitle from "$lib/components/ui/card/card-title.svelte";
+import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabase-client";
 
@@ -36,6 +37,7 @@ async function load() {
 					.from("tenant_settings")
 					.select("low_stock_threshold")
 					.eq("tenant_id", tenantId)
+					.is("facility_id", null)
 					.limit(1)
 					.maybeSingle();
 				if (settings && settings.low_stock_threshold != null) {
@@ -46,12 +48,26 @@ async function load() {
 	} catch (/** intentionally ignore: fallback to default threshold */ _err) {
 		/* no-op */
 	}
-	const { data } = await supabase
+	// Determine tenant and selected facility
+	let tenantId: string | null = null;
+	const { data: sessionData } = await supabase.auth.getSession();
+	const uid = sessionData.session?.user.id ?? "";
+	const { data: tm } = await supabase
+		.from("tenant_members")
+		.select("tenant_id")
+		.eq("user_id", uid)
+		.limit(1);
+	tenantId = (tm?.[0]?.tenant_id as string | undefined) ?? null;
+	const facilityId = await resolveSelectedFacilityId(supabase);
+	let q = supabase
 		.from("products")
 		.select("id,name,stock_quantity")
 		.order("stock_quantity", { ascending: true })
 		.lte("stock_quantity", threshold)
 		.neq("stock_quantity", -1);
+	if (tenantId) q = q.eq("tenant_id", tenantId);
+	if (facilityId) q = q.eq("facility_id", facilityId);
+	const { data } = await q;
 	items = (data ?? []) as Array<{
 		id: string;
 		name: string;
@@ -67,9 +83,7 @@ $effect(() => {
 <Card class="rounded-3xl border border-outline-soft bg-surface shadow-sm">
   <CardHeader class="flex flex-col gap-2 border-b border-outline-soft/60 p-5">
     <div class="flex items-center justify-between">
-      <CardTitle
-        class="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground"
-      >
+      <CardTitle class="text-sm font-semibold uppercase text-muted-foreground">
         {t("inventory.lowStock.title")}
       </CardTitle>
       <Badge

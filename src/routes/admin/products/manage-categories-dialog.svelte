@@ -17,6 +17,7 @@ import TableCell from "$lib/components/ui/table/table-cell.svelte";
 import TableHead from "$lib/components/ui/table/table-head.svelte";
 import TableHeader from "$lib/components/ui/table/table-header.svelte";
 import TableRow from "$lib/components/ui/table/table-row.svelte";
+import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabase-client";
 
@@ -76,12 +77,14 @@ async function save() {
 			.select("tenant_id")
 			.eq("user_id", user.id);
 		const tenantId = memberships?.[0]?.tenant_id;
+		const facId = await resolveSelectedFacilityId(supabase);
 		await supabase.from("categories").insert({
 			name: form.name,
 			description: form.description,
 			parent_id: form.parent_id || null,
 			created_by: user.id,
 			tenant_id: tenantId,
+			facility_id: facId,
 		});
 	}
 	await reload();
@@ -125,18 +128,13 @@ async function remove(id: string) {
 })(remove);
 
 async function reload() {
-	const { data: sessionData } = await supabase.auth.getSession();
-	const userId = sessionData.session?.user.id ?? "";
-	const { data: memberships } = await supabase
-		.from("tenant_members")
-		.select("tenant_id")
-		.eq("user_id", userId);
-	const tenantId = memberships?.[0]?.tenant_id;
-	const { data } = await supabase
+	const facId = await resolveSelectedFacilityId(supabase);
+	const query = supabase
 		.from("categories")
-		.select("id,name,description,parent_id")
-		.eq("tenant_id", tenantId)
-		.order("name");
+		.select("id,name,description,parent_id");
+	const { data } = await (facId ? query.eq("facility_id", facId) : query).order(
+		"name",
+	);
 	categories = (data ?? []) as Category[];
 }
 

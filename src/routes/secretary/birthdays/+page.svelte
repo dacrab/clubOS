@@ -26,6 +26,7 @@ import {
 	TabsTrigger,
 } from "$lib/components/ui/tabs";
 import { Textarea } from "$lib/components/ui/textarea";
+import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabase-client";
 import { currentUser, loadCurrentUser } from "$lib/user";
@@ -88,13 +89,16 @@ async function load() {
 		.select("tenant_id")
 		.eq("user_id", userId);
 
-	const tenantId = memberships?.[0]?.tenant_id;
+	const tenantId = memberships?.[0]?.tenant_id as string | undefined;
+	const facilityId = await resolveSelectedFacilityId(supabase);
 
-	const { data } = await supabase
+	let query = supabase
 		.from("appointments")
 		.select("*")
-		.eq("tenant_id", tenantId)
 		.order("appointment_date");
+	if (tenantId) query = query.eq("tenant_id", tenantId);
+	if (facilityId) query = query.eq("facility_id", facilityId);
+	const { data } = await query;
 
 	const rows = (data ?? []) as AppointmentDB[];
 	list = rows.map((a) => ({
@@ -117,6 +121,7 @@ async function create() {
 		.from("tenant_members")
 		.select("tenant_id")
 		.eq("user_id", user.id);
+	const facId = await resolveSelectedFacilityId(supabase);
 
 	const payload = {
 		...form,
@@ -125,6 +130,7 @@ async function create() {
 		),
 		created_by: user.id,
 		tenant_id: membership?.[0]?.tenant_id,
+		facility_id: facId,
 	};
 
 	const { error } = await supabase.from("appointments").insert(payload);

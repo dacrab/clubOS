@@ -6,7 +6,7 @@ import type { Database } from "../_database.types.ts";
 function getClients(req: Request) {
 	const supabaseUrl = Deno.env.get("SUPABASE_URL");
 	const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-	const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+	const serviceRole = Deno.env.get("SUPABASE_SECRET_KEY");
 	if (!(supabaseUrl && anonKey && serviceRole)) {
 		return { error: new Response("Missing Supabase env", { status: 500 }) };
 	}

@@ -30,11 +30,11 @@ let {
   {#if label || typeof count === "number" || badge}
     <div class="flex items-center justify-between gap-3 text-xs font-medium text-muted-foreground">
       {#if label}
-        <span class="uppercase tracking-[0.24em] text-muted-foreground/80">{label}</span>
+        <span class="uppercase text-muted-foreground/80">{label}</span>
       {/if}
       <div class="flex items-center gap-1.5">
         {#if typeof count === "number"}
-          <Badge variant="secondary" class="rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.18em]">
+          <Badge variant="secondary" class="rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase">
             {count}
           </Badge>
         {/if}

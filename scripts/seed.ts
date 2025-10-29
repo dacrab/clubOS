@@ -1,299 +1,264 @@
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
+// Types
+type UserRole = "admin" | "staff" | "secretary";
 type Category = { id: string; name: string };
 type Product = { id: string; name: string; price: number };
-type RegisterSession = { id: string };
 
+interface UserConfig {
+	email: string;
+	password: string;
+	username: string;
+	role: UserRole;
+}
+
+interface Context {
+	tenantId: string;
+	facilityId: string;
+}
+
+// Configuration
 dotenv.config({ path: ".env.local" });
 
 const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SECRET_KEY;
 
 if (!(supabaseUrl && supabaseServiceKey)) {
-	throw new Error(
-		"Missing PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in env",
-	);
+	throw new Error("Missing PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY in env");
 }
 
-// Use service role key to bypass RLS for seeding
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-	auth: {
-		autoRefreshToken: false,
-		persistSession: false,
-	},
+	auth: { autoRefreshToken: false, persistSession: false },
 });
 
-// Hardcoded user configuration
 const CONFIG = {
 	tenantName: "Demo Club",
+	facilityName: "Main Facility",
 	admin: {
 		email: "admin@example.com",
 		password: "admin123",
 		username: "Admin User",
+		role: "admin" as const,
 	},
 	staff: {
 		email: "staff@example.com",
 		password: "staff123",
+		username: "Staff User",
+		role: "staff" as const,
 	},
 	secretary: {
 		email: "secretary@example.com",
 		password: "secretary123",
+		username: "Secretary User",
+		role: "secretary" as const,
 	},
 };
 
-// Removed Edge Function dependencies - using direct database operations instead
+const DAY_MS = 24 * 60 * 60 * 1000;
 
-async function signInOrSignUpAdmin(): Promise<{ userId: string }> {
-	// Check if admin user already exists
-	const { data: existingUser } = await supabase.auth.admin.listUsers({
-		page: 1,
-		perPage: 1000,
-	});
-
-	const adminUser = existingUser.users.find(
-		(user) => user.email === CONFIG.admin.email,
-	);
-
-	if (adminUser) {
-		process.stdout.write(`Admin user already exists: ${CONFIG.admin.email}\n`);
-		return { userId: adminUser.id };
-	}
-
-	// Create admin user
-	const { data: signUpData, error: signUpErr } =
-		await supabase.auth.admin.createUser({
-			email: CONFIG.admin.email,
-			password: CONFIG.admin.password,
-			user_metadata: { role: "admin", username: CONFIG.admin.username },
-			email_confirm: true,
-		});
-
-	if (signUpErr) {
-		throw new Error(`Admin creation failed: ${signUpErr.message}`);
-	}
-
-	const createdId = signUpData.user?.id;
-	if (!createdId) {
-		throw new Error("Admin creation did not return a user id");
-	}
-
-	process.stdout.write(`Created admin user: ${CONFIG.admin.email}\n`);
-	return { userId: createdId };
-}
-
-async function ensureUserByUsername(username: string): Promise<string | null> {
-	const { data } = await supabase
-		.from("users")
-		.select("id")
-		.ilike("username", username)
-		.limit(1)
-		.maybeSingle();
-
-	return data?.id ?? null;
-}
-
-type CreateUserOptions = {
-	email: string;
-	password: string;
-	role: "admin" | "staff" | "secretary";
-	username: string;
-	facilityId?: string;
-};
-
-async function createUserViaFunction(opts: CreateUserOptions): Promise<string> {
-	const { email, password, role, username, facilityId } = opts;
-
-	const existingId = await ensureUserByUsername(username);
-	if (existingId) {
-		process.stdout.write(`User ${username} already exists\n`);
-		return existingId;
-	}
-
-	// Create user via Supabase Auth Admin API
-	const { data: signUpData, error: signUpError } =
-		await supabase.auth.admin.createUser({
-			email,
-			password,
-			user_metadata: { role, username },
-			email_confirm: true,
-		});
-
-	if (signUpError) {
-		throw new Error(`User creation failed: ${signUpError.message}`);
-	}
-
-	const userId = signUpData.user?.id;
-	if (!userId) {
-		throw new Error("User creation did not return a user id");
-	}
-
-	// Add user to tenant (required for all users)
-	const { data: tenantData } = await supabase
-		.from("tenants")
-		.select("id")
-		.eq("name", CONFIG.tenantName)
-		.limit(1)
-		.maybeSingle();
-
-	if (tenantData?.id) {
-		const { error: tenantError } = await supabase
-			.from("tenant_members")
-			.insert({ tenant_id: tenantData.id, user_id: userId });
-
-		if (tenantError) {
-			process.stderr.write(
-				`WARN: Failed to add user to tenant: ${tenantError.message}\n`,
-			);
-		}
-	}
-
-	// Add user to facility if specified
-	if (facilityId) {
-		const { error: facilityError } = await supabase
-			.from("facility_members")
-			.insert({ facility_id: facilityId, user_id: userId });
-
-		if (facilityError) {
-			process.stderr.write(
-				`WARN: Failed to add user to facility: ${facilityError.message}\n`,
-			);
-		}
-	}
-
-	process.stdout.write(`Created user: ${username}\n`);
-	return userId;
-}
-
-async function ensureTenantAndFacility(): Promise<{
-	tenantId: string;
-	facilityId: string;
-}> {
-	// Check if tenant already exists
-	const { data: existingTenant } = await supabase
-		.from("tenants")
-		.select("id")
-		.eq("name", CONFIG.tenantName)
-		.limit(1)
-		.maybeSingle();
-
-	let tenantId: string;
-	if (existingTenant?.id) {
-		tenantId = existingTenant.id;
-		process.stdout.write(`Using existing tenant: ${CONFIG.tenantName}\n`);
-	} else {
-		// Create new tenant
-		const { data: newTenant, error: tenantError } = await supabase
-			.from("tenants")
-			.insert({ name: CONFIG.tenantName })
-			.select("id")
-			.single();
-
-		if (tenantError) {
-			throw new Error(`Failed to create tenant: ${tenantError.message}`);
-		}
-		tenantId = newTenant.id;
-		process.stdout.write(`Created tenant: ${CONFIG.tenantName}\n`);
-	}
-
-	// Check if facility already exists
-	const { data: existingFacility } = await supabase
-		.from("facilities")
-		.select("id")
-		.eq("tenant_id", tenantId)
-		.eq("name", "Main Facility")
-		.limit(1)
-		.maybeSingle();
-
-	let facilityId: string;
-	if (existingFacility?.id) {
-		facilityId = existingFacility.id;
-		process.stdout.write("Using existing facility: Main Facility\n");
-	} else {
-		// Create new facility
-		const { data: newFacility, error: facilityError } = await supabase
-			.from("facilities")
-			.insert({
-				tenant_id: tenantId,
-				name: "Main Facility",
-			})
-			.select("id")
-			.single();
-
-		if (facilityError) {
-			throw new Error(`Failed to create facility: ${facilityError.message}`);
-		}
-		facilityId = newFacility.id;
-		process.stdout.write("Created facility: Main Facility\n");
-	}
-
-	return { tenantId, facilityId };
-}
-
-async function ensureTenantSettings(
+// Helper functions
+async function ensureMemberships(
+	userId: string,
 	tenantId: string,
 	facilityId: string,
-): Promise<string> {
+): Promise<void> {
+	await Promise.all([
+		supabase
+			.from("tenant_members")
+			.upsert(
+				{ tenant_id: tenantId, user_id: userId },
+				{ onConflict: "tenant_id,user_id" },
+			),
+		supabase
+			.from("facility_members")
+			.upsert(
+				{ facility_id: facilityId, user_id: userId },
+				{ onConflict: "facility_id,user_id" },
+			),
+	]);
+}
+
+async function normalizeMemberships(
+	userId: string,
+	tenantId: string,
+	facilityId: string,
+): Promise<void> {
+	await ensureMemberships(userId, tenantId, facilityId);
+	await Promise.all([
+		supabase
+			.from("tenant_members")
+			.delete()
+			.eq("user_id", userId)
+			.neq("tenant_id", tenantId),
+		supabase
+			.from("facility_members")
+			.delete()
+			.eq("user_id", userId)
+			.neq("facility_id", facilityId),
+	]);
+}
+
+async function ensureProfileUser(
+	userId: string,
+	username: string,
+	role: UserRole,
+): Promise<void> {
 	const { data: existing } = await supabase
-		.from("tenant_settings")
+		.from("users")
 		.select("id")
-		.eq("tenant_id", tenantId)
-		.eq("facility_id", facilityId)
-		.limit(1)
+		.eq("id", userId)
 		.maybeSingle();
 
 	if (existing?.id) {
-		return existing.id;
+		await supabase.from("users").update({ username, role }).eq("id", userId);
+		return;
 	}
 
+	await supabase.from("users").insert({ id: userId, username, role });
+}
+
+async function findAuthUserByEmail(email: string): Promise<string | null> {
+	const { data } = await supabase.auth.admin.listUsers({
+		page: 1,
+		perPage: 1000,
+	});
+	const user = data.users.find(
+		(u) => u.email?.toLowerCase() === email.toLowerCase(),
+	);
+	return user?.id ?? null;
+}
+
+async function createAuthUser(config: UserConfig): Promise<string> {
+	const { data, error } = await supabase.auth.admin.createUser({
+		email: config.email,
+		password: config.password,
+		user_metadata: { role: config.role, username: config.username },
+		email_confirm: true,
+	});
+
+	if (error) throw new Error(`User creation failed: ${error.message}`);
+	if (!data.user?.id) throw new Error("User creation did not return a user id");
+
+	return data.user.id;
+}
+
+async function ensureUser(
+	config: UserConfig,
+	context: Context,
+): Promise<string> {
+	const existingAuthId = await findAuthUserByEmail(config.email);
+
+	if (existingAuthId) {
+		await ensureProfileUser(existingAuthId, config.username, config.role);
+		await ensureMemberships(
+			existingAuthId,
+			context.tenantId,
+			context.facilityId,
+		);
+		process.stdout.write(`User exists: ${config.email}\n`);
+		return existingAuthId;
+	}
+
+	const userId = await createAuthUser(config);
+	await ensureProfileUser(userId, config.username, config.role);
+	await ensureMemberships(userId, context.tenantId, context.facilityId);
+	process.stdout.write(`Created user: ${config.username}\n`);
+	return userId;
+}
+
+async function ensureEntity<T extends { id: string }>(opts: {
+	table: string;
+	findBy: Record<string, unknown>;
+	insert: Record<string, unknown>;
+	select?: string;
+}): Promise<T> {
+	const { data: existing } = await supabase
+		.from(opts.table)
+		.select(opts.select ?? "id")
+		.match(opts.findBy)
+		.maybeSingle();
+
+	if (existing) return existing as unknown as T;
+
 	const { data, error } = await supabase
-		.from("tenant_settings")
-		.upsert(
-			{
-				tenant_id: tenantId,
-				facility_id: facilityId,
-			},
-			{ onConflict: "tenant_id,facility_id" },
-		)
-		.select("id")
+		.from(opts.table)
+		.insert(opts.insert)
+		.select(opts.select ?? "id")
 		.single();
 
 	if (error) {
-		throw new Error(`Failed to ensure tenant settings: ${error.message}`);
+		throw new Error(`Failed to create ${opts.table}: ${error.message}`);
 	}
 
-	return data.id;
+	return data as unknown as T;
 }
 
-async function ensureUserPreferences(userId: string) {
+async function ensureTenantAndFacility(): Promise<Context> {
+	const tenant = await ensureEntity<{ id: string }>({
+		table: "tenants",
+		findBy: { name: CONFIG.tenantName },
+		insert: { name: CONFIG.tenantName },
+	});
+
+	process.stdout.write(`Using tenant: ${CONFIG.tenantName}\n`);
+
+	const facility = await ensureEntity<{ id: string }>({
+		table: "facilities",
+		findBy: { tenant_id: tenant.id, name: CONFIG.facilityName },
+		insert: { tenant_id: tenant.id, name: CONFIG.facilityName },
+	});
+
+	process.stdout.write(`Using facility: ${CONFIG.facilityName}\n`);
+
+	return { tenantId: tenant.id, facilityId: facility.id };
+}
+
+async function ensureTenantSettings(context: Context): Promise<void> {
+	await Promise.all([
+		supabase
+			.from("tenant_settings")
+			.upsert(
+				{ tenant_id: context.tenantId, facility_id: context.facilityId },
+				{ onConflict: "tenant_id,facility_id" },
+			),
+		supabase
+			.from("tenant_settings")
+			.upsert({ tenant_id: context.tenantId }, { onConflict: "tenant_id" }),
+	]);
+}
+
+async function ensureUserPreferences(userId: string): Promise<void> {
 	await supabase
 		.from("user_preferences")
-		.upsert({ user_id: userId }, { onConflict: "user_id" })
-		.select("user_id")
-		.maybeSingle();
+		.upsert({ user_id: userId }, { onConflict: "user_id" });
 }
 
 async function seedCategories(
 	adminId: string,
-	tenantId: string,
-	facilityId: string,
-): Promise<Category[]> {
+	context: Context,
+): Promise<Map<string, Category>> {
+	const categoryMap = new Map<string, Category>();
+
 	async function ensureCategory(
 		name: string,
 		description: string,
 		parentId?: string,
 	): Promise<Category> {
-		const { data: existing } = await supabase
+		const existing = categoryMap.get(name);
+		if (existing) return existing;
+
+		const { data: found } = await supabase
 			.from("categories")
 			.select("id, name")
-			.eq("tenant_id", tenantId)
-			.eq("facility_id", facilityId)
+			.eq("tenant_id", context.tenantId)
+			.eq("facility_id", context.facilityId)
 			.ilike("name", name)
-			.limit(1)
 			.maybeSingle();
 
-		if (existing?.id) {
-			return existing as Category;
+		if (found) {
+			categoryMap.set(name, found as Category);
+			return found as Category;
 		}
 
 		const { data, error } = await supabase
@@ -303,21 +268,21 @@ async function seedCategories(
 				description,
 				parent_id: parentId,
 				created_by: adminId,
-				tenant_id: tenantId,
-				facility_id: facilityId,
+				tenant_id: context.tenantId,
+				facility_id: context.facilityId,
 			})
 			.select("id,name")
 			.single();
 
-		if (error) {
-			throw new Error(`Failed to ensure category ${name}: ${error.message}`);
-		}
+		if (error)
+			throw new Error(`Failed to create category ${name}: ${error.message}`);
 
-		return data as Category;
+		const category = data as Category;
+		categoryMap.set(name, category);
+		return category;
 	}
 
 	const rootCategory = await ensureCategory("Καφέδες", "Όλα τα είδη καφέ");
-
 	await Promise.all([
 		ensureCategory("Ζεστοί Καφέδες", "Ζεστοί καφέδες", rootCategory.id),
 		ensureCategory("Κρύοι Καφέδες", "Κρύοι καφέδες", rootCategory.id),
@@ -325,205 +290,162 @@ async function seedCategories(
 		ensureCategory("Σνακ", "Διάφορα σνακ"),
 	]);
 
-	const { data: rows, error: fetchErr } = await supabase
-		.from("categories")
-		.select("id,name")
-		.eq("tenant_id", tenantId)
-		.eq("facility_id", facilityId);
-
-	if (fetchErr) {
-		throw new Error(`Failed to fetch categories: ${fetchErr.message}`);
-	}
-
 	process.stdout.write("Ensured categories\n");
-	return (rows ?? []).map(({ id, name }) => ({ id, name }));
+	return categoryMap;
 }
 
 async function seedProducts(
-	categories: Category[],
+	categories: Map<string, Category>,
 	adminId: string,
-	tenantId: string,
-	facilityId: string,
-): Promise<Product[]> {
-	const categoryMap = {
-		hotCoffee: categories.find((c) => c.name === "Ζεστοί Καφέδες"),
-		coldCoffee: categories.find((c) => c.name === "Κρύοι Καφέδες"),
-		beverage: categories.find((c) => c.name === "Ροφήματα"),
-		snack: categories.find((c) => c.name === "Σνακ"),
-	};
-
+	context: Context,
+): Promise<Map<string, Product>> {
 	const productData = [
-		// Hot Coffees
-		{ name: "Espresso", price: 2.0, category: categoryMap.hotCoffee },
-		{ name: "Cappuccino", price: 3.0, category: categoryMap.hotCoffee },
-		{ name: "Latte", price: 3.5, category: categoryMap.hotCoffee },
-
-		// Cold Coffees
-		{ name: "Freddo Espresso", price: 3.0, category: categoryMap.coldCoffee },
-		{ name: "Freddo Cappuccino", price: 3.5, category: categoryMap.coldCoffee },
-		{ name: "Iced Latte", price: 4.0, category: categoryMap.coldCoffee },
-
-		// Beverages
-		{ name: "Σοκολάτα", price: 3.5, category: categoryMap.beverage },
-		{ name: "Τσάι", price: 2.5, category: categoryMap.beverage },
-		{ name: "Χυμός Πορτοκάλι", price: 3.0, category: categoryMap.beverage },
-
-		// Snacks
-		{ name: "Κρουασάν", price: 2.0, category: categoryMap.snack, stock: 20 },
-		{ name: "Σάντουιτς", price: 3.5, category: categoryMap.snack, stock: 15 },
-		{ name: "Τοστ", price: 2.5, category: categoryMap.snack, stock: 25 },
+		{ name: "Espresso", price: 2.0, categoryName: "Ζεστοί Καφέδες" },
+		{ name: "Cappuccino", price: 3.0, categoryName: "Ζεστοί Καφέδες" },
+		{ name: "Latte", price: 3.5, categoryName: "Ζεστοί Καφέδες" },
+		{ name: "Freddo Espresso", price: 3.0, categoryName: "Κρύοι Καφέδες" },
+		{ name: "Freddo Cappuccino", price: 3.5, categoryName: "Κρύοι Καφέδες" },
+		{ name: "Iced Latte", price: 4.0, categoryName: "Κρύοι Καφέδες" },
+		{ name: "Σοκολάτα", price: 3.5, categoryName: "Ροφήματα" },
+		{ name: "Τσάι", price: 2.5, categoryName: "Ροφήματα" },
+		{ name: "Χυμός Πορτοκάλι", price: 3.0, categoryName: "Ροφήματα" },
+		{ name: "Κρουασάν", price: 2.0, categoryName: "Σνακ", stock: 20 },
+		{ name: "Σάντουιτς", price: 3.5, categoryName: "Σνακ", stock: 15 },
+		{ name: "Τοστ", price: 2.5, categoryName: "Σνακ", stock: 25 },
 	];
 
-	const ensured: Product[] = [];
+	const productMap = new Map<string, Product>();
 
 	for (const p of productData) {
 		const { data: existing } = await supabase
 			.from("products")
 			.select("id,name,price")
-			.eq("tenant_id", tenantId)
-			.eq("facility_id", facilityId)
+			.eq("tenant_id", context.tenantId)
+			.eq("facility_id", context.facilityId)
 			.ilike("name", p.name)
-			.limit(1)
 			.maybeSingle();
 
-		if (existing?.id) {
-			ensured.push(existing as Product);
+		if (existing) {
+			productMap.set(p.name, existing as Product);
 			continue;
 		}
 
+		const category = categories.get(p.categoryName);
 		const { data: created, error } = await supabase
 			.from("products")
 			.insert({
 				name: p.name,
 				price: p.price,
-				stock_quantity: p.stock ?? -1,
-				category_id: p.category?.id,
+				stock_quantity: ("stock" in p ? p.stock : undefined) ?? -1,
+				category_id: category?.id,
 				created_by: adminId,
-				tenant_id: tenantId,
-				facility_id: facilityId,
+				tenant_id: context.tenantId,
+				facility_id: context.facilityId,
 			})
 			.select("id,name,price")
 			.single();
 
-		if (error) {
-			throw new Error(`Failed to ensure product ${p.name}: ${error.message}`);
-		}
-
-		ensured.push(created as Product);
+		if (error)
+			throw new Error(`Failed to create product ${p.name}: ${error.message}`);
+		productMap.set(p.name, created as Product);
 	}
 
 	process.stdout.write("Ensured products\n");
-	return ensured.map(({ id, name, price }) => ({ id, name, price }));
+	return productMap;
 }
 
 async function seedRegisterSession(
 	adminId: string,
-	tenantId: string,
-	facilityId: string,
-): Promise<RegisterSession> {
+	context: Context,
+): Promise<string> {
 	const { data: existing } = await supabase
 		.from("register_sessions")
 		.select("id")
-		.eq("tenant_id", tenantId)
-		.eq("facility_id", facilityId)
+		.eq("tenant_id", context.tenantId)
+		.eq("facility_id", context.facilityId)
 		.is("closed_at", null)
-		.limit(1)
 		.maybeSingle();
 
 	if (existing?.id) {
 		process.stdout.write("Reusing open register session\n");
-		return { id: existing.id };
+		return existing.id;
 	}
 
 	const { data, error } = await supabase
 		.from("register_sessions")
 		.insert({
 			opened_by: adminId,
-			tenant_id: tenantId,
-			facility_id: facilityId,
+			tenant_id: context.tenantId,
+			facility_id: context.facilityId,
 		})
 		.select("id")
 		.single();
 
-	if (error) {
+	if (error)
 		throw new Error(`Failed to create register session: ${error.message}`);
-	}
-
 	process.stdout.write("Created register session\n");
-	return { id: data.id };
+	return data.id;
 }
 
-type SeedOrderOptions = {
-	session: RegisterSession;
-	products: Product[];
+async function seedOrders(opts: {
+	sessionId: string;
+	products: Map<string, Product>;
 	staffId: string;
-	tenantId: string;
-	facilityId: string;
-};
+	context: Context;
+}): Promise<void> {
+	const { sessionId, products, staffId, context } = opts;
 
-async function seedOrders(opts: SeedOrderOptions) {
-	const { session, products, staffId, tenantId, facilityId } = opts;
+	const espresso = products.get("Espresso");
+	const chocolate = products.get("Σοκολάτα");
+	const croissant = products.get("Κρουασάν");
 
-	const productMap = {
-		espresso: products.find((p) => p.name === "Espresso"),
-		chocolate: products.find((p) => p.name === "Σοκολάτα"),
-		croissant: products.find((p) => p.name === "Κρουασάν"),
-	};
-
-	if (!(productMap.espresso && productMap.chocolate && productMap.croissant)) {
+	if (!(espresso && chocolate && croissant)) {
 		throw new Error("Required products missing for order items");
 	}
 
-	// Check if order already exists
-	const { data: existingOrder } = await supabase
+	const { data: existing } = await supabase
 		.from("orders")
 		.select("id")
-		.eq("session_id", session.id)
-		.limit(1)
+		.eq("session_id", sessionId)
 		.maybeSingle();
 
-	if (existingOrder?.id) {
-		process.stdout.write("Sample order already exists — skipping\n");
+	if (existing?.id) {
+		process.stdout.write("Sample order exists — skipping\n");
 		return;
 	}
 
-	// Calculate order totals
 	const prices = {
-		espresso: Number(productMap.espresso.price),
-		chocolate: Number(productMap.chocolate.price),
-		croissant: Number(productMap.croissant.price),
+		espresso: Number(espresso.price),
+		chocolate: Number(chocolate.price),
+		croissant: Number(croissant.price),
 	};
 
 	const subtotal = prices.espresso + prices.chocolate + prices.croissant;
-	const treatDiscount = prices.espresso; // espresso is treated
-	const discountAmount = treatDiscount;
+	const discountAmount = prices.espresso;
 	const totalAmount = subtotal - discountAmount;
 
-	// Create order
 	const { data: order, error: orderError } = await supabase
 		.from("orders")
 		.insert({
-			session_id: session.id,
+			session_id: sessionId,
 			subtotal,
 			discount_amount: discountAmount,
 			total_amount: totalAmount,
 			coupon_count: 0,
 			created_by: staffId,
-			tenant_id: tenantId,
-			facility_id: facilityId,
+			tenant_id: context.tenantId,
+			facility_id: context.facilityId,
 		})
 		.select("id")
 		.single();
 
-	if (orderError) {
+	if (orderError)
 		throw new Error(`Failed to create order: ${orderError.message}`);
-	}
 
-	// Create order items
 	const orderItems = [
 		{
 			order_id: order.id,
-			product_id: productMap.espresso.id,
+			product_id: espresso.id,
 			quantity: 1,
 			unit_price: prices.espresso,
 			line_total: 0,
@@ -531,7 +453,7 @@ async function seedOrders(opts: SeedOrderOptions) {
 		},
 		{
 			order_id: order.id,
-			product_id: productMap.chocolate.id,
+			product_id: chocolate.id,
 			quantity: 1,
 			unit_price: prices.chocolate,
 			line_total: prices.chocolate,
@@ -539,7 +461,7 @@ async function seedOrders(opts: SeedOrderOptions) {
 		},
 		{
 			order_id: order.id,
-			product_id: productMap.croissant.id,
+			product_id: croissant.id,
 			quantity: 1,
 			unit_price: prices.croissant,
 			line_total: prices.croissant,
@@ -550,30 +472,16 @@ async function seedOrders(opts: SeedOrderOptions) {
 	const { error: itemsError } = await supabase
 		.from("order_items")
 		.insert(orderItems);
-
-	if (itemsError) {
+	if (itemsError)
 		throw new Error(`Failed to create order items: ${itemsError.message}`);
-	}
 
 	process.stdout.write("Created sample order\n");
 }
 
-const MILLISECONDS_PER_SECOND = 1000;
-const SECONDS_PER_MINUTE = 60;
-const MINUTES_PER_HOUR = 60;
-const HOURS_PER_DAY = 24;
-const DAYS_AHEAD_FOR_APPOINTMENT = 3;
-const DAY_MS =
-	HOURS_PER_DAY *
-	MINUTES_PER_HOUR *
-	SECONDS_PER_MINUTE *
-	MILLISECONDS_PER_SECOND;
-
 async function seedAppointments(
 	staffId: string,
-	tenantId: string,
-	facilityId: string,
-) {
+	context: Context,
+): Promise<void> {
 	const appointments = [
 		{
 			customer_name: "Μαρία Παπαδοπούλου",
@@ -586,9 +494,7 @@ async function seedAppointments(
 		{
 			customer_name: "Γιώργος Δημητρίου",
 			contact_info: "6923456789",
-			appointment_date: new Date(
-				Date.now() + DAYS_AHEAD_FOR_APPOINTMENT * DAY_MS,
-			),
+			appointment_date: new Date(Date.now() + 3 * DAY_MS),
 			num_children: 5,
 			num_adults: 3,
 			notes: "Σχολική εκδρομή",
@@ -599,22 +505,19 @@ async function seedAppointments(
 		const { data: existing } = await supabase
 			.from("appointments")
 			.select("id")
-			.eq("tenant_id", tenantId)
-			.eq("facility_id", facilityId)
+			.eq("tenant_id", context.tenantId)
+			.eq("facility_id", context.facilityId)
 			.eq("appointment_date", appointment.appointment_date.toISOString())
 			.ilike("customer_name", appointment.customer_name)
-			.limit(1)
 			.maybeSingle();
 
-		if (existing?.id) {
-			continue;
-		}
+		if (existing?.id) continue;
 
 		const { error } = await supabase.from("appointments").insert({
 			...appointment,
 			created_by: staffId,
-			tenant_id: tenantId,
-			facility_id: facilityId,
+			tenant_id: context.tenantId,
+			facility_id: context.facilityId,
 		});
 
 		if (error) {
@@ -629,9 +532,8 @@ async function seedAppointments(
 
 async function seedFootballBookings(
 	staffId: string,
-	tenantId: string,
-	facilityId: string,
-) {
+	context: Context,
+): Promise<void> {
 	const bookings = [
 		{
 			customer_name: "Νίκος Αντωνίου",
@@ -655,22 +557,19 @@ async function seedFootballBookings(
 		const { data: existing } = await supabase
 			.from("football_bookings")
 			.select("id")
-			.eq("tenant_id", tenantId)
-			.eq("facility_id", facilityId)
+			.eq("tenant_id", context.tenantId)
+			.eq("facility_id", context.facilityId)
 			.eq("booking_datetime", booking.booking_datetime.toISOString())
 			.eq("field_number", booking.field_number)
-			.limit(1)
 			.maybeSingle();
 
-		if (existing?.id) {
-			continue;
-		}
+		if (existing?.id) continue;
 
 		const { error } = await supabase.from("football_bookings").insert({
 			...booking,
 			created_by: staffId,
-			tenant_id: tenantId,
-			facility_id: facilityId,
+			tenant_id: context.tenantId,
+			facility_id: context.facilityId,
 		});
 
 		if (error) {
@@ -683,83 +582,39 @@ async function seedFootballBookings(
 	process.stdout.write("Ensured football bookings\n");
 }
 
-async function main() {
+async function main(): Promise<void> {
 	try {
 		process.stdout.write("Starting database seeding...\n");
 
-		// Ensure tenant + facility first
-		const { tenantId, facilityId } = await ensureTenantAndFacility();
+		const context = await ensureTenantAndFacility();
+		const adminId = await ensureUser(CONFIG.admin, context);
+		await normalizeMemberships(adminId, context.tenantId, context.facilityId);
 
-		// Authenticate admin
-		const { userId: adminId } = await signInOrSignUpAdmin();
+		const staffId = await ensureUser(CONFIG.staff, context);
+		await normalizeMemberships(staffId, context.tenantId, context.facilityId);
 
-		// Ensure admin is added to tenant
-		const { error: adminTenantError } = await supabase
-			.from("tenant_members")
-			.upsert(
-				{ tenant_id: tenantId, user_id: adminId },
-				{ onConflict: "tenant_id,user_id" },
-			);
+		const secretaryId = await ensureUser(CONFIG.secretary, context);
+		await normalizeMemberships(
+			secretaryId,
+			context.tenantId,
+			context.facilityId,
+		);
 
-		if (adminTenantError) {
-			process.stderr.write(
-				`WARN: Failed to add admin to tenant: ${adminTenantError.message}\n`,
-			);
-		}
-
-		// Ensure admin is added to facility
-		const { error: adminFacilityError } = await supabase
-			.from("facility_members")
-			.upsert(
-				{ facility_id: facilityId, user_id: adminId },
-				{ onConflict: "facility_id,user_id" },
-			);
-
-		if (adminFacilityError) {
-			process.stderr.write(
-				`WARN: Failed to add admin to facility: ${adminFacilityError.message}\n`,
-			);
-		}
-
-		// Create additional users
-		const staffId = await createUserViaFunction({
-			email: CONFIG.staff.email,
-			password: CONFIG.staff.password,
-			role: "staff",
-			username: "Staff User",
-			facilityId,
-		});
-
-		const secretaryId = await createUserViaFunction({
-			email: CONFIG.secretary.email,
-			password: CONFIG.secretary.password,
-			role: "secretary",
-			username: "Secretary User",
-			facilityId,
-		});
-
-		// Ensure settings and preferences
-		await ensureTenantSettings(tenantId, facilityId);
+		await ensureTenantSettings(context);
 		await Promise.all([
 			ensureUserPreferences(adminId),
 			ensureUserPreferences(staffId),
 			ensureUserPreferences(secretaryId),
 		]);
 
-		// Seed data
-		const categories = await seedCategories(adminId, tenantId, facilityId);
-		const products = await seedProducts(
-			categories,
-			adminId,
-			tenantId,
-			facilityId,
-		);
-		const session = await seedRegisterSession(adminId, tenantId, facilityId);
+		const categories = await seedCategories(adminId, context);
+		const products = await seedProducts(categories, adminId, context);
+		const sessionId = await seedRegisterSession(adminId, context);
 
 		await Promise.all([
-			seedOrders({ session, products, staffId, tenantId, facilityId }),
-			seedAppointments(staffId, tenantId, facilityId),
-			seedFootballBookings(staffId, tenantId, facilityId),
+			seedOrders({ sessionId, products, staffId, context }),
+			seedAppointments(staffId, context),
+			seedFootballBookings(staffId, context),
 		]);
 
 		process.stdout.write("Database seeding completed successfully!\n");

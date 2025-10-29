@@ -17,6 +17,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "$lib/components/ui/dialog";
+import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import {
 	subtotal as calcSubtotal,
@@ -67,7 +68,6 @@ let couponCount = $state(0);
 let selectedCategory = $state<string | null>(null);
 let categories: Category[] = $state([]);
 let internalProducts: Product[] = $state([]);
-let tenantId: string | null = $state(null);
 let facilityId: string | null = $state(null);
 
 function addToCart(product: Product) {
@@ -129,63 +129,12 @@ async function submit() {
 }
 
 async function ensureFacilityContext(): Promise<void> {
-	if (tenantId && facilityId) {
-		return;
-	}
-
-	const { data: sessionData } = await supabase.auth.getSession();
-	const userId = sessionData.session?.user.id;
-	if (!userId) {
-		return;
-	}
-
-	// Get tenant
-	const { data: memberships } = await supabase
-		.from("tenant_members")
-		.select("tenant_id")
-		.eq("user_id", userId);
-
-	tenantId = memberships?.[0]?.tenant_id ?? null;
-	if (!tenantId) {
-		return;
-	}
-
-	// Get facility
-	const { data: facilities } = await supabase
-		.from("facilities")
-		.select("id")
-		.eq("tenant_id", tenantId)
-		.order("name")
-		.limit(1);
-
-	const facilityIdValue = facilities?.[0]?.id ?? null;
-	if (!facilityIdValue) {
-		return;
-	}
-
-	// Ensure membership
-	const { data: existing } = await supabase
-		.from("facility_members")
-		.select("facility_id")
-		.eq("facility_id", facilityIdValue)
-		.eq("user_id", userId)
-		.maybeSingle();
-
-	if (!existing) {
-		await supabase
-			.from("facility_members")
-			.upsert(
-				{ facility_id: facilityIdValue, user_id: userId },
-				{ onConflict: "facility_id,user_id" },
-			);
-	}
-
-	facilityId = facilityIdValue;
+	facilityId = await resolveSelectedFacilityId(supabase);
 }
 
 async function loadCategories() {
 	await ensureFacilityContext();
-	if (!(tenantId && facilityId)) {
+	if (!facilityId) {
 		categories = [];
 		return;
 	}
@@ -193,7 +142,6 @@ async function loadCategories() {
 	const { data } = await supabase
 		.from("categories")
 		.select("id,name,parent_id")
-		.eq("tenant_id", tenantId)
 		.eq("facility_id", facilityId)
 		.order("name");
 
@@ -206,7 +154,7 @@ async function loadProducts() {
 	}
 
 	await ensureFacilityContext();
-	if (!(tenantId && facilityId)) {
+	if (!facilityId) {
 		internalProducts = [];
 		return;
 	}
@@ -214,7 +162,6 @@ async function loadProducts() {
 	const { data } = await supabase
 		.from("products")
 		.select("id,name,price,category_id,image_url")
-		.eq("tenant_id", tenantId)
 		.eq("facility_id", facilityId)
 		.order("name");
 

@@ -105,7 +105,7 @@ function money(value: number) {
 
   <div class="flex flex-col gap-2">
     <h5
-      class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
+      class="text-xs font-semibold uppercase text-muted-foreground"
     >
       {t("orders.itemsHeader")}
     </h5>

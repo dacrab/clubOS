@@ -54,13 +54,19 @@ export async function loadCurrentUser(): Promise<void> {
 		.from("tenant_members")
 		.select("tenant_id")
 		.eq("user_id", session.user.id);
+
+	const tenantIds = (memberships ?? []).map(
+		(m) => (m as { tenant_id: string }).tenant_id,
+	);
+
+	// If no tenant membership, still keep the session and expose the user;
+	// pages can handle empty tenantIds without forcing a logout loop.
+
 	currentUser.set({
 		id: session.user.id,
 		email: session.user.email ?? null,
 		role: profileRole,
 		username: profileUsername,
-		tenantIds: (memberships ?? []).map(
-			(m) => (m as { tenant_id: string }).tenant_id,
-		),
+		tenantIds,
 	});
 }

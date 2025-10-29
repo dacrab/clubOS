@@ -112,6 +112,7 @@ export async function loadSettings(): Promise<void> {
 					"lowStockThreshold:low_stock_threshold,allowUnlimitedStock:allow_unlimited_stock,negativeStockAllowed:negative_stock_allowed,defaultCategorySort:default_category_sort,productsPageSize:products_page_size,imageMaxSizeMb:image_max_size_mb,couponsValue:coupons_value,allowTreats:allow_treats,requireOpenRegisterForSale:require_open_register_for_sale,currencyCode:currency_code,taxRatePercent:tax_rate_percent,receiptFooterText:receipt_footer_text,bookingDefaultDurationMin:booking_default_duration_min,footballFieldsCount:football_fields_count,appointmentBufferMin:appointment_buffer_min,preventOverlaps:prevent_overlaps,themeDefault:theme_default,defaultLocale:default_locale",
 				)
 				.eq("tenant_id", tenantId)
+				.is("facility_id", null)
 				.limit(1)
 				.maybeSingle()
 		: Promise.resolve<Row<Partial<DbTenantSettingsRow>>>({ data: null });

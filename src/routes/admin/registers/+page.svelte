@@ -14,6 +14,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "$lib/components/ui/table";
+import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import {
 	discountsForSession,
@@ -149,10 +150,23 @@ async function loadSessions() {
 		: null;
 	const endISO = endDate ? new Date(`${endDate}T23:59:59`).toISOString() : null;
 
+	// Resolve tenant and selected facility
+	const { data: sessionData } = await supabase.auth.getSession();
+	const uid = sessionData.session?.user.id ?? "";
+	const { data: tm } = await supabase
+		.from("tenant_members")
+		.select("tenant_id")
+		.eq("user_id", uid)
+		.limit(1);
+	const tenantId = (tm?.[0]?.tenant_id as string | undefined) ?? null;
+	const facilityId = await resolveSelectedFacilityId(supabase);
+
 	let query = supabase
 		.from("register_sessions")
 		.select("id, opened_at, opened_by, closed_at, notes")
 		.order("opened_at", { ascending: false });
+	if (tenantId) query = query.eq("tenant_id", tenantId);
+	if (facilityId) query = query.eq("facility_id", facilityId);
 
 	if (startISO || endISO) {
 		const s = startISO ?? "1970-01-01T00:00:00.000Z";
@@ -379,7 +393,7 @@ function getTreatTotalForSession(sessionId: string): number {
   >
     <div class="border-b border-outline-soft/60 px-6 py-4">
       <div
-        class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+        class="text-[11px] font-semibold uppercase text-muted-foreground"
       >
         {t("pages.registers.pickDate")}
       </div>
@@ -401,7 +415,7 @@ function getTreatTotalForSession(sessionId: string): number {
         <Table class="min-w-full">
           <TableHeader>
             <TableRow
-              class="border-0 text-xs uppercase tracking-[0.22em] text-muted-foreground"
+              class="border-0 text-xs uppercase text-muted-foreground"
             >
               <TableHead class="rounded-l-xl"
                 >{t("pages.registers.id")}</TableHead
@@ -442,7 +456,7 @@ function getTreatTotalForSession(sessionId: string): number {
                 >
                   <TableCell class="text-muted-foreground">
                     <div
-                      class="font-mono text-[11px] uppercase tracking-[0.24em]"
+                      class="font-mono text-[11px] uppercase"
                     >
                       #{session.id.slice(0, 8)}
                     </div>
@@ -504,7 +518,7 @@ function getTreatTotalForSession(sessionId: string): number {
                       {#if expanded[session.id]}
                         <div class="px-6 py-4">
                           <div
-                            class="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+                            class="mb-2 text-xs font-semibold uppercase text-muted-foreground"
                           >
                             {t("orders.recent")} •
                             {t("orders.coupons")}: {getCouponsCountForSession(
@@ -524,7 +538,7 @@ function getTreatTotalForSession(sessionId: string): number {
                                 >
                                   <div class="flex items-center gap-3">
                                     <span
-                                      class="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground"
+                                      class="font-mono text-[11px] uppercase text-muted-foreground"
                                     >
                                       #{order.id.slice(0, 8)}
                                     </span>

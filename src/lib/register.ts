@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { resolveSelectedFacilityId } from "$lib/facility";
 
 export async function getOpenSession(
 	supabase: SupabaseClient,
@@ -10,12 +11,15 @@ export async function getOpenSession(
 		.select("tenant_id")
 		.eq("user_id", userId);
 	const tenantId = memberships?.[0]?.tenant_id;
-	const { data, error } = await supabase
+	const facilityId = await resolveSelectedFacilityId(supabase);
+	let query = supabase
 		.from("register_sessions")
 		.select("id, closed_at")
 		.eq("tenant_id", tenantId)
 		.order("opened_at", { ascending: false })
 		.limit(1);
+	if (facilityId) query = query.eq("facility_id", facilityId);
+	const { data, error } = await query;
 	if (error) {
 		return null;
 	}
@@ -39,9 +43,10 @@ export async function ensureOpenSession(
 		.select("tenant_id")
 		.eq("user_id", userId);
 	const tenantId = memberships?.[0]?.tenant_id;
+	const facilityId = await resolveSelectedFacilityId(supabase);
 	const { data, error } = await supabase
 		.from("register_sessions")
-		.insert({ opened_by: userId, tenant_id: tenantId })
+		.insert({ opened_by: userId, tenant_id: tenantId, facility_id: facilityId })
 		.select()
 		.single();
 	if (error) {

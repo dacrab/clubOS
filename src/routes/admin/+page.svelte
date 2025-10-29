@@ -14,6 +14,7 @@ import RecentOrders from "$lib/components/recent-orders.svelte";
 import Button from "$lib/components/ui/button/button.svelte";
 import PageContent from "$lib/components/ui/page/page-content.svelte";
 import PageHeader from "$lib/components/ui/page/page-header.svelte";
+import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import { closeRegister, ensureOpenSession } from "$lib/register";
 import { supabase } from "$lib/supabase-client";
@@ -55,13 +56,24 @@ $effect(() => {
 async function notifyLowStock() {
 	const THRESHOLD = 3;
 	const SAMPLE = 5;
-	const { data } = await supabase
+	const { data: sessionData } = await supabase.auth.getSession();
+	const uid = sessionData.session?.user.id ?? "";
+	const { data: tm } = await supabase
+		.from("tenant_members")
+		.select("tenant_id")
+		.eq("user_id", uid)
+		.limit(1);
+	const tenantId = (tm?.[0]?.tenant_id as string | undefined) ?? null;
+	const facilityId = await resolveSelectedFacilityId(supabase);
+	let q = supabase
 		.from("products")
 		.select("name, stock_quantity")
 		.lte("stock_quantity", THRESHOLD)
 		.neq("stock_quantity", -1)
-		.order("stock_quantity", { ascending: true })
-		.limit(SAMPLE);
+		.order("stock_quantity", { ascending: true });
+	if (tenantId) q = q.eq("tenant_id", tenantId);
+	if (facilityId) q = q.eq("facility_id", facilityId);
+	const { data } = await q.limit(SAMPLE);
 	const low =
 		(data as Array<{ name: string; stock_quantity: number }> | null) ?? [];
 	if (low.length > 0) {
@@ -125,6 +137,7 @@ async function createSale(payload: {
 		.select("tenant_id")
 		.eq("user_id", user.id);
 	const tenantId = memberships?.[0]?.tenant_id;
+	const facilityId = await resolveSelectedFacilityId(supabase);
 	const { data: inserted, error } = await supabase
 		.from("orders")
 		.insert({
@@ -135,6 +148,7 @@ async function createSale(payload: {
 			coupon_count: Math.max(0, payload.couponCount),
 			created_by: user.id,
 			tenant_id: tenantId,
+			facility_id: facilityId,
 		})
 		.select()
 		.single();
@@ -161,109 +175,109 @@ async function createSale(payload: {
 </script>
 
 <PageContent>
-  <PageHeader
-    title={t("dashboard.admin.title")}
-    subtitle={t("pages.admin.overview")}
-    icon={BarChart3}
-  >
-    <Button
-      type="button"
-      size="lg"
-      class="gap-2 rounded-xl px-5"
-      onclick={() => (showSale = true)}
-    >
-      <ShoppingCart class="h-4 w-4" />
-      {t("orders.new")}
-    </Button>
-    <Button href="/admin/settings" variant="ghost" class="rounded-xl">
-      {t("nav.settings")}
-    </Button>
-  </PageHeader>
+	<PageHeader
+		title={t("dashboard.admin.title")}
+		subtitle={t("pages.admin.overview")}
+		icon={BarChart3}
+	>
+		<Button
+			type="button"
+			size="lg"
+			class="gap-2 rounded-xl px-5"
+			onclick={() => (showSale = true)}
+		>
+			<ShoppingCart class="h-4 w-4" />
+			{t("orders.new")}
+		</Button>
+		<Button href="/admin/settings" variant="ghost" class="rounded-xl">
+			{t("nav.settings")}
+		</Button>
+	</PageHeader>
 
-  <div class="grid gap-6 lg:grid-cols-[3fr_2fr] xl:grid-cols-[2fr_1fr]">
-    <section
-      class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm"
-    >
-      <div class="flex items-center justify-between gap-2">
-        <h2 class="text-lg font-semibold text-foreground">
-          {t("orders.recent")}
-        </h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          class="rounded-lg px-3"
-          href="/admin/orders"
-        >
-          {t("common.viewAll")}
-        </Button>
-      </div>
-      <div class="mt-5">
-        <RecentOrders limit={5} />
-      </div>
-    </section>
+	<div class="grid gap-6 lg:grid-cols-[3fr_2fr] xl:grid-cols-[2fr_1fr]">
+		<section
+			class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm"
+		>
+			<div class="flex items-center justify-between gap-2">
+				<h2 class="text-lg font-semibold text-foreground">
+					{t("orders.recent")}
+				</h2>
+				<Button
+					variant="ghost"
+					size="sm"
+					class="rounded-lg px-3"
+					href="/admin/orders"
+				>
+					{t("common.viewAll")}
+				</Button>
+			</div>
+			<div class="mt-5">
+				<RecentOrders limit={5} />
+			</div>
+		</section>
 
-    <aside class="flex flex-col gap-6">
-      <section
-        class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm"
-      >
-        <LowStockCard threshold={10} />
-      </section>
+		<aside class="flex flex-col gap-6">
+			<section
+				class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm"
+			>
+				<LowStockCard threshold={10} />
+			</section>
 
-      <section
-        class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm"
-      >
-        <h3
-          class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground"
-        >
-          {t("common.actions")}
-        </h3>
-        <div class="mt-4 flex flex-col gap-2">
-          <Button
-            href="/admin/products"
-            variant="ghost"
-            class="justify-start gap-3 rounded-lg px-3"
-          >
-            <Package class="h-4 w-4" />
-            {t("nav.products")}
-          </Button>
-          <Button
-            href="/admin/users"
-            variant="ghost"
-            class="justify-start gap-3 rounded-lg px-3"
-          >
-            <UserCog class="h-4 w-4" />
-            {t("nav.users")}
-          </Button>
-          <Button
-            href="/admin/registers"
-            variant="ghost"
-            class="justify-start gap-3 rounded-lg px-3"
-          >
-            <ClipboardList class="h-4 w-4" />
-            {t("dashboard.admin.manageRegisters")}
-          </Button>
-        </div>
-        <div class="mt-6 border-t border-outline-soft/60 pt-4">
-          <Button
-            type="button"
-            onclick={onCloseRegister}
-            disabled={closing}
-            variant="destructive"
-            class="w-full justify-center gap-2 rounded-lg"
-          >
-            <LogOut class="h-4 w-4" />
-            {closing
-              ? t("dashboard.admin.closing")
-              : t("dashboard.admin.closeRegister")}
-          </Button>
-        </div>
-      </section>
-    </aside>
-  </div>
+			<section
+				class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 px-6 py-6 shadow-sm"
+			>
+				<h3
+					class="text-xs font-semibold uppercase text-muted-foreground"
+				>
+					{t("common.actions")}
+				</h3>
+				<div class="mt-4 flex flex-col gap-2">
+					<Button
+						href="/admin/products"
+						variant="ghost"
+						class="justify-start gap-3 rounded-lg px-3"
+					>
+						<Package class="h-4 w-4" />
+						{t("nav.products")}
+					</Button>
+					<Button
+						href="/admin/users"
+						variant="ghost"
+						class="justify-start gap-3 rounded-lg px-3"
+					>
+						<UserCog class="h-4 w-4" />
+						{t("nav.users")}
+					</Button>
+					<Button
+						href="/admin/registers"
+						variant="ghost"
+						class="justify-start gap-3 rounded-lg px-3"
+					>
+						<ClipboardList class="h-4 w-4" />
+						{t("dashboard.admin.manageRegisters")}
+					</Button>
+				</div>
+				<div class="mt-6 border-t border-outline-soft/60 pt-4">
+					<Button
+						type="button"
+						onclick={onCloseRegister}
+						disabled={closing}
+						variant="destructive"
+						class="w-full justify-center gap-2 rounded-lg"
+					>
+						<LogOut class="h-4 w-4" />
+						{closing
+							? t("dashboard.admin.closing")
+							: t("dashboard.admin.closeRegister")}
+					</Button>
+				</div>
+			</section>
+		</aside>
+	</div>
 
-  <NewSaleDialog
-    bind:open={showSale}
-    products={productsForSale}
-    onSubmit={createSale}
-  />
+	<NewSaleDialog
+		bind:open={showSale}
+		products={productsForSale}
+		onSubmit={createSale}
+	/>
 </PageContent>

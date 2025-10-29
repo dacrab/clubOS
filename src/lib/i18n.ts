@@ -212,6 +212,7 @@ const translations = {
 		open: { en: "Open", el: "Ανοιχτό" },
 		changeLanguage: { en: "Change language", el: "Αλλαγή γλώσσας" },
 		quickSettings: { en: "Quick settings", el: "Γρήγορες ρυθμίσεις" },
+		facility: { en: "Facility", el: "Εγκατάσταση" },
 	},
 	pages: {
 		settings: {
@@ -219,6 +220,61 @@ const translations = {
 			lowStockThreshold: {
 				en: "Low stock threshold",
 				el: "Όριο χαμηλού αποθέματος",
+			},
+			allowUnlimitedStock: {
+				en: "Allow unlimited stock",
+				el: "Επιτρέπεται απεριόριστο απόθεμα",
+			},
+			negativeStockAllowed: {
+				en: "Allow negative stock",
+				el: "Επιτρέπεται αρνητικό απόθεμα",
+			},
+			defaultCategorySort: {
+				en: "Default category sort",
+				el: "Προεπιλογή ταξινόμησης κατηγορίας",
+			},
+			productsPageSize: {
+				en: "Products page size",
+				el: "Μέγεθος σελίδας προϊόντων",
+			},
+			imageMaxSizeMb: {
+				en: "Image max size (MB)",
+				el: "Μέγιστο μέγεθος εικόνας (MB)",
+			},
+			coupons: { en: "Coupons", el: "Κουπόνια" },
+			couponsValue: { en: "Coupon value", el: "Αξία κουπονιού" },
+			allowTreats: { en: "Allow treats", el: "Επιτρέπονται κεράσματα" },
+			sales: { en: "Sales", el: "Πωλήσεις" },
+			requireOpenRegisterForSale: {
+				en: "Require open register for sale",
+				el: "Απαιτείται ανοιχτό ταμείο για πώληση",
+			},
+			finance: { en: "Finance", el: "Οικονομικά" },
+			currencyCode: { en: "Currency", el: "Νόμισμα" },
+			taxRatePercent: { en: "Tax rate (%)", el: "Φόρος (%)" },
+			receipt: { en: "Receipt", el: "Απόδειξη" },
+			receiptFooterText: {
+				en: "Receipt footer text",
+				el: "Κείμενο υποσέλιδου απόδειξης",
+			},
+			bookings: { en: "Bookings", el: "Κρατήσεις" },
+			bookingDefaultDurationMin: {
+				en: "Default booking duration (min)",
+				el: "Προεπιλεγμένη διάρκεια κράτησης (λεπτά)",
+			},
+			appointmentBufferMin: {
+				en: "Appointment buffer (min)",
+				el: "Χρόνος διαλείμματος ραντεβού (λεπτά)",
+			},
+			preventOverlaps: { en: "Prevent overlaps", el: "Αποτροπή επικαλύψεων" },
+			football: { en: "Football", el: "Ποδόσφαιρο" },
+			footballFieldsCount: { en: "Fields count", el: "Αριθμός γηπέδων" },
+			appearance: { en: "Appearance", el: "Εμφάνιση" },
+			themeDefault: { en: "Default theme", el: "Προεπιλεγμένο θέμα" },
+			defaultLocale: { en: "Default language", el: "Προεπιλεγμένη γλώσσα" },
+			categorySort: {
+				name: { en: "Name", el: "Όνομα" },
+				custom: { en: "Custom", el: "Προσαρμοσμένο" },
 			},
 		},
 		products: {

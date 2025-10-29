@@ -6,6 +6,7 @@ import {
 	DropdownMenuContent,
 	DropdownMenuTrigger,
 } from "$lib/components/ui/dropdown-menu";
+import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabase-client";
 import { formatDateTime, openPrintWindow } from "$lib/utils";
@@ -106,15 +107,14 @@ async function loadOrders(): Promise<void> {
 	try {
 		const { data: sessionData } = await supabase.auth.getSession();
 		const userId = sessionData.session?.user.id ?? "";
-
 		const { data: memberships } = await supabase
 			.from("tenant_members")
 			.select("tenant_id")
 			.eq("user_id", userId);
-
 		const tenantId = memberships?.[0]?.tenant_id;
+		const facilityId = await resolveSelectedFacilityId(supabase);
 
-		const { data } = await supabase
+		let base = supabase
 			.from("orders")
 			.select(
 				`
@@ -138,9 +138,10 @@ async function loadOrders(): Promise<void> {
         )
       `,
 			)
-			.order("created_at", { ascending: false })
-			.eq("tenant_id", tenantId)
-			.limit(limit);
+			.order("created_at", { ascending: false });
+		if (tenantId) base = base.eq("tenant_id", tenantId);
+		const query = facilityId ? base.eq("facility_id", facilityId) : base;
+		const { data } = await query.limit(limit);
 
 		const rawOrders = (data ?? []) as RawOrder[];
 
@@ -194,9 +195,7 @@ $effect(() => {
           <div
             class="flex items-center gap-3 text-sm font-semibold text-foreground"
           >
-            <span
-              class="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground"
-            >
+            <span class="font-mono text-[11px] uppercase text-muted-foreground">
               #{order.id.slice(0, ORDER_ID_PREFIX_LEN)}
             </span>
             <span>{formatMoney(order.total_amount)}</span>
@@ -266,7 +265,7 @@ $effect(() => {
               <!-- Order items -->
               <div class="flex flex-col gap-2">
                 <h5
-                  class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
+                  class="text-xs font-semibold uppercase text-muted-foreground"
                 >
                   {t("orders.itemsHeader")}
                 </h5>

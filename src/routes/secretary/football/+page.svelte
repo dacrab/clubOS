@@ -25,6 +25,7 @@ import {
 	TabsTrigger,
 } from "$lib/components/ui/tabs";
 import { Textarea } from "$lib/components/ui/textarea";
+import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabase-client";
 import { currentUser, loadCurrentUser } from "$lib/user";
@@ -83,11 +84,14 @@ async function load() {
 		.select("tenant_id")
 		.eq("user_id", userId);
 	const tenantId = memberships?.[0]?.tenant_id;
-	const { data } = await supabase
+	const facilityId = await resolveSelectedFacilityId(supabase);
+	let query = supabase
 		.from("football_bookings")
 		.select("*")
-		.eq("tenant_id", tenantId)
 		.order("booking_datetime");
+	if (tenantId) query = query.eq("tenant_id", tenantId);
+	if (facilityId) query = query.eq("facility_id", facilityId);
+	const { data } = await query;
 	list = (data ?? []) as Booking[];
 }
 
@@ -105,6 +109,7 @@ async function create() {
 		.select("tenant_id")
 		.eq("user_id", user.id);
 
+	const facId = await resolveSelectedFacilityId(supabase);
 	const payload = {
 		customer_name: form.customer_name,
 		contact_info: form.contact_info,
@@ -116,6 +121,7 @@ async function create() {
 		notes: form.notes || null,
 		created_by: user.id,
 		tenant_id: membership?.[0]?.tenant_id,
+		facility_id: facId,
 	};
 
 	const { error } = await supabase.from("football_bookings").insert(payload);

@@ -10,6 +10,7 @@ import TableCell from "$lib/components/ui/table/table-cell.svelte";
 import TableHead from "$lib/components/ui/table/table-head.svelte";
 import TableHeader from "$lib/components/ui/table/table-header.svelte";
 import TableRow from "$lib/components/ui/table/table-row.svelte";
+import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabase-client";
 import { loadCurrentUser } from "$lib/user";
@@ -49,23 +50,16 @@ async function loadUsers() {
 		users = [];
 		return;
 	}
-	// Find the admin's primary tenant (first membership)
-	const { data: tm } = await supabase
-		.from("tenant_members")
-		.select("tenant_id")
-		.eq("user_id", uid)
-		.order("tenant_id")
-		.limit(1);
-	const tenantId = tm?.[0]?.tenant_id as string | undefined;
-	if (!tenantId) {
+	const facilityId = await resolveSelectedFacilityId(supabase);
+	if (!facilityId) {
 		users = [];
 		return;
 	}
-	// Load user ids that belong to this tenant, then fetch users with IN() to avoid join RLS issues
+	// Load user ids that belong to this facility, then fetch users with IN()
 	const { data: memberRows } = await supabase
-		.from("tenant_members")
+		.from("facility_members")
 		.select("user_id")
-		.eq("tenant_id", tenantId);
+		.eq("facility_id", facilityId);
 	const ids = (memberRows ?? []).map((r: { user_id: string }) => r.user_id);
 	if (ids.length === 0) {
 		users = [];
@@ -200,7 +194,7 @@ async function onSaveUser(user: AdminUser) {
       <Table class="min-w-full">
         <TableHeader>
           <TableRow
-            class="border-0 text-xs uppercase tracking-[0.22em] text-muted-foreground"
+            class="border-0 text-xs uppercase text-muted-foreground"
           >
             <TableHead class="rounded-l-xl">{t("common.username")}</TableHead>
             <TableHead>{t("common.role")}</TableHead>

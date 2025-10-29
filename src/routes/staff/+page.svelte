@@ -82,7 +82,7 @@ async function onCloseRegister() {
           </span>
           <div class="flex flex-col gap-1">
             <span
-              class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+              class="text-xs font-semibold uppercase text-muted-foreground"
             >
               {t("dashboard.staff.pos")}
             </span>
@@ -108,7 +108,7 @@ async function onCloseRegister() {
       <div class="flex flex-col gap-4 px-6 py-6">
         <div class="flex flex-col gap-1">
           <span
-            class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+            class="text-xs font-semibold uppercase text-muted-foreground"
           >
             {t("dashboard.staff.register")}
           </span>

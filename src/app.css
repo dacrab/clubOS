@@ -145,7 +145,6 @@
 			"ss01" on,
 			"ss02" on,
 			"liga" on;
-		letter-spacing: -0.01em;
 	}
 
 	h1,
@@ -155,7 +154,6 @@
 	h5,
 	h6 {
 		font-weight: 600;
-		letter-spacing: -0.02em;
 	}
 
 	::selection {
@@ -169,6 +167,15 @@
 
 	:is(button, [role="button"]) {
 		font-family: inherit;
+	}
+
+	/* Ensure all buttons show pointer cursor when interactive */
+	:is(button, [role="button"], [data-slot="button"]) {
+		cursor: pointer;
+	}
+	:is(button, [role="button"], [data-slot="button"])[aria-disabled="true"],
+	:is(button, [role="button"], [data-slot="button"])[disabled] {
+		cursor: not-allowed;
 	}
 }
 
@@ -196,7 +203,7 @@
 		@apply truncate font-semibold text-foreground;
 	}
 	.product-card__price {
-		@apply text-xs uppercase tracking-[0.18em] text-muted-foreground;
+		@apply text-xs uppercase text-muted-foreground;
 	}
 	.control-pill {
 		@apply rounded-full border border-outline-soft/60 bg-background/60;
@@ -211,7 +218,7 @@
 		@apply truncate text-sm font-semibold text-foreground;
 	}
 	.cart-line__meta {
-		@apply flex items-center gap-3 text-xs uppercase tracking-[0.18em] text-muted-foreground;
+		@apply flex items-center gap-3 text-xs uppercase text-muted-foreground;
 	}
 	.treat-pill {
 		@apply rounded-full bg-primary/10 px-2 py-1 text-[10px] font-medium text-primary;
@@ -240,7 +247,7 @@
 		@apply h-10;
 	}
 	.data-table__caption {
-		@apply mb-2 text-left text-xs uppercase tracking-[0.18em] text-muted-foreground;
+		@apply mb-2 text-left text-xs uppercase text-muted-foreground;
 	}
 
 	/* EmptyState */
@@ -341,7 +348,6 @@
 	.eyebrow {
 		font-size: 0.75rem;
 		font-weight: 500;
-		letter-spacing: 0.18em;
 		text-transform: uppercase;
 		color: var(--muted-foreground);
 	}

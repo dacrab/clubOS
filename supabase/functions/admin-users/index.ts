@@ -213,7 +213,7 @@ async function handleDelete(
 Deno.serve(async (req: Request): Promise<Response> => {
 	const url = Deno.env.get("SUPABASE_URL");
 	const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-	const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+	const serviceKey = Deno.env.get("SUPABASE_SECRET_KEY");
 	if (!(url && anonKey && serviceKey)) {
 		return new Response("Server misconfigured", { status: 500 });
 	}

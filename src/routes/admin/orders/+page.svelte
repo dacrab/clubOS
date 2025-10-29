@@ -14,6 +14,7 @@ import TableCell from "$lib/components/ui/table/table-cell.svelte";
 import TableHead from "$lib/components/ui/table/table-head.svelte";
 import TableHeader from "$lib/components/ui/table/table-header.svelte";
 import TableRow from "$lib/components/ui/table/table-row.svelte";
+import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabase-client";
 import { formatDateTime } from "$lib/utils";
@@ -68,6 +69,7 @@ async function loadAll() {
 		? new Date(`${startDate}T00:00:00`).toISOString()
 		: null;
 	const endISO = endDate ? new Date(`${endDate}T23:59:59`).toISOString() : null;
+	const facilityId = await resolveSelectedFacilityId(supabase);
 	let query = supabase
 		.from("orders")
 		.select(
@@ -84,6 +86,7 @@ async function loadAll() {
 	if (tenantId) {
 		query = query.eq("tenant_id", tenantId);
 	}
+	if (facilityId) query = query.eq("facility_id", facilityId);
 	if (startISO) {
 		query = query.gte("created_at", startISO);
 	}
@@ -144,7 +147,7 @@ function money(value: number) {
     <div class="border-b border-outline-soft/60 px-6 py-4">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <h2
-          class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+          class="text-xs font-semibold uppercase text-muted-foreground"
         >
           {t("orders.recent")}
         </h2>
@@ -154,7 +157,7 @@ function money(value: number) {
       </div>
       <div class="mt-4 max-w-xl">
         <div
-          class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+          class="text-[11px] font-semibold uppercase text-muted-foreground"
         >
           {t("pages.registers.pickDate")}
         </div>
@@ -176,7 +179,7 @@ function money(value: number) {
         <Table class="min-w-full">
           <TableHeader>
             <TableRow
-              class="border-0 text-xs uppercase tracking-[0.22em] text-muted-foreground"
+              class="border-0 text-xs uppercase text-muted-foreground"
             >
               <TableHead class="rounded-l-xl pl-6">ID</TableHead>
               <TableHead>{t("pages.ordersPage.date")}</TableHead>
@@ -198,7 +201,7 @@ function money(value: number) {
             {#each orders.slice(startIndex, endIndex) as order}
               <TableRow class="border-b border-outline-soft/40">
                 <TableCell
-                  class="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground"
+                  class="font-mono text-[11px] uppercase text-muted-foreground"
                 >
                   #{order.id.slice(0, 8)}
                 </TableCell>

@@ -34,7 +34,7 @@ Copy example env and edit:
 cp .env.example .env.local
 ```
 
-Keys used by the app: `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or legacy `PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`). Local-only: `SUPABASE_SERVICE_ROLE_KEY` (for `bun run db:seed`).
+Keys used by the app: `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or legacy `PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`). Local-only: `SUPABASE_SECRET_KEY` (for `bun run db:seed`).
 
 3) Optional: local Supabase
 ```bash
@@ -91,8 +91,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$
 
 ## Environment
 - Runtime (client): `PUBLIC_SUPABASE_URL` and one of `PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` are required. The app throws if missing.
-- Server/admin: use `SUPABASE_SERVICE_ROLE_KEY`. On hosted projects, prefer an `sb_secret_...` key. For local Supabase CLI, you must use the legacy JWT `service_role` key (the `sb_secret_...` key is not supported by the local Auth server for admin endpoints).
-- Local tooling only: `SUPABASE_SERVICE_ROLE_KEY` is used by `scripts/seed.ts` to bypass RLS for seeding. Never expose this key to browsers or deploy hosts.
+- Server/admin: use `SUPABASE_SECRET_KEY`. On hosted projects, prefer an `sb_secret_...` key. For local Supabase CLI, you must use the legacy JWT `service_role` key (the `sb_secret_...` key is not supported by the local Auth server for admin endpoints).
+- Local tooling only: `SUPABASE_SECRET_KEY` is used by `scripts/seed.ts` to bypass RLS for seeding. Never expose this key to browsers or deploy hosts.
 - SvelteKit CSP: production CSP is strict (`script-src 'self'`, `style-src 'self'`). Add hosts explicitly if you embed external resources.
 
 ## Database (high level)

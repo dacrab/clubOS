@@ -15,7 +15,7 @@ alwaysApply: true
 - Avoid unused code: keep components reusable and referenced; use Knip to detect genuine dead code.
 - Environment variables:
   - Use `$env/dynamic/public` for `PUBLIC_SUPABASE_URL` on client
-  - Use `$env/dynamic/private` for `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` on server
+  - Use `$env/dynamic/private` for `SUPABASE_URL` and `SUPABASE_SECRET_KEY` on server
 - Accessibility: follow Ultracite a11y rules strictly.
 
 ### Commands
