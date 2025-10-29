@@ -30,7 +30,15 @@ export default defineConfig({
 	},
 	optimizeDeps: {
 		esbuildOptions: {
-			resolveExtensions: [".mjs", ".js", ".mts", ".ts", ".jsx", ".tsx", ".json"],
+			resolveExtensions: [
+				".mjs",
+				".js",
+				".mts",
+				".ts",
+				".jsx",
+				".tsx",
+				".json",
+			],
 		},
 	},
 });
