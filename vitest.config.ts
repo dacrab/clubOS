@@ -28,4 +28,9 @@ export default defineConfig({
 			"$env/dynamic/public": resolve(process.cwd(), "./vitest-env-public.ts"),
 		},
 	},
+	optimizeDeps: {
+		esbuildOptions: {
+			resolveExtensions: [".mjs", ".js", ".mts", ".ts", ".jsx", ".tsx", ".json"],
+		},
+	},
 });

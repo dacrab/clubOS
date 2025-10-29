@@ -1,3 +1,11 @@
+import { vi } from "vitest";
+
+// Mock supabase-client BEFORE mocking $env/dynamic/public
+// This ensures supabase-client doesn't try to import $env/dynamic/public
+vi.mock("$lib/supabase-client", () => ({
+	supabase: {},
+}));
+
 import { describe, expect, it } from "vitest";
 import { getInventorySettings, settingsStore } from "./settings";
 
