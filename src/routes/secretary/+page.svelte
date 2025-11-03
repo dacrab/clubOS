@@ -37,7 +37,7 @@ $effect(() => {
   <StatsCards
     items={[
       {
-        title: t("pages.appointments.title"),
+        title: t("appointments.title"),
         value: String(upcoming),
         accent: "yellow",
         icon: CalendarRange,
@@ -51,10 +51,8 @@ $effect(() => {
     >
       <div class="flex flex-col gap-4 px-6 py-6">
         <div class="flex flex-col gap-1">
-          <span
-            class="text-xs font-semibold uppercase text-muted-foreground"
-          >
-            {t("pages.appointments.title")}
+          <span class="text-xs font-semibold uppercase text-muted-foreground">
+            {t("appointments.title")}
           </span>
           <p class="text-sm text-muted-foreground">
             {t("dashboard.secretary.appointmentsDesc")}
@@ -75,9 +73,7 @@ $effect(() => {
     >
       <div class="flex flex-col gap-4 px-6 py-6">
         <div class="flex flex-col gap-1">
-          <span
-            class="text-xs font-semibold uppercase text-muted-foreground"
-          >
+          <span class="text-xs font-semibold uppercase text-muted-foreground">
             {t("nav.football")}
           </span>
           <p class="text-sm text-muted-foreground">

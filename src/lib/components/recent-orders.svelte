@@ -84,7 +84,7 @@ function renderReceipt(order: OrderDetails): string {
 		.join("");
 
 	return `
-    <h1>clubOS ${t("orders.receiptTitle")}</h1>
+    <h1>clubOS ${t("common.receipt")}</h1>
     <div class="muted">#${order.id.slice(0, ORDER_ID_PREFIX_LEN)} — ${formatDateTime(order.created_at)}</div>
     <hr />
     <table>${lines}</table>
@@ -181,9 +181,21 @@ $effect(() => {
 
 {#if orders.length === 0}
   <div
-    class="rounded-2xl border border-outline-soft bg-surface p-6 text-sm text-muted-foreground"
+    class="flex flex-col items-center justify-center gap-4 rounded-2xl border border-outline-soft bg-surface py-12 px-6 text-center"
   >
-    {t("orders.none")}
+    <div
+      class="grid size-16 place-items-center rounded-full bg-muted/30"
+    >
+      <Receipt class="size-8 text-muted-foreground/60" />
+    </div>
+    <div class="flex max-w-xs flex-col gap-1">
+      <h3 class="text-base font-semibold text-foreground">
+        {t("orders.none")}
+      </h3>
+      <p class="text-sm text-muted-foreground">
+        {t("orders.latest")}
+      </p>
+    </div>
   </div>
 {:else}
   <div class="flex flex-col gap-3">
@@ -335,7 +347,7 @@ $effect(() => {
                   class="flex-1 rounded-full border-outline-soft"
                 >
                   <Printer class="mr-2 h-4 w-4" />
-                  {t("orders.print")}
+                  {t("common.print")}
                 </Button>
                 <Button
                   variant="outline"
@@ -343,7 +355,7 @@ $effect(() => {
                   class="flex-1 rounded-full border-outline-soft"
                 >
                   <Receipt class="mr-2 h-4 w-4" />
-                  {t("orders.details")}
+                  {t("common.details")}
                 </Button>
               </div>
             </div>

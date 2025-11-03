@@ -2,10 +2,9 @@
 import { Candy, ClipboardList, Clock3, TicketPercent } from "@lucide/svelte";
 import { Badge } from "$lib/components/ui/badge";
 import { Card } from "$lib/components/ui/card";
-import DateRangePicker from "$lib/components/ui/date-picker/date-range-picker.svelte";
-import PageContent from "$lib/components/ui/page/page-content.svelte";
-import PageHeader from "$lib/components/ui/page/page-header.svelte";
-import StatsCards from "$lib/components/ui/stats-cards.svelte";
+import { DateRangePicker } from "$lib/components/ui/date-picker";
+import { PageContent, PageHeader } from "$lib/components/ui/page";
+import { StatsCards } from "$lib/components/ui/stats-cards";
 import {
 	Table,
 	TableBody,
@@ -21,7 +20,7 @@ import {
 	ordersTotalForSession,
 } from "$lib/registers/stats";
 import { supabase } from "$lib/supabase-client";
-import { currentUser, loadCurrentUser } from "$lib/user";
+import { loadCurrentUser } from "$lib/user";
 import { formatDateTime } from "$lib/utils";
 import { computeWindow } from "$lib/virtualization/window";
 
@@ -116,15 +115,6 @@ const totalTreatAmountEffective = $derived(
 // Initialize
 $effect(() => {
 	loadCurrentUser().then(() => {
-		const user = $currentUser;
-		if (!user) {
-			window.location.href = "/login";
-			return;
-		}
-		if (user.role !== "admin") {
-			window.location.href = "/dashboard";
-			return;
-		}
 		load();
 	});
 });
@@ -348,21 +338,21 @@ function getTreatTotalForSession(sessionId: string): number {
 
 <PageContent>
   <PageHeader
-    title={t("pages.registers.title")}
-    subtitle={t("pages.registers.subtitle")}
+    title={t("registers.title")}
+    subtitle={t("registers.subtitle")}
     icon={ClipboardList}
   />
 
   <StatsCards
     items={[
       {
-        title: t("pages.registers.totalSessions"),
+        title: t("registers.totalSessions"),
         value: String(totalSessions),
         accent: "neutral",
         icon: ClipboardList,
       },
       {
-        title: t("pages.registers.openSessions"),
+        title: t("registers.openSessions"),
         value: String(openSessions),
         accent: "blue",
         icon: Clock3,
@@ -374,13 +364,13 @@ function getTreatTotalForSession(sessionId: string): number {
         icon: ClipboardList,
       },
       {
-        title: t("pages.registers.totalDiscounts"),
+        title: t("registers.totalDiscounts"),
         value: formatCurrency(totalDiscountAmountEffective),
         accent: "green",
         icon: TicketPercent,
       },
       {
-        title: t("pages.registers.totalTreats"),
+        title: t("registers.totalTreats"),
         value: formatCurrency(totalTreatAmountEffective),
         accent: "purple",
         icon: Candy,
@@ -395,7 +385,7 @@ function getTreatTotalForSession(sessionId: string): number {
       <div
         class="text-[11px] font-semibold uppercase text-muted-foreground"
       >
-        {t("pages.registers.pickDate")}
+        {t("registers.pickDate")}
       </div>
       <div class="mt-3 max-w-xl">
         <DateRangePicker
@@ -418,14 +408,14 @@ function getTreatTotalForSession(sessionId: string): number {
               class="border-0 text-xs uppercase text-muted-foreground"
             >
               <TableHead class="rounded-l-xl"
-                >{t("pages.registers.id")}</TableHead
+                >{t("registers.id")}</TableHead
               >
-              <TableHead>{t("pages.registers.opened")}</TableHead>
-              <TableHead>{t("pages.registers.closed")}</TableHead>
+              <TableHead>{t("registers.opened")}</TableHead>
+              <TableHead>{t("registers.closed")}</TableHead>
               <TableHead class="text-right">{t("orders.total")}</TableHead>
               <TableHead class="text-right">{t("orders.discount")}</TableHead>
               <TableHead class="rounded-r-xl text-right"
-                >{t("pages.registers.treats")}</TableHead
+                >{t("registers.treats")}</TableHead
               >
             </TableRow>
           </TableHeader>
@@ -434,9 +424,25 @@ function getTreatTotalForSession(sessionId: string): number {
               <TableRow>
                 <TableCell
                   colspan={6}
-                  class="py-10 text-center text-sm text-muted-foreground"
+                  class="py-16 text-center"
                 >
-                  {t("pages.registers.empty") ?? t("orders.none")}
+                  <div
+                    class="mx-auto flex max-w-sm flex-col items-center gap-4 text-center"
+                  >
+                    <div
+                      class="grid size-16 place-items-center rounded-full bg-muted/30"
+                    >
+                      <ClipboardList class="size-8 text-muted-foreground/60" />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <h3 class="text-base font-semibold text-foreground">
+                        {t("registers.empty")}
+                      </h3>
+                      <p class="text-sm text-muted-foreground">
+                        {t("registers.subtitle")}
+                      </p>
+                    </div>
+                  </div>
                 </TableCell>
               </TableRow>
             {:else}

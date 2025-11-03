@@ -64,7 +64,7 @@ async function signIn(e?: Event) {
 	loading = true;
 
 	try {
-		const { error } = await supabase.auth.signInWithPassword({
+		const { data, error } = await supabase.auth.signInWithPassword({
 			email,
 			password,
 		});
@@ -73,6 +73,27 @@ async function signIn(e?: Event) {
 			errorMessage = error.message;
 			toast.error(t("login.error"));
 			return;
+		}
+
+		// Ensure SSR cookie set before navigating to protected area
+		const session = data?.session;
+		if (session) {
+			try {
+				await fetch("/auth/callback", {
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					credentials: "same-origin",
+					body: JSON.stringify({
+						event: "SIGNED_IN",
+						session: {
+							access_token: session.access_token,
+							refresh_token: session.refresh_token,
+						},
+					}),
+				});
+			} catch {
+				/* ignore */
+			}
 		}
 
 		toast.success(t("login.success"));

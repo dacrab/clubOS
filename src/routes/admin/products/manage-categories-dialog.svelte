@@ -148,7 +148,7 @@ $effect(() => {
 <Dialog bind:open>
   <DialogContent class="sm:max-w-[720px]">
     <DialogHeader>
-      <DialogTitle>{t("pages.products.manageCategories")}</DialogTitle>
+      <DialogTitle>{t("products.manageCategories")}</DialogTitle>
     </DialogHeader>
     <div class="grid gap-4 py-2">
       <div class="grid grid-cols-4 items-center gap-3">
@@ -195,6 +195,45 @@ $effect(() => {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {#if categories.length === 0}
+              <TableRow>
+                <TableCell
+                  colspan={4}
+                  class="py-12 text-center"
+                >
+                  <div
+                    class="mx-auto flex max-w-xs flex-col items-center gap-3 text-center"
+                  >
+                    <div
+                      class="grid size-12 place-items-center rounded-full bg-muted/30"
+                    >
+                      <svg
+                        class="size-6 text-muted-foreground/60"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <title>{t("categories.title")}</title>
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                        />
+                      </svg>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <h3 class="text-sm font-semibold text-foreground">
+                        {t("categories.empty.title")}
+                      </h3>
+                      <p class="text-xs text-muted-foreground">
+                        {t("categories.empty.description")}
+                      </p>
+                    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            {:else}
             {#each categories as c}
               <TableRow>
                 <TableCell>{c.name}</TableCell>
@@ -217,6 +256,7 @@ $effect(() => {
                 </TableCell>
               </TableRow>
             {/each}
+            {/if}
           </TableBody>
         </Table>
       </div>

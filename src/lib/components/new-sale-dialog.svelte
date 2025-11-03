@@ -208,7 +208,7 @@ $effect(() => {
         </DialogTitle>
         <DialogClose
           class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-outline-soft/60 bg-background/90 text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
-          aria-label={t("orders.close")}
+          aria-label={t("common.close")}
         >
           <X class="size-4" />
         </DialogClose>
@@ -226,7 +226,7 @@ $effect(() => {
           class="inline-flex items-center gap-2 text-sm font-semibold text-foreground"
         >
           <Filter class="size-4" />
-          {t("orders.categories")}
+          {t("nav.categories")}
         </h3>
 
         <button
@@ -236,7 +236,7 @@ $effect(() => {
           }`}
           onclick={() => (selectedCategory = null)}
         >
-          {t("orders.all")}
+          {t("date.all")}
         </button>
 
         <div class="space-y-2 overflow-auto pr-1">
@@ -325,7 +325,7 @@ $effect(() => {
           </h3>
           {#if cart.length > 0}
             <Button type="button" variant="ghost" size="sm" onclick={clearCart}>
-              {t("orders.clear")}
+              {t("common.clear")}
             </Button>
           {/if}
         </div>
@@ -442,7 +442,7 @@ $effect(() => {
             class="rounded-lg"
             onclick={() => (open = false)}
           >
-            {t("orders.close")}
+            {t("common.close")}
           </Button>
           <Button
             type="button"

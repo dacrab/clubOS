@@ -55,7 +55,7 @@ async function updatePassword(e?: Event) {
       <form onsubmit={updatePassword} class="flex flex-col gap-5">
         <div class="space-y-2">
           <Label class="text-[13px] font-medium text-muted-foreground/90"
-            >{t("pages.users.newPasswordPlaceholder")}</Label
+            >{t("users.newPasswordPlaceholder")}</Label
           >
           <Input
             type="password"
@@ -85,7 +85,7 @@ async function updatePassword(e?: Event) {
           aria-busy={loading}
         >
           {#if loading}{t("dashboard.admin.closing")}{:else}{t(
-              "pages.users.newPasswordPlaceholder",
+              "users.newPasswordPlaceholder",
             )}{/if}
         </Button>
       </form>

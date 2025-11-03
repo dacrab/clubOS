@@ -28,7 +28,7 @@ import { Textarea } from "$lib/components/ui/textarea";
 import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabase-client";
-import { currentUser, loadCurrentUser } from "$lib/user";
+import { loadCurrentUser } from "$lib/user";
 import { formatDateTime } from "$lib/utils";
 
 type Booking = {
@@ -64,14 +64,6 @@ let editTime = $state("");
 
 $effect(() => {
 	loadCurrentUser().then(() => {
-		const u = $currentUser;
-		if (!u) {
-			window.location.href = "/login";
-			return;
-		}
-		if (u.role !== "secretary" && u.role !== "admin") {
-			window.location.href = "/dashboard";
-		}
 		load();
 	});
 });
@@ -99,10 +91,7 @@ async function create() {
 	const {
 		data: { user },
 	} = await supabase.auth.getUser();
-	if (!user) {
-		window.location.href = "/login";
-		return;
-	}
+	if (!user) return;
 
 	const { data: membership } = await supabase
 		.from("tenant_members")
@@ -173,151 +162,179 @@ async function saveEdit() {
 </script>
 
 <PageContent>
-  <PageHeader
-    title={t("pages.football.title")}
-    subtitle={t("pages.football.subtitle")}
-  />
+  <PageHeader title={t("football.title")} subtitle={t("football.subtitle")} />
 
   <Tabs bind:value={activeTab} class="w-full">
     <TabsList
-      class="grid w-full max-w-lg grid-cols-2 rounded-2xl border border-outline-soft bg-surface"
+      class="inline-flex h-10 w-fit items-center justify-center rounded-lg bg-muted/50 p-1"
     >
-      <TabsTrigger value="create" class="rounded-xl">
-        {t("pages.football.tabsCreate")}
+      <TabsTrigger
+        value="create"
+        class="rounded-md px-4 py-1.5 text-sm font-medium text-muted-foreground transition-all hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+      >
+        {t("football.tabsCreate")}
       </TabsTrigger>
-      <TabsTrigger value="upcoming" class="rounded-xl">
-        {t("pages.football.tabsUpcoming")}
+      <TabsTrigger
+        value="upcoming"
+        class="rounded-md px-4 py-1.5 text-sm font-medium text-muted-foreground transition-all hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+      >
+        {t("football.tabsUpcoming")}
       </TabsTrigger>
     </TabsList>
 
     <TabsContent value="create" class="mt-8">
-      <Card
-        class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm"
-      >
-        <div class="flex flex-col gap-6 border-b border-outline-soft/70 p-6">
-          <h2 class="text-lg font-semibold text-foreground">
-            {t("pages.football.createTitle")}
+      <Card class="rounded-xl border bg-surface shadow-sm">
+        <div class="p-6">
+          <h2 class="text-base font-semibold text-foreground">
+            {t("football.createTitle")}
           </h2>
-          <p class="text-sm text-muted-foreground">
-            {t("pages.football.subtitle")}
+          <p class="mt-1 text-sm text-muted-foreground">
+            {t("football.subtitle")}
           </p>
-        </div>
-        <div class="grid gap-6 p-6 md:grid-cols-2">
-          <div class="flex flex-col gap-4">
-            <label class="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span class="font-medium text-foreground"
-                >{t("pages.football.customerName")}</span
-              >
-              <Input
-                bind:value={form.customer_name}
-                class="rounded-lg border-outline-soft bg-background"
-              />
-            </label>
-            <label class="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span class="font-medium text-foreground"
-                >{t("pages.football.contactInfo")}</span
-              >
-              <Input
-                placeholder={t("pages.football.contactPlaceholder")}
-                bind:value={form.contact_info}
-                class="rounded-lg border-outline-soft bg-background"
-              />
-            </label>
-            <label class="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span class="font-medium text-foreground"
-                >{t("pages.football.dateTime")}</span
-              >
-              <div class="grid grid-cols-[1fr_auto] items-center gap-2">
-                <DateInput
-                  bind:value={form.booking_date}
-                  placeholder={t("date.placeholder")}
-                />
+          <div class="mt-6 grid gap-6 md:grid-cols-2">
+            <div class="flex flex-col gap-4">
+              <div class="flex flex-col gap-2">
+                <Label for="fb_customer_name" class="text-sm"
+                  >{t("common.customerName")}</Label
+                >
                 <Input
-                  type="time"
-                  bind:value={form.booking_time}
-                  class="w-28 rounded-xl border-outline-soft bg-background"
+                  id="fb_customer_name"
+                  bind:value={form.customer_name}
+                  class="rounded-md"
+                  placeholder={t("common.customerPlaceholder")}
                 />
               </div>
-            </label>
-          </div>
-
-          <div class="flex flex-col gap-4">
-            <div class="grid grid-cols-2 gap-4">
-              <label class="flex flex-col gap-2 text-sm text-muted-foreground">
-                <span class="font-medium text-foreground"
-                  >{t("pages.football.field")}</span
+              <div class="flex flex-col gap-2">
+                <Label for="fb_contact" class="text-sm"
+                  >{t("common.contactInfo")}</Label
                 >
                 <Input
-                  type="number"
-                  min="1"
-                  max="5"
-                  bind:value={form.field_number}
-                  class="rounded-xl border-outline-soft bg-background"
+                  id="fb_contact"
+                  placeholder={t("common.contactPlaceholder")}
+                  bind:value={form.contact_info}
+                  class="rounded-md"
                 />
-              </label>
-              <label class="flex flex-col gap-2 text-sm text-muted-foreground">
-                <span class="font-medium text-foreground"
-                  >{t("pages.football.players")}</span
-                >
-                <Input
-                  type="number"
-                  min="2"
-                  max="12"
-                  bind:value={form.num_players}
-                  class="rounded-xl border-outline-soft bg-background"
-                />
-              </label>
+              </div>
+              <div class="flex flex-col gap-2">
+                <Label class="text-sm">{t("common.dateTime")}</Label>
+                <div class="grid grid-cols-[1fr_auto] items-center gap-2">
+                  <DateInput
+                    bind:value={form.booking_date}
+                    placeholder={t("date.placeholder")}
+                  />
+                  <Input
+                    type="time"
+                    bind:value={form.booking_time}
+                    class="w-28 rounded-md"
+                  />
+                </div>
+              </div>
             </div>
-            <label class="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span class="font-medium text-foreground"
-                >{t("pages.football.notes")}</span
+            <div class="flex flex-col gap-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-2">
+                  <Label for="fb_field" class="text-sm"
+                    >{t("football.field")}</Label
+                  >
+                  <Input
+                    id="fb_field"
+                    type="number"
+                    min="1"
+                    max="5"
+                    bind:value={form.field_number}
+                    class="rounded-md"
+                  />
+                </div>
+                <div class="flex flex-col gap-2">
+                  <Label for="fb_players" class="text-sm"
+                    >{t("football.players")}</Label
+                  >
+                  <Input
+                    id="fb_players"
+                    type="number"
+                    min="2"
+                    max="12"
+                    bind:value={form.num_players}
+                    class="rounded-md"
+                  />
+                </div>
+              </div>
+              <div class="flex flex-col gap-2">
+                <Label for="fb_notes" class="text-sm">{t("common.notes")}</Label
+                >
+                <Textarea
+                  id="fb_notes"
+                  placeholder={t("common.notesPlaceholder")}
+                  bind:value={form.notes}
+                  class="min-h-24 rounded-md"
+                />
+              </div>
+              <Button
+                type="button"
+                onclick={create}
+                class="h-10 rounded-md text-sm font-medium"
               >
-              <Textarea
-                placeholder={t("pages.football.notesPlaceholder")}
-                bind:value={form.notes}
-                class="min-h-24 rounded-lg border-outline-soft bg-background"
-              />
-            </label>
-            <Button
-              type="button"
-              onclick={create}
-              class="h-12 rounded-lg text-sm font-semibold"
-            >
-              {t("pages.football.createButton")}
-            </Button>
+                {t("football.createButton")}
+              </Button>
+            </div>
           </div>
         </div>
       </Card>
     </TabsContent>
 
     <TabsContent value="upcoming" class="mt-8">
-      <Card
-        class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm"
-      >
-        <div class="flex flex-col gap-6 border-b border-outline-soft/70 p-6">
-          <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 class="text-lg font-semibold text-foreground">
-                {t("pages.football.upcomingTitle")}
-              </h2>
-              <p class="text-sm text-muted-foreground">
-                {t("pages.football.manageExisting")}
-              </p>
-            </div>
-          </div>
-        </div>
+      <Card class="rounded-xl border bg-surface shadow-sm">
         <div class="p-6">
+          <h2 class="text-base font-semibold text-foreground">
+            {t("football.upcomingTitle")}
+          </h2>
+          <p class="mt-1 text-sm text-muted-foreground">
+            {t("football.manageExisting")}
+          </p>
+
           {#if list.length === 0}
             <div
-              class="grid place-items-center gap-4 rounded-2xl border border-dashed border-outline-soft/70 bg-surface-strong/40 px-8 py-16 text-center text-sm text-muted-foreground"
+              class="mt-4 grid place-items-center gap-4 rounded-xl border border-dashed border-outline-soft/60 bg-muted/20 px-8 py-12 text-center"
             >
-              {t("pages.football.none")}
+              <div
+                class="grid size-16 place-items-center rounded-full bg-muted/30"
+              >
+                <svg
+                  class="size-8 text-muted-foreground/60"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <title>{t("football.title")}</title>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+              </div>
+              <div class="flex flex-col gap-1">
+                <h3 class="text-base font-semibold text-foreground">
+                  {t("football.empty.title")}
+                </h3>
+                <p class="text-sm text-muted-foreground">
+                  {t("football.empty.description")}
+                </p>
+              </div>
+              <Button
+                type="button"
+                class="rounded-md"
+                onclick={() => (activeTab = "create")}
+              >
+                {t("football.createButton")}
+              </Button>
             </div>
           {:else}
-            <div class="flex flex-col gap-4">
+            <div class="mt-4 flex flex-col gap-3">
               {#each list as booking}
                 <div
-                  class="flex items-center justify-between gap-4 rounded-2xl border border-outline-soft bg-surface px-4 py-4 text-sm text-muted-foreground transition-all hover:border-outline-strong hover:bg-surface-strong/60"
+                  class="flex items-center justify-between gap-4 rounded-xl border bg-surface px-4 py-4 text-sm text-muted-foreground transition-colors hover:bg-muted/40"
                 >
                   <div class="min-w-0 flex-1">
                     <div class="font-semibold text-foreground">
@@ -326,12 +343,12 @@ async function saveEdit() {
                     <div class="mt-1 flex flex-wrap items-center gap-3 text-xs">
                       <span>{formatDateTime(booking.booking_datetime)}</span>
                       <span
-                        >{t("pages.football.fieldLabel")}
+                        >{t("football.fieldLabel")}
                         {booking.field_number}</span
                       >
                       <span
                         >{booking.num_players}
-                        {t("pages.football.players").toLowerCase()}</span
+                        {t("football.players").toLowerCase()}</span
                       >
                     </div>
                     <div class="mt-1 text-xs text-muted-foreground">
@@ -347,13 +364,13 @@ async function saveEdit() {
                     <span
                       class={`rounded-lg px-3 py-1 text-xs font-medium capitalize ${booking.status === "confirmed" ? "bg-green-500/10 text-green-700 dark:text-green-300" : "bg-muted text-muted-foreground"}`}
                     >
-                      {t(`pages.football.status.${booking.status}` as any)}
+                      {t(`football.status.${booking.status}` as any)}
                     </span>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      class="rounded-lg"
+                      class="rounded-md"
                       onclick={() => openEdit(booking)}
                     >
                       {t("common.edit")}
@@ -374,7 +391,7 @@ async function saveEdit() {
     class="sm:max-w-[520px] rounded-2xl border border-outline-soft/70 bg-surface-soft/90 shadow-xl"
   >
     <DialogHeader>
-      <DialogTitle>{t("pages.football.editTitle")}</DialogTitle>
+      <DialogTitle>{t("football.editTitle")}</DialogTitle>
     </DialogHeader>
     <div class="grid gap-4 py-2">
       <div class="grid grid-cols-4 items-center gap-3">
@@ -383,21 +400,21 @@ async function saveEdit() {
           <Select bind:value={editStatus} type="single">
             <SelectTrigger class="w-full">
               <span data-slot="select-value" class="truncate"
-                >{t(`pages.football.status.${editStatus}` as any)}</span
+                >{t(`football.status.${editStatus}` as any)}</span
               >
             </SelectTrigger>
             <SelectContent>
               <SelectItem
                 value="confirmed"
-                label={t("pages.football.status.confirmed")}
+                label={t("football.status.confirmed")}
               />
               <SelectItem
                 value="completed"
-                label={t("pages.football.status.completed")}
+                label={t("football.status.completed")}
               />
               <SelectItem
                 value="cancelled"
-                label={t("pages.football.status.cancelled")}
+                label={t("football.status.cancelled")}
               />
             </SelectContent>
           </Select>
@@ -405,15 +422,15 @@ async function saveEdit() {
       </div>
       {#if editing}
         <div class="grid grid-cols-4 items-center gap-3">
-          <Label class="text-right">{t("pages.football.customerName")}</Label>
+          <Label class="text-right">{t("common.customerName")}</Label>
           <Input class="col-span-3" bind:value={editing.customer_name} />
         </div>
         <div class="grid grid-cols-4 items-center gap-3">
-          <Label class="text-right">{t("pages.football.contactInfo")}</Label>
+          <Label class="text-right">{t("common.contactInfo")}</Label>
           <Input class="col-span-3" bind:value={editing.contact_info} />
         </div>
         <div class="grid grid-cols-4 items-center gap-3">
-          <Label class="text-right">{t("pages.football.dateTime")}</Label>
+          <Label class="text-right">{t("common.dateTime")}</Label>
           <div class="col-span-3 grid grid-cols-[1fr_auto] gap-2 items-center">
             <DateInput
               bind:value={editDate}
@@ -423,7 +440,7 @@ async function saveEdit() {
           </div>
         </div>
         <div class="grid grid-cols-4 items-center gap-3">
-          <Label class="text-right">{t("pages.football.field")}</Label>
+          <Label class="text-right">{t("football.field")}</Label>
           <Input
             class="col-span-3 w-40"
             type="number"
@@ -433,7 +450,7 @@ async function saveEdit() {
           />
         </div>
         <div class="grid grid-cols-4 items-center gap-3">
-          <Label class="text-right">{t("pages.football.players")}</Label>
+          <Label class="text-right">{t("football.players")}</Label>
           <Input
             class="col-span-3 w-40"
             type="number"
@@ -443,7 +460,7 @@ async function saveEdit() {
           />
         </div>
         <div class="grid grid-cols-4 items-center gap-3">
-          <Label class="text-right">{t("pages.football.notes")}</Label>
+          <Label class="text-right">{t("common.notes")}</Label>
           <Textarea class="col-span-3 min-h-20" bind:value={editing.notes} />
         </div>
       {/if}

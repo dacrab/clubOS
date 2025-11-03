@@ -1,15 +1,16 @@
 <script lang="ts">
 import { Pencil, Shield, Users } from "@lucide/svelte";
-import Button from "$lib/components/ui/button/button.svelte";
-import Card from "$lib/components/ui/card/card.svelte";
-import PageContent from "$lib/components/ui/page/page-content.svelte";
-import PageHeader from "$lib/components/ui/page/page-header.svelte";
-import Table from "$lib/components/ui/table/table.svelte";
-import TableBody from "$lib/components/ui/table/table-body.svelte";
-import TableCell from "$lib/components/ui/table/table-cell.svelte";
-import TableHead from "$lib/components/ui/table/table-head.svelte";
-import TableHeader from "$lib/components/ui/table/table-header.svelte";
-import TableRow from "$lib/components/ui/table/table-row.svelte";
+import { Button } from "$lib/components/ui/button";
+import { Card } from "$lib/components/ui/card";
+import { PageContent, PageHeader } from "$lib/components/ui/page";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "$lib/components/ui/table";
 import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabase-client";
@@ -73,33 +74,28 @@ async function loadUsers() {
 	users = data ?? [];
 }
 
-async function getAuthToken(): Promise<string | null> {
-	const { data: sessionData } = await supabase.auth.getSession();
-	return sessionData.session?.access_token ?? null;
-}
+// token derivation moved server-side
 
 async function errorToast(message: string) {
 	const { toast } = await import("svelte-sonner");
 	toast.error(message);
 }
 
-function patchUser(payload: AdminUser, token: string) {
+function patchUser(payload: AdminUser) {
 	return fetch("/api/admin/users", {
 		method: "PATCH",
 		headers: {
 			"content-type": "application/json",
-			authorization: `Bearer ${token}`,
 		},
 		body: JSON.stringify(payload),
 	});
 }
 
-function postUser(payload: AdminUser, token: string) {
+function postUser(payload: AdminUser) {
 	return fetch("/api/admin/users", {
 		method: "POST",
 		headers: {
 			"content-type": "application/json",
-			authorization: `Bearer ${token}`,
 		},
 		body: JSON.stringify(payload),
 	});
@@ -126,22 +122,16 @@ function buildCreatePayload(user: AdminUser): AdminUser & { email: string } {
 }
 
 async function onSaveUser(user: AdminUser) {
-	const token = await getAuthToken();
-	if (!token) {
-		await errorToast("Not authenticated");
-		return;
-	}
-
 	if (user.id) {
 		const payload = buildPatchPayload(user);
-		const res = await patchUser(payload, token);
+		const res = await patchUser(payload);
 		if (!res.ok) {
 			await errorToast(await res.text());
 			return;
 		}
 	} else {
 		const createPayload = buildCreatePayload(user);
-		const res = await postUser(createPayload, token);
+		const res = await postUser(createPayload);
 		if (!res.ok) {
 			await errorToast(await res.text());
 			return;
@@ -181,9 +171,9 @@ async function onSaveUser(user: AdminUser) {
 />
 
 <PageContent>
-  <PageHeader title={t("pages.users.title")} icon={Users}>
+  <PageHeader title={t("users.title")} icon={Users}>
     <Button type="button" class="rounded-lg" onclick={openNewUserDialog}>
-      {t("pages.users.add")}
+      {t("users.add")}
     </Button>
   </PageHeader>
 
@@ -204,7 +194,40 @@ async function onSaveUser(user: AdminUser) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {#each users as user}
+          {#if users.length === 0}
+            <TableRow>
+              <TableCell
+                colspan={3}
+                class="py-16 text-center"
+              >
+                <div
+                  class="mx-auto flex max-w-sm flex-col items-center gap-4 text-center"
+                >
+                  <div
+                    class="grid size-16 place-items-center rounded-full bg-muted/30"
+                  >
+                    <Users class="size-8 text-muted-foreground/60" />
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <h3 class="text-base font-semibold text-foreground">
+                      {t("users.empty.title")}
+                    </h3>
+                    <p class="text-sm text-muted-foreground">
+                      {t("users.empty.description")}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    class="rounded-lg"
+                    onclick={openNewUserDialog}
+                  >
+                    {t("users.add")}
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          {:else}
+            {#each users as user}
             <TableRow class="border-b border-outline-soft/40 text-sm">
               <TableCell>
                 <div class="flex items-center gap-3 text-foreground">
@@ -245,6 +268,7 @@ async function onSaveUser(user: AdminUser) {
               </TableCell>
             </TableRow>
           {/each}
+          {/if}
         </TableBody>
       </Table>
     </div>

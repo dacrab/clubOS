@@ -1,16 +1,17 @@
 <script lang="ts">
 import { Package, Pencil } from "@lucide/svelte";
 import SearchBar from "$lib/components/common/search-bar.svelte";
-import Button from "$lib/components/ui/button/button.svelte";
-import Card from "$lib/components/ui/card/card.svelte";
-import PageContent from "$lib/components/ui/page/page-content.svelte";
-import PageHeader from "$lib/components/ui/page/page-header.svelte";
-import Table from "$lib/components/ui/table/table.svelte";
-import TableBody from "$lib/components/ui/table/table-body.svelte";
-import TableCell from "$lib/components/ui/table/table-cell.svelte";
-import TableHead from "$lib/components/ui/table/table-head.svelte";
-import TableHeader from "$lib/components/ui/table/table-header.svelte";
-import TableRow from "$lib/components/ui/table/table-row.svelte";
+import { Button } from "$lib/components/ui/button";
+import { Card } from "$lib/components/ui/card";
+import { PageContent, PageHeader } from "$lib/components/ui/page";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "$lib/components/ui/table";
 import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabase-client";
@@ -65,14 +66,6 @@ $effect(() => {
 		return;
 	}
 	loadCurrentUser().then(() => {
-		const u = $currentUser;
-		if (!u) {
-			window.location.href = "/login";
-			return;
-		}
-		if (u.role !== "admin") {
-			window.location.href = "/dashboard";
-		}
 		loadLists();
 	});
 });
@@ -221,9 +214,9 @@ function openEdit(p: Product) {
 </script>
 
 <PageContent>
-  <PageHeader title={t("pages.products.title")} icon={Package}>
+  <PageHeader title={t("products.title")} icon={Package}>
     <Button type="button" class="rounded-lg" onclick={() => (showAdd = true)}>
-      {t("pages.products.add")}
+      {t("products.add")}
     </Button>
     <Button
       type="button"
@@ -232,7 +225,7 @@ function openEdit(p: Product) {
       class="rounded-full px-4"
       onclick={() => (showCategories = true)}
     >
-      {t("pages.products.manageCategories")}
+      {t("products.manageCategories")}
     </Button>
   </PageHeader>
 
@@ -265,6 +258,66 @@ function openEdit(p: Product) {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {#if filtered().length === 0}
+                {#if search.trim()}
+                  <TableRow>
+                    <TableCell
+                      colspan={5}
+                      class="py-16 text-center"
+                    >
+                      <div
+                        class="mx-auto flex max-w-sm flex-col items-center gap-4 text-center"
+                      >
+                        <div
+                          class="grid size-16 place-items-center rounded-full bg-muted/30"
+                        >
+                          <Package class="size-8 text-muted-foreground/60" />
+                        </div>
+                        <div class="flex flex-col gap-1">
+                          <h3 class="text-base font-semibold text-foreground">
+                            {t("common.emptyState.title")}
+                          </h3>
+                          <p class="text-sm text-muted-foreground">
+                            {t("orders.search")} "{search}"
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                {:else}
+                  <TableRow>
+                    <TableCell
+                      colspan={5}
+                      class="py-16 text-center"
+                    >
+                      <div
+                        class="mx-auto flex max-w-sm flex-col items-center gap-4 text-center"
+                      >
+                        <div
+                          class="grid size-16 place-items-center rounded-full bg-muted/30"
+                        >
+                          <Package class="size-8 text-muted-foreground/60" />
+                        </div>
+                        <div class="flex flex-col gap-1">
+                          <h3 class="text-base font-semibold text-foreground">
+                            {t("products.empty.title")}
+                          </h3>
+                          <p class="text-sm text-muted-foreground">
+                            {t("products.empty.description")}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          class="rounded-lg"
+                          onclick={() => (showAdd = true)}
+                        >
+                          {t("products.add")}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                {/if}
+              {:else}
               {#if topPad > 0}
                 <TableRow
                   ><TableCell
@@ -330,6 +383,7 @@ function openEdit(p: Product) {
                     style={`height:${bottomPad}px; padding:0; border:0;`}
                   ></TableCell></TableRow
                 >
+              {/if}
               {/if}
             </TableBody>
           </Table>

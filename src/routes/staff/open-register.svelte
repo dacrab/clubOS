@@ -11,10 +11,7 @@ async function openNow() {
 	const {
 		data: { user },
 	} = await supabase.auth.getUser();
-	if (!user) {
-		window.location.href = "/login";
-		return;
-	}
+	if (!user) return;
 	saving = true;
 	try {
 		const sessionId = await ensureOpenSession(supabase, user.id);

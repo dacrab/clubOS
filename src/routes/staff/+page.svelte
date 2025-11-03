@@ -1,32 +1,31 @@
 <script lang="ts">
 import { LogOut, ShoppingCart } from "@lucide/svelte";
-import { get } from "svelte/store";
-import Button from "$lib/components/ui/button/button.svelte";
-import Card from "$lib/components/ui/card/card.svelte";
-import PageContent from "$lib/components/ui/page/page-content.svelte";
-import PageHeader from "$lib/components/ui/page/page-header.svelte";
+import NewSaleDialog from "$lib/components/new-sale-dialog.svelte";
+import RecentOrders from "$lib/components/recent-orders.svelte";
+import { Button } from "$lib/components/ui/button";
+import { Card } from "$lib/components/ui/card";
+import { PageContent, PageHeader } from "$lib/components/ui/page";
 import { t } from "$lib/i18n";
 import { closeRegister, ensureOpenSession } from "$lib/register";
+import { createSale as createSaleShared } from "$lib/sales";
 import { supabase } from "$lib/supabase-client";
-import { currentUser, loadCurrentUser } from "$lib/user";
+import { loadCurrentUser } from "$lib/user";
 
 let closing = $state(false);
 let showCloseDialog = $state(false);
 let staffName = $state("");
 let notes = $state("");
-let finalCash = $state("");
+// removed finalCash; not collected anymore
+let showSale = $state(false);
+const productsForSale: Array<{
+	id: string;
+	name: string;
+	price: number;
+	category_id?: string | null;
+}> = $state([]);
 
 $effect(() => {
-	loadCurrentUser().then(() => {
-		const user = get(currentUser);
-		if (!user) {
-			window.location.href = "/login";
-			return;
-		}
-		if (user.role !== "staff") {
-			window.location.href = "/dashboard";
-		}
-	});
+	loadCurrentUser();
 });
 
 async function onCloseRegister() {
@@ -37,10 +36,7 @@ async function onCloseRegister() {
 	const {
 		data: { user },
 	} = await supabase.auth.getUser();
-	if (!user) {
-		window.location.href = "/login";
-		return;
-	}
+	if (!user) return;
 
 	const sessionId = await ensureOpenSession(supabase, user.id);
 	closing = true;
@@ -49,16 +45,31 @@ async function onCloseRegister() {
 		await closeRegister(supabase, sessionId, {
 			staff_name: staffName,
 			notes,
-			final_cash: Number(finalCash || 0),
 		});
 
 		showCloseDialog = false;
 		staffName = "";
 		notes = "";
-		finalCash = "";
 	} finally {
 		closing = false;
 	}
+}
+
+async function createSale(payload: {
+	items: Array<{
+		id: string;
+		name: string;
+		price: number;
+		is_treat?: boolean;
+	}>;
+	paymentMethod: "cash";
+	couponCount: number;
+}) {
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+	if (!user) return;
+	await createSaleShared(supabase, user.id, payload);
 }
 </script>
 
@@ -81,9 +92,7 @@ async function onCloseRegister() {
             <ShoppingCart class="size-5" />
           </span>
           <div class="flex flex-col gap-1">
-            <span
-              class="text-xs font-semibold uppercase text-muted-foreground"
-            >
+            <span class="text-xs font-semibold uppercase text-muted-foreground">
               {t("dashboard.staff.pos")}
             </span>
             <p class="text-sm text-muted-foreground">
@@ -92,7 +101,8 @@ async function onCloseRegister() {
           </div>
         </div>
         <Button
-          href="/orders"
+          type="button"
+          onclick={() => (showSale = true)}
           size="lg"
           class="h-12 rounded-lg text-base font-semibold"
         >
@@ -107,9 +117,7 @@ async function onCloseRegister() {
     >
       <div class="flex flex-col gap-4 px-6 py-6">
         <div class="flex flex-col gap-1">
-          <span
-            class="text-xs font-semibold uppercase text-muted-foreground"
-          >
+          <span class="text-xs font-semibold uppercase text-muted-foreground">
             {t("dashboard.staff.register")}
           </span>
           <p class="text-sm text-muted-foreground">
@@ -132,6 +140,25 @@ async function onCloseRegister() {
     </Card>
   </div>
 
+  <Card
+    class="mt-5 rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm"
+  >
+    <div class="flex items-center justify-between gap-2 px-6 py-4">
+      <h2 class="text-lg font-semibold text-foreground">
+        {t("orders.recent")}
+      </h2>
+    </div>
+    <div class="px-6 pb-6">
+      <RecentOrders limit={5} />
+    </div>
+  </Card>
+
+  <NewSaleDialog
+    bind:open={showSale}
+    products={productsForSale}
+    onSubmit={createSale}
+  />
+
   {#if showCloseDialog}
     <div
       class="fixed inset-0 z-50 grid place-items-center bg-black/55 px-4 py-12"
@@ -151,28 +178,17 @@ async function onCloseRegister() {
             class="flex flex-col gap-2 text-sm text-muted-foreground"
             for="staffName"
           >
-            <span class="font-medium text-foreground">{t("common.name")}</span>
+            <span class="font-medium text-foreground"
+              >{t("common.name")}
+              <span class="text-red-600" aria-hidden="true">*</span></span
+            >
             <input
               id="staffName"
               class="w-full rounded-lg border border-outline-soft/70 bg-background px-3 py-2"
+              required
+              aria-required="true"
               bind:value={staffName}
               placeholder={t("dashboard.staff.required")}
-            />
-          </label>
-
-          <label
-            class="flex flex-col gap-2 text-sm text-muted-foreground"
-            for="finalCash"
-          >
-            <span class="font-medium text-foreground">Final cash (€)</span>
-            <input
-              id="finalCash"
-              class="w-full rounded-lg border border-outline-soft/70 bg-background px-3 py-2"
-              type="number"
-              step="0.01"
-              min="0"
-              bind:value={finalCash}
-              placeholder="0.00"
             />
           </label>
 
@@ -203,7 +219,7 @@ async function onCloseRegister() {
             type="button"
             class="rounded-lg"
             onclick={onCloseRegister}
-            disabled={closing || !staffName.trim() || finalCash === ""}
+            disabled={closing || !staffName.trim()}
           >
             {t("dashboard.staff.confirmClose")}
           </Button>

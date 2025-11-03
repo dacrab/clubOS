@@ -184,12 +184,12 @@ async function saveAll() {
 			class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 p-6 shadow-sm"
 		>
 			<h2 class="text-sm font-semibold uppercase text-muted-foreground">
-				{t("pages.settings.inventory")}
+				{t("settings.inventory")}
 			</h2>
 			<div class="mt-4 grid gap-4">
 				<div class="flex items-center gap-3">
 					<Label for="low-stock" class="text-sm text-muted-foreground"
-						>{t("pages.settings.lowStockThreshold")}</Label
+						>{t("settings.lowStockThreshold")}</Label
 					>
 					<Input
 						id="low-stock"
@@ -200,19 +200,19 @@ async function saveAll() {
 				</div>
 				<div class="flex items-center gap-3">
 					<Label class="text-sm text-muted-foreground"
-						>{t("pages.settings.allowUnlimitedStock")}</Label
+						>{t("settings.allowUnlimitedStock")}</Label
 					>
 					<Switch bind:checked={form.allowUnlimitedStock} />
 				</div>
 				<div class="flex items-center gap-3">
 					<Label class="text-sm text-muted-foreground"
-						>{t("pages.settings.negativeStockAllowed")}</Label
+						>{t("settings.negativeStockAllowed")}</Label
 					>
 					<Switch bind:checked={form.negativeStockAllowed} />
 				</div>
 				<div class="flex items-center gap-3">
 					<Label class="text-sm text-muted-foreground"
-						>{t("pages.settings.defaultCategorySort")}</Label
+						>{t("settings.defaultCategorySort")}</Label
 					>
 					<Select bind:value={form.defaultCategorySort} type="single">
 						<SelectTrigger
@@ -223,25 +223,25 @@ async function saveAll() {
 								class="truncate text-sm"
 							>
 								{form.defaultCategorySort === "name"
-									? t("pages.settings.categorySort.name")
-									: t("pages.settings.categorySort.custom")}
+									? t("settings.categorySort.name")
+									: t("settings.categorySort.custom")}
 							</span>
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem
-								value="name"
-								label={t("pages.settings.categorySort.name")}
+							value="name"
+							label={t("settings.categorySort.name")}
 							/>
 							<SelectItem
-								value="custom"
-								label={t("pages.settings.categorySort.custom")}
+							value="custom"
+							label={t("settings.categorySort.custom")}
 							/>
 						</SelectContent>
 					</Select>
 				</div>
 				<div class="flex items-center gap-3">
 					<Label for="page-size" class="text-sm text-muted-foreground"
-						>{t("pages.settings.productsPageSize")}</Label
+						>{t("settings.productsPageSize")}</Label
 					>
 					<Input
 						id="page-size"
@@ -252,7 +252,7 @@ async function saveAll() {
 				</div>
 				<div class="flex items-center gap-3">
 					<Label for="img-max" class="text-sm text-muted-foreground"
-						>{t("pages.settings.imageMaxSizeMb")}</Label
+						>{t("settings.imageMaxSizeMb")}</Label
 					>
 					<Input
 						id="img-max"
@@ -268,14 +268,14 @@ async function saveAll() {
 			class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 p-6 shadow-sm"
 		>
 			<h2 class="text-sm font-semibold uppercase text-muted-foreground">
-				{t("pages.settings.coupons")}
+				{t("settings.coupons")}
 			</h2>
 			<div class="mt-4 grid gap-4">
 				<div class="flex items-center gap-3">
 					<Label
 						for="coupon-value"
 						class="text-sm text-muted-foreground"
-						>{t("pages.settings.couponsValue")}</Label
+						>{t("settings.couponsValue")}</Label
 					>
 					<Input
 						id="coupon-value"
@@ -287,7 +287,7 @@ async function saveAll() {
 				</div>
 				<div class="flex items-center gap-3">
 					<Label class="text-sm text-muted-foreground"
-						>{t("pages.settings.allowTreats")}</Label
+						>{t("settings.allowTreats")}</Label
 					>
 					<Switch bind:checked={form.allowTreats} />
 				</div>
@@ -298,12 +298,12 @@ async function saveAll() {
 			class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 p-6 shadow-sm"
 		>
 			<h2 class="text-sm font-semibold uppercase text-muted-foreground">
-				{t("pages.settings.sales")}
+				{t("settings.sales")}
 			</h2>
 			<div class="mt-4 grid gap-4">
 				<div class="flex items-center gap-3">
 					<Label class="text-sm text-muted-foreground"
-						>{t("pages.settings.requireOpenRegisterForSale")}</Label
+						>{t("settings.requireOpenRegisterForSale")}</Label
 					>
 					<Switch bind:checked={form.requireOpenRegisterForSale} />
 				</div>
@@ -314,12 +314,12 @@ async function saveAll() {
 			class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 p-6 shadow-sm"
 		>
 			<h2 class="text-sm font-semibold uppercase text-muted-foreground">
-				{t("pages.settings.finance")}
+				{t("settings.finance")}
 			</h2>
 			<div class="mt-4 grid gap-4">
 				<div class="flex items-center gap-3">
 					<Label for="currency" class="text-sm text-muted-foreground"
-						>{t("pages.settings.currencyCode")}</Label
+						>{t("settings.currencyCode")}</Label
 					>
 					<Input
 						id="currency"
@@ -329,7 +329,7 @@ async function saveAll() {
 				</div>
 				<div class="flex items-center gap-3">
 					<Label for="tax" class="text-sm text-muted-foreground"
-						>{t("pages.settings.taxRatePercent")}</Label
+						>{t("settings.taxRatePercent")}</Label
 					>
 					<Input
 						id="tax"
@@ -346,13 +346,13 @@ async function saveAll() {
 			class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 p-6 shadow-sm"
 		>
 			<h2 class="text-sm font-semibold uppercase text-muted-foreground">
-				{t("pages.settings.receipt")}
+				{t("settings.receipt")}
 			</h2>
 			<div class="mt-4 grid gap-4">
 				<Label
 					for="receipt-footer"
 					class="text-sm text-muted-foreground"
-					>{t("pages.settings.receiptFooterText")}</Label
+					>{t("settings.receiptFooterText")}</Label
 				>
 				<Textarea
 					id="receipt-footer"
@@ -366,14 +366,14 @@ async function saveAll() {
 			class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 p-6 shadow-sm"
 		>
 			<h2 class="text-sm font-semibold uppercase text-muted-foreground">
-				{t("pages.settings.bookings")}
+				{t("settings.bookings")}
 			</h2>
 			<div class="mt-4 grid gap-4">
 				<div class="flex items-center gap-3">
 					<Label
 						for="booking-duration"
 						class="text-sm text-muted-foreground"
-						>{t("pages.settings.bookingDefaultDurationMin")}</Label
+						>{t("settings.bookingDefaultDurationMin")}</Label
 					>
 					<Input
 						id="booking-duration"
@@ -384,7 +384,7 @@ async function saveAll() {
 				</div>
 				<div class="flex items-center gap-3">
 					<Label for="buffer" class="text-sm text-muted-foreground"
-						>{t("pages.settings.appointmentBufferMin")}</Label
+						>{t("settings.appointmentBufferMin")}</Label
 					>
 					<Input
 						id="buffer"
@@ -395,7 +395,7 @@ async function saveAll() {
 				</div>
 				<div class="flex items-center gap-3">
 					<Label class="text-sm text-muted-foreground"
-						>{t("pages.settings.preventOverlaps")}</Label
+						>{t("settings.preventOverlaps")}</Label
 					>
 					<Switch bind:checked={form.preventOverlaps} />
 				</div>
@@ -406,14 +406,14 @@ async function saveAll() {
 			class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 p-6 shadow-sm"
 		>
 			<h2 class="text-sm font-semibold uppercase text-muted-foreground">
-				{t("pages.settings.football")}
+				{t("settings.football")}
 			</h2>
 			<div class="mt-4 grid gap-4">
 				<div class="flex items-center gap-3">
 					<Label
 						for="fields-count"
 						class="text-sm text-muted-foreground"
-						>{t("pages.settings.footballFieldsCount")}</Label
+						>{t("settings.footballFieldsCount")}</Label
 					>
 					<Input
 						id="fields-count"
@@ -429,12 +429,12 @@ async function saveAll() {
 			class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 p-6 shadow-sm"
 		>
 			<h2 class="text-sm font-semibold uppercase text-muted-foreground">
-				{t("pages.settings.appearance")}
+				{t("settings.appearance")}
 			</h2>
 			<div class="mt-4 grid gap-4">
 				<div class="flex items-center gap-3">
 					<Label class="text-sm text-muted-foreground"
-						>{t("pages.settings.themeDefault")}</Label
+						>{t("settings.themeDefault")}</Label
 					>
 					<Select bind:value={form.themeDefault} type="single">
 						<SelectTrigger
@@ -462,7 +462,7 @@ async function saveAll() {
 				</div>
 				<div class="flex items-center gap-3">
 					<Label class="text-sm text-muted-foreground"
-						>{t("pages.settings.defaultLocale")}</Label
+						>{t("settings.defaultLocale")}</Label
 					>
 					<Select bind:value={form.defaultLocale} type="single">
 						<SelectTrigger

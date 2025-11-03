@@ -87,7 +87,7 @@ async function save() {
   <DialogContent class="sm:max-w-[520px] rounded-2xl border border-outline-soft/70 bg-surface-soft/95 shadow-xl">
     <DialogHeader class="border-b border-outline-soft/60 pb-4">
       <DialogTitle class="text-lg font-semibold text-foreground">
-        {t("pages.products.add")}
+        {t("products.add")}
       </DialogTitle>
     </DialogHeader>
     <div class="grid gap-4 py-4">
@@ -132,7 +132,7 @@ async function save() {
                 {#if form.category_id}
                   {(categories.find((c: { id: string; name: string }) => c.id === form.category_id)?.name) || ""}
                 {:else}
-                  {t("pages.products.selectCategory")}
+                  {t("products.selectCategory")}
                 {/if}
               </span>
             </SelectTrigger>

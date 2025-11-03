@@ -165,7 +165,7 @@ function triggerFile() {
                 {#if form.category_id}
                   {(categories.find((c: { id: string; name: string }) => c.id === form.category_id)?.name) || ""}
                 {:else}
-                  {t("pages.products.selectCategory")}
+                  {t("products.selectCategory")}
                 {/if}
               </span>
             </SelectTrigger>

@@ -136,7 +136,7 @@ function money(value: number) {
 
 <PageContent>
   <PageHeader
-    title={t("pages.ordersPage.title")}
+    title={t("orders.list.title")}
     icon={ReceiptText}
     subtitle={t("orders.latest") ?? t("orders.recent")}
   />
@@ -146,9 +146,7 @@ function money(value: number) {
   >
     <div class="border-b border-outline-soft/60 px-6 py-4">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2
-          class="text-xs font-semibold uppercase text-muted-foreground"
-        >
+        <h2 class="text-xs font-semibold uppercase text-muted-foreground">
           {t("orders.recent")}
         </h2>
         <span class="text-[12px] text-muted-foreground">
@@ -156,10 +154,8 @@ function money(value: number) {
         </span>
       </div>
       <div class="mt-4 max-w-xl">
-        <div
-          class="text-[11px] font-semibold uppercase text-muted-foreground"
-        >
-          {t("pages.registers.pickDate")}
+        <div class="text-[11px] font-semibold uppercase text-muted-foreground">
+          {t("registers.pickDate")}
         </div>
         <div class="mt-3">
           <DateRangePicker
@@ -178,11 +174,9 @@ function money(value: number) {
       >
         <Table class="min-w-full">
           <TableHeader>
-            <TableRow
-              class="border-0 text-xs uppercase text-muted-foreground"
-            >
+            <TableRow class="border-0 text-xs uppercase text-muted-foreground">
               <TableHead class="rounded-l-xl pl-6">ID</TableHead>
-              <TableHead>{t("pages.ordersPage.date")}</TableHead>
+              <TableHead>{t("orders.list.date")}</TableHead>
               <TableHead class="text-right">{t("orders.subtotal")}</TableHead>
               <TableHead class="text-right">{t("orders.discount")}</TableHead>
               <TableHead class="text-right">{t("orders.total")}</TableHead>
@@ -190,6 +184,32 @@ function money(value: number) {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {#if orders.length === 0}
+              <TableRow>
+                <TableCell
+                  colspan={6}
+                  class="py-16 text-center"
+                >
+                  <div
+                    class="mx-auto flex max-w-sm flex-col items-center gap-4 text-center"
+                  >
+                    <div
+                      class="grid size-16 place-items-center rounded-full bg-muted/30"
+                    >
+                      <ReceiptText class="size-8 text-muted-foreground/60" />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <h3 class="text-base font-semibold text-foreground">
+                        {t("orders.list.empty.title")}
+                      </h3>
+                      <p class="text-sm text-muted-foreground">
+                        {t("orders.list.empty.description")}
+                      </p>
+                    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            {:else}
             {#if topPad > 0}
               <TableRow
                 ><TableCell
@@ -248,6 +268,7 @@ function money(value: number) {
                   style={`height:${bottomPad}px; padding:0; border:0;`}
                 ></TableCell></TableRow
               >
+            {/if}
             {/if}
           </TableBody>
         </Table>

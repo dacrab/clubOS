@@ -87,7 +87,7 @@ const Select = SelectPrimitive.Root;
   <DialogContent class="sm:max-w-[520px] rounded-2xl border border-outline-soft/70 bg-surface-soft/95 shadow-xl">
     <DialogHeader class="border-b border-outline-soft/60 pb-4">
       <DialogTitle class="text-lg font-semibold text-foreground">
-        {user ? t("pages.users.edit") : t("pages.users.add")}
+        {user ? t("users.edit") : t("users.add")}
       </DialogTitle>
     </DialogHeader>
     <div class="grid gap-4 py-4">
@@ -99,7 +99,7 @@ const Select = SelectPrimitive.Root;
           <Input
             id="username"
             bind:value={form.username}
-            placeholder={t("pages.users.usernamePlaceholder")}
+            placeholder={t("users.usernamePlaceholder")}
             class="rounded-lg border-outline-soft bg-background"
           />
         </div>
@@ -111,7 +111,7 @@ const Select = SelectPrimitive.Root;
             id="password"
             type="password"
             bind:value={form.password}
-            placeholder={t("pages.users.passwordOptionalPlaceholder")}
+            placeholder={t("users.passwordOptionalPlaceholder")}
             class="rounded-lg border-outline-soft bg-background"
           />
         </div>

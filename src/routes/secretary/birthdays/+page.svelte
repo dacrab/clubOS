@@ -1,6 +1,4 @@
 <script lang="ts">
-import { ClipboardList } from "@lucide/svelte";
-import { get } from "svelte/store";
 import { Button } from "$lib/components/ui/button";
 import { Card } from "$lib/components/ui/card";
 import { DateInput } from "$lib/components/ui/date-input";
@@ -12,6 +10,7 @@ import {
 	DialogTitle,
 } from "$lib/components/ui/dialog";
 import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
 import { PageContent, PageHeader } from "$lib/components/ui/page";
 import {
 	Select,
@@ -29,7 +28,7 @@ import { Textarea } from "$lib/components/ui/textarea";
 import { resolveSelectedFacilityId } from "$lib/facility";
 import { t } from "$lib/i18n";
 import { supabase } from "$lib/supabase-client";
-import { currentUser, loadCurrentUser } from "$lib/user";
+import { loadCurrentUser } from "$lib/user";
 import { formatDateTime } from "$lib/utils";
 
 type AppointmentDB = {
@@ -68,14 +67,6 @@ let form = $state({
 
 $effect(() => {
 	loadCurrentUser().then(() => {
-		const u = get(currentUser);
-		if (!u) {
-			window.location.href = "/login";
-			return;
-		}
-		if (u.role !== "secretary" && u.role !== "admin") {
-			window.location.href = "/dashboard";
-		}
 		load();
 	});
 });
@@ -112,10 +103,7 @@ async function create() {
 	const {
 		data: { user },
 	} = await supabase.auth.getUser();
-	if (!user) {
-		window.location.href = "/login";
-		return;
-	}
+	if (!user) return;
 
 	const { data: membership } = await supabase
 		.from("tenant_members")
@@ -188,189 +176,194 @@ async function saveEdit() {
 
 <PageContent>
   <PageHeader
-    title={t("pages.appointments.title")}
-    subtitle={t("pages.appointments.subtitle")}
-    icon={ClipboardList}
+    title={t("appointments.title")}
+    subtitle={t("appointments.subtitle")}
   />
 
   <Tabs bind:value={activeTab} class="w-full">
     <TabsList
-      class="grid w-full max-w-lg grid-cols-2 rounded-2xl border border-outline-soft bg-surface"
+      class="inline-flex h-10 w-fit items-center justify-center rounded-lg bg-muted/50 p-1"
     >
-      <TabsTrigger value="create" class="rounded-xl">
-        {t("pages.appointments.tabsCreate")}
+      <TabsTrigger
+        value="create"
+        class="rounded-md px-4 py-1.5 text-sm font-medium text-muted-foreground transition-all hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+      >
+        {t("appointments.tabsCreate")}
       </TabsTrigger>
-      <TabsTrigger value="upcoming" class="rounded-xl">
-        {t("pages.appointments.tabsUpcoming")}
+      <TabsTrigger
+        value="upcoming"
+        class="rounded-md px-4 py-1.5 text-sm font-medium text-muted-foreground transition-all hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+      >
+        {t("appointments.tabsUpcoming")}
       </TabsTrigger>
     </TabsList>
 
     <TabsContent value="create" class="mt-8">
-      <Card
-        class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm"
-      >
-        <div class="flex flex-col gap-6 border-b border-outline-soft/70 p-6">
-          <h2 class="text-lg font-semibold text-foreground">
-            {t("pages.appointments.createTitle")}
+      <Card class="rounded-xl border bg-surface shadow-sm">
+        <div class="p-6">
+          <h2 class="text-base font-semibold text-foreground">
+            {t("appointments.createTitle")}
           </h2>
-          <p class="text-sm text-muted-foreground">
-            {t("pages.appointments.createSubtitle")}
+          <p class="mt-1 text-sm text-muted-foreground">
+            {t("appointments.createSubtitle")}
           </p>
-        </div>
 
-        <div class="grid gap-6 p-6 md:grid-cols-2">
-          <div class="flex flex-col gap-4">
-            <label class="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span class="font-medium text-foreground">
-                {t("pages.appointments.customerName")}
-              </span>
-              <Input
-                placeholder={t("pages.appointments.customerPlaceholder")}
-                bind:value={form.customer_name}
-                class="rounded-lg border-outline-soft bg-background"
-              />
-            </label>
-
-            <label class="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span class="font-medium text-foreground">
-                {t("pages.appointments.contactInfo")}
-              </span>
-              <Input
-                placeholder={t("pages.appointments.contactPlaceholder")}
-                bind:value={form.contact_info}
-                class="rounded-lg border-outline-soft bg-background"
-              />
-            </label>
-
-            <label class="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span class="font-medium text-foreground">
-                {t("pages.appointments.dateTime")}
-              </span>
-              <div class="grid grid-cols-[1fr_auto] items-center gap-2">
-                <DateInput
-                  bind:value={form.appointment_date}
-                  placeholder={t("date.placeholder")}
-                />
+          <div class="mt-6 grid gap-6 md:grid-cols-2">
+            <div class="flex flex-col gap-4">
+              <div class="flex flex-col gap-2">
+                <Label for="customer_name" class="text-sm">
+                  {t("common.customerName")}
+                </Label>
                 <Input
-                  type="time"
-                  bind:value={form.appointment_time}
-                  class="w-28 rounded-xl border-outline-soft bg-background"
+                  id="customer_name"
+                  placeholder={t("common.customerPlaceholder")}
+                  bind:value={form.customer_name}
+                  class="rounded-md"
                 />
               </div>
-            </label>
-          </div>
 
-          <div class="flex flex-col gap-4">
-            <div class="grid grid-cols-2 gap-4">
-              <label class="flex flex-col gap-2 text-sm text-muted-foreground">
-                <span class="font-medium text-foreground">
-                  {t("pages.appointments.children")}
-                </span>
+              <div class="flex flex-col gap-2">
+                <Label for="contact_info" class="text-sm">
+                  {t("common.contactInfo")}
+                </Label>
                 <Input
-                  type="number"
-                  min="1"
-                  bind:value={form.num_children}
-                  class="rounded-xl border-outline-soft bg-background"
+                  id="contact_info"
+                  placeholder={t("common.contactPlaceholder")}
+                  bind:value={form.contact_info}
+                  class="rounded-md"
                 />
-              </label>
+              </div>
 
-              <label class="flex flex-col gap-2 text-sm text-muted-foreground">
-                <span class="font-medium text-foreground">
-                  {t("pages.appointments.adults")}
-                </span>
-                <Input
-                  type="number"
-                  min="0"
-                  bind:value={form.num_adults}
-                  class="rounded-xl border-outline-soft bg-background"
-                />
-              </label>
+              <div class="flex flex-col gap-2">
+                <Label for="appointment_date" class="text-sm">
+                  {t("common.dateTime")}
+                </Label>
+                <div class="grid grid-cols-[1fr_auto] items-center gap-2">
+                  <DateInput
+                    id="appointment_date"
+                    bind:value={form.appointment_date}
+                    placeholder={t("date.placeholder")}
+                  />
+                  <Input
+                    id="appointment_time"
+                    type="time"
+                    bind:value={form.appointment_time}
+                    class="w-28 rounded-md"
+                  />
+                </div>
+              </div>
             </div>
 
-            <label class="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span class="font-medium text-foreground">
-                {t("pages.appointments.notes")}
-              </span>
-              <Textarea
-                placeholder={t("pages.appointments.notesPlaceholder")}
-                bind:value={form.notes}
-                class="min-h-24 rounded-lg border-outline-soft bg-background"
-              />
-            </label>
+            <div class="flex flex-col gap-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-2">
+                  <Label for="num_children" class="text-sm">
+                    {t("appointments.children")}
+                  </Label>
+                  <Input
+                    id="num_children"
+                    type="number"
+                    min="1"
+                    bind:value={form.num_children}
+                    class="rounded-md"
+                  />
+                </div>
 
-            <Button
-              type="button"
-              onclick={create}
-              class="h-12 rounded-lg text-sm font-semibold"
-            >
-              <ClipboardList class="mr-2 h-4 w-4" />
-              {t("pages.appointments.createButton")}
-            </Button>
+                <div class="flex flex-col gap-2">
+                  <Label for="num_adults" class="text-sm">
+                    {t("appointments.adults")}
+                  </Label>
+                  <Input
+                    id="num_adults"
+                    type="number"
+                    min="0"
+                    bind:value={form.num_adults}
+                    class="rounded-md"
+                  />
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <Label for="notes" class="text-sm">
+                  {t("common.notes")}
+                </Label>
+                <Textarea
+                  id="notes"
+                  placeholder={t("common.notesPlaceholder")}
+                  bind:value={form.notes}
+                  class="min-h-24 rounded-md"
+                />
+              </div>
+
+              <Button
+                type="button"
+                onclick={create}
+                class="h-10 rounded-md text-sm font-medium"
+              >
+                {t("appointments.createButton")}
+              </Button>
+            </div>
           </div>
         </div>
       </Card>
     </TabsContent>
 
     <TabsContent value="upcoming" class="mt-8">
-      <Card
-        class="rounded-2xl border border-outline-soft/70 bg-surface-soft/80 shadow-sm"
-      >
-        <div class="flex flex-col gap-6 border-b border-outline-soft/70 p-6">
-          <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 class="text-lg font-semibold text-foreground">
-                {t("pages.appointments.allAppointments")}
-              </h2>
-              <p class="text-sm text-muted-foreground">
-                {t("pages.appointments.manageExisting")}
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              class="rounded-lg"
-            >
-              {t("pages.appointments.exportList")}
-            </Button>
-          </div>
-        </div>
-
+      <Card class="rounded-xl border bg-surface shadow-sm">
         <div class="p-6">
+          <h2 class="text-base font-semibold text-foreground">
+            {t("appointments.allAppointments")}
+          </h2>
+          <p class="mt-1 text-sm text-muted-foreground">
+            {t("appointments.manageExisting")}
+          </p>
+
           {#if list.length === 0}
             <div
-              class="grid place-items-center gap-4 rounded-2xl border border-dashed border-outline-soft/70 bg-surface-strong/40 px-8 py-16 text-center"
+              class="mt-4 grid place-items-center gap-4 rounded-xl border border-dashed border-outline-soft/60 bg-muted/20 px-8 py-12 text-center"
             >
-              <ClipboardList class="size-12 text-muted-foreground" />
-              <div class="space-y-2">
+              <div
+                class="grid size-16 place-items-center rounded-full bg-muted/30"
+              >
+                <svg
+                  class="size-8 text-muted-foreground/60"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <title>{t("appointments.title")}</title>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <div class="flex flex-col gap-1">
                 <h3 class="text-base font-semibold text-foreground">
-                  {t("pages.appointments.emptyTitle")}
+                  {t("appointments.emptyTitle")}
                 </h3>
                 <p class="text-sm text-muted-foreground">
-                  {t("pages.appointments.emptySubtitle")}
+                  {t("appointments.emptySubtitle")}
                 </p>
               </div>
               <Button
                 type="button"
-                class="rounded-lg"
+                class="rounded-md"
                 onclick={() => (activeTab = "create")}
               >
-                {t("pages.appointments.createCta")}
+                {t("appointments.createCta")}
               </Button>
             </div>
           {:else}
-            <div class="flex flex-col gap-4">
+            <div class="mt-4 flex flex-col gap-3">
               {#each list as appointment}
                 <div
-                  class="flex items-center justify-between gap-4 rounded-2xl border border-outline-soft bg-surface px-4 py-4 transition-all hover:border-outline-strong hover:bg-surface-strong/60"
+                  class="flex items-center justify-between gap-4 rounded-xl border bg-surface px-4 py-4 transition-colors hover:bg-muted/40"
                 >
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-3">
-                      <span
-                        class="grid size-10 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
-                      >
-                        {appointment.customer_name?.slice(0, 1) ?? "?"}
-                      </span>
                       <div class="flex flex-col">
                         <span class="font-semibold text-foreground">
                           {appointment.customer_name}
@@ -382,7 +375,7 @@ async function saveEdit() {
                     </div>
 
                     <div
-                      class="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"
+                      class="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"
                     >
                       <span>
                         {appointment.display_date ||
@@ -390,11 +383,11 @@ async function saveEdit() {
                       </span>
                       <span>
                         {appointment.num_children}
-                        {t("pages.appointments.children").toLowerCase()}
+                        {t("appointments.children").toLowerCase()}
                       </span>
                       <span>
                         {appointment.num_adults}
-                        {t("pages.appointments.adults").toLowerCase()}
+                        {t("appointments.adults").toLowerCase()}
                       </span>
                     </div>
 
@@ -413,15 +406,13 @@ async function saveEdit() {
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {t(
-                        `pages.appointments.status.${appointment.status}` as any,
-                      )}
+                      {t(`appointments.status.${appointment.status}` as any)}
                     </span>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      class="rounded-lg"
+                      class="rounded-md"
                       onclick={() => openEdit(appointment)}
                     >
                       {t("common.edit")}
@@ -439,131 +430,110 @@ async function saveEdit() {
 
 <DialogRoot bind:open={showEdit}>
   <DialogContent
-    class="sm:max-w-[520px] rounded-2xl border border-outline-soft/70 bg-surface-soft/90 shadow-xl"
+    class="sm:max-w-[520px] rounded-xl border bg-surface/95 shadow-xl"
   >
     <DialogHeader>
-      <DialogTitle class="text-lg font-semibold text-foreground">
-        {t("pages.appointments.editTitle")}
+      <DialogTitle class="text-base font-semibold text-foreground">
+        {t("appointments.editTitle")}
       </DialogTitle>
     </DialogHeader>
 
-    <div class="grid gap-4 py-4">
-      <label
-        class="grid grid-cols-4 items-center gap-3 text-sm text-muted-foreground"
-      >
-        <span class="text-right font-medium text-foreground">
-          {t("common.status")}
-        </span>
+    <div class="grid gap-4 py-2">
+      <div class="grid grid-cols-4 items-center gap-3 text-sm">
+        <Label class="text-right">{t("common.status")}</Label>
         <div class="col-span-3">
           <Select bind:value={editStatus} type="single">
-            <SelectTrigger
-              class="w-full rounded-xl border-outline-soft bg-background"
-            >
+            <SelectTrigger class="w-full rounded-md">
               <span data-slot="select-value" class="truncate">
-                {t(`pages.appointments.status.${editStatus}` as any)}
+                {t(`appointments.status.${editStatus}` as any)}
               </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem
                 value="confirmed"
-                label={t("pages.appointments.status.confirmed")}
+                label={t("appointments.status.confirmed")}
               />
               <SelectItem
                 value="completed"
-                label={t("pages.appointments.status.completed")}
+                label={t("appointments.status.completed")}
               />
               <SelectItem
                 value="cancelled"
-                label={t("pages.appointments.status.cancelled")}
+                label={t("appointments.status.cancelled")}
               />
             </SelectContent>
           </Select>
         </div>
-      </label>
+      </div>
 
       {#if editing}
-        <label
-          class="grid grid-cols-4 items-center gap-3 text-sm text-muted-foreground"
-        >
-          <span class="text-right font-medium text-foreground">
-            {t("pages.appointments.customerName")}
-          </span>
+        <div class="grid grid-cols-4 items-center gap-3 text-sm">
+          <Label class="text-right" for="edit_customer_name"
+            >{t("common.customerName")}</Label
+          >
           <Input
-            class="col-span-3 rounded-xl border-outline-soft bg-background"
+            id="edit_customer_name"
+            class="col-span-3 rounded-md"
             bind:value={editing.customer_name}
           />
-        </label>
+        </div>
 
-        <label
-          class="grid grid-cols-4 items-center gap-3 text-sm text-muted-foreground"
-        >
-          <span class="text-right font-medium text-foreground">
-            {t("pages.appointments.contactInfo")}
-          </span>
+        <div class="grid grid-cols-4 items-center gap-3 text-sm">
+          <Label class="text-right" for="edit_contact_info"
+            >{t("common.contactInfo")}</Label
+          >
           <Input
-            class="col-span-3 rounded-xl border-outline-soft bg-background"
+            id="edit_contact_info"
+            class="col-span-3 rounded-md"
             bind:value={editing.contact_info}
           />
-        </label>
+        </div>
 
-        <label
-          class="grid grid-cols-4 items-center gap-3 text-sm text-muted-foreground"
-        >
-          <span class="text-right font-medium text-foreground">
-            {t("pages.appointments.dateTime")}
-          </span>
+        <div class="grid grid-cols-4 items-center gap-3 text-sm">
+          <Label class="text-right">{t("common.dateTime")}</Label>
           <div class="col-span-3 grid grid-cols-[1fr_auto] items-center gap-2">
             <DateInput
               bind:value={editDate}
               placeholder={t("date.placeholder")}
             />
-            <Input
-              class="w-28 rounded-xl border-outline-soft bg-background"
-              type="time"
-              bind:value={editTime}
-            />
+            <Input class="w-28 rounded-md" type="time" bind:value={editTime} />
           </div>
-        </label>
+        </div>
 
-        <label
-          class="grid grid-cols-4 items-center gap-3 text-sm text-muted-foreground"
-        >
-          <span class="text-right font-medium text-foreground">
-            {t("pages.appointments.children")}
-          </span>
+        <div class="grid grid-cols-4 items-center gap-3 text-sm">
+          <Label class="text-right" for="edit_children"
+            >{t("appointments.children")}</Label
+          >
           <Input
-            class="col-span-3 w-40 rounded-xl border-outline-soft bg-background"
+            id="edit_children"
+            class="col-span-3 w-40 rounded-md"
             type="number"
             min="1"
             bind:value={editing.num_children}
           />
-        </label>
+        </div>
 
-        <label
-          class="grid grid-cols-4 items-center gap-3 text-sm text-muted-foreground"
-        >
-          <span class="text-right font-medium text-foreground">
-            {t("pages.appointments.adults")}
-          </span>
+        <div class="grid grid-cols-4 items-center gap-3 text-sm">
+          <Label class="text-right" for="edit_adults"
+            >{t("appointments.adults")}</Label
+          >
           <Input
-            class="col-span-3 w-40 rounded-xl border-outline-soft bg-background"
+            id="edit_adults"
+            class="col-span-3 w-40 rounded-md"
             type="number"
             min="0"
             bind:value={editing.num_adults}
           />
-        </label>
+        </div>
 
-        <label
-          class="grid grid-cols-4 items-center gap-3 text-sm text-muted-foreground"
-        >
-          <span class="text-right font-medium text-foreground">
-            {t("pages.appointments.notes")}
-          </span>
+        <div class="grid grid-cols-4 items-center gap-3 text-sm">
+          <Label class="text-right" for="edit_notes">{t("common.notes")}</Label>
           <Textarea
-            class="col-span-3 min-h-24 rounded-xl border-outline-soft bg-background"
+            id="edit_notes"
+            class="col-span-3 min-h-24 rounded-md"
             bind:value={editing.notes}
           />
-        </label>
+        </div>
       {/if}
     </div>
 
@@ -571,12 +541,12 @@ async function saveEdit() {
       <Button
         type="button"
         variant="outline"
-        class="rounded-full"
+        class="rounded-md"
         onclick={() => (showEdit = false)}
       >
         {t("common.cancel")}
       </Button>
-      <Button type="button" class="rounded-full" onclick={saveEdit}>
+      <Button type="button" class="rounded-md" onclick={saveEdit}>
         {t("common.save")}
       </Button>
     </DialogFooter>

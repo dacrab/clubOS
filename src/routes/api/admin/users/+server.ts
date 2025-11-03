@@ -11,15 +11,16 @@ function getFunctionsBaseUrl() {
 	return `${url}/functions/v1`;
 }
 
-function getAuthHeader(request: Request) {
-	const auth = request.headers.get("authorization");
-	return auth ? { Authorization: auth } : {};
+function buildAuthHeader(token: string | null | undefined) {
+	return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
 	const base = getFunctionsBaseUrl();
+	const token = locals.session?.access_token;
+	if (!token) return new Response("Unauthorized", { status: 401 });
 	const headers: HeadersInit = {
-		...getAuthHeader(request),
+		...buildAuthHeader(token),
 		"content-type": "application/json",
 	};
 	const res = await fetch(`${base}/admin-create-user`, {
@@ -30,7 +31,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	return new Response(await res.text(), { status: res.status });
 };
 
-export const DELETE: RequestHandler = async ({ request, url }) => {
+export const DELETE: RequestHandler = async ({ url, locals }) => {
 	const base = getFunctionsBaseUrl();
 	const id = url.searchParams.get("id");
 	if (!id) {
@@ -40,16 +41,18 @@ export const DELETE: RequestHandler = async ({ request, url }) => {
 		`${base}/admin-delete-user?id=${encodeURIComponent(id)}`,
 		{
 			method: "DELETE",
-			headers: getAuthHeader(request),
+			headers: buildAuthHeader(locals.session?.access_token),
 		},
 	);
 	return new Response(await res.text(), { status: res.status });
 };
 
-export const PATCH: RequestHandler = async ({ request }) => {
+export const PATCH: RequestHandler = async ({ request, locals }) => {
 	const base = getFunctionsBaseUrl();
+	const token = locals.session?.access_token;
+	if (!token) return new Response("Unauthorized", { status: 401 });
 	const headers: HeadersInit = {
-		...getAuthHeader(request),
+		...buildAuthHeader(token),
 		"content-type": "application/json",
 	};
 	const res = await fetch(`${base}/admin-update-user`, {

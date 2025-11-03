@@ -11,7 +11,7 @@ import {
 	UserCog,
 } from "@lucide/svelte";
 import { createEventDispatcher } from "svelte";
-import { page } from "$app/stores";
+import { page } from "$app/state";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -64,10 +64,18 @@ type NavSection = {
 	items: NavItem[];
 };
 
-const navSections: NavSection[] = [
+const dashboardHref = $derived(
+	userRole === "secretary"
+		? "/secretary"
+		: userRole === "staff"
+			? "/staff"
+			: "/admin",
+);
+
+const navSections: NavSection[] = $derived([
 	{
 		headingKey: "nav.overview",
-		items: [{ href: "/admin", icon: Home, labelKey: "nav.dashboard" }],
+		items: [{ href: dashboardHref, icon: Home, labelKey: "nav.dashboard" }],
 	},
 	{
 		headingKey: "nav.admin",
@@ -110,7 +118,7 @@ const navSections: NavSection[] = [
 			{
 				href: "/secretary/birthdays",
 				icon: ClipboardList,
-				labelKey: "pages.appointments.title",
+				labelKey: "appointments.title",
 				roles: ["admin", "secretary"],
 			},
 			{
@@ -121,14 +129,14 @@ const navSections: NavSection[] = [
 			},
 		],
 	},
-];
+]);
 
 const TRAILING_SLASH_RE = /\/+$/;
 function normalizePath(p: string): string {
 	const n = p.replace(TRAILING_SLASH_RE, "");
 	return n === "" ? "/" : n;
 }
-const currentPath = $derived(normalizePath($page.url.pathname));
+const currentPath = $derived(normalizePath(page.url.pathname));
 function isActive(path: string): boolean {
 	const current = currentPath;
 	const href = normalizePath(path);
@@ -150,8 +158,11 @@ const visibleSections = $derived(
 );
 
 async function logout(): Promise<void> {
-	await supabase.auth.signOut();
-	window.location.href = "/";
+	try {
+		await fetch("/logout", { method: "POST" });
+	} finally {
+		window.location.href = "/";
+	}
 }
 function toggleTheme() {
 	dispatch("toggleTheme");
@@ -295,47 +306,49 @@ $effect(() => {
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto px-2 pb-8 scrollbar-thin">
-        <div class="flex flex-col gap-7">
-            {#each visibleSections as section}
-                <div class="flex flex-col gap-2">
-                    {#if section.headingKey && reveal}
-                        <span
-                            class="text-[11px] font-semibold uppercase text-muted-foreground transition-all duration-200 ease-out opacity-100 translate-x-0"
-                            style="will-change: opacity, transform; transition-delay: 120ms;"
-                        >
-                            {t(section.headingKey)}
-                        </span>
-                    {/if}
-                    <div class="flex flex-col gap-1.5">
-                        {#each section.items as item}
-                            {@const active = isActive(item.href)}
-                            <a
-                                href={item.href}
-                                class={`${linkBase} ${active ? activeLink : ""}`}
-                                aria-current={active ? "page" : undefined}
-                                title={collapsed ? t(item.labelKey) : undefined}
+    {#if userRole !== "staff"}
+        <nav class="flex-1 overflow-y-auto px-2 pb-8 scrollbar-thin">
+            <div class="flex flex-col gap-7">
+                {#each visibleSections as section}
+                    <div class="flex flex-col gap-2">
+                        {#if section.headingKey && reveal}
+                            <span
+                                class="text-[11px] font-semibold uppercase text-muted-foreground transition-all duration-200 ease-out opacity-100 translate-x-0"
+                                style="will-change: opacity, transform; transition-delay: 120ms;"
                             >
-                                <span
-                                    class={`${iconWrapper} ${active ? iconWrapperActive : ""}`}
+                                {t(section.headingKey)}
+                            </span>
+                        {/if}
+                        <div class="flex flex-col gap-1.5">
+                            {#each section.items as item}
+                                {@const active = isActive(item.href)}
+                                <a
+                                    href={item.href}
+                                    class={`${linkBase} ${active ? activeLink : ""}`}
+                                    aria-current={active ? "page" : undefined}
+                                    title={collapsed ? t(item.labelKey) : undefined}
                                 >
-                                    <item.icon class="size-4" />
-                                </span>
-                                {#if reveal}
                                     <span
-                                        class="truncate transition-all duration-200 ease-out opacity-100 translate-x-0"
-                                        style="will-change: opacity, transform; transition-delay: 140ms;"
+                                        class={`${iconWrapper} ${active ? iconWrapperActive : ""}`}
                                     >
-                                        {t(item.labelKey)}
+                                        <item.icon class="size-4" />
                                     </span>
-                                {/if}
-                            </a>
-                        {/each}
+                                    {#if reveal}
+                                        <span
+                                            class="truncate transition-all duration-200 ease-out opacity-100 translate-x-0"
+                                            style="will-change: opacity, transform; transition-delay: 140ms;"
+                                        >
+                                            {t(item.labelKey)}
+                                        </span>
+                                    {/if}
+                                </a>
+                            {/each}
+                        </div>
                     </div>
-                </div>
-            {/each}
-        </div>
-    </nav>
+                {/each}
+            </div>
+        </nav>
+    {/if}
 
     <!-- Collapse Toggle & Quick Settings & User -->
     <div class="border-t border-sidebar-border/70 px-4 py-6">

@@ -3,7 +3,7 @@ import "../app.css";
 import { MonitorCog, Moon, Sun } from "@lucide/svelte";
 import type { ComponentType } from "svelte";
 import { Toaster } from "svelte-sonner";
-import { page } from "$app/stores";
+import { page } from "$app/state";
 import favicon from "$lib/assets/favicon.svg";
 import { locale, t } from "$lib/i18n";
 import { sidebarCollapsed } from "$lib/sidebar";
@@ -14,30 +14,36 @@ const { children } = $props();
 type ThemeChoice = "light" | "dark" | "system";
 
 let theme = $state<ThemeChoice>("system");
-const isLoginPage = $derived($page.url.pathname === "/");
+const isLoginPage = $derived(page.url.pathname === "/");
+const isErrorPage = $derived(
+	typeof page.status === "number" && page.status >= 400,
+);
 let SidebarComp = $state<ComponentType | null>(null);
 let systemPrefersDark: MediaQueryList | null = null;
 
 const shellClass =
 	"min-h-screen bg-background text-foreground transition-colors duration-200";
 
+// derive on current path
 const mainClass = $derived(
-	$page.url.pathname === "/"
+	page.url.pathname === "/"
 		? "flex flex-1 items-center justify-center px-4 pb-16 pt-8 sm:px-6"
 		: "flex flex-1 flex-col px-6 pb-12 pt-6 md:px-10",
 );
 
 const contentWrapperClass = $derived(
-	$page.url.pathname === "/"
+	page.url.pathname === "/"
 		? "w-full max-w-md"
 		: "mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8",
 );
 
 const sidebarWidth = $derived($sidebarCollapsed ? "4rem" : "16rem");
 const layoutPaddingStyle = $derived(
-	$page.url.pathname === "/"
+	page.url.pathname === "/"
 		? ""
-		: `padding-left: ${sidebarWidth}; will-change: padding-left;`,
+		: isErrorPage
+			? ""
+			: `padding-left: ${sidebarWidth}; will-change: padding-left;`,
 );
 
 function resolvedTheme(choice: ThemeChoice): "light" | "dark" {
@@ -118,7 +124,7 @@ $effect(() => {
 		class="flex min-h-screen transition-[padding-left] duration-200 ease-in-out"
 		style={layoutPaddingStyle}
 	>
-		{#if !isLoginPage && SidebarComp}
+		{#if !isLoginPage && !isErrorPage && SidebarComp}
 			<SidebarComp themeIcon={ThemeIcon} on:toggleTheme={cycleTheme} />
 		{/if}
 		<div class="flex flex-1 flex-col">
