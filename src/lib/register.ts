@@ -1,3 +1,7 @@
+/**
+ * Register session helpers for opening, checking, and closing POS register sessions.
+ * These functions interact with Supabase tables and RPC to manage sessions.
+ */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveSelectedFacilityId } from "$lib/facility";
 
