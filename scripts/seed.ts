@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
@@ -32,24 +33,31 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 	auth: { autoRefreshToken: false, persistSession: false },
 });
 
+function getSeedPassword(role: "admin" | "staff" | "secretary"): string {
+	const envKey = `SEED_${role.toUpperCase()}_PASSWORD`;
+	const value = process.env[envKey];
+	if (value?.trim()) return value;
+	return `seed-${role}-${randomUUID()}`;
+}
+
 const CONFIG = {
 	tenantName: "Demo Club",
 	facilityName: "Main Facility",
 	admin: {
 		email: "admin@example.com",
-		password: "admin123",
+		password: getSeedPassword("admin"),
 		username: "Admin User",
 		role: "admin" as const,
 	},
 	staff: {
 		email: "staff@example.com",
-		password: "staff123",
+		password: getSeedPassword("staff"),
 		username: "Staff User",
 		role: "staff" as const,
 	},
 	secretary: {
 		email: "secretary@example.com",
-		password: "secretary123",
+		password: getSeedPassword("secretary"),
 		username: "Secretary User",
 		role: "secretary" as const,
 	},
