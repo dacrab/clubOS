@@ -36,7 +36,7 @@
 		"tailwindcss": "^4.1.16",
 		"tailwindcss-animate": "^1.0.7",
 		"typescript": "^5.9.3",
-		"ultracite": "6.3.2",
+		"ultracite": "6.3.3",
 		"vite": "^7.1.12",
 		"vitest": "^4.0.6"
 	},
