@@ -18,7 +18,7 @@
 	},
 	"devDependencies": {
 		"@internationalized/date": "^3.10.0",
-		"@lucide/svelte": "^0.553.0",
+		"@lucide/svelte": "^0.554.0",
 		"@sveltejs/adapter-vercel": "^6.1.1",
 		"@sveltejs/kit": "^2.48.4",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
@@ -36,7 +36,7 @@
 		"tailwindcss": "^4.1.16",
 		"tailwindcss-animate": "^1.0.7",
 		"typescript": "^5.9.3",
-		"ultracite": "6.3.2",
+		"ultracite": "6.3.6",
 		"vite": "^7.1.12",
 		"vitest": "^4.0.6"
 	},
