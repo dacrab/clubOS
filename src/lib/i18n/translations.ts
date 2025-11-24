@@ -1,26 +1,4 @@
-import { derived, get, writable } from "svelte/store";
-
 export type Locale = "en" | "el";
-
-export const locale = writable<Locale>("en");
-if (typeof window !== "undefined") {
-	const saved = window.localStorage.getItem("locale");
-	if (saved === "en" || saved === "el") {
-		locale.set(saved);
-	}
-	locale.subscribe((val) => {
-		try {
-			window.localStorage.setItem("locale", val);
-		} catch {
-			/* ignore */
-		}
-		try {
-			document.documentElement.setAttribute("lang", val);
-		} catch {
-			/* ignore */
-		}
-	});
-}
 
 // Helper type for deeply nested keys
 type DeepKey<T> = T extends object
@@ -31,7 +9,7 @@ type DeepKey<T> = T extends object
 		}[keyof T]
 	: "";
 
-const translations = {
+export const translations = {
 	admin: {
 		activeUsers: { en: "Active Users", el: "Ενεργοί Χρήστες" },
 		overview: {
@@ -572,44 +550,3 @@ const translations = {
 } as const;
 
 export type TranslationKey = DeepKey<typeof translations>;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getNestedTranslation<T extends Record<string, unknown>>(
-	obj: T,
-	path: string,
-	current: Locale,
-): string | undefined {
-	const keys = path.split(".");
-	let result: unknown = obj;
-	for (const key of keys) {
-		if (
-			typeof result === "object" &&
-			result !== null &&
-			key in (result as Record<string, unknown>)
-		) {
-			result = (result as Record<string, unknown>)[key];
-		} else {
-			return;
-		}
-	}
-	if (
-		typeof result === "object" &&
-		result !== null &&
-		current in (result as Record<string, string>)
-	) {
-		return (result as Record<string, string>)[current];
-	}
-	return;
-}
-
-export function t(key: TranslationKey): string {
-	const currentLocale = get(locale);
-	return getNestedTranslation(translations, key, currentLocale) ?? key;
-}
-
-// Reactive translator: use as $tt('nav.dashboard') for reactivity on locale change
-export const tt = derived(
-	locale,
-	($locale) => (key: TranslationKey) =>
-		getNestedTranslation(translations, key, $locale) ?? key,
-);

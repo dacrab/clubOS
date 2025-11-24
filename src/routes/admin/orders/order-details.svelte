@@ -1,7 +1,7 @@
 <script lang="ts">
-import { t } from "$lib/i18n";
-import { supabase } from "$lib/supabase-client";
-import { formatDateTime } from "$lib/utils";
+import { t } from "$lib/state/i18n.svelte";
+import { supabase } from "$lib/utils/supabase";
+import { formatDateTime } from "$lib/utils/utils";
 
 type OrderRow = {
 	id: string;

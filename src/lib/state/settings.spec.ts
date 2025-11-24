@@ -2,18 +2,18 @@ import { vi } from "vitest";
 
 // Mock supabase-client BEFORE mocking $env/dynamic/public
 // This ensures supabase-client doesn't try to import $env/dynamic/public
-vi.mock("$lib/supabase-client", () => ({
+vi.mock("$lib/utils/supabase", () => ({
 	supabase: {},
 }));
 
 import { describe, expect, it } from "vitest";
-import { getInventorySettings, settingsStore } from "./settings";
+import { settingsState } from "./settings.svelte";
 
 describe("settings", () => {
 	const EXPECTED_LOW_STOCK_THRESHOLD = 7;
 
-	it("returns inventory settings from store snapshot", () => {
-		settingsStore.set({
+	it("returns inventory settings from state", () => {
+		settingsState.value = {
 			tenant: {
 				lowStockThreshold: EXPECTED_LOW_STOCK_THRESHOLD,
 				allowUnlimitedStock: false,
@@ -40,8 +40,8 @@ describe("settings", () => {
 				defaultLocale: "en",
 				theme: "system",
 			},
-		});
-		const inv = getInventorySettings();
+		};
+		const inv = settingsState.inventorySettings;
 		expect(inv.lowStockThreshold).toBe(EXPECTED_LOW_STOCK_THRESHOLD);
 		expect(inv.allowUnlimitedStock).toBe(false);
 		expect(inv.negativeStockAllowed).toBe(true);

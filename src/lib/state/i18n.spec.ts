@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { locale, t } from "./i18n";
+import { i18nState, type TranslationKey, tt as t } from "./i18n.svelte";
 
 describe("i18n", () => {
 	it("returns key when translation missing", () => {
-		expect(t("nonexistent.key" as any)).toBe("nonexistent.key");
+		expect(t("nonexistent.key" as TranslationKey)).toBe("nonexistent.key");
 	});
 
-	it("switches language via store", () => {
-		locale.set("el");
+	it("switches language via state", () => {
+		i18nState.locale = "el";
 		expect(t("nav.dashboard")).toBe("Πίνακας Ελέγχου");
-		locale.set("en");
+		i18nState.locale = "en";
 		expect(t("nav.dashboard")).toBe("Dashboard");
 	});
 });

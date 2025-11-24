@@ -8,7 +8,6 @@ import {
 	X,
 } from "@lucide/svelte";
 import { Dialog as DialogPrimitive } from "bits-ui";
-import { collectWithDescendants } from "$lib/categories/tree";
 import { Button } from "$lib/components/ui/button";
 import {
 	DialogClose,
@@ -17,14 +16,15 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "$lib/components/ui/dialog";
-import { resolveSelectedFacilityId } from "$lib/facility";
-import { t } from "$lib/i18n";
+import { facilityState } from "$lib/state/facility.svelte";
+import { tt as t } from "$lib/state/i18n.svelte";
+import { collectWithDescendants } from "$lib/utils/category-tree";
 import {
 	subtotal as calcSubtotal,
 	discountAmount,
 	totalAmount,
-} from "$lib/orders/calc";
-import { supabase } from "$lib/supabase-client";
+} from "$lib/utils/order-calculations";
+import { supabase } from "$lib/utils/supabase";
 
 const DialogRoot = DialogPrimitive.Root;
 
@@ -129,7 +129,7 @@ async function submit() {
 }
 
 async function ensureFacilityContext(): Promise<void> {
-	facilityId = await resolveSelectedFacilityId(supabase);
+	facilityId = await facilityState.resolveSelected();
 }
 
 async function loadCategories() {

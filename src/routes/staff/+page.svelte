@@ -1,15 +1,15 @@
 <script lang="ts">
 import { LogOut, ShoppingCart } from "@lucide/svelte";
-import NewSaleDialog from "$lib/components/new-sale-dialog.svelte";
-import RecentOrders from "$lib/components/recent-orders.svelte";
+import NewSaleDialog from "$lib/components/features/new-sale-dialog.svelte";
+import RecentOrders from "$lib/components/features/recent-orders.svelte";
 import { Button } from "$lib/components/ui/button";
 import { Card } from "$lib/components/ui/card";
 import { PageContent, PageHeader } from "$lib/components/ui/page";
-import { t } from "$lib/i18n";
-import { closeRegister, ensureOpenSession } from "$lib/register";
-import { createSale as createSaleShared } from "$lib/sales";
-import { supabase } from "$lib/supabase-client";
-import { loadCurrentUser } from "$lib/user";
+import { tt as t } from "$lib/state/i18n.svelte";
+import { registerState } from "$lib/state/register.svelte";
+import { salesState } from "$lib/state/sales.svelte";
+import { userState } from "$lib/state/user.svelte";
+import { supabase } from "$lib/utils/supabase";
 
 let closing = $state(false);
 let showCloseDialog = $state(false);
@@ -25,7 +25,7 @@ const productsForSale: Array<{
 }> = $state([]);
 
 $effect(() => {
-	loadCurrentUser();
+	userState.load();
 });
 
 async function onCloseRegister() {
@@ -38,11 +38,11 @@ async function onCloseRegister() {
 	} = await supabase.auth.getUser();
 	if (!user) return;
 
-	const sessionId = await ensureOpenSession(supabase, user.id);
+	const sessionId = await registerState.ensureOpenSession(user.id);
 	closing = true;
 
 	try {
-		await closeRegister(supabase, sessionId, {
+		await registerState.close(sessionId, {
 			staff_name: staffName,
 			notes,
 		});
@@ -69,7 +69,7 @@ async function createSale(payload: {
 		data: { user },
 	} = await supabase.auth.getUser();
 	if (!user) return;
-	await createSaleShared(supabase, user.id, payload);
+	await salesState.create(user.id, payload);
 }
 </script>
 

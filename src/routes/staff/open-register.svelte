@@ -1,8 +1,8 @@
 <script lang="ts">
-import Button from "$lib/components/ui/button/button.svelte";
-import Input from "$lib/components/ui/input/input.svelte";
-import { ensureOpenSession } from "$lib/register";
-import { supabase } from "$lib/supabase-client";
+import { Button } from "$lib/components/ui/button";
+import { Input } from "$lib/components/ui/input";
+import { registerState } from "$lib/state/register.svelte";
+import { supabase } from "$lib/utils/supabase";
 
 let openingCash = $state("");
 let saving = $state(false);
@@ -14,7 +14,7 @@ async function openNow() {
 	if (!user) return;
 	saving = true;
 	try {
-		const sessionId = await ensureOpenSession(supabase, user.id);
+		const sessionId = await registerState.ensureOpenSession(user.id);
 		await supabase
 			.from("register_sessions")
 			.update({ notes: { opening_cash: Number(openingCash || 0) } })

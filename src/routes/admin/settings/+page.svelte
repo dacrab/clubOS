@@ -1,27 +1,24 @@
 <script lang="ts">
-import { Select as SelectPrimitive } from "bits-ui";
 import { afterNavigate } from "$app/navigation";
 import { Button } from "$lib/components/ui/button";
 import { Card } from "$lib/components/ui/card";
 import { Input } from "$lib/components/ui/input";
 import { Label } from "$lib/components/ui/label";
 import { PageContent, PageHeader } from "$lib/components/ui/page";
-import SelectContent from "$lib/components/ui/select/select-content.svelte";
-import SelectItem from "$lib/components/ui/select/select-item.svelte";
-import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+} from "$lib/components/ui/select";
 import { Switch } from "$lib/components/ui/switch";
 import { Textarea } from "$lib/components/ui/textarea";
-import { t } from "$lib/i18n";
-import type { TenantSettings } from "$lib/settings";
-import {
-	loadSettings as loadGlobalSettings,
-	settingsStore,
-} from "$lib/settings";
-import { supabase } from "$lib/supabase-client";
+import { tt as t } from "$lib/state/i18n.svelte";
+import type { TenantSettings } from "$lib/state/settings.svelte";
+import { settingsState } from "$lib/state/settings.svelte";
+import { supabase } from "$lib/utils/supabase";
 
 let saving = $state(false);
-
-const Select = SelectPrimitive.Root;
 
 let form = $state<TenantSettings>({
 	lowStockThreshold: 3,
@@ -47,23 +44,22 @@ let form = $state<TenantSettings>({
 let receiptFooterText = $state("");
 
 $effect(() => {
-	const unsubscribe = settingsStore.subscribe((s) => {
-		form = { ...s.tenant };
-		receiptFooterText = s.tenant.receiptFooterText ?? "";
-	});
-	loadGlobalSettings();
+	// Sync from global state
+	form = { ...settingsState.value.tenant };
+	receiptFooterText = settingsState.value.tenant.receiptFooterText ?? "";
+});
+
+$effect(() => {
+	settingsState.load();
 	// Ensure fresh data when navigating back to this page
 	afterNavigate(() => {
 		if (
 			typeof window !== "undefined" &&
 			window.location.pathname === "/admin/settings"
 		) {
-			loadGlobalSettings();
+			settingsState.load();
 		}
 	});
-	return () => {
-		unsubscribe();
-	};
 });
 
 async function upsertTenantSettings(partial: Partial<TenantSettings>) {
@@ -131,7 +127,7 @@ async function upsertTenantSettings(partial: Partial<TenantSettings>) {
 
 		const { toast } = await import("svelte-sonner");
 		if (!error) {
-			loadGlobalSettings();
+			settingsState.load();
 			toast.success(t("common.save"));
 		} else {
 			toast.error(error.message);

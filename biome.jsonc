@@ -1,32 +1,101 @@
 {
-	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-	"formatter": {
-		"enabled": true
-	},
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"recommended": true,
-			"style": {
-				"useImportType": "error"
-			},
-			"nursery": {
-				"recommended": true
-			},
-			"suspicious": {
-				"noConsole": "error",
-				"noDebugger": "error"
-			}
-		}
-	},
+	"$schema": "https://biomejs.dev/schemas/2.3.7/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
 		"useIgnoreFile": true
 	},
+	"files": {
+		"ignoreUnknown": false,
+		"includes": [
+			"**",
+			"!**/.svelte-kit",
+			"!**/node_modules",
+			"!**/dist",
+			"!**/coverage",
+			"!**/.vercel",
+			"!**/src/app.css",
+			"!**/bun.lock"
+		]
+	},
+	"formatter": {
+		"enabled": true,
+		"formatWithErrors": false,
+		"indentStyle": "tab",
+		"indentWidth": 2,
+		"lineEnding": "lf",
+		"lineWidth": 80,
+		"attributePosition": "auto"
+	},
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"complexity": {
+				"useLiteralKeys": "off",
+				"noExcessiveCognitiveComplexity": "off"
+			},
+			"correctness": {
+				"noUnusedImports": "error",
+				"noUnusedVariables": "error",
+				"noUndeclaredVariables": "off"
+			},
+			"style": {
+				"noNamespace": "off",
+				"useImportType": "error",
+				"useFilenamingConvention": "off",
+				"useConst": "off"
+			},
+			"suspicious": {
+				"noConsole": "warn",
+				"noDebugger": "error",
+				"noExplicitAny": "off",
+				"noArrayIndexKey": "off"
+			},
+			"performance": {
+				"noBarrelFile": "off"
+			},
+			"nursery": {
+				"useSortedClasses": {
+					"level": "warn",
+					"options": {
+						"attributes": ["class"],
+						"functions": ["cn", "clsx", "cva"]
+					}
+				}
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double",
+			"jsxQuoteStyle": "double",
+			"quoteProperties": "asNeeded",
+			"trailingCommas": "all",
+			"semicolons": "always",
+			"arrowParentheses": "always",
+			"bracketSpacing": true,
+			"bracketSameLine": false,
+			"attributePosition": "auto"
+		},
+		"globals": ["Deno", "App"]
+	},
+	"json": {
+		"formatter": {
+			"trailingCommas": "none"
+		}
+	},
 	"css": {
 		"parser": {
-			"tailwindDirectives": true
+			"cssModules": false
+		},
+		"formatter": {
+			"enabled": true,
+			"quoteStyle": "double"
+		},
+		"linter": {
+			"enabled": false
 		}
 	},
 	"overrides": [
@@ -35,14 +104,9 @@
 			"linter": {
 				"rules": {
 					"style": {
-						"useFilenamingConvention": "off",
 						"useConst": "off"
 					},
-					"complexity": {
-						"useLiteralKeys": "off"
-					},
 					"correctness": {
-						"noUnusedImports": "off",
 						"noUnusedVariables": "off",
 						"noUndeclaredVariables": "off"
 					}
@@ -55,56 +119,6 @@
 				"rules": {
 					"style": {
 						"useFilenamingConvention": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["src/app.css"],
-			"linter": {
-				"rules": {
-					"suspicious": {
-						"noUnknownAtRules": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["src/app.d.ts"],
-			"linter": {
-				"rules": {
-					"style": {
-						"noNamespace": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["supabase/functions/**/*.ts"],
-			"javascript": {
-				"globals": ["Deno"]
-			}
-		},
-		{
-			"includes": ["**/index.ts"],
-			"linter": {
-				"rules": {
-					"performance": {
-						"noBarrelFile": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["**/*.{test,spec}.{ts,tsx}", "**/__tests__/**/*"],
-			"linter": {
-				"rules": {
-					"complexity": {
-						"noExcessiveCognitiveComplexity": "off"
-					},
-					"suspicious": {
-						"noConsole": "off",
-						"noExplicitAny": "off"
 					}
 				}
 			}

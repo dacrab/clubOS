@@ -5,7 +5,7 @@ import Card from "$lib/components/ui/card/card.svelte";
 import PageContent from "$lib/components/ui/page/page-content.svelte";
 import PageHeader from "$lib/components/ui/page/page-header.svelte";
 import StatsCards from "$lib/components/ui/stats-cards.svelte";
-import { t } from "$lib/i18n";
+import { t } from "$lib/state/i18n.svelte";
 
 const upcoming = $state(0);
 

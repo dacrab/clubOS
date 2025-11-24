@@ -8,17 +8,17 @@ import {
 	UserCog,
 } from "@lucide/svelte";
 import { toast } from "svelte-sonner";
-import LowStockCard from "$lib/components/low-stock-card.svelte";
-import NewSaleDialog from "$lib/components/new-sale-dialog.svelte";
-import RecentOrders from "$lib/components/recent-orders.svelte";
+import LowStockCard from "$lib/components/features/low-stock-card.svelte";
+import NewSaleDialog from "$lib/components/features/new-sale-dialog.svelte";
+import RecentOrders from "$lib/components/features/recent-orders.svelte";
 import Button from "$lib/components/ui/button/button.svelte";
 import PageContent from "$lib/components/ui/page/page-content.svelte";
 import PageHeader from "$lib/components/ui/page/page-header.svelte";
-import { resolveSelectedFacilityId } from "$lib/facility";
-import { t } from "$lib/i18n";
-import { closeRegister, ensureOpenSession } from "$lib/register";
-import { createSale as createSaleShared } from "$lib/sales";
-import { supabase } from "$lib/supabase-client";
+import { facilityState } from "$lib/state/facility.svelte";
+import { tt as t } from "$lib/state/i18n.svelte";
+import { registerState } from "$lib/state/register.svelte";
+import { salesState } from "$lib/state/sales.svelte";
+import { supabase } from "$lib/utils/supabase";
 
 ((..._args: unknown[]) => {
 	return;
@@ -65,7 +65,7 @@ async function notifyLowStock() {
 		.eq("user_id", uid)
 		.limit(1);
 	const tenantId = (tm?.[0]?.tenant_id as string | undefined) ?? null;
-	const facilityId = await resolveSelectedFacilityId(supabase);
+	const facilityId = await facilityState.resolveSelected();
 	let q = supabase
 		.from("products")
 		.select("name, stock_quantity")
@@ -90,10 +90,10 @@ async function onCloseRegister() {
 		data: { user },
 	} = await supabase.auth.getUser();
 	if (!user) return;
-	const sessionId = await ensureOpenSession(supabase, user.id);
+	const sessionId = await registerState.ensureOpenSession(user.id);
 	closing = true;
 	try {
-		await closeRegister(supabase, sessionId, null);
+		await registerState.close(sessionId, null);
 	} finally {
 		closing = false;
 	}
@@ -113,7 +113,7 @@ async function createSale(payload: {
 		data: { user },
 	} = await supabase.auth.getUser();
 	if (!user) return;
-	await createSaleShared(supabase, user.id, payload);
+	await salesState.create(user.id, payload);
 }
 
 // remove capturing IIFE that referenced reactive state once; all symbols are used in markup

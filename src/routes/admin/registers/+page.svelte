@@ -1,28 +1,12 @@
 <script lang="ts">
-import { Candy, ClipboardList, Clock3, TicketPercent } from "@lucide/svelte";
-import { Badge } from "$lib/components/ui/badge";
-import { Card } from "$lib/components/ui/card";
-import { DateRangePicker } from "$lib/components/ui/date-picker";
-import { PageContent, PageHeader } from "$lib/components/ui/page";
-import { StatsCards } from "$lib/components/ui/stats-cards";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "$lib/components/ui/table";
-import { resolveSelectedFacilityId } from "$lib/facility";
-import { t } from "$lib/i18n";
+import { facilityState } from "$lib/state/facility.svelte";
+import { userState } from "$lib/state/user.svelte";
 import {
 	discountsForSession,
 	ordersTotalForSession,
-} from "$lib/registers/stats";
-import { supabase } from "$lib/supabase-client";
-import { loadCurrentUser } from "$lib/user";
-import { formatDateTime } from "$lib/utils";
-import { computeWindow } from "$lib/virtualization/window";
+} from "$lib/utils/register-stats";
+import { supabase } from "$lib/utils/supabase";
+import { computeWindow } from "$lib/utils/virtualization";
 
 type SessionRow = {
 	id: string;
@@ -114,7 +98,7 @@ const totalTreatAmountEffective = $derived(
 
 // Initialize
 $effect(() => {
-	loadCurrentUser().then(() => {
+	userState.load().then(() => {
 		load();
 	});
 });
@@ -149,7 +133,7 @@ async function loadSessions() {
 		.eq("user_id", uid)
 		.limit(1);
 	const tenantId = (tm?.[0]?.tenant_id as string | undefined) ?? null;
-	const facilityId = await resolveSelectedFacilityId(supabase);
+	const facilityId = await facilityState.resolveSelected();
 
 	let query = supabase
 		.from("register_sessions")

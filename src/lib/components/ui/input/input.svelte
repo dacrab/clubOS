@@ -3,8 +3,8 @@ import type {
 	HTMLInputAttributes,
 	HTMLInputTypeAttribute,
 } from "svelte/elements";
-import type { WithElementRef } from "$lib/utils";
-import { cn } from "$lib/utils";
+import type { WithElementRef } from "$lib/utils/utils";
+import { cn } from "$lib/utils/utils";
 
 type InputType = Exclude<HTMLInputTypeAttribute, "file">;
 

@@ -12,10 +12,10 @@ import {
 	TableHeader,
 	TableRow,
 } from "$lib/components/ui/table";
-import { resolveSelectedFacilityId } from "$lib/facility";
-import { t } from "$lib/i18n";
-import { supabase } from "$lib/supabase-client";
-import { currentUser, loadCurrentUser } from "$lib/user";
+import { facilityState } from "$lib/state/facility.svelte";
+import { tt as t } from "$lib/state/i18n.svelte";
+import { userState } from "$lib/state/user.svelte";
+import { supabase } from "$lib/utils/supabase";
 import AddProductDialog from "./add-product-dialog.svelte";
 import EditProductDialog from "./edit-product-dialog.svelte";
 import ManageCategoriesDialog from "./manage-categories-dialog.svelte";
@@ -65,13 +65,13 @@ $effect(() => {
 	if (typeof window === "undefined") {
 		return;
 	}
-	loadCurrentUser().then(() => {
+	userState.load().then(() => {
 		loadLists();
 	});
 });
 
 async function loadLists() {
-	const facilityId = await resolveSelectedFacilityId(supabase);
+	const facilityId = await facilityState.resolveSelected();
 	if (!facilityId) {
 		categories = [];
 		products = [];
@@ -105,8 +105,8 @@ async function onCreate(payload: {
 	category_id: string | null;
 }): Promise<void> {
 	const toast = (await import("svelte-sonner")).toast;
-	const tenantId = $currentUser?.tenantIds?.[0];
-	const fid = await resolveSelectedFacilityId(supabase);
+	const tenantId = userState.current?.tenantIds?.[0];
+	const fid = await facilityState.resolveSelected();
 	const { error } = await supabase
 		.from("products")
 		.insert({ ...payload, tenant_id: tenantId, facility_id: fid });
@@ -208,7 +208,7 @@ function openEdit(p: Product) {
 	EditProductDialog,
 	ManageCategoriesDialog,
 	recomputeWindow,
-	currentUser,
+	userState, // updated usage
 	openEdit,
 );
 </script>

@@ -50,7 +50,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 	async function ensureRole(required: "admin" | "staff" | "secretary") {
 		const u = event.locals.user;
 		if (!u) redirect(307, "/");
-		// biome-ignore lint/complexity/useLiteralKeys: index signature requires bracket access
 		const metaRole = (u.user_metadata?.["role"] as string | undefined) ?? null;
 		if (metaRole === required) return;
 		if (metaRole == null) {
@@ -72,7 +71,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 	} else if (path.startsWith("/secretary")) {
 		// Allow admin to access secretary area if desired
 		const u = event.locals.user;
-		// biome-ignore lint/complexity/useLiteralKeys: index signature requires bracket access
 		const metaRole = (u?.user_metadata?.["role"] as string | undefined) ?? null;
 		if (metaRole === "secretary" || metaRole === "admin") {
 			// ok

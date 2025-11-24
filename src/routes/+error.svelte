@@ -1,9 +1,9 @@
 <script lang="ts">
-import { Home as HomeIcon } from "@lucide/svelte";
 import { page } from "$app/state";
 import { Button } from "$lib/components/ui/button";
-import { t } from "$lib/i18n";
-import { supabase } from "$lib/supabase-client";
+import { tt as t } from "$lib/state/i18n.svelte";
+import { supabase } from "$lib/utils/supabase";
+import { Home as HomeIcon } from "@lucide/svelte";
 
 let homeHref = $state("/admin");
 

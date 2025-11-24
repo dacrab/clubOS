@@ -11,10 +11,10 @@ import {
 	TableHeader,
 	TableRow,
 } from "$lib/components/ui/table";
-import { resolveSelectedFacilityId } from "$lib/facility";
-import { t } from "$lib/i18n";
-import { supabase } from "$lib/supabase-client";
-import { loadCurrentUser } from "$lib/user";
+import { facilityState } from "$lib/state/facility.svelte";
+import { tt as t } from "$lib/state/i18n.svelte";
+import { userState } from "$lib/state/user.svelte";
+import { supabase } from "$lib/utils/supabase";
 import UserDialog from "./user-dialog.svelte";
 
 type AdminUser = {
@@ -30,7 +30,7 @@ let showUserDialog = $state(false);
 let selectedUser = $state<AdminUser | null>(null);
 
 $effect(() => {
-	loadCurrentUser();
+	userState.load();
 	loadUsers();
 });
 
@@ -51,7 +51,7 @@ async function loadUsers() {
 		users = [];
 		return;
 	}
-	const facilityId = await resolveSelectedFacilityId(supabase);
+	const facilityId = await facilityState.resolveSelected();
 	if (!facilityId) {
 		users = [];
 		return;

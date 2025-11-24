@@ -3,8 +3,8 @@ import CheckIcon from "@lucide/svelte/icons/check";
 import MinusIcon from "@lucide/svelte/icons/minus";
 import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 import type { Snippet } from "svelte";
-import type { WithoutChildrenOrChild } from "$lib/utils";
-import { cn } from "$lib/utils";
+import type { WithoutChildrenOrChild } from "$lib/utils/utils";
+import { cn } from "$lib/utils/utils";
 
 let {
 	ref = $bindable(null),

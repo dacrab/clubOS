@@ -17,9 +17,9 @@ import TableCell from "$lib/components/ui/table/table-cell.svelte";
 import TableHead from "$lib/components/ui/table/table-head.svelte";
 import TableHeader from "$lib/components/ui/table/table-header.svelte";
 import TableRow from "$lib/components/ui/table/table-row.svelte";
-import { resolveSelectedFacilityId } from "$lib/facility";
-import { t } from "$lib/i18n";
-import { supabase } from "$lib/supabase-client";
+import { facilityState } from "$lib/state/facility.svelte";
+import { tt as t } from "$lib/state/i18n.svelte";
+import { supabase } from "$lib/utils/supabase";
 
 const Dialog = DialogPrimitive.Root;
 const Select = SelectPrimitive.Root;
@@ -77,7 +77,7 @@ async function save() {
 			.select("tenant_id")
 			.eq("user_id", user.id);
 		const tenantId = memberships?.[0]?.tenant_id;
-		const facId = await resolveSelectedFacilityId(supabase);
+		const facId = await facilityState.resolveSelected();
 		await supabase.from("categories").insert({
 			name: form.name,
 			description: form.description,
@@ -128,7 +128,7 @@ async function remove(id: string) {
 })(remove);
 
 async function reload() {
-	const facId = await resolveSelectedFacilityId(supabase);
+	const facId = await facilityState.resolveSelected();
 	const query = supabase
 		.from("categories")
 		.select("id,name,description,parent_id");

@@ -11,7 +11,9 @@ function getFunctionsBaseUrl() {
 	return `${url}/functions/v1`;
 }
 
-function buildAuthHeader(token: string | null | undefined) {
+function buildAuthHeader(
+	token: string | null | undefined,
+): Record<string, string> {
 	return token ? { Authorization: `Bearer ${token}` } : {};
 }
 

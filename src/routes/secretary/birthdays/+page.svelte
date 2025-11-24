@@ -1,7 +1,7 @@
 <script lang="ts">
 import { Button } from "$lib/components/ui/button";
 import { Card } from "$lib/components/ui/card";
-import { DateInput } from "$lib/components/ui/date-input";
+import DateInput from "$lib/components/ui/date-input.svelte";
 import {
 	DialogContent,
 	DialogFooter,
@@ -25,11 +25,11 @@ import {
 	TabsTrigger,
 } from "$lib/components/ui/tabs";
 import { Textarea } from "$lib/components/ui/textarea";
-import { resolveSelectedFacilityId } from "$lib/facility";
-import { t } from "$lib/i18n";
-import { supabase } from "$lib/supabase-client";
-import { loadCurrentUser } from "$lib/user";
-import { formatDateTime } from "$lib/utils";
+import { facilityState } from "$lib/state/facility.svelte";
+import { tt as t } from "$lib/state/i18n.svelte";
+import { userState } from "$lib/state/user.svelte";
+import { supabase } from "$lib/utils/supabase";
+import { formatDateTime } from "$lib/utils/utils";
 
 type AppointmentDB = {
 	id: string;
@@ -66,7 +66,7 @@ let form = $state({
 });
 
 $effect(() => {
-	loadCurrentUser().then(() => {
+	userState.load().then(() => {
 		load();
 	});
 });
@@ -81,7 +81,7 @@ async function load() {
 		.eq("user_id", userId);
 
 	const tenantId = memberships?.[0]?.tenant_id as string | undefined;
-	const facilityId = await resolveSelectedFacilityId(supabase);
+	const facilityId = await facilityState.resolveSelected();
 
 	let query = supabase
 		.from("appointments")
@@ -109,7 +109,7 @@ async function create() {
 		.from("tenant_members")
 		.select("tenant_id")
 		.eq("user_id", user.id);
-	const facId = await resolveSelectedFacilityId(supabase);
+	const facId = await facilityState.resolveSelected();
 
 	const payload = {
 		...form,

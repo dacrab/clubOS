@@ -1,13 +1,13 @@
 <script lang="ts">
-import { Eye, EyeOff } from "@lucide/svelte";
 import { toast } from "svelte-sonner";
 import { goto } from "$app/navigation";
 import { Button } from "$lib/components/ui/button";
 import { Card, CardContent } from "$lib/components/ui/card";
 import { Input } from "$lib/components/ui/input";
 import { Label } from "$lib/components/ui/label";
-import { t } from "$lib/i18n";
-import { supabase } from "$lib/supabase-client";
+import { t } from "$lib/state/i18n.svelte";
+import { supabase } from "$lib/utils/supabase";
+import { Eye, EyeOff } from "lucide-svelte";
 
 let email = $state("");
 let password = $state("");

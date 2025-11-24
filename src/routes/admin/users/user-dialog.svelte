@@ -14,7 +14,7 @@ import Label from "$lib/components/ui/label/label.svelte";
 import SelectContent from "$lib/components/ui/select/select-content.svelte";
 import SelectItem from "$lib/components/ui/select/select-item.svelte";
 import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
-import { t } from "$lib/i18n";
+import { t } from "$lib/state/i18n.svelte";
 
 type AdminUser = {
 	id?: string;

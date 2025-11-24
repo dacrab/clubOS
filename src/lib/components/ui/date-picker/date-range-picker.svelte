@@ -3,9 +3,8 @@ import flatpickr from "flatpickr";
 import { Greek } from "flatpickr/dist/l10n/gr.js";
 import { createEventDispatcher, onDestroy, onMount } from "svelte";
 import Input from "$lib/components/ui/input/input.svelte";
-import { locale as appLocale, t } from "$lib/i18n";
+import { i18nState, tt as t } from "$lib/state/i18n.svelte";
 import "flatpickr/dist/flatpickr.min.css";
-import { get } from "svelte/store";
 
 ((..._args: unknown[]) => {
 	return;
@@ -142,7 +141,7 @@ function getPresetRange(id: PresetId): Range {
 // Flatpickr initialization
 onMount(() => {
 	if (startInput) {
-		const localeOpt: unknown = get(appLocale) === "el" ? Greek : undefined;
+		const localeOpt: unknown = i18nState.locale === "el" ? Greek : undefined;
 		const base: FlatpickrOptionsApprox = {
 			dateFormat: "d-m-y",
 			allowInput: true,
@@ -158,7 +157,7 @@ onMount(() => {
 	}
 
 	if (endInput) {
-		const localeOpt: unknown = get(appLocale) === "el" ? Greek : undefined;
+		const localeOpt: unknown = i18nState.locale === "el" ? Greek : undefined;
 		const base: FlatpickrOptionsApprox = {
 			dateFormat: "d-m-y",
 			allowInput: true,
@@ -194,7 +193,7 @@ $effect(() => {
 
 // React to locale changes
 $effect(() => {
-	const lng = get(appLocale);
+	const lng = i18nState.locale;
 	const localeOpt: unknown = lng === "el" ? Greek : undefined;
 	fpStart?.set?.("locale", localeOpt);
 	fpEnd?.set?.("locale", localeOpt);

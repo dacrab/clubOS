@@ -18,7 +18,7 @@ import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
 const Select = SelectPrimitive.Root;
 
 import Switch from "$lib/components/ui/switch/switch.svelte";
-import { t } from "$lib/i18n";
+import { t } from "$lib/state/i18n.svelte";
 
 let {
 	open = $bindable(false),

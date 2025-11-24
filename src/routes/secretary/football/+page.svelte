@@ -1,7 +1,7 @@
 <script lang="ts">
 import { Button } from "$lib/components/ui/button";
 import { Card } from "$lib/components/ui/card";
-import { DateInput } from "$lib/components/ui/date-input";
+import DateInput from "$lib/components/ui/date-input.svelte";
 import {
 	DialogContent,
 	DialogFooter,
@@ -25,11 +25,11 @@ import {
 	TabsTrigger,
 } from "$lib/components/ui/tabs";
 import { Textarea } from "$lib/components/ui/textarea";
-import { resolveSelectedFacilityId } from "$lib/facility";
-import { t } from "$lib/i18n";
-import { supabase } from "$lib/supabase-client";
-import { loadCurrentUser } from "$lib/user";
-import { formatDateTime } from "$lib/utils";
+import { facilityState } from "$lib/state/facility.svelte";
+import { tt as t } from "$lib/state/i18n.svelte";
+import { userState } from "$lib/state/user.svelte";
+import { formatDateTime } from "$lib/utils/utils";
+import { supabase } from "$lib/utils/supabase";
 
 type Booking = {
 	id: string;
@@ -63,7 +63,7 @@ let editDate = $state("");
 let editTime = $state("");
 
 $effect(() => {
-	loadCurrentUser().then(() => {
+	userState.load().then(() => {
 		load();
 	});
 });
@@ -76,7 +76,7 @@ async function load() {
 		.select("tenant_id")
 		.eq("user_id", userId);
 	const tenantId = memberships?.[0]?.tenant_id;
-	const facilityId = await resolveSelectedFacilityId(supabase);
+	const facilityId = await facilityState.resolveSelected();
 	let query = supabase
 		.from("football_bookings")
 		.select("*")
@@ -98,7 +98,7 @@ async function create() {
 		.select("tenant_id")
 		.eq("user_id", user.id);
 
-	const facId = await resolveSelectedFacilityId(supabase);
+	const facId = await facilityState.resolveSelected();
 	const payload = {
 		customer_name: form.customer_name,
 		contact_info: form.contact_info,

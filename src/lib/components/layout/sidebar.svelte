@@ -1,15 +1,4 @@
 <script lang="ts">
-import {
-	ChevronLeft,
-	ChevronRight,
-	ClipboardList,
-	Home,
-	LogOut,
-	Package,
-	ReceiptText,
-	Settings,
-	UserCog,
-} from "@lucide/svelte";
 import { createEventDispatcher } from "svelte";
 import { page } from "$app/state";
 import {
@@ -25,29 +14,33 @@ import {
 	SelectTrigger,
 } from "$lib/components/ui/select";
 import {
-	type Facility as Fac,
-	listFacilitiesForCurrentUser,
-	resolveSelectedFacilityId,
-} from "$lib/facility";
-import type { TranslationKey } from "$lib/i18n";
-import { locale, t } from "$lib/i18n";
-import {
-	SIDEBAR_DIMENSIONS,
-	sidebarAnimating,
-	sidebarCollapsed,
-} from "$lib/sidebar";
-import { supabase } from "$lib/supabase-client";
-import type { AppUser } from "$lib/user";
-import { currentUser } from "$lib/user";
+	ChevronLeft,
+	ChevronRight,
+	ClipboardList,
+	Home,
+	LogOut,
+	Package,
+	ReceiptText,
+	Settings,
+	UserCog,
+} from "@lucide/svelte";
+import type { TranslationKey } from "$lib/i18n/translations";
+import { facilityState } from "$lib/state/facility.svelte";
+import { i18nState, tt as t } from "$lib/state/i18n.svelte";
+import { SIDEBAR_DIMENSIONS, sidebarState } from "$lib/state/sidebar.svelte";
+import { type AppUser, userState } from "$lib/state/user.svelte";
+import { supabase } from "$lib/utils/supabase";
 
 type IconComponent = typeof Home;
 const { themeIcon = null } = $props<{ themeIcon?: IconComponent | null }>();
 const dispatch = createEventDispatcher<{ toggleTheme: undefined }>();
 
 const userRole = $derived(
-	($currentUser?.role ?? null) as AppUser["role"] | null,
+	(userState.current?.role ?? null) as AppUser["role"] | null,
 );
-const userName = $derived($currentUser?.username ?? $currentUser?.email ?? "");
+const userName = $derived(
+	userState.current?.username ?? userState.current?.email ?? "",
+);
 const userRoleLabel = $derived(
 	userRole ? `${userRole[0]?.toUpperCase() ?? ""}${userRole.slice(1)}` : "",
 );
@@ -168,7 +161,7 @@ function toggleTheme() {
 	dispatch("toggleTheme");
 }
 function setLocale(next: "en" | "el") {
-	locale.set(next);
+	i18nState.locale = next;
 }
 
 // Collapse state and visibility gating
@@ -179,24 +172,24 @@ $effect(() => {
 	if (typeof window === "undefined") return;
 	const saved = window.localStorage.getItem("sidebar-collapsed");
 	collapsed = saved === "1";
-	sidebarCollapsed.set(collapsed);
+	sidebarState.collapsed = collapsed;
 	showExpanded = !collapsed;
 });
 
 $effect(() => {
 	// sync from shared store
-	collapsed = $sidebarCollapsed;
+	collapsed = sidebarState.collapsed;
 	if (collapsed) showExpanded = false;
 });
 
 async function toggleCollapsed() {
 	collapsed = !collapsed;
 	if (collapsed) showExpanded = false;
-	sidebarAnimating.set(true);
+	sidebarState.animating = true;
 	try {
 		window.localStorage.setItem("sidebar-collapsed", collapsed ? "1" : "0");
 	} catch {}
-	sidebarCollapsed.set(collapsed);
+	sidebarState.collapsed = collapsed;
 
 	const { data: sessionData } = await supabase.auth.getSession();
 	const uid = sessionData.session?.user.id;
@@ -216,11 +209,11 @@ function onSidebarTransitionEnd(event: TransitionEvent) {
 		requestAnimationFrame(() => {
 			requestAnimationFrame(() => {
 				showExpanded = true;
-				sidebarAnimating.set(false);
+				sidebarState.animating = false;
 			});
 		});
 	} else {
-		sidebarAnimating.set(false);
+		sidebarState.animating = false;
 	}
 }
 
@@ -233,24 +226,23 @@ const iconWrapper =
 const iconWrapperActive = "border-primary/40 bg-primary/10 text-primary";
 
 // Orchestrated reveal flag (only after width finishes and not animating)
-const reveal = $derived(showExpanded && !$sidebarAnimating);
+const reveal = $derived(showExpanded && !sidebarState.animating);
 
 // Facility selection for admin
-type Facility = Fac;
-let facilities: Facility[] = $state([]);
+const facilities = $derived(facilityState.list);
 let facilityId = $state<string | null>(null);
 let initialFacilityId: string | null = null;
 
 async function loadFacilitiesForUser(): Promise<void> {
-	facilities = await listFacilitiesForCurrentUser(supabase);
-	const selected = await resolveSelectedFacilityId(supabase);
+	await facilityState.loadList();
+	const selected = await facilityState.resolveSelected();
 	facilityId = selected;
 	initialFacilityId = selected;
 }
 
 $effect(() => {
 	// Load facilities once user available
-	if ($currentUser) {
+	if (userState.current) {
 		loadFacilitiesForUser();
 	}
 });
@@ -392,7 +384,7 @@ $effect(() => {
                             ? t("common.changeLanguage")
                             : undefined}
                     >
-                        {($locale || "en").toUpperCase()}
+                        {(i18nState.locale || "en").toUpperCase()}
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                         align={collapsed ? "center" : "start"}
@@ -453,7 +445,7 @@ $effect(() => {
             {/if}
 
             <!-- User -->
-            {#if $currentUser && reveal}
+            {#if userState.current && reveal}
                 <div
                     class="rounded-xl border border-sidebar-border/60 bg-sidebar-muted/40 px-4 py-3 transition-all duration-200 ease-out opacity-100 translate-x-0"
                     style="will-change: opacity, transform; transition-delay: 200ms;"

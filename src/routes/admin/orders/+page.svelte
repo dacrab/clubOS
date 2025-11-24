@@ -14,10 +14,10 @@ import TableCell from "$lib/components/ui/table/table-cell.svelte";
 import TableHead from "$lib/components/ui/table/table-head.svelte";
 import TableHeader from "$lib/components/ui/table/table-header.svelte";
 import TableRow from "$lib/components/ui/table/table-row.svelte";
-import { resolveSelectedFacilityId } from "$lib/facility";
-import { t } from "$lib/i18n";
-import { supabase } from "$lib/supabase-client";
-import { formatDateTime } from "$lib/utils";
+import { facilityState } from "$lib/state/facility.svelte";
+import { tt as t } from "$lib/state/i18n.svelte";
+import { supabase } from "$lib/utils/supabase";
+import { formatDateTime } from "$lib/utils/utils";
 import OrderDetails from "./order-details.svelte";
 
 const DropdownMenu = DropdownMenuPrimitive.Root;
@@ -69,7 +69,7 @@ async function loadAll() {
 		? new Date(`${startDate}T00:00:00`).toISOString()
 		: null;
 	const endISO = endDate ? new Date(`${endDate}T23:59:59`).toISOString() : null;
-	const facilityId = await resolveSelectedFacilityId(supabase);
+	const facilityId = await facilityState.resolveSelected();
 	let query = supabase
 		.from("orders")
 		.select(

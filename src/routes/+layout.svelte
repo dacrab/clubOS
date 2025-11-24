@@ -2,12 +2,12 @@
 import "../app.css";
 import { MonitorCog, Moon, Sun } from "@lucide/svelte";
 import type { ComponentType } from "svelte";
-import { Toaster } from "svelte-sonner";
 import { page } from "$app/state";
 import favicon from "$lib/assets/favicon.svg";
-import { locale, t } from "$lib/i18n";
-import { sidebarCollapsed } from "$lib/sidebar";
-import { loadCurrentUser } from "$lib/user";
+import { i18nState, tt as t } from "$lib/state/i18n.svelte";
+import { sidebarState } from "$lib/state/sidebar.svelte";
+import { userState } from "$lib/state/user.svelte";
+import { Toaster } from "svelte-sonner";
 
 const { children } = $props();
 
@@ -37,7 +37,7 @@ const contentWrapperClass = $derived(
 		: "mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8",
 );
 
-const sidebarWidth = $derived($sidebarCollapsed ? "4rem" : "16rem");
+const sidebarWidth = $derived(sidebarState.collapsed ? "4rem" : "16rem");
 const layoutPaddingStyle = $derived(
 	page.url.pathname === "/"
 		? ""
@@ -83,14 +83,14 @@ $effect(() => {
 	if (typeof window === "undefined") return;
 
 	if (!isLoginPage) {
-		loadCurrentUser();
-		import("$lib/components/sidebar.svelte").then((mod) => {
+		userState.load();
+		import("$lib/components/layout/sidebar.svelte").then((mod) => {
 			SidebarComp = mod.default;
 		});
 	}
 
 	const savedSidebar = window.localStorage.getItem("sidebar-collapsed");
-	sidebarCollapsed.set(savedSidebar === "1");
+	sidebarState.collapsed = savedSidebar === "1";
 
 	const stored = window.localStorage.getItem("theme");
 	theme =
@@ -136,24 +136,24 @@ $effect(() => {
 						<button
 							type="button"
 							class={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-								$locale === "en"
+								i18nState.locale === "en"
 									? "bg-primary text-primary-foreground"
 									: "text-muted-foreground hover:text-foreground"
 							}`}
-							aria-pressed={$locale === "en"}
-							onclick={() => locale.set("en")}
+							aria-pressed={i18nState.locale === "en"}
+							onclick={() => i18nState.locale = "en"}
 						>
 							EN
 						</button>
 						<button
 							type="button"
 							class={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-								$locale === "el"
+								i18nState.locale === "el"
 									? "bg-primary text-primary-foreground"
 									: "text-muted-foreground hover:text-foreground"
 							}`}
-							aria-pressed={$locale === "el"}
-							onclick={() => locale.set("el")}
+							aria-pressed={i18nState.locale === "el"}
+							onclick={() => i18nState.locale = "el"}
 						>
 							EL
 						</button>

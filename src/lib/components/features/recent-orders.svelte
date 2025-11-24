@@ -1,15 +1,15 @@
 <script lang="ts">
-import { Eye, Printer, Receipt } from "@lucide/svelte";
 import { Button } from "$lib/components/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuTrigger,
 } from "$lib/components/ui/dropdown-menu";
-import { resolveSelectedFacilityId } from "$lib/facility";
-import { t } from "$lib/i18n";
-import { supabase } from "$lib/supabase-client";
-import { formatDateTime, openPrintWindow } from "$lib/utils";
+import { Eye, Printer, Receipt } from "@lucide/svelte";
+import { facilityState } from "$lib/state/facility.svelte";
+import { tt as t } from "$lib/state/i18n.svelte";
+import { supabase } from "$lib/utils/supabase";
+import { formatDateTime, openPrintWindow } from "$lib/utils/utils";
 
 // Types
 type OrderItem = {
@@ -112,7 +112,7 @@ async function loadOrders(): Promise<void> {
 			.select("tenant_id")
 			.eq("user_id", userId);
 		const tenantId = memberships?.[0]?.tenant_id;
-		const facilityId = await resolveSelectedFacilityId(supabase);
+		const facilityId = await facilityState.resolveSelected();
 
 		let base = supabase
 			.from("orders")

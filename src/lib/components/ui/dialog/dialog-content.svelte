@@ -5,8 +5,8 @@ import {
 	Dialog as DialogPrimitiveNS,
 } from "bits-ui";
 import type { Snippet } from "svelte";
-import type { WithoutChildrenOrChild } from "$lib/utils";
-import { cn } from "$lib/utils";
+import type { WithoutChildrenOrChild } from "$lib/utils/utils";
+import { cn } from "$lib/utils/utils";
 import DialogOverlay from "./dialog-overlay.svelte";
 
 const DialogPortal = DialogPrimitiveNS.Portal;

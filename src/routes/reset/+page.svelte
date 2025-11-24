@@ -6,8 +6,8 @@ import Card from "$lib/components/ui/card/card.svelte";
 import CardContent from "$lib/components/ui/card/card-content.svelte";
 import Input from "$lib/components/ui/input/input.svelte";
 import Label from "$lib/components/ui/label/label.svelte";
-import { t } from "$lib/i18n";
-import { supabase } from "$lib/supabase-client";
+import { t } from "$lib/state/i18n.svelte";
+import { supabase } from "$lib/utils/supabase";
 
 let password = $state("");
 let confirm = $state("");

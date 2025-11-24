@@ -5,9 +5,9 @@ import CardContent from "$lib/components/ui/card/card-content.svelte";
 import CardDescription from "$lib/components/ui/card/card-description.svelte";
 import CardHeader from "$lib/components/ui/card/card-header.svelte";
 import CardTitle from "$lib/components/ui/card/card-title.svelte";
-import { resolveSelectedFacilityId } from "$lib/facility";
-import { t } from "$lib/i18n";
-import { supabase } from "$lib/supabase-client";
+import { facilityState } from "$lib/state/facility.svelte";
+import { tt as t } from "$lib/state/i18n.svelte";
+import { supabase } from "$lib/utils/supabase";
 
 ((..._args: unknown[]) => {
 	return;
@@ -58,7 +58,7 @@ async function load() {
 		.eq("user_id", uid)
 		.limit(1);
 	tenantId = (tm?.[0]?.tenant_id as string | undefined) ?? null;
-	const facilityId = await resolveSelectedFacilityId(supabase);
+	const facilityId = await facilityState.resolveSelected();
 	let q = supabase
 		.from("products")
 		.select("id,name,stock_quantity")
