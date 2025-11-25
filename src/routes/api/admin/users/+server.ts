@@ -1,7 +1,7 @@
 import type { RequestHandler } from "@sveltejs/kit";
 import { env as publicEnv } from "$env/dynamic/public";
 
-function getFunctionsBaseUrl() {
+function getFunctionsBaseUrl(): string {
 	const { PUBLIC_SUPABASE_URL: url } = publicEnv as {
 		PUBLIC_SUPABASE_URL?: string;
 	};

@@ -4,8 +4,6 @@ import { Button } from "$lib/components/ui/button";
 import { Card } from "$lib/components/ui/card";
 import { PageContent, PageHeader } from "$lib/components/ui/page";
 import { t } from "$lib/state/i18n.svelte";
-
-const upcoming = $state(0);
 </script>
 
 <PageContent>

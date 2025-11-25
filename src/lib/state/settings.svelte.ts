@@ -65,7 +65,7 @@ class SettingsState {
 		user: DEFAULT_USER_PREFS,
 	});
 
-	get inventorySettings() {
+	get inventorySettings(): { lowStockThreshold: number; allowUnlimitedStock: boolean; negativeStockAllowed: boolean } {
 		return {
 			lowStockThreshold: this.value.tenant.lowStockThreshold,
 			allowUnlimitedStock: this.value.tenant.allowUnlimitedStock,

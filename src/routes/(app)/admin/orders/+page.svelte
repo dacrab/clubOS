@@ -94,7 +94,7 @@ async function loadAll() {
   <PageHeader title={t("orders.list.title")}>
     <div class="flex items-center gap-2">
       <span class="text-sm text-muted-foreground mr-2">{t("registers.pickDate")}</span>
-      <DateRangePicker bind:start={startDate} bind:end={endDate} on:change={loadAll} />
+      <DateRangePicker bind:start={startDate} bind:end={endDate} onchange={loadAll} />
     </div>
   </PageHeader>
 

@@ -212,7 +212,7 @@ async function loadOrderItems() {
 		if (!map[orderId]) map[orderId] = [];
 		map[orderId].push({
 			...item,
-			product_name: (item.products as any)?.name ?? "Unknown",
+			product_name: (item.products as { name?: string } | null)?.name ?? "Unknown",
 		});
 	}
 	itemsByOrder = map;
@@ -220,18 +220,6 @@ async function loadOrderItems() {
 
 function toggleSession(id: string) {
 	expanded[id] = !expanded[id];
-}
-
-function getCouponsCountForSession(sessionId: string): number {
-	return (ordersBySession[sessionId] ?? []).reduce((sum, order) => sum + order.coupon_count, 0);
-}
-
-function getTreatsCountForSession(sessionId: string): number {
-	const orders = ordersBySession[sessionId] ?? [];
-	return orders.reduce((count, order) => {
-		const items = itemsByOrder[order.id] ?? [];
-		return count + items.filter((item) => item.is_treat).length;
-	}, 0);
 }
 
 function closedBy(sessionId: string): string | null {
@@ -285,7 +273,7 @@ function getTreatTotalForSession(sessionId: string): number {
   <Card class="overflow-hidden border-border shadow-sm">
     <div class="flex items-center justify-between border-b border-border/60 p-4">
       <h3 class="text-sm font-medium">{t("registers.pickDate")}</h3>
-      <DateRangePicker bind:start={startDate} bind:end={endDate} on:change={load} />
+      <DateRangePicker bind:start={startDate} bind:end={endDate} onchange={load} />
     </div>
 
     <div
@@ -373,7 +361,7 @@ function getTreatTotalForSession(sessionId: string): number {
                         {t("orders.recent")}
                       </div>
                       <div class="grid gap-3">
-                        {#each ordersBySession[session.id] ?? [] as order}
+                        {#each ordersBySession[session.id] ?? [] as order (order.id)}
                           <div class="rounded-lg border bg-card p-4 shadow-sm">
                             <div class="flex items-center justify-between mb-3 pb-3 border-b border-border/50">
                               <div class="flex items-center gap-3">
@@ -395,7 +383,7 @@ function getTreatTotalForSession(sessionId: string): number {
                               </div>
                             </div>
                             <div class="space-y-1">
-                              {#each itemsByOrder[order.id] ?? [] as item}
+                              {#each itemsByOrder[order.id] ?? [] as item (item.id)}
                                 <div class="flex items-center justify-between text-sm">
                                   <div class="flex items-center gap-2">
                                     <span>{item.product_name}</span>

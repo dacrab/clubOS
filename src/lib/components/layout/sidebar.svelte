@@ -121,7 +121,7 @@ function toggle() {
 
 		<!-- Navigation -->
 		<div class="flex-1 overflow-y-auto py-4 px-2 space-y-6 scrollbar-thin">
-			{#each navItems as group}
+			{#each navItems as group (group.section ?? 'main')}
 				{@const visibleItems = group.items.filter(hasAccess)}
 				{#if visibleItems.length > 0}
 					<div class="space-y-1">
@@ -130,7 +130,7 @@ function toggle() {
 								{t(group.section)}
 							</div>
 						{/if}
-						{#each visibleItems as item}
+						{#each visibleItems as item (item.href)}
 							{@const active = isActive(item.href)}
 							<a
 								href={item.href}

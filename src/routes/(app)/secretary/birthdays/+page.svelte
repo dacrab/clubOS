@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "$lib/component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "$lib/components/ui/tabs";
 import { Textarea } from "$lib/components/ui/textarea";
 import { facilityState } from "$lib/state/facility.svelte";
+import type { TranslationKey } from "$lib/i18n/translations";
 import { t } from "$lib/state/i18n.svelte";
 import { userState } from "$lib/state/user.svelte";
 import { supabase } from "$lib/utils/supabase";
@@ -237,7 +238,7 @@ async function saveEdit() {
             </div>
           {:else}
             <div class="space-y-4">
-              {#each list as appointment}
+              {#each list as appointment (appointment.id)}
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border p-4 hover:bg-muted/30 transition-colors">
                   <div class="space-y-1">
                     <div class="flex items-center gap-2">
@@ -245,7 +246,7 @@ async function saveEdit() {
                       <span class={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
                         appointment.status === "confirmed" ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground"
                       }`}>
-                        {t(`appointments.status.${appointment.status}` as any)}
+                        {t(`appointments.status.${appointment.status}` as TranslationKey)}
                       </span>
                     </div>
                     <p class="text-sm text-muted-foreground">
@@ -277,7 +278,7 @@ async function saveEdit() {
             <Label>{t("common.status")}</Label>
             <Select bind:value={editStatus} type="single">
               <SelectTrigger>
-                {t(`appointments.status.${editStatus}` as any)}
+                {t(`appointments.status.${editStatus}` as TranslationKey)}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="confirmed" label={t("appointments.status.confirmed")} />

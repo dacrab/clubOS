@@ -107,7 +107,7 @@ function money(value: number) {
     >
       {t("orders.itemsHeader")}
     </h5>
-    {#each items as item}
+    {#each items as item (item.id)}
       <div
         class="flex items-center justify-between gap-4 rounded-xl border border-outline-soft/60 bg-surface px-3 py-3 text-sm"
       >

@@ -73,7 +73,7 @@ $effect(() => {
   </div>
 {:else}
   <div class="divide-y divide-border/40">
-    {#each items as item}
+    {#each items as item (item.id)}
       <div class="flex items-center justify-between p-4 hover:bg-muted/20 transition-colors">
         <div class="flex items-center gap-3 min-w-0">
           <div class="grid size-8 place-items-center rounded-md bg-destructive/10 text-destructive">

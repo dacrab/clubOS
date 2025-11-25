@@ -1,11 +1,10 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-export function cn(...inputs: ClassValue[]) {
+export function cn(...inputs: ClassValue[]): string {
 	return twMerge(clsx(inputs));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type WithoutChild<T> = T extends { child?: unknown } ? Omit<T, "child"> : T;
 export type WithoutChildren<T> = T extends { children?: unknown } ? Omit<T, "children"> : T;
 export type WithoutChildrenOrChild<T> = WithoutChildren<WithoutChild<T>>;
@@ -22,9 +21,9 @@ export function openPrintWindow(html: string): void {
 	if (!w) {
 		return;
 	}
-	w.document.open();
-	w.document.write(`<!doctype html><html><head><title>Receipt</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+	const doc = w.document;
+	doc.title = "Receipt";
+	doc.body.innerHTML = `
   <style>
     body{font:14px/1.3 ui-sans-serif,system-ui,-apple-system; padding:16px;}
     h1{font-size:16px;margin:0 0 8px}
@@ -34,8 +33,7 @@ export function openPrintWindow(html: string): void {
     .total{font-weight:600}
     hr{border:none;border-top:1px dashed #ccc;margin:8px 0}
   </style>
-  </head><body>${html}</body></html>`);
-	w.document.close();
+  ${html}`;
 	// Give the window a tick to render before printing
 	const printDelayMs = 100;
 	setTimeout(() => {
@@ -63,5 +61,5 @@ export function formatDateTime(value: string | number | Date): string {
 
 // Currency formatting (EUR)
 export function formatCurrency(value: number): string {
-	return `€${Number(value).toFixed(2)}`;
+	return `€${value.toFixed(2)}`;
 }

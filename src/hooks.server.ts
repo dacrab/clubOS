@@ -48,7 +48,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (needsAuth && !event.locals.user) redirect(307, "/");
 
 	// Role checks
-	async function ensureRole(required: "admin" | "staff" | "secretary") {
+	async function ensureRole(required: "admin" | "staff" | "secretary"): Promise<void> {
 		const u = event.locals.user;
 		if (!u) redirect(307, "/");
 		const metaRole = (u.user_metadata?.role as string | undefined) ?? null;

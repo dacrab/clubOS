@@ -1,4 +1,5 @@
 <script lang="ts">
+ 
 import { Package, Pencil, Plus, Settings2 } from "@lucide/svelte";
 import SearchBar from "$lib/components/common/search-bar.svelte";
 import { Button } from "$lib/components/ui/button";
@@ -20,15 +21,19 @@ import AddProductDialog from "./add-product-dialog.svelte";
 import EditProductDialog from "./edit-product-dialog.svelte";
 import ManageCategoriesDialog from "./manage-categories-dialog.svelte";
 
-type Product = {
+interface Product {
 	id: string;
 	name: string;
 	price: number;
 	stock_quantity: number;
 	category_id: string | null;
 	image_url?: string | null;
-};
-type Category = { id: string; name: string };
+}
+
+interface Category {
+	id: string;
+	name: string;
+}
 
 let products: Product[] = $state([]);
 let categories: Category[] = $state([]);
@@ -68,7 +73,7 @@ $effect(() => {
 
 $effect(() => {
 	if (typeof window !== "undefined") {
-		userState.load().then(loadLists);
+		void userState.load().then(loadLists);
 	}
 });
 
@@ -121,8 +126,8 @@ async function onSave(payload: {
 		.from("products")
 		.update({
 			name: payload.name,
-			price: Number(payload.price),
-			stock_quantity: Number(payload.stock_quantity),
+			price: payload.price,
+			stock_quantity: payload.stock_quantity,
 			category_id: payload.category_id,
 		})
 		.eq("id", payload.id);
@@ -141,8 +146,8 @@ async function onUploadImage(file: File, productId: string) {
 		.from("tenant_members")
 		.select("tenant_id")
 		.eq("user_id", userId);
-	const tenantId = memberships?.[0]?.tenant_id;
-	const path = `tenant-${tenantId}/product-${productId}-${Date.now()}-${file.name}`;
+	const tenantId = (memberships?.[0] as { tenant_id: string } | undefined)?.tenant_id ?? "unknown";
+	const path = `tenant-${tenantId}/product-${productId}-${Date.now().toString()}-${file.name}`;
 	await supabase.storage.from("product-images").upload(path, file, { upsert: true });
 	const { data: pub } = supabase.storage.from("product-images").getPublicUrl(path);
 	await supabase.from("products").update({ image_url: pub.publicUrl }).eq("id", productId);
@@ -168,7 +173,7 @@ function openEdit(p: Product) {
   </PageHeader>
 
   <div class="space-y-4">
-    <SearchBar bind:value={search} placeholder={t("orders.search") ?? ""} class="max-w-sm" />
+    <SearchBar bind:value={search} placeholder={t("orders.search")} class="max-w-sm" />
 
     <Card class="overflow-hidden border-border shadow-sm">
       <div
@@ -223,7 +228,7 @@ function openEdit(p: Product) {
                     </div>
                   </TableCell>
                   <TableCell class="text-right font-medium">
-                    €{Number(product.price).toFixed(2)}
+                    €{product.price.toFixed(2)}
                   </TableCell>
                   <TableCell class="text-center">
                     {#if product.stock_quantity === -1}
@@ -235,7 +240,13 @@ function openEdit(p: Product) {
                     {/if}
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" onclick={() => openEdit(product)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onclick={() => {
+                        openEdit(product);
+                      }}
+                    >
                       <Pencil class="size-4 text-muted-foreground" />
                     </Button>
                   </TableCell>

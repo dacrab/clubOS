@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Calendar, Edit2, Trophy } from "@lucide/svelte";
+import { Edit2, Trophy } from "@lucide/svelte";
 import { Button } from "$lib/components/ui/button";
 import { Card } from "$lib/components/ui/card";
 import DateInput from "$lib/components/ui/date-input.svelte";
@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "$lib/component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "$lib/components/ui/tabs";
 import { Textarea } from "$lib/components/ui/textarea";
 import { facilityState } from "$lib/state/facility.svelte";
+import type { TranslationKey } from "$lib/i18n/translations";
 import { t } from "$lib/state/i18n.svelte";
 import { userState } from "$lib/state/user.svelte";
 import { supabase } from "$lib/utils/supabase";
@@ -224,7 +225,7 @@ async function saveEdit() {
             </div>
           {:else}
             <div class="space-y-4">
-              {#each list as booking}
+              {#each list as booking (booking.id)}
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border p-4 hover:bg-muted/30 transition-colors">
                   <div class="space-y-1">
                     <div class="flex items-center gap-2">
@@ -232,7 +233,7 @@ async function saveEdit() {
                       <span class={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
                         booking.status === "confirmed" ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground"
                       }`}>
-                        {t(`football.status.${booking.status}` as any)}
+                        {t(`football.status.${booking.status}` as TranslationKey)}
                       </span>
                     </div>
                     <div class="flex gap-3 text-sm text-muted-foreground">
@@ -265,7 +266,7 @@ async function saveEdit() {
             <Label>{t("common.status")}</Label>
             <Select bind:value={editStatus} type="single">
               <SelectTrigger>
-                {t(`football.status.${editStatus}` as any)}
+                {t(`football.status.${editStatus}` as TranslationKey)}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="confirmed" label={t("football.status.confirmed")} />

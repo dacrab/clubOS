@@ -1,12 +1,10 @@
 <script lang="ts">
 import "../app.css";
-import type { ComponentType } from "svelte";
 import { Toaster } from "svelte-sonner";
 import { browser } from "$app/environment";
-import { page } from "$app/state";
 import favicon from "$lib/assets/favicon.svg";
-import { i18nState } from "$lib/state/i18n.svelte";
 import { userState } from "$lib/state/user.svelte";
+import { TooltipProvider } from "$lib/components/ui/tooltip";
 
 const { children } = $props();
 
@@ -38,4 +36,6 @@ $effect(() => {
 </svelte:head>
 
 <Toaster richColors position="top-center" />
-{@render children()}
+<TooltipProvider>
+	{@render children()}
+</TooltipProvider>

@@ -166,7 +166,7 @@ $effect(() => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="" label="—" />
-              {#each categories as c}
+              {#each categories as c (c.id)}
                 <SelectItem value={c.id} label={c.name} />
               {/each}
             </SelectContent>
@@ -229,7 +229,7 @@ $effect(() => {
                 </TableCell>
               </TableRow>
             {:else}
-            {#each categories as c}
+            {#each categories as c (c.id)}
               <TableRow>
                 <TableCell>{c.name}</TableCell>
                 <TableCell class="truncate max-w-[260px]"

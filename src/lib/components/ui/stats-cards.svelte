@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Card, CardContent } from "$lib/components/ui/card";
+import { Card } from "$lib/components/ui/card";
 
 type StatItem = {
 	title: string;
@@ -33,7 +33,7 @@ function getAccentClass(accent?: string) {
 </script>
 
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    {#each items as item}
+    {#each items as item (item.title)}
         <Card class="transition-all hover:shadow-md">
             <div class="p-6 flex items-center justify-between">
                 <div class="space-y-1">

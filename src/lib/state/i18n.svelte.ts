@@ -1,8 +1,7 @@
 import { type Locale, type TranslationKey, translations } from "$lib/i18n/translations";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getNestedTranslation<T extends Record<string, unknown>>(
-	obj: T,
+function getNestedTranslation(
+	obj: Record<string, unknown>,
 	path: string,
 	current: Locale,
 ): string | undefined {
@@ -39,8 +38,8 @@ class I18nState {
 				this.locale = saved;
 			}
 			// Subscribe to changes to update DOM/storage
-			$effect.root(() => {
-				$effect(() => {
+			$effect.root((): void => {
+				$effect((): void => {
 					const val = this.locale;
 					try {
 						window.localStorage.setItem("locale", val);
@@ -57,13 +56,14 @@ class I18nState {
 		}
 	}
 
-	set(l: Locale) {
+	set(l: Locale): void {
 		this.locale = l;
 	}
 
 	// Helper to get translation function derived from current locale
 	get t() {
-		return (key: TranslationKey) => getNestedTranslation(translations, key, this.locale) ?? key;
+		return (key: TranslationKey): string =>
+			getNestedTranslation(translations, key, this.locale) ?? key;
 	}
 }
 

@@ -7,7 +7,6 @@ import { Label } from "$lib/components/ui/label";
 import { PageContent, PageHeader } from "$lib/components/ui/page";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "$lib/components/ui/select";
 import { Switch } from "$lib/components/ui/switch";
-import { Textarea } from "$lib/components/ui/textarea";
 import { t } from "$lib/state/i18n.svelte";
 import type { TenantSettings } from "$lib/state/settings.svelte";
 import { settingsState } from "$lib/state/settings.svelte";
@@ -145,11 +144,9 @@ async function saveAll() {
 
 <PageContent>
 	<PageHeader title={t("nav.settings")}>
-		{#snippet children()}
-			<Button type="button" onclick={saveAll} disabled={saving}>
-				{t("common.save")}
-			</Button>
-		{/snippet}
+		<Button type="button" onclick={saveAll} disabled={saving}>
+			{t("common.save")}
+		</Button>
 	</PageHeader>
 
 	<div class="grid gap-6 lg:grid-cols-2">

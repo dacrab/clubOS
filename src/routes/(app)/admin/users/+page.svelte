@@ -162,7 +162,7 @@ async function onSaveUser(user: AdminUser) {
             </TableCell>
           </TableRow>
         {:else}
-          {#each users as user}
+          {#each users as user (user.id)}
             <TableRow class="h-16">
               <TableCell>
                 <div class="flex items-center gap-3">

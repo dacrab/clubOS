@@ -157,7 +157,7 @@ async function loadOrders(): Promise<void> {
 					},
 				})) ?? [],
 		}));
-	} catch (_error) {
+	} catch {
 		orders = [];
 	}
 }
@@ -175,7 +175,7 @@ $effect(() => {
   </div>
 {:else}
   <div class="space-y-4">
-    {#each orders as order}
+    {#each orders as order (order.id)}
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border p-4 hover:bg-muted/30 transition-colors">
         <div class="space-y-1">
           <div class="flex items-center gap-3">
@@ -200,7 +200,7 @@ $effect(() => {
                 <span class="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
               </div>
               <div class="space-y-2">
-                {#each order.items as item}
+                {#each order.items as item (item.id)}
                   <div class="flex justify-between text-sm">
                     <span>{item.product.name} <span class="text-muted-foreground">x{item.quantity}</span></span>
                     <span>{formatMoney(item.line_total)}</span>

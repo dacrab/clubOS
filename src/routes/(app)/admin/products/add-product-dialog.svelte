@@ -137,7 +137,7 @@ async function save() {
               </span>
             </SelectTrigger>
             <SelectContent>
-              {#each categories as c}
+              {#each categories as c (c.id)}
                 <SelectItem value={c.id} label={c.name} />
               {/each}
             </SelectContent>

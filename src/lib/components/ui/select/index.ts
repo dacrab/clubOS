@@ -1,10 +1,4 @@
 export { default as Select } from "./select.svelte";
 export { default as SelectContent } from "./select-content.svelte";
-export { default as SelectGroup } from "./select-group.svelte";
-export { default as SelectGroupHeading } from "./select-group-heading.svelte";
 export { default as SelectItem } from "./select-item.svelte";
-export { default as SelectLabel } from "./select-label.svelte";
-export { default as SelectScrollDownButton } from "./select-scroll-down-button.svelte";
-export { default as SelectScrollUpButton } from "./select-scroll-up-button.svelte";
-export { default as SelectSeparator } from "./select-separator.svelte";
 export { default as SelectTrigger } from "./select-trigger.svelte";

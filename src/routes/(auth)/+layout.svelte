@@ -1,6 +1,6 @@
 <script lang="ts">
-import { MonitorCog, Moon, Sun } from "@lucide/svelte";
-import { i18nState, t } from "$lib/state/i18n.svelte";
+import { Moon, Sun } from "@lucide/svelte";
+import { i18nState } from "$lib/state/i18n.svelte";
 
 const { children } = $props();
 

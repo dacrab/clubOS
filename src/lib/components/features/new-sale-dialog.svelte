@@ -229,7 +229,7 @@ $effect(() => {
         </button>
 
         <div class="space-y-2 overflow-auto pr-1">
-          {#each categories.filter((c) => !c.parent_id) as category}
+          {#each categories.filter((c) => !c.parent_id) as category (category.id)}
             <div class="space-y-1">
               <button
                 type="button"
@@ -243,7 +243,7 @@ $effect(() => {
                 <span class="block truncate">{category.name}</span>
               </button>
 
-              {#each categories.filter((c) => c.parent_id === category.id) as subcategory}
+              {#each categories.filter((c) => c.parent_id === category.id) as subcategory (subcategory.id)}
                 <button
                   type="button"
                   class={`ml-4 w-[calc(100%-1rem)] rounded-md px-3 py-1.5 text-left text-xs transition-colors ${
@@ -268,7 +268,7 @@ $effect(() => {
         <div
           class="grid content-start gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
-          {#each filteredProducts as product}
+          {#each filteredProducts as product (product.id)}
             <button
               type="button"
               class="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/50 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -330,7 +330,7 @@ $effect(() => {
               <p>{t("orders.emptyCart")}</p>
             </div>
           {:else}
-            {#each cart as item, index}
+            {#each cart as item, index (index)}
               <div
                 class="group flex items-center justify-between gap-3 rounded-lg border border-border bg-background p-3 shadow-sm transition-all hover:border-primary/20"
               >
@@ -442,7 +442,7 @@ $effect(() => {
           </Button>
           <Button
             type="button"
-            class="flex-[2]"
+            class="flex-2"
             onclick={submit}
             disabled={cart.length === 0}
           >

@@ -27,7 +27,7 @@ let showCloseDialog = $state(false);
 let staffName = $state("");
 let notes = $state("");
 let showSale = $state(false);
-const productsForSale: any[] = $state([]);
+const productsForSale: Array<{ id: string; name: string; price: number }> = $state([]);
 
 $effect(() => {
 	userState.load();
@@ -52,7 +52,7 @@ async function onCloseRegister() {
 	}
 }
 
-async function createSale(payload: any) {
+async function createSale(payload: { items: Array<{ id: string; name: string; price: number; is_treat?: boolean }>; paymentMethod: "cash"; couponCount: number }) {
 	const {
 		data: { user },
 	} = await supabase.auth.getUser();
