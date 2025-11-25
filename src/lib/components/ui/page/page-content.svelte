@@ -11,7 +11,7 @@ const {
 </script>
 
 <div
-    class="flex flex-1 flex-col gap-6 px-6 py-6 md:px-10 {className}"
+    class="flex flex-col gap-8 {className}"
     {...props}
 >
     {@render children()}

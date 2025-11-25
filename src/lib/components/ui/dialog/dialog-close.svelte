@@ -1,8 +1,7 @@
 <script lang="ts">
 import { Dialog as DialogPrimitive } from "bits-ui";
 
-let { ref = $bindable(null), ...restProps }: DialogPrimitive.CloseProps =
-	$props();
+let { ref = $bindable(null), ...restProps }: DialogPrimitive.CloseProps = $props();
 ((..._args: unknown[]) => {
 	return;
 })(DialogPrimitive, ref, restProps);

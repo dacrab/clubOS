@@ -44,17 +44,11 @@ function getDaysInMonth(date: Date) {
 }
 
 function previousMonth() {
-	currentMonth = new Date(
-		currentMonth.getFullYear(),
-		currentMonth.getMonth() - 1,
-	);
+	currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1);
 }
 
 function nextMonth() {
-	currentMonth = new Date(
-		currentMonth.getFullYear(),
-		currentMonth.getMonth() + 1,
-	);
+	currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
 }
 
 function selectDate(date: Date) {
@@ -76,8 +70,7 @@ function selectDate(date: Date) {
 function isSelected(date: Date) {
 	if (mode === "range") {
 		return (
-			(start && date.getTime() === start.getTime()) ||
-			(end && date.getTime() === end.getTime())
+			(start && date.getTime() === start.getTime()) || (end && date.getTime() === end.getTime())
 		);
 	}
 	return value && date.getTime() === value.getTime();
@@ -109,40 +102,39 @@ const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 </script>
 
 <div
-    class="rounded-md border border-outline-soft bg-background p-3 shadow-md {className}"
+    class="rounded-md border border-border bg-background p-3 shadow-sm {className}"
     {...props}
 >
     <div class="flex items-center justify-between pb-4">
-        <Button variant="outline" size="sm" onclick={previousMonth}>
+        <Button variant="outline" size="icon" class="h-7 w-7" onclick={previousMonth}>
             <ChevronLeft class="h-4 w-4" />
         </Button>
         <div class="text-sm font-medium">
             {monthNames[currentMonth.getMonth()]}
             {currentMonth.getFullYear()}
         </div>
-        <Button variant="outline" size="sm" onclick={nextMonth}>
+        <Button variant="outline" size="icon" class="h-7 w-7" onclick={nextMonth}>
             <ChevronRight class="h-4 w-4" />
         </Button>
     </div>
 
-    <div class="grid grid-cols-7 gap-1">
+    <div class="grid grid-cols-7 gap-1 mb-2">
         {#each dayNames as day}
             <div
-                class="text-center text-xs font-medium text-muted-foreground p-2"
+                class="text-center text-[0.8rem] font-medium text-muted-foreground"
             >
                 {day}
             </div>
         {/each}
+    </div>
 
+    <div class="grid grid-cols-7 gap-1">
         {#each getDaysInMonth(currentMonth) as day}
             {#if day}
                 <Button
                     variant={isSelected(day) ? "default" : "ghost"}
                     size="sm"
-                    class="h-8 w-8 p-0 text-xs {isInRange(day) &&
-                    !isSelected(day)
-                        ? 'bg-primary/20'
-                        : ''}"
+                    class="h-8 w-8 p-0 text-sm font-normal aria-selected:opacity-100 {isInRange(day) && !isSelected(day) ? 'bg-accent text-accent-foreground rounded-none first:rounded-l-md last:rounded-r-md' : ''} {isSelected(day) ? 'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground' : ''}"
                     onclick={() => selectDate(day)}
                 >
                     {day.getDate()}

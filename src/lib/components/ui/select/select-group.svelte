@@ -1,8 +1,7 @@
 <script lang="ts">
 import { Select as SelectPrimitive } from "bits-ui";
 
-let { ref = $bindable(null), ...restProps }: SelectPrimitive.GroupProps =
-	$props();
+const { ref = $bindable(null), ...restProps }: SelectPrimitive.GroupProps = $props();
 ((..._args: unknown[]) => {
 	return;
 })(SelectPrimitive, ref, restProps);

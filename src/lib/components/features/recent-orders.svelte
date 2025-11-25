@@ -1,17 +1,17 @@
 <script lang="ts">
+import { Eye, Printer, ShoppingCart } from "@lucide/svelte";
 import { Button } from "$lib/components/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuTrigger,
 } from "$lib/components/ui/dropdown-menu";
-import { Eye, Printer, Receipt } from "@lucide/svelte";
 import { facilityState } from "$lib/state/facility.svelte";
-import { tt as t } from "$lib/state/i18n.svelte";
+import { t } from "$lib/state/i18n.svelte";
 import { supabase } from "$lib/utils/supabase";
 import { formatDateTime, openPrintWindow } from "$lib/utils/utils";
 
-// Types
+// Types & Setup same as before...
 type OrderItem = {
 	id: string;
 	quantity: number;
@@ -54,23 +54,15 @@ type RawOrder = {
 	}>;
 };
 
-// Constants
 const ORDER_ID_PREFIX_LEN = 8;
-
-// Component setup
-
-// Props
-const __props = $props<{ limit?: number }>();
-const { limit = 5 } = __props;
-
-// State
+const { limit = 5 } = $props<{ limit?: number }>();
 let orders: OrderDetails[] = $state([]);
 
-// Utility functions
 function formatMoney(v: number): string {
 	return `€${Number(v).toFixed(2)}`;
 }
 
+// ... renderReceipt, printReceipt, loadOrders logic remains mostly same but simplified styling
 function renderReceipt(order: OrderDetails): string {
 	const lines = order.items
 		.map(
@@ -102,11 +94,10 @@ function printReceipt(order: OrderDetails): void {
 	openPrintWindow(html);
 }
 
-// Data loading
 async function loadOrders(): Promise<void> {
 	try {
-		const { data: sessionData } = await supabase.auth.getSession();
-		const userId = sessionData.session?.user.id ?? "";
+		const { data: sessionData } = await supabase.auth.getUser();
+		const userId = sessionData.user?.id ?? "";
 		const { data: memberships } = await supabase
 			.from("tenant_members")
 			.select("tenant_id")
@@ -159,9 +150,7 @@ async function loadOrders(): Promise<void> {
 					unit_price: item.unit_price,
 					line_total: item.line_total,
 					is_treat: item.is_treat,
-					product: (Array.isArray(item.products)
-						? item.products[0]
-						: item.products) ?? {
+					product: (Array.isArray(item.products) ? item.products[0] : item.products) ?? {
 						id: item.id,
 						name: "Unknown",
 						price: 0,
@@ -173,189 +162,70 @@ async function loadOrders(): Promise<void> {
 	}
 }
 
-// Effects
 $effect(() => {
 	loadOrders();
 });
 </script>
 
 {#if orders.length === 0}
-  <div
-    class="flex flex-col items-center justify-center gap-4 rounded-2xl border border-outline-soft bg-surface py-12 px-6 text-center"
-  >
-    <div
-      class="grid size-16 place-items-center rounded-full bg-muted/30"
-    >
-      <Receipt class="size-8 text-muted-foreground/60" />
-    </div>
-    <div class="flex max-w-xs flex-col gap-1">
-      <h3 class="text-base font-semibold text-foreground">
-        {t("orders.none")}
-      </h3>
-      <p class="text-sm text-muted-foreground">
-        {t("orders.latest")}
-      </p>
-    </div>
+  <div class="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+    <ShoppingCart class="size-12 opacity-20 mb-4" />
+    <h3 class="text-lg font-medium text-foreground">{t("orders.none")}</h3>
+    <p class="text-sm">{t("orders.latest")}</p>
   </div>
 {:else}
-  <div class="flex flex-col gap-3">
+  <div class="space-y-4">
     {#each orders as order}
-      <div
-        class="flex items-center justify-between gap-4 rounded-2xl border border-outline-soft bg-surface px-4 py-3 transition-all hover:border-outline-strong hover:bg-surface-strong/60"
-      >
-        <div class="min-w-0 flex-1">
-          <div
-            class="flex items-center gap-3 text-sm font-semibold text-foreground"
-          >
-            <span class="font-mono text-[11px] uppercase text-muted-foreground">
-              #{order.id.slice(0, ORDER_ID_PREFIX_LEN)}
-            </span>
-            <span>{formatMoney(order.total_amount)}</span>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border p-4 hover:bg-muted/30 transition-colors">
+        <div class="space-y-1">
+          <div class="flex items-center gap-3">
+            <span class="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
+            <span class="font-semibold">{formatMoney(order.total_amount)}</span>
           </div>
-          <div class="mt-1 text-xs text-muted-foreground">
-            {formatDateTime(order.created_at)}
-          </div>
-          <div class="mt-2 text-xs text-muted-foreground">
-            {order.items.length}
-            {t("orders.itemsWord")} • {order.items.filter((i) => i.is_treat)
-              .length}
-            {t("orders.treatsWord")}
+          <div class="text-xs text-muted-foreground">
+            {formatDateTime(order.created_at)} • {order.items.length} items
           </div>
         </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger>
-            <Button
-              variant="ghost"
-              size="sm"
-              class="h-8 w-8 rounded-full border border-outline-soft p-0"
-            >
-              <Eye class="h-4 w-4" />
+            <Button variant="ghost" size="icon">
+              <Eye class="size-4 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            class="w-[24rem] rounded-2xl border border-outline-soft bg-surface-strong/80 backdrop-blur-xl"
-          >
-            <div class="flex flex-col gap-3 p-4">
-              <!-- Order header -->
-              <div class="flex items-center justify-between">
-                <h4 class="text-sm font-semibold text-foreground">
-                  {t("orders.orderLabel")} #{order.id.slice(
-                    0,
-                    ORDER_ID_PREFIX_LEN,
-                  )}
-                </h4>
-                <span class="text-xs text-muted-foreground">
-                  {formatDateTime(order.created_at)}
-                </span>
+          <DropdownMenuContent align="end" class="w-[320px]">
+            <div class="p-4 space-y-4">
+              <div class="flex items-center justify-between border-b pb-2">
+                <span class="font-semibold">Order Details</span>
+                <span class="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
               </div>
-
-              <!-- Order stats -->
-              <div
-                class="grid gap-1 rounded-xl border border-outline-soft bg-surface/70 p-2 text-xs font-medium text-muted-foreground sm:grid-cols-3"
-              >
-                <div class="flex flex-col gap-1">
-                  <span>{t("orders.itemsHeader")}</span>
-                  <span class="text-base font-semibold text-foreground"
-                    >{order.items.length}</span
-                  >
-                </div>
-                <div class="flex flex-col gap-1">
-                  <span>{t("orders.coupons")}</span>
-                  <span class="text-base font-semibold text-foreground"
-                    >{order.coupon_count}</span
-                  >
-                </div>
-                <div class="flex flex-col gap-1">
-                  <span>{t("orders.treatsWord")}</span>
-                  <span class="text-base font-semibold text-foreground"
-                    >{order.items.filter((i) => i.is_treat).length}</span
-                  >
-                </div>
-              </div>
-
-              <!-- Order items -->
-              <div class="flex flex-col gap-2">
-                <h5
-                  class="text-xs font-semibold uppercase text-muted-foreground"
-                >
-                  {t("orders.itemsHeader")}
-                </h5>
+              <div class="space-y-2">
                 {#each order.items as item}
-                  <div
-                    class="flex items-center justify-between gap-3 rounded-xl border border-outline-soft bg-surface px-2 py-1.5 text-xs"
-                  >
-                    <div class="flex items-center gap-2 text-foreground">
-                      <span class="font-medium">{item.product.name}</span>
-                      <span class="text-xs text-muted-foreground"
-                        >×{item.quantity}</span
-                      >
-                      {#if item.is_treat}
-                        <span
-                          class="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-300"
-                        >
-                          {t("orders.free")}
-                        </span>
-                      {/if}
-                    </div>
-                    <div class="flex items-center gap-2 text-xs">
-                      {#if item.is_treat}
-                        <span class="text-xs text-muted-foreground line-through"
-                          >€{Number(item.unit_price).toFixed(2)}</span
-                        >
-                        <span class="font-medium text-foreground">€0.00</span>
-                      {:else}
-                        <span class="font-medium text-foreground"
-                          >€{Number(item.line_total).toFixed(2)}</span
-                        >
-                      {/if}
-                    </div>
+                  <div class="flex justify-between text-sm">
+                    <span>{item.product.name} <span class="text-muted-foreground">x{item.quantity}</span></span>
+                    <span>{formatMoney(item.line_total)}</span>
                   </div>
                 {/each}
               </div>
-
-              <!-- Order totals -->
-              <div
-                class="flex flex-col gap-1.5 border-t border-outline-soft pt-3 text-xs text-foreground"
-              >
-                <div class="flex justify-between">
-                  <span class="text-muted-foreground"
-                    >{t("orders.subtotal")}</span
-                  >
+              <div class="border-t pt-2 space-y-1 text-sm">
+                <div class="flex justify-between text-muted-foreground">
+                  <span>Subtotal</span>
                   <span>{formatMoney(order.subtotal)}</span>
                 </div>
                 {#if order.discount_amount > 0}
-                  <div
-                    class="flex justify-between text-emerald-600 dark:text-emerald-300"
-                  >
-                    <span>{t("orders.discount")}</span>
+                  <div class="flex justify-between text-destructive">
+                    <span>Discount</span>
                     <span>-{formatMoney(order.discount_amount)}</span>
                   </div>
                 {/if}
-                <div class="flex justify-between text-sm font-semibold">
-                  <span>{t("orders.total")}</span>
+                <div class="flex justify-between font-bold pt-1">
+                  <span>Total</span>
                   <span>{formatMoney(order.total_amount)}</span>
                 </div>
               </div>
-
-              <!-- Action buttons -->
-              <div class="flex gap-2 border-t border-outline-soft pt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onclick={() => printReceipt(order)}
-                  class="flex-1 rounded-full border-outline-soft"
-                >
-                  <Printer class="mr-2 h-4 w-4" />
-                  {t("common.print")}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="flex-1 rounded-full border-outline-soft"
-                >
-                  <Receipt class="mr-2 h-4 w-4" />
-                  {t("common.details")}
+              <div class="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" class="w-full" onclick={() => printReceipt(order)}>
+                  <Printer class="size-4 mr-2" /> Print
                 </Button>
               </div>
             </div>

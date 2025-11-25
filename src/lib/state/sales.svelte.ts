@@ -14,10 +14,7 @@ class SalesState {
 	async create(userId: string, payload: CreateSalePayload): Promise<void> {
 		const sessionId = await registerState.ensureOpenSession(userId);
 
-		const subtotal = payload.items.reduce(
-			(acc, item) => acc + Number(item.price),
-			0,
-		);
+		const subtotal = payload.items.reduce((acc, item) => acc + Number(item.price), 0);
 		const treatDiscount = payload.items.reduce(
 			(acc, item) => acc + (item.is_treat ? Number(item.price) : 0),
 			0,
@@ -63,9 +60,7 @@ class SalesState {
 			line_total: product.is_treat ? 0 : Number(product.price),
 			is_treat: Boolean(product.is_treat),
 		}));
-		const { error: itemsError } = await supabase
-			.from("order_items")
-			.insert(items);
+		const { error: itemsError } = await supabase.from("order_items").insert(items);
 		if (itemsError) {
 			throw new Error(itemsError.message);
 		}

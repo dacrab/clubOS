@@ -1,9 +1,9 @@
 <script lang="ts">
+import { Home as HomeIcon } from "@lucide/svelte";
 import { page } from "$app/state";
 import { Button } from "$lib/components/ui/button";
 import { tt as t } from "$lib/state/i18n.svelte";
 import { supabase } from "$lib/utils/supabase";
-import { Home as HomeIcon } from "@lucide/svelte";
 
 let homeHref = $state("/admin");
 
@@ -17,14 +17,8 @@ $effect(() => {
 				homeHref = "/";
 				return;
 			}
-			const role =
-				(user.user_metadata?.["role"] as string | undefined) ?? undefined;
-			homeHref =
-				role === "staff"
-					? "/staff"
-					: role === "secretary"
-						? "/secretary"
-						: "/admin";
+			const role = (user.user_metadata?.["role"] as string | undefined) ?? undefined;
+			homeHref = role === "staff" ? "/staff" : role === "secretary" ? "/secretary" : "/admin";
 		} catch {
 			/* ignore */
 		}

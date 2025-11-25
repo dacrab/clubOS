@@ -14,17 +14,7 @@ let {
 }: WithoutChild<SelectPrimitive.ItemProps> = $props();
 ((..._args: unknown[]) => {
 	return;
-})(
-	CheckIcon,
-	SelectPrimitive,
-	cn,
-	ref,
-	className,
-	value,
-	label,
-	childrenProp,
-	restProps,
-);
+})(CheckIcon, SelectPrimitive, cn, ref, className, value, label, childrenProp, restProps);
 </script>
 
 <SelectPrimitive.Item

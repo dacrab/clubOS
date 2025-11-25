@@ -3,9 +3,7 @@ export type Locale = "en" | "el";
 // Helper type for deeply nested keys
 type DeepKey<T> = T extends object
 	? {
-			[K in keyof T]-?: K extends string | number
-				? `${K}` | `${K}.${DeepKey<T[K]>}`
-				: never;
+			[K in keyof T]-?: K extends string | number ? `${K}` | `${K}.${DeepKey<T[K]>}` : never;
 		}[keyof T]
 	: "";
 

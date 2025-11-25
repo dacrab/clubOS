@@ -13,16 +13,13 @@ import "flatpickr/dist/flatpickr.min.css";
 // Types
 type Range = { start: string; end: string };
 type PresetId = "all" | "today" | "yesterday" | "last7" | "last30";
-type PresetLabelKey =
-	| "date.all"
-	| "date.today"
-	| "date.yesterday"
-	| "date.last7"
-	| "date.last30";
+type PresetLabelKey = "date.all" | "date.today" | "date.yesterday" | "date.last7" | "date.last30";
 
 // Props and bindings
-let { start = $bindable("") as string, end = $bindable("") as string } =
-	$props<{ start: string; end: string }>();
+let { start = $bindable("") as string, end = $bindable("") as string } = $props<{
+	start: string;
+	end: string;
+}>();
 
 // Event dispatcher
 const dispatch = createEventDispatcher<{ change: Range }>();
@@ -206,7 +203,7 @@ $effect(() => {
       type="text"
       bind:ref={startInput}
       placeholder={t("date.rangePlaceholderStart")}
-      class="h-11 w-full rounded-2xl border border-outline-soft bg-background px-3 cursor-pointer"
+      class="h-10 w-full rounded-md border border-input bg-background px-3 cursor-pointer"
       aria-label={t("date.rangePlaceholderStart")}
       autocomplete="off"
       readonly
@@ -215,7 +212,7 @@ $effect(() => {
       type="text"
       bind:ref={endInput}
       placeholder={t("date.rangePlaceholderEnd")}
-      class="h-11 w-full rounded-2xl border border-outline-soft bg-background px-3 cursor-pointer"
+      class="h-10 w-full rounded-md border border-input bg-background px-3 cursor-pointer"
       aria-label={t("date.rangePlaceholderEnd")}
       autocomplete="off"
       readonly
@@ -225,7 +222,7 @@ $effect(() => {
     {#each presets as p}
       <button
         type="button"
-        class={`rounded-full border border-outline-soft px-3 py-1 text-xs hover:bg-muted ${activePresetId === p.id ? "bg-muted text-foreground" : "text-muted-foreground"}`}
+        class={`rounded-md border px-3 py-1 text-xs font-medium transition-colors hover:bg-muted ${activePresetId === p.id ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-input"}`}
         aria-pressed={activePresetId === p.id}
         onclick={() => setRange(getPresetRange(p.id))}
       >

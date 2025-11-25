@@ -2,10 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RequestHandler } from "@sveltejs/kit";
 import { json } from "@sveltejs/kit";
 import { KEEP_ALIVE_CONFIG } from "$lib/config/keep-alive-config";
-import {
-	generateRandomString,
-	pingEndpoint,
-} from "$lib/server/keep-alive-helper";
+import { generateRandomString, pingEndpoint } from "$lib/server/keep-alive-helper";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 
 type InsertDeleteStatus = "success" | "skipped" | "failed";
@@ -43,17 +40,10 @@ async function maybeInsertDelete(
 		return { insert: "skipped", delete: "skipped" };
 	}
 
-	const insertResponse = await admin
-		.from(table)
-		.insert({ [searchColumn]: randomString });
-	const insert: InsertDeleteStatus = insertResponse.error
-		? "failed"
-		: "success";
+	const insertResponse = await admin.from(table).insert({ [searchColumn]: randomString });
+	const insert: InsertDeleteStatus = insertResponse.error ? "failed" : "success";
 
-	const deleteResponse = await admin
-		.from(table)
-		.delete()
-		.eq(searchColumn, randomString);
+	const deleteResponse = await admin.from(table).delete().eq(searchColumn, randomString);
 	const del: InsertDeleteStatus = deleteResponse.error ? "failed" : "success";
 
 	return { insert, delete: del };
@@ -68,10 +58,7 @@ async function maybeList(
 	if (listCount <= 0) {
 		return;
 	}
-	const listResponse = await admin
-		.from(table)
-		.select(searchColumn)
-		.limit(listCount);
+	const listResponse = await admin.from(table).select(searchColumn).limit(listCount);
 	if (listResponse.error) {
 		return;
 	}
@@ -79,8 +66,7 @@ async function maybeList(
 }
 
 export const GET: RequestHandler = async () => {
-	const { table, searchColumn, runInsertDelete, listCount, otherEndpoints } =
-		KEEP_ALIVE_CONFIG;
+	const { table, searchColumn, runInsertDelete, listCount, otherEndpoints } = KEEP_ALIVE_CONFIG;
 
 	const randomString = generateRandomString();
 	const admin = getSupabaseAdmin();
@@ -94,12 +80,7 @@ export const GET: RequestHandler = async () => {
 	} = {};
 
 	try {
-		const selectResult = await selectRandom(
-			admin,
-			table,
-			searchColumn,
-			randomString,
-		);
+		const selectResult = await selectRandom(admin, table, searchColumn, randomString);
 		if (selectResult.error) {
 			database.error = selectResult.error;
 		} else {
@@ -121,14 +102,11 @@ export const GET: RequestHandler = async () => {
 			database.list = list;
 		}
 	} catch (error) {
-		database.error =
-			error instanceof Error ? error.message : "Unknown database error";
+		database.error = error instanceof Error ? error.message : "Unknown database error";
 	}
 
 	// 4) Ping other endpoints in parallel
-	const endpointResults = await Promise.all(
-		otherEndpoints.map((url) => pingEndpoint(url)),
-	);
+	const endpointResults = await Promise.all(otherEndpoints.map((url) => pingEndpoint(url)));
 
 	const body = {
 		message: "Keep-alive executed",

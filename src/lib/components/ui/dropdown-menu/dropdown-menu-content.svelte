@@ -13,15 +13,7 @@ let {
 } = $props();
 ((..._args: unknown[]) => {
 	return;
-})(
-	DropdownMenuPrimitive,
-	cn,
-	ref,
-	sideOffset,
-	portalProps,
-	className,
-	restProps,
-);
+})(DropdownMenuPrimitive, cn, ref, sideOffset, portalProps, className, restProps);
 </script>
 
 <DropdownMenuPrimitive.Portal {...portalProps}>

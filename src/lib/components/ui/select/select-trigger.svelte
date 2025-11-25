@@ -15,16 +15,7 @@ let {
 } = $props();
 ((..._args: unknown[]) => {
 	return;
-})(
-	ChevronDownIcon,
-	SelectPrimitive,
-	cn,
-	ref,
-	className,
-	children,
-	size,
-	restProps,
-);
+})(ChevronDownIcon, SelectPrimitive, cn, ref, className, children, size, restProps);
 </script>
 
 <SelectPrimitive.Trigger

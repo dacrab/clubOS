@@ -14,7 +14,8 @@
 		"isolatedModules": true,
 		"verbatimModuleSyntax": true,
 		"noEmit": true,
-		"types": ["svelte", "node"]
+		"types": ["svelte", "node"],
+		"strictNullChecks": true
 	},
 	"exclude": ["supabase/functions/**"]
 }

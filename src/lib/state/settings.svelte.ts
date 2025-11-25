@@ -74,8 +74,8 @@ class SettingsState {
 	}
 
 	async load(): Promise<void> {
-		const { data: sessionData } = await supabase.auth.getSession();
-		const uid = sessionData.session?.user.id ?? "";
+		const { data: sessionData } = await supabase.auth.getUser();
+		const uid = sessionData.user?.id ?? "";
 		if (!uid) {
 			return;
 		}
@@ -132,14 +132,12 @@ class SettingsState {
 			.eq("user_id", uid)
 			.maybeSingle();
 
-		const [tenantRow, userRow] = (await Promise.all([
-			tRowPromise,
-			uRowPromise,
-		])) as [Row<Partial<DbTenantSettingsRow>>, Row<DbUserPreferencesRow>];
+		const [tenantRow, userRow] = (await Promise.all([tRowPromise, uRowPromise])) as [
+			Row<Partial<DbTenantSettingsRow>>,
+			Row<DbUserPreferencesRow>,
+		];
 
-		function mapTenantSettings(
-			row: Partial<DbTenantSettingsRow> | null,
-		): Partial<TenantSettings> {
+		function mapTenantSettings(row: Partial<DbTenantSettingsRow> | null): Partial<TenantSettings> {
 			if (!row) {
 				return {};
 			}

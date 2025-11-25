@@ -1,8 +1,4 @@
-import {
-	type Locale,
-	type TranslationKey,
-	translations,
-} from "$lib/i18n/translations";
+import { type Locale, type TranslationKey, translations } from "$lib/i18n/translations";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getNestedTranslation<T extends Record<string, unknown>>(
@@ -67,8 +63,7 @@ class I18nState {
 
 	// Helper to get translation function derived from current locale
 	get t() {
-		return (key: TranslationKey) =>
-			getNestedTranslation(translations, key, this.locale) ?? key;
+		return (key: TranslationKey) => getNestedTranslation(translations, key, this.locale) ?? key;
 	}
 }
 
@@ -92,12 +87,7 @@ export function t(key: TranslationKey): string {
 
 // Correct approach for Svelte 5:
 // Just use `i18nState.locale` if you need the locale.
-// For translation:
-export function translate(key: TranslationKey): string {
+// For translation, use `tt` - it reads `i18nState.locale` so it's reactive in templates.
+export function tt(key: TranslationKey): string {
 	return getNestedTranslation(translations, key, i18nState.locale) ?? key;
 }
-
-// But we want a short name `t`.
-// And we want it to be reactive.
-// If we use `translate` in a derived or effect or template, it will read `i18nState.locale`, so it will be reactive.
-export const tt = translate;

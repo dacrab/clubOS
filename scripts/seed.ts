@@ -74,16 +74,10 @@ async function ensureMemberships(
 	await Promise.all([
 		supabase
 			.from("tenant_members")
-			.upsert(
-				{ tenant_id: tenantId, user_id: userId },
-				{ onConflict: "tenant_id,user_id" },
-			),
+			.upsert({ tenant_id: tenantId, user_id: userId }, { onConflict: "tenant_id,user_id" }),
 		supabase
 			.from("facility_members")
-			.upsert(
-				{ facility_id: facilityId, user_id: userId },
-				{ onConflict: "facility_id,user_id" },
-			),
+			.upsert({ facility_id: facilityId, user_id: userId }, { onConflict: "facility_id,user_id" }),
 	]);
 }
 
@@ -94,24 +88,12 @@ async function normalizeMemberships(
 ): Promise<void> {
 	await ensureMemberships(userId, tenantId, facilityId);
 	await Promise.all([
-		supabase
-			.from("tenant_members")
-			.delete()
-			.eq("user_id", userId)
-			.neq("tenant_id", tenantId),
-		supabase
-			.from("facility_members")
-			.delete()
-			.eq("user_id", userId)
-			.neq("facility_id", facilityId),
+		supabase.from("tenant_members").delete().eq("user_id", userId).neq("tenant_id", tenantId),
+		supabase.from("facility_members").delete().eq("user_id", userId).neq("facility_id", facilityId),
 	]);
 }
 
-async function ensureProfileUser(
-	userId: string,
-	username: string,
-	role: UserRole,
-): Promise<void> {
+async function ensureProfileUser(userId: string, username: string, role: UserRole): Promise<void> {
 	const { data: existing } = await supabase
 		.from("users")
 		.select("id")
@@ -131,9 +113,7 @@ async function findAuthUserByEmail(email: string): Promise<string | null> {
 		page: 1,
 		perPage: 1000,
 	});
-	const user = data.users.find(
-		(u) => u.email?.toLowerCase() === email.toLowerCase(),
-	);
+	const user = data.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
 	return user?.id ?? null;
 }
 
@@ -151,19 +131,12 @@ async function createAuthUser(config: UserConfig): Promise<string> {
 	return data.user.id;
 }
 
-async function ensureUser(
-	config: UserConfig,
-	context: Context,
-): Promise<string> {
+async function ensureUser(config: UserConfig, context: Context): Promise<string> {
 	const existingAuthId = await findAuthUserByEmail(config.email);
 
 	if (existingAuthId) {
 		await ensureProfileUser(existingAuthId, config.username, config.role);
-		await ensureMemberships(
-			existingAuthId,
-			context.tenantId,
-			context.facilityId,
-		);
+		await ensureMemberships(existingAuthId, context.tenantId, context.facilityId);
 		process.stdout.write(`User exists: ${config.email}\n`);
 		return existingAuthId;
 	}
@@ -237,15 +210,10 @@ async function ensureTenantSettings(context: Context): Promise<void> {
 }
 
 async function ensureUserPreferences(userId: string): Promise<void> {
-	await supabase
-		.from("user_preferences")
-		.upsert({ user_id: userId }, { onConflict: "user_id" });
+	await supabase.from("user_preferences").upsert({ user_id: userId }, { onConflict: "user_id" });
 }
 
-async function seedCategories(
-	adminId: string,
-	context: Context,
-): Promise<Map<string, Category>> {
+async function seedCategories(adminId: string, context: Context): Promise<Map<string, Category>> {
 	const categoryMap = new Map<string, Category>();
 
 	async function ensureCategory(
@@ -282,8 +250,7 @@ async function seedCategories(
 			.select("id,name")
 			.single();
 
-		if (error)
-			throw new Error(`Failed to create category ${name}: ${error.message}`);
+		if (error) throw new Error(`Failed to create category ${name}: ${error.message}`);
 
 		const category = data as Category;
 		categoryMap.set(name, category);
@@ -353,8 +320,7 @@ async function seedProducts(
 			.select("id,name,price")
 			.single();
 
-		if (error)
-			throw new Error(`Failed to create product ${p.name}: ${error.message}`);
+		if (error) throw new Error(`Failed to create product ${p.name}: ${error.message}`);
 		productMap.set(p.name, created as Product);
 	}
 
@@ -362,10 +328,7 @@ async function seedProducts(
 	return productMap;
 }
 
-async function seedRegisterSession(
-	adminId: string,
-	context: Context,
-): Promise<string> {
+async function seedRegisterSession(adminId: string, context: Context): Promise<string> {
 	const { data: existing } = await supabase
 		.from("register_sessions")
 		.select("id")
@@ -389,8 +352,7 @@ async function seedRegisterSession(
 		.select("id")
 		.single();
 
-	if (error)
-		throw new Error(`Failed to create register session: ${error.message}`);
+	if (error) throw new Error(`Failed to create register session: ${error.message}`);
 	process.stdout.write("Created register session\n");
 	return data.id;
 }
@@ -447,8 +409,7 @@ async function seedOrders(opts: {
 		.select("id")
 		.single();
 
-	if (orderError)
-		throw new Error(`Failed to create order: ${orderError.message}`);
+	if (orderError) throw new Error(`Failed to create order: ${orderError.message}`);
 
 	const orderItems = [
 		{
@@ -477,19 +438,13 @@ async function seedOrders(opts: {
 		},
 	];
 
-	const { error: itemsError } = await supabase
-		.from("order_items")
-		.insert(orderItems);
-	if (itemsError)
-		throw new Error(`Failed to create order items: ${itemsError.message}`);
+	const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+	if (itemsError) throw new Error(`Failed to create order items: ${itemsError.message}`);
 
 	process.stdout.write("Created sample order\n");
 }
 
-async function seedAppointments(
-	staffId: string,
-	context: Context,
-): Promise<void> {
+async function seedAppointments(staffId: string, context: Context): Promise<void> {
 	const appointments = [
 		{
 			customer_name: "Μαρία Παπαδοπούλου",
@@ -538,10 +493,7 @@ async function seedAppointments(
 	process.stdout.write("Ensured appointments\n");
 }
 
-async function seedFootballBookings(
-	staffId: string,
-	context: Context,
-): Promise<void> {
+async function seedFootballBookings(staffId: string, context: Context): Promise<void> {
 	const bookings = [
 		{
 			customer_name: "Νίκος Αντωνίου",
@@ -602,11 +554,7 @@ async function main(): Promise<void> {
 		await normalizeMemberships(staffId, context.tenantId, context.facilityId);
 
 		const secretaryId = await ensureUser(CONFIG.secretary, context);
-		await normalizeMemberships(
-			secretaryId,
-			context.tenantId,
-			context.facilityId,
-		);
+		await normalizeMemberships(secretaryId, context.tenantId, context.facilityId);
 
 		await ensureTenantSettings(context);
 		await Promise.all([

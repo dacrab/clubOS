@@ -14,16 +14,7 @@ let {
 } = $props();
 ((..._args: unknown[]) => {
 	return;
-})(
-	ChevronRightIcon,
-	DropdownMenuPrimitive,
-	cn,
-	ref,
-	className,
-	inset,
-	children,
-	restProps,
-);
+})(ChevronRightIcon, DropdownMenuPrimitive, cn, ref, className, inset, children, restProps);
 </script>
 
 <DropdownMenuPrimitive.SubTrigger

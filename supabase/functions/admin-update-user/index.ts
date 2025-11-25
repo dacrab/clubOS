@@ -119,10 +119,7 @@ async function updateAuth(
 		authAttrs.user_metadata = userMeta;
 	}
 	if (Object.keys(authAttrs).length) {
-		const { error } = await adminClient.auth.admin.updateUserById(
-			userId,
-			authAttrs,
-		);
+		const { error } = await adminClient.auth.admin.updateUserById(userId, authAttrs);
 		if (error) {
 			return new Response(error.message, { status: 400 });
 		}
@@ -139,9 +136,7 @@ async function reconcileFacilities(
 	if (!Array.isArray(body.facility_ids)) {
 		return null;
 	}
-	const { data: adminTenants } = await authedClient
-		.from("tenant_members")
-		.select("tenant_id");
+	const { data: adminTenants } = await authedClient.from("tenant_members").select("tenant_id");
 	const adminTenantIds = new Set((adminTenants ?? []).map((t) => t.tenant_id));
 	const { data: facilities, error: facErr } = await adminClient
 		.from("facilities")
@@ -151,9 +146,7 @@ async function reconcileFacilities(
 		return new Response(facErr.message, { status: 400 });
 	}
 	const desiredFacilityIds = new Set(
-		(facilities ?? [])
-			.filter((f) => adminTenantIds.has(f.tenant_id))
-			.map((f) => f.id),
+		(facilities ?? []).filter((f) => adminTenantIds.has(f.tenant_id)).map((f) => f.id),
 	);
 	const { data: current, error: curErr } = await adminClient
 		.from("facility_members")
@@ -197,10 +190,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 		return new Response("Missing id", { status: 400 });
 	}
 	const { authedClient, adminClient } = getClients(req);
-	const profileRes = await updateProfile(
-		adminClient as unknown as SupabaseClient<Database>,
-		body,
-	);
+	const profileRes = await updateProfile(adminClient as unknown as SupabaseClient<Database>, body);
 	if (profileRes) {
 		return profileRes;
 	}

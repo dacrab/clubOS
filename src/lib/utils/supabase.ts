@@ -1,18 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 import { env as publicEnv } from "$env/dynamic/public";
 
-const {
-	PUBLIC_SUPABASE_URL: url,
-	PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: anonKey,
-} = publicEnv as {
-	PUBLIC_SUPABASE_URL?: string;
-	PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY?: string;
-};
+const { PUBLIC_SUPABASE_URL: url, PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: anonKey } =
+	publicEnv as {
+		PUBLIC_SUPABASE_URL?: string;
+		PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY?: string;
+	};
 
 if (!(url && anonKey)) {
-	throw new Error(
-		"Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY",
-	);
+	throw new Error("Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY");
 }
 
 export const supabase = createClient(url, anonKey);
@@ -26,9 +22,7 @@ if (typeof window !== "undefined") {
 	): Promise<void> => {
 		// Only sync for meaningful events
 		const shouldSync =
-			event === "SIGNED_IN" ||
-			event === "TOKEN_REFRESHED" ||
-			event === "SIGNED_OUT";
+			event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "SIGNED_OUT";
 		if (!shouldSync) return;
 		try {
 			await fetch("/auth/callback", {

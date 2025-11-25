@@ -14,6 +14,6 @@ let {
 })(cn, ref, className, children, restProps);
 </script>
 
-<div bind:this={ref} data-slot="card-content" class={cn("px-6", className)} {...restProps}>
+<div bind:this={ref} data-slot="card-content" class={cn("p-6 pt-0", className)} {...restProps}>
 	{@render children?.()}
 </div>

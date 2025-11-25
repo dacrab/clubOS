@@ -12,15 +12,7 @@ let {
 }: WithoutChild<DropdownMenuPrimitive.RadioItemProps> = $props();
 ((..._args: unknown[]) => {
 	return;
-})(
-	CircleIcon,
-	DropdownMenuPrimitive,
-	cn,
-	ref,
-	className,
-	childrenProp,
-	restProps,
-);
+})(CircleIcon, DropdownMenuPrimitive, cn, ref, className, childrenProp, restProps);
 </script>
 
 <DropdownMenuPrimitive.RadioItem

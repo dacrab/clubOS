@@ -1,13 +1,6 @@
 <script lang="ts">
-import {
-	Filter,
-	Minus,
-	Plus,
-	ReceiptText,
-	ShoppingCart,
-	X,
-} from "@lucide/svelte";
-import { Dialog as DialogPrimitive } from "bits-ui";
+import { Filter, Minus, Plus, ReceiptText, ShoppingCart, X } from "@lucide/svelte";
+import { Dialog as DialogPrimitive, Separator as SeparatorPrimitive } from "bits-ui";
 import { Button } from "$lib/components/ui/button";
 import {
 	DialogClose,
@@ -122,8 +115,7 @@ async function submit() {
 		clearCart();
 	} catch (error) {
 		const { toast } = await import("svelte-sonner");
-		const message =
-			error instanceof Error ? error.message : t("orders.toast.error");
+		const message = error instanceof Error ? error.message : t("orders.toast.error");
 		toast.error(message);
 	}
 }
@@ -168,9 +160,7 @@ async function loadProducts() {
 	internalProducts = (data ?? []) as Product[];
 }
 
-const allProducts: Product[] = $derived(
-	products.length > 0 ? products : internalProducts,
-);
+const allProducts: Product[] = $derived(products.length > 0 ? products : internalProducts);
 
 const filteredProducts: Product[] = $derived(
 	(() => {
@@ -181,8 +171,7 @@ const filteredProducts: Product[] = $derived(
 		const descendantIds = collectWithDescendants(categories, selectedCategory);
 
 		return allProducts.filter(
-			(product) =>
-				!product.category_id || descendantIds.has(product.category_id),
+			(product) => !product.category_id || descendantIds.has(product.category_id),
 		);
 	})(),
 );
@@ -199,15 +188,15 @@ $effect(() => {
   <DialogContent
     size="fullscreen"
     showCloseButton={false}
-    class="flex max-h-[92vh] flex-col overflow-hidden rounded-2xl border border-outline-soft/70 bg-surface-soft/95 p-0 shadow-xl"
+    class="flex max-h-[92vh] flex-col overflow-hidden rounded-xl border border-border bg-background p-0 shadow-xl"
   >
-    <DialogHeader class="flex-none border-b border-outline-soft/60 px-6 py-4">
+    <DialogHeader class="flex-none border-b border-border px-6 py-4">
       <div class="flex items-center justify-between">
         <DialogTitle class="text-xl font-semibold text-foreground">
           {t("orders.new")}
         </DialogTitle>
         <DialogClose
-          class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-outline-soft/60 bg-background/90 text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           aria-label={t("common.close")}
         >
           <X class="size-4" />
@@ -220,7 +209,7 @@ $effect(() => {
     >
       <!-- Categories Sidebar -->
       <aside
-        class="flex min-h-0 flex-col gap-3 rounded-xl border border-outline-soft/60 bg-background/80 p-3"
+        class="flex min-h-0 flex-col gap-3 rounded-lg border border-border bg-muted/30 p-3"
       >
         <h3
           class="inline-flex items-center gap-2 text-sm font-semibold text-foreground"
@@ -231,8 +220,8 @@ $effect(() => {
 
         <button
           type="button"
-          class={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-            !selectedCategory ? "bg-primary/10 text-primary" : "hover:bg-muted"
+          class={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
+            !selectedCategory ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-muted-foreground hover:text-foreground"
           }`}
           onclick={() => (selectedCategory = null)}
         >
@@ -244,10 +233,10 @@ $effect(() => {
             <div class="space-y-1">
               <button
                 type="button"
-                class={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                class={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
                   selectedCategory === category.id
-                    ? "bg-primary/10 text-primary"
-                    : "hover:bg-muted"
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "hover:bg-muted text-muted-foreground hover:text-foreground"
                 }`}
                 onclick={() => (selectedCategory = category.id)}
               >
@@ -257,10 +246,10 @@ $effect(() => {
               {#each categories.filter((c) => c.parent_id === category.id) as subcategory}
                 <button
                   type="button"
-                  class={`ml-4 w-[calc(100%-1rem)] rounded-lg px-3 py-1.5 text-left text-xs transition-colors ${
+                  class={`ml-4 w-[calc(100%-1rem)] rounded-md px-3 py-1.5 text-left text-xs transition-colors ${
                     selectedCategory === subcategory.id
-                      ? "bg-primary/10 text-primary"
-                      : "hover:bg-muted"
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "hover:bg-muted text-muted-foreground hover:text-foreground"
                   }`}
                   onclick={() => (selectedCategory = subcategory.id)}
                 >
@@ -274,7 +263,7 @@ $effect(() => {
 
       <!-- Products Grid -->
       <section
-        class="min-h-0 overflow-auto rounded-xl border border-outline-soft/60 bg-background/70 p-4"
+        class="min-h-0 overflow-auto rounded-lg border border-border bg-background p-4"
       >
         <div
           class="grid content-start gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
@@ -282,12 +271,12 @@ $effect(() => {
           {#each filteredProducts as product}
             <button
               type="button"
-              class="flex h-full flex-col overflow-hidden rounded-xl border border-outline-soft/60 bg-surface transition-colors hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              class="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/50 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               onclick={() => addToCart(product)}
             >
               {#if product.image_url}
                 <div
-                  class="flex h-28 w-full items-center justify-center bg-muted/30"
+                  class="flex h-32 w-full items-center justify-center bg-muted"
                 >
                   <img
                     src={product.image_url}
@@ -297,16 +286,18 @@ $effect(() => {
                   />
                 </div>
               {:else}
-                <div class="h-28 w-full bg-muted/20"></div>
+                <div class="h-32 w-full bg-muted/50 flex items-center justify-center text-muted-foreground">
+                  <ShoppingCart class="size-8 opacity-20" />
+                </div>
               {/if}
 
               <div
-                class="flex flex-1 flex-col justify-between gap-1 px-3 py-3 text-left"
+                class="flex flex-1 flex-col justify-between gap-2 p-3 text-left"
               >
-                <span class="truncate font-medium text-foreground"
+                <span class="line-clamp-2 font-medium text-sm text-card-foreground"
                   >{product.name}</span
                 >
-                <span class="text-sm text-muted-foreground">
+                <span class="text-sm font-semibold text-primary">
                   €{product.price.toFixed(2)}
                 </span>
               </div>
@@ -317,14 +308,14 @@ $effect(() => {
 
       <!-- Cart Sidebar -->
       <aside
-        class="flex min-h-0 flex-col rounded-xl border border-outline-soft/60 bg-background/80 p-4"
+        class="flex min-h-0 flex-col rounded-lg border border-border bg-muted/30 p-4"
       >
-        <div class="mb-3 flex items-center justify-between">
+        <div class="mb-4 flex items-center justify-between">
           <h3 class="text-lg font-semibold text-foreground">
-            {t("orders.cart")} ({cart.length})
+            {t("orders.cart")} <span class="text-muted-foreground text-sm font-normal ml-1">({cart.length})</span>
           </h3>
           {#if cart.length > 0}
-            <Button type="button" variant="ghost" size="sm" onclick={clearCart}>
+            <Button type="button" variant="ghost" size="sm" onclick={clearCart} class="h-8 text-muted-foreground hover:text-foreground">
               {t("common.clear")}
             </Button>
           {/if}
@@ -333,18 +324,18 @@ $effect(() => {
         <div class="flex-1 space-y-2 overflow-auto pr-1">
           {#if cart.length === 0}
             <div
-              class="grid place-items-center gap-2 rounded-lg border border-dashed border-outline-soft/60 bg-surface px-6 py-10 text-center text-sm text-muted-foreground"
+              class="grid place-items-center gap-2 rounded-lg border border-dashed border-border bg-background px-6 py-12 text-center text-sm text-muted-foreground"
             >
-              <ShoppingCart class="size-10 opacity-50" />
+              <ShoppingCart class="size-10 opacity-20" />
               <p>{t("orders.emptyCart")}</p>
             </div>
           {:else}
             {#each cart as item, index}
               <div
-                class="flex items-center justify-between gap-3 rounded-lg border border-outline-soft/40 bg-surface px-3 py-2 text-sm"
+                class="group flex items-center justify-between gap-3 rounded-lg border border-border bg-background p-3 shadow-sm transition-all hover:border-primary/20"
               >
-                <div class="min-w-0">
-                  <div class="truncate font-medium text-foreground">
+                <div class="min-w-0 flex-1">
+                  <div class="truncate text-sm font-medium text-foreground">
                     {item.name}
                   </div>
                   <div class="text-xs text-muted-foreground">
@@ -352,12 +343,12 @@ $effect(() => {
                   </div>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1">
                   <Button
                     type="button"
-                    variant={item.is_treat ? "default" : "outline"}
+                    variant={item.is_treat ? "secondary" : "ghost"}
                     size="sm"
-                    class="rounded-lg"
+                    class={`h-7 px-2 text-xs ${item.is_treat ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400" : "text-muted-foreground"}`}
                     onclick={() => toggleTreat(index)}
                   >
                     {item.is_treat ? t("orders.treat") : t("orders.free")}
@@ -367,11 +358,11 @@ $effect(() => {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    class="rounded-lg"
+                    class="h-7 w-7 text-muted-foreground hover:text-destructive"
                     onclick={() => removeFromCart(index)}
                     aria-label={t("common.delete")}
                   >
-                    ✕
+                    <X class="size-3.5" />
                   </Button>
                 </div>
               </div>
@@ -380,11 +371,11 @@ $effect(() => {
         </div>
 
         <!-- Coupons and Totals -->
-        <div class="mt-4 space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-foreground">{t("orders.coupons")}</span>
+        <div class="mt-4 space-y-4">
+          <div class="flex items-center justify-between rounded-lg border border-border bg-background p-2">
+            <span class="text-sm font-medium pl-2 text-muted-foreground">{t("orders.coupons")}</span>
             <div
-              class="inline-flex items-center gap-2 rounded-lg border border-outline-soft/60 bg-surface px-2 py-1"
+              class="flex items-center gap-1"
             >
               <Button
                 type="button"
@@ -393,15 +384,17 @@ $effect(() => {
                 class="size-7 rounded-md"
                 onclick={() => (couponCount = Math.max(0, couponCount - 1))}
                 aria-label={t("orders.decrementCoupon")}
+                disabled={couponCount <= 0}
               >
                 <Minus class="size-3.5" />
               </Button>
-              <span class="w-6 text-center text-sm font-semibold"
+              <span class="w-8 text-center text-sm font-semibold tabular-nums"
                 >{couponCount}</span
               >
               <Button
                 type="button"
                 size="icon"
+                variant="ghost"
                 class="size-7 rounded-md"
                 onclick={() => (couponCount = couponCount + 1)}
                 aria-label={t("orders.incrementCoupon")}
@@ -412,20 +405,23 @@ $effect(() => {
           </div>
 
           <div
-            class="space-y-1 rounded-lg border border-outline-soft/50 bg-surface px-3 py-3 text-sm"
+            class="space-y-2 rounded-lg border border-border bg-background p-4 shadow-sm"
           >
-            <div class="flex justify-between text-muted-foreground">
+            <div class="flex justify-between text-sm text-muted-foreground">
               <span>{t("orders.subtotal")}</span>
               <span>€{subtotal().toFixed(2)}</span>
             </div>
+            {#if discount() > 0}
+              <div
+                class="flex justify-between text-sm text-emerald-600 dark:text-emerald-400"
+              >
+                <span>{t("orders.discount")}</span>
+                <span>-€{discount().toFixed(2)}</span>
+              </div>
+            {/if}
+            <SeparatorPrimitive.Root class="my-2 h-px bg-border" />
             <div
-              class="flex justify-between text-emerald-600 dark:text-emerald-300"
-            >
-              <span>{t("orders.discount")}</span>
-              <span>-€{discount().toFixed(2)}</span>
-            </div>
-            <div
-              class="flex justify-between border-t border-outline-soft/40 pt-2 text-base font-semibold"
+              class="flex justify-between text-lg font-bold text-foreground"
             >
               <span>{t("orders.total")}</span>
               <span class="text-primary">€{total().toFixed(2)}</span>
@@ -434,19 +430,19 @@ $effect(() => {
         </div>
 
         <DialogFooter
-          class="mt-4 flex justify-end gap-2 border-t border-outline-soft/50 pt-3"
+          class="mt-4 flex gap-2 border-t border-border pt-4"
         >
           <Button
             type="button"
             variant="outline"
-            class="rounded-lg"
+            class="flex-1"
             onclick={() => (open = false)}
           >
             {t("common.close")}
           </Button>
           <Button
             type="button"
-            class="rounded-lg px-6"
+            class="flex-[2]"
             onclick={submit}
             disabled={cart.length === 0}
           >

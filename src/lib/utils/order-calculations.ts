@@ -17,10 +17,7 @@ export function discountAmount(couponCount: number): number {
 	return count * 2;
 }
 
-export function totalAmount(
-	items: readonly OrderLine[],
-	couponCount: number,
-): number {
+export function totalAmount(items: readonly OrderLine[], couponCount: number): number {
 	const sub = subtotal(items);
 	const disc = discountAmount(couponCount);
 	const total = sub - disc;

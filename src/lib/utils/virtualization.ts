@@ -11,10 +11,7 @@ export function computeWindow(
 ): { startIndex: number; endIndex: number } {
 	const { rowHeight, viewBufferRows, viewportHeight } = cfg;
 	const visibleCount = Math.ceil(viewportHeight / rowHeight) + viewBufferRows;
-	const first = Math.max(
-		0,
-		Math.floor(scrollTop / rowHeight) - Math.ceil(viewBufferRows / 2),
-	);
+	const first = Math.max(0, Math.floor(scrollTop / rowHeight) - Math.ceil(viewBufferRows / 2));
 	const startIndex = first;
 	const endIndex = Math.min(totalRows, first + visibleCount);
 	return { startIndex, endIndex };

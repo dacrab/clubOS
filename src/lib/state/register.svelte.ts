@@ -6,9 +6,7 @@ import { supabase } from "$lib/utils/supabase";
 import { facilityState } from "./facility.svelte";
 
 class RegisterState {
-	async getOpenSession(): Promise<string | null> {
-		const { data: sessionData } = await supabase.auth.getSession();
-		const userId = sessionData.session?.user.id ?? "";
+	async getOpenSession(userId: string): Promise<string | null> {
 		const { data: memberships } = await supabase
 			.from("tenant_members")
 			.select("tenant_id")
@@ -40,7 +38,7 @@ class RegisterState {
 	}
 
 	async ensureOpenSession(userId: string): Promise<string> {
-		const existing = await this.getOpenSession();
+		const existing = await this.getOpenSession(userId);
 		if (existing) {
 			return existing;
 		}
@@ -70,10 +68,7 @@ class RegisterState {
 		return (data as unknown as { id: string }).id as string;
 	}
 
-	async close(
-		sessionId: string,
-		notes: Record<string, unknown> | null = null,
-	): Promise<string> {
+	async close(sessionId: string, notes: Record<string, unknown> | null = null): Promise<string> {
 		const { data, error } = await supabase.rpc("close_register_session", {
 			p_session_id: sessionId,
 			p_notes: notes,

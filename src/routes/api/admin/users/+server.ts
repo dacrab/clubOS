@@ -11,9 +11,7 @@ function getFunctionsBaseUrl() {
 	return `${url}/functions/v1`;
 }
 
-function buildAuthHeader(
-	token: string | null | undefined,
-): Record<string, string> {
+function buildAuthHeader(token: string | null | undefined): Record<string, string> {
 	return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -39,13 +37,10 @@ export const DELETE: RequestHandler = async ({ url, locals }) => {
 	if (!id) {
 		return new Response("Missing id", { status: 400 });
 	}
-	const res = await fetch(
-		`${base}/admin-delete-user?id=${encodeURIComponent(id)}`,
-		{
-			method: "DELETE",
-			headers: buildAuthHeader(locals.session?.access_token),
-		},
-	);
+	const res = await fetch(`${base}/admin-delete-user?id=${encodeURIComponent(id)}`, {
+		method: "DELETE",
+		headers: buildAuthHeader(locals.session?.access_token),
+	});
 	return new Response(await res.text(), { status: res.status });
 };
 

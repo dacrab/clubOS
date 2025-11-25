@@ -8,8 +8,8 @@ class FacilityState {
 
 	// Resolve a valid selected facility for current user
 	async resolveSelected(): Promise<string | null> {
-		const { data: sessionData } = await supabase.auth.getSession();
-		const uid = sessionData.session?.user.id ?? "";
+		const { data: sessionData } = await supabase.auth.getUser();
+		const uid = sessionData.user?.id ?? "";
 		if (!uid) return null;
 
 		let saved: string | null = null;
@@ -61,8 +61,7 @@ class FacilityState {
 
 		try {
 			if (typeof window !== "undefined") {
-				if (selected)
-					window.localStorage.setItem("selected-facility", selected);
+				if (selected) window.localStorage.setItem("selected-facility", selected);
 				else window.localStorage.removeItem("selected-facility");
 			}
 		} catch {}
@@ -72,8 +71,8 @@ class FacilityState {
 	}
 
 	async loadList(): Promise<void> {
-		const { data: sessionData } = await supabase.auth.getSession();
-		const uid = sessionData.session?.user.id ?? "";
+		const { data: sessionData } = await supabase.auth.getUser();
+		const uid = sessionData.user?.id ?? "";
 		if (!uid) {
 			this.list = [];
 			return;
@@ -85,11 +84,7 @@ class FacilityState {
 		const ids = (fms ?? []).map((r: { facility_id: string }) => r.facility_id);
 		let data: Facility[] | null = null;
 		if (ids.length > 0) {
-			const res = await supabase
-				.from("facilities")
-				.select("id,name")
-				.in("id", ids)
-				.order("name");
+			const res = await supabase.from("facilities").select("id,name").in("id", ids).order("name");
 			data = (res.data as Facility[] | null) ?? [];
 		} else {
 			const { data: tm } = await supabase
