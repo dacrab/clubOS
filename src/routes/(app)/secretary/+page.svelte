@@ -1,47 +1,79 @@
 <script lang="ts">
-import { Calendar, Trophy } from "@lucide/svelte";
-import { Button } from "$lib/components/ui/button";
-import { Card } from "$lib/components/ui/card";
-import { PageContent, PageHeader } from "$lib/components/ui/page";
-import { t } from "$lib/state/i18n.svelte";
+	import { t } from "$lib/i18n/index.svelte";
+	import { PageHeader } from "$lib/components/layout";
+	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
+	import { Button } from "$lib/components/ui/button";
+	import { Cake, Dribbble, Calendar } from "@lucide/svelte";
+
+	const { data } = $props();
 </script>
 
-<PageContent>
-  <PageHeader title={t("dashboard.secretary.title")} subtitle={t("dashboard.secretary.appointmentsDesc")} />
+<div class="space-y-6">
+	<PageHeader title={t("dashboard.title")} description={t("dashboard.overview")} />
 
-  <div class="grid gap-6 md:grid-cols-2">
-    <Card class="border-border shadow-sm hover:border-primary/20 transition-colors">
-      <div class="p-6 flex flex-col gap-6">
-        <div class="flex items-start gap-4">
-          <div class="grid size-12 place-items-center rounded-xl bg-yellow-500/10 text-yellow-600 dark:text-yellow-400">
-            <Calendar class="size-6" />
-          </div>
-          <div class="space-y-1">
-            <h3 class="font-semibold leading-none">{t("appointments.title")}</h3>
-            <p class="text-sm text-muted-foreground">{t("dashboard.secretary.appointmentsDesc")}</p>
-          </div>
-        </div>
-        <Button href="/secretary/birthdays" variant="outline" class="w-full">
-          {t("dashboard.secretary.manage")}
-        </Button>
-      </div>
-    </Card>
+	<!-- Stats -->
+	<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+		<Card>
+			<CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+				<CardTitle class="text-sm font-medium">{t("appointments.upcoming")}</CardTitle>
+				<Cake class="h-4 w-4 text-muted-foreground" />
+			</CardHeader>
+			<CardContent>
+				<div class="text-2xl font-bold">{data.upcomingAppointments}</div>
+			</CardContent>
+		</Card>
 
-    <Card class="border-border shadow-sm hover:border-primary/20 transition-colors">
-      <div class="p-6 flex flex-col gap-6">
-        <div class="flex items-start gap-4">
-          <div class="grid size-12 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-            <Trophy class="size-6" />
-          </div>
-          <div class="space-y-1">
-            <h3 class="font-semibold leading-none">{t("nav.football")}</h3>
-            <p class="text-sm text-muted-foreground">{t("dashboard.secretary.footballDesc")}</p>
-          </div>
-        </div>
-        <Button href="/secretary/football" variant="outline" class="w-full">
-          {t("dashboard.secretary.manage")}
-        </Button>
-      </div>
-    </Card>
-  </div>
-</PageContent>
+		<Card>
+			<CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+				<CardTitle class="text-sm font-medium">{t("football.title")}</CardTitle>
+				<Dribbble class="h-4 w-4 text-muted-foreground" />
+			</CardHeader>
+			<CardContent>
+				<div class="text-2xl font-bold">{data.upcomingBookings}</div>
+			</CardContent>
+		</Card>
+
+		<Card>
+			<CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+				<CardTitle class="text-sm font-medium">{t("appointments.thisMonth")}</CardTitle>
+				<Calendar class="h-4 w-4 text-muted-foreground" />
+			</CardHeader>
+			<CardContent>
+				<div class="text-2xl font-bold">{data.thisMonthTotal}</div>
+			</CardContent>
+		</Card>
+	</div>
+
+	<!-- Quick Access -->
+	<div class="grid gap-4 md:grid-cols-2">
+		<Card>
+			<CardHeader>
+				<CardTitle class="flex items-center gap-2">
+					<Cake class="h-5 w-5" />
+					{t("nav.appointments")}
+				</CardTitle>
+				<CardDescription>{t("appointments.subtitle")}</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<Button href="/secretary/birthdays" class="w-full">
+					{t("common.viewAll")}
+				</Button>
+			</CardContent>
+		</Card>
+
+		<Card>
+			<CardHeader>
+				<CardTitle class="flex items-center gap-2">
+					<Dribbble class="h-5 w-5" />
+					{t("nav.football")}
+				</CardTitle>
+				<CardDescription>{t("football.subtitle")}</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<Button href="/secretary/football" class="w-full">
+					{t("common.viewAll")}
+				</Button>
+			</CardContent>
+		</Card>
+	</div>
+</div>

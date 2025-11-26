@@ -1,425 +1,245 @@
 <script lang="ts">
-import {
-	Candy,
-	ChevronDown,
-	ChevronUp,
-	ClipboardList,
-	Clock3,
-	TicketPercent,
-} from "@lucide/svelte";
-import { Badge } from "$lib/components/ui/badge";
-import { Card } from "$lib/components/ui/card";
-import DateRangePicker from "$lib/components/ui/date-picker/date-range-picker.svelte";
-import { PageContent, PageHeader } from "$lib/components/ui/page";
-import StatsCards from "$lib/components/ui/stats-cards.svelte";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "$lib/components/ui/table";
-import { facilityState } from "$lib/state/facility.svelte";
-import { t } from "$lib/state/i18n.svelte";
-import { userState } from "$lib/state/user.svelte";
-import { discountsForSession, ordersTotalForSession } from "$lib/utils/register-stats";
-import { supabase } from "$lib/utils/supabase";
-import { formatCurrency, formatDateTime } from "$lib/utils/utils";
+	import { t } from "$lib/i18n/index.svelte";
+	import { fmtDate, fmtCurrency } from "$lib/utils/format";
+	import { PageHeader, EmptyState } from "$lib/components/layout";
+	import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
+	import { Badge } from "$lib/components/ui/badge";
+	import { Button } from "$lib/components/ui/button";
+	import {
+		Dialog,
+		DialogContent,
+		DialogHeader,
+		DialogTitle,
+	} from "$lib/components/ui/dialog";
+	import {
+		Table,
+		TableHeader,
+		TableBody,
+		TableRow,
+		TableHead,
+		TableCell,
+	} from "$lib/components/ui/table";
+	import { Separator } from "$lib/components/ui/separator";
+	import { DollarSign, Eye, Gift, ChevronDown, ChevronUp } from "@lucide/svelte";
 
-type SessionRow = {
-	id: string;
-	opened_at: string;
-	opened_by: string;
-	closed_at: string | null;
-	notes: { opening_cash?: number } | null;
-};
+	const { data } = $props();
 
-type ClosingRow = {
-	session_id: string;
-	orders_total?: number;
-	treat_total: number;
-	total_discounts: number;
-	treat_count?: number;
-	notes: Record<string, unknown> | null;
-};
+	type OrderItem = {
+		id: string;
+		quantity: number;
+		unit_price: number;
+		line_total: number;
+		is_treat: boolean;
+		is_deleted: boolean;
+		products: { id: string; name: string } | null;
+	};
 
-type OrderRow = {
-	id: string;
-	created_at: string;
-	subtotal: number;
-	discount_amount: number;
-	total_amount: number;
-	coupon_count: number;
-};
+	type Order = {
+		id: string;
+		session_id: string;
+		created_at: string;
+		subtotal: number;
+		discount_amount: number;
+		total_amount: number;
+		coupon_count: number;
+		order_items: OrderItem[];
+	};
 
-type OrderItemRow = {
-	id: string;
-	quantity: number;
-	unit_price: number;
-	line_total: number;
-	is_treat: boolean;
-	product_name: string;
-};
+	let selectedOrder = $state<Order | null>(null);
+	let showOrderDialog = $state(false);
+	let expandedSession = $state<string | null>(null);
 
-// State
-let sessions: SessionRow[] = $state([]);
-let closingsBySession: Record<string, ClosingRow> = $state({});
-let ordersBySession: Record<string, OrderRow[]> = $state({});
-let itemsByOrder: Record<string, OrderItemRow[]> = $state({});
-let expanded: Record<string, boolean> = $state({});
-
-// Virtualization
-let scrollRef: HTMLDivElement | null = $state(null);
-const ROW_HEIGHT = 64;
-const VIEW_BUFFER_ROWS = 6;
-const VIEWPORT_HEIGHT = 600;
-let startIndex = $state(0);
-let endIndex = $state(0);
-const topPad = $derived(startIndex * ROW_HEIGHT);
-const bottomPad = $derived(Math.max(0, (sessions.length - endIndex) * ROW_HEIGHT));
-
-function recomputeWindow() {
-	if (!scrollRef) return;
-	const scrollTop = scrollRef.scrollTop;
-	const visibleCount = Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
-	const first = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - Math.ceil(VIEW_BUFFER_ROWS / 2));
-	startIndex = first;
-	endIndex = Math.min(sessions.length, first + visibleCount);
-}
-
-// Date selection
-let startDate = $state<string>("");
-let endDate = $state<string>("");
-
-// Computed stats
-const totalSessions = $derived(sessions.length);
-const openSessions = $derived(sessions.filter((session) => !session.closed_at).length);
-const totalOrdersAmount = $derived(
-	sessions.reduce((sum, s) => sum + getOrdersTotalForSession(s.id), 0),
-);
-const totalDiscountAmountEffective = $derived(
-	sessions.reduce((sum, s) => sum + getDiscountsForSession(s.id), 0),
-);
-const totalTreatAmountEffective = $derived(
-	sessions.reduce((sum, s) => sum + getTreatTotalForSession(s.id), 0),
-);
-
-// Initialize
-$effect(() => {
-	userState.load().then(() => {
-		load();
-	});
-});
-
-async function load() {
-	await loadSessions();
-	await Promise.all([loadClosings(), loadOrders()]);
-	await loadOrderItems();
-	startIndex = 0;
-	endIndex = Math.min(sessions.length, Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS);
-}
-
-async function loadSessions() {
-	const startISO = startDate ? new Date(`${startDate}T00:00:00`).toISOString() : null;
-	const endISO = endDate ? new Date(`${endDate}T23:59:59`).toISOString() : null;
-
-	const { data: sessionData } = await supabase.auth.getUser();
-	const uid = sessionData.user?.id ?? "";
-	const { data: tm } = await supabase
-		.from("tenant_members")
-		.select("tenant_id")
-		.eq("user_id", uid)
-		.limit(1);
-	const tenantId = tm?.[0]?.tenant_id;
-	const facilityId = await facilityState.resolveSelected();
-
-	let query = supabase
-		.from("register_sessions")
-		.select("id, opened_at, opened_by, closed_at, notes")
-		.order("opened_at", { ascending: false });
-	if (tenantId) query = query.eq("tenant_id", tenantId);
-	if (facilityId) query = query.eq("facility_id", facilityId);
-
-	if (startISO || endISO) {
-		const s = startISO ?? "1970-01-01T00:00:00.000Z";
-		const e = endISO ?? "9999-12-31T23:59:59.999Z";
-		query = query.or(
-			`and(opened_at.gte.${s},opened_at.lte.${e}),and(opened_at.lt.${e},closed_at.gte.${s}),and(opened_at.lte.${e},closed_at.is.null)`,
-		);
+	function getSessionOrders(sessionId: string): Order[] {
+		return data.orders.filter((o: Order) => o.session_id === sessionId);
 	}
 
-	const { data } = await query;
-	sessions = data ?? [];
-}
-
-async function loadClosings() {
-	if (sessions.length === 0) {
-		closingsBySession = {};
-		return;
+	function viewOrder(order: Order) {
+		selectedOrder = order;
+		showOrderDialog = true;
 	}
-	const sessionIds = sessions.map((session) => session.id);
-	const { data } = await supabase
-		.from("register_closings")
-		.select("session_id, orders_total, treat_total, treat_count, total_discounts, notes")
-		.in("session_id", sessionIds);
 
-	const map: Record<string, ClosingRow> = {};
-	for (const closing of data ?? []) {
-		map[closing.session_id] = closing;
+	function toggleSession(sessionId: string) {
+		expandedSession = expandedSession === sessionId ? null : sessionId;
 	}
-	closingsBySession = map;
-}
 
-async function loadOrders() {
-	if (sessions.length === 0) {
-		ordersBySession = {};
-		return;
+	function getActiveItems(items: OrderItem[]): OrderItem[] {
+		return items?.filter(item => !item.is_deleted) ?? [];
 	}
-	const sessionIds = sessions.map((session) => session.id);
-	const { data } = await supabase
-		.from("orders")
-		.select("id, created_at, subtotal, discount_amount, total_amount, coupon_count, session_id")
-		.in("session_id", sessionIds)
-		.order("created_at", { ascending: false });
-
-	const bySession: Record<string, OrderRow[]> = {};
-	for (const order of data ?? []) {
-		const sessionId = order.session_id;
-		if (!bySession[sessionId]) bySession[sessionId] = [];
-		bySession[sessionId].push(order);
-	}
-	ordersBySession = bySession;
-}
-
-async function loadOrderItems() {
-	const orderIds = Object.values(ordersBySession).flatMap(
-		(orders) => orders?.map((o) => o.id) ?? [],
-	);
-	if (orderIds.length === 0) {
-		itemsByOrder = {};
-		return;
-	}
-	const { data } = await supabase
-		.from("order_items")
-		.select("id, order_id, quantity, unit_price, line_total, is_treat, is_deleted, products(name)")
-		.in("order_id", orderIds);
-
-	const map: Record<string, OrderItemRow[]> = {};
-	for (const item of data ?? []) {
-		if (item.is_deleted) continue;
-		const orderId = item.order_id;
-		if (!map[orderId]) map[orderId] = [];
-		map[orderId].push({
-			...item,
-			product_name: (item.products as { name?: string } | null)?.name ?? "Unknown",
-		});
-	}
-	itemsByOrder = map;
-}
-
-function toggleSession(id: string) {
-	expanded[id] = !expanded[id];
-}
-
-function closedBy(sessionId: string): string | null {
-	const notes = closingsBySession[sessionId]?.notes as { closed_by?: string } | undefined;
-	return notes?.closed_by ? String(notes.closed_by) : null;
-}
-
-function getOrdersTotalForSession(sessionId: string): number {
-	const closing = closingsBySession[sessionId];
-	const orders = ordersBySession[sessionId] ?? [];
-	return ordersTotalForSession(closing, orders);
-}
-
-function getDiscountsForSession(sessionId: string): number {
-	const closing = closingsBySession[sessionId];
-	const orders = ordersBySession[sessionId] ?? [];
-	return discountsForSession(closing, orders);
-}
-
-function getTreatTotalForSession(sessionId: string): number {
-	const closing = closingsBySession[sessionId];
-	if (closing && typeof closing.treat_total === "number") return Number(closing.treat_total);
-	const orders = ordersBySession[sessionId] ?? [];
-	return orders.reduce((sum, o) => {
-		const items = itemsByOrder[o.id] ?? [];
-		return (
-			sum +
-			items.reduce(
-				(itemSum, it) =>
-					it.is_treat ? itemSum + Number(it.unit_price ?? 0) * Number(it.quantity ?? 0) : itemSum,
-				0,
-			)
-		);
-	}, 0);
-}
 </script>
 
-<PageContent>
-  <PageHeader title={t("registers.title")} subtitle={t("registers.subtitle")} />
+<div class="space-y-6">
+	<PageHeader title={t("register.title")} description={t("register.subtitle")} />
 
-  <StatsCards
-    items={[
-      { title: t("registers.totalSessions"), value: String(totalSessions), accent: "neutral", icon: ClipboardList },
-      { title: t("registers.openSessions"), value: String(openSessions), accent: "blue", icon: Clock3 },
-      { title: t("orders.total"), value: formatCurrency(totalOrdersAmount), accent: "neutral", icon: ClipboardList },
-      { title: t("registers.totalDiscounts"), value: formatCurrency(totalDiscountAmountEffective), accent: "green", icon: TicketPercent },
-      { title: t("registers.totalTreats"), value: formatCurrency(totalTreatAmountEffective), accent: "purple", icon: Candy },
-    ]}
-  />
+	{#if data.sessions.length === 0}
+		<Card>
+			<CardContent class="pt-6">
+				<EmptyState
+					title={t("register.empty.title")}
+					description={t("register.empty.description")}
+					icon={DollarSign}
+				/>
+			</CardContent>
+		</Card>
+	{:else}
+		<div class="space-y-4">
+			{#each data.sessions as session (session.id)}
+				{@const closing = data.closings.find((c: { session_id: string }) => c.session_id === session.id)}
+				{@const sessionOrders = getSessionOrders(session.id)}
+				{@const isExpanded = expandedSession === session.id}
+				<Card>
+					<CardHeader class="pb-3">
+						<div class="flex items-center justify-between">
+							<div class="space-y-1">
+								<CardTitle class="text-base flex items-center gap-2">
+									{fmtDate(session.opened_at)}
+									{#if session.closed_at}
+										<Badge variant="secondary">{t("common.close")}</Badge>
+									{:else}
+										<Badge variant="success">{t("common.open")}</Badge>
+									{/if}
+								</CardTitle>
+								<p class="text-sm text-muted-foreground">
+									{closing?.orders_count ?? sessionOrders.length} {t("orders.title").toLowerCase()} · {fmtCurrency(closing?.orders_total ?? sessionOrders.reduce((sum: number, o: Order) => sum + o.total_amount, 0))}
+								</p>
+							</div>
+							<Button
+								variant="ghost"
+								size="sm"
+								onclick={() => toggleSession(session.id)}
+								disabled={sessionOrders.length === 0}
+							>
+								{#if isExpanded}
+									<ChevronUp class="h-4 w-4 mr-1" />
+								{:else}
+									<ChevronDown class="h-4 w-4 mr-1" />
+								{/if}
+								{t("orders.viewItems")}
+							</Button>
+						</div>
+					</CardHeader>
 
-  <Card class="overflow-hidden border-border shadow-sm">
-    <div class="flex items-center justify-between border-b border-border/60 p-4">
-      <h3 class="text-sm font-medium">{t("registers.pickDate")}</h3>
-      <DateRangePicker bind:start={startDate} bind:end={endDate} onchange={load} />
-    </div>
+					{#if isExpanded && sessionOrders.length > 0}
+						<CardContent class="pt-0">
+							<div class="rounded-lg border">
+								<Table>
+									<TableHeader>
+										<TableRow>
+											<TableHead>{t("orders.orderNumber")}</TableHead>
+											<TableHead>{t("date.today")}</TableHead>
+											<TableHead>{t("orders.items")}</TableHead>
+											<TableHead>{t("orders.total")}</TableHead>
+											<TableHead class="w-16"></TableHead>
+										</TableRow>
+									</TableHeader>
+									<TableBody>
+										{#each sessionOrders as order (order.id)}
+											{@const activeItems = getActiveItems(order.order_items)}
+											<TableRow class="cursor-pointer hover:bg-muted/50" onclick={() => viewOrder(order)}>
+												<TableCell class="font-mono text-sm">{order.id.slice(0, 8)}</TableCell>
+												<TableCell class="text-sm">{fmtDate(order.created_at)}</TableCell>
+												<TableCell>
+													<Badge variant="outline">
+														{activeItems.length} {t("orders.itemsCount")}
+													</Badge>
+												</TableCell>
+												<TableCell class="font-medium">{fmtCurrency(order.total_amount)}</TableCell>
+												<TableCell>
+													<Button variant="ghost" size="icon-sm" onclick={(e: MouseEvent) => { e.stopPropagation(); viewOrder(order); }}>
+														<Eye class="h-4 w-4" />
+													</Button>
+												</TableCell>
+											</TableRow>
+										{/each}
+									</TableBody>
+								</Table>
+							</div>
+						</CardContent>
+					{/if}
+				</Card>
+			{/each}
+		</div>
+	{/if}
+</div>
 
-    <div
-      bind:this={scrollRef}
-      onscroll={recomputeWindow}
-      style="max-height: {VIEWPORT_HEIGHT}px; overflow-y: auto;"
-    >
-      <Table>
-        <TableHeader class="sticky top-0 bg-card z-10 shadow-sm">
-          <TableRow class="hover:bg-transparent border-b border-border/60">
-            <TableHead class="w-[100px]">{t("registers.id")}</TableHead>
-            <TableHead>{t("registers.opened")}</TableHead>
-            <TableHead>{t("registers.closed")}</TableHead>
-            <TableHead class="text-right">{t("orders.total")}</TableHead>
-            <TableHead class="text-right">{t("orders.discount")}</TableHead>
-            <TableHead class="text-right w-[100px]">{t("registers.treats")}</TableHead>
-            <TableHead class="w-[40px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {#if sessions.length === 0}
-            <TableRow>
-              <TableCell colspan={7} class="h-96 text-center">
-                <div class="flex flex-col items-center gap-2 text-muted-foreground">
-                  <ClipboardList class="size-8 opacity-50" />
-                  <p>{t("registers.empty")}</p>
-                  <p class="text-xs">{t("registers.subtitle")}</p>
-                </div>
-              </TableCell>
-            </TableRow>
-          {:else}
-            {#if topPad > 0}
-              <tr><td colspan={7} style="height: {topPad}px;"></td></tr>
-            {/if}
-            
-            {#each sessions.slice(startIndex, endIndex) as session (session.id)}
-              {@const isOpen = !session.closed_at}
-              {@const isExpanded = expanded[session.id]}
-              <TableRow 
-                class="cursor-pointer h-16 transition-colors {isExpanded ? 'bg-muted/30' : ''}" 
-                onclick={() => toggleSession(session.id)}
-              >
-                <TableCell>
-                  <div class="flex flex-col gap-1">
-                    <span class="font-mono text-xs text-muted-foreground">#{session.id.slice(0, 8)}</span>
-                    {#if isOpen}
-                      <Badge variant="default" class="w-fit text-[10px] px-1.5 py-0 h-5 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 border-emerald-500/20 shadow-none">
-                        {t("common.open")}
-                      </Badge>
-                    {:else}
-                      <Badge variant="secondary" class="w-fit text-[10px] px-1.5 py-0 h-5 shadow-none">Closed</Badge>
-                    {/if}
-                  </div>
-                </TableCell>
-                <TableCell>{formatDateTime(session.opened_at)}</TableCell>
-                <TableCell>
-                  {#if session.closed_at}
-                    <div class="flex flex-col">
-                      <span>{formatDateTime(session.closed_at)}</span>
-                      {#if closedBy(session.id)}
-                        <span class="text-xs text-muted-foreground">by {closedBy(session.id)}</span>
-                      {/if}
-                    </div>
-                  {:else}
-                    —
-                  {/if}
-                </TableCell>
-                <TableCell class="text-right font-medium">{formatCurrency(getOrdersTotalForSession(session.id))}</TableCell>
-                <TableCell class="text-right text-destructive">{formatCurrency(getDiscountsForSession(session.id))}</TableCell>
-                <TableCell class="text-right text-primary font-medium">{formatCurrency(getTreatTotalForSession(session.id))}</TableCell>
-                <TableCell class="text-center">
-                  {#if isExpanded}
-                    <ChevronUp class="size-4 text-muted-foreground" />
-                  {:else}
-                    <ChevronDown class="size-4 text-muted-foreground" />
-                  {/if}
-                </TableCell>
-              </TableRow>
+<!-- Order Details Dialog -->
+<Dialog bind:open={showOrderDialog}>
+	<DialogContent class="max-w-2xl">
+		<DialogHeader>
+			<DialogTitle>
+				{t("orders.orderDetails")} #{selectedOrder?.id.slice(0, 8)}
+			</DialogTitle>
+		</DialogHeader>
 
-              {#if isExpanded}
-                <TableRow class="hover:bg-transparent">
-                  <TableCell colspan={7} class="p-0 bg-muted/10 shadow-inner">
-                    <div class="p-6 space-y-4">
-                      <div class="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        {t("orders.recent")}
-                      </div>
-                      <div class="grid gap-3">
-                        {#each ordersBySession[session.id] ?? [] as order (order.id)}
-                          <div class="rounded-lg border bg-card p-4 shadow-sm">
-                            <div class="flex items-center justify-between mb-3 pb-3 border-b border-border/50">
-                              <div class="flex items-center gap-3">
-                                <span class="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
-                                <span class="text-sm text-muted-foreground">{formatDateTime(order.created_at)}</span>
-                              </div>
-                              <div class="flex items-center gap-4 text-sm">
-                                <div class="text-muted-foreground">
-                                  {t("orders.coupons")}: <span class="font-medium text-foreground">{order.coupon_count}</span>
-                                </div>
-                                {#if order.discount_amount > 0}
-                                  <div class="text-destructive">
-                                    {t("orders.discount")}: -{formatCurrency(order.discount_amount)}
-                                  </div>
-                                {/if}
-                                <div class="font-bold text-foreground text-base">
-                                  {formatCurrency(order.total_amount)}
-                                </div>
-                              </div>
-                            </div>
-                            <div class="space-y-1">
-                              {#each itemsByOrder[order.id] ?? [] as item (item.id)}
-                                <div class="flex items-center justify-between text-sm">
-                                  <div class="flex items-center gap-2">
-                                    <span>{item.product_name}</span>
-                                    <span class="text-muted-foreground">×{item.quantity}</span>
-                                    {#if item.is_treat}
-                                      <Badge variant="secondary" class="h-5 text-[10px] px-1.5 bg-purple-500/10 text-purple-700 border-purple-500/20">
-                                        {t("orders.free")}
-                                      </Badge>
-                                    {/if}
-                                  </div>
-                                  <div>
-                                    {#if item.is_treat}
-                                      <span class="line-through text-muted-foreground mr-2">{formatCurrency(item.unit_price)}</span>
-                                      <span class="font-medium">€0.00</span>
-                                    {:else}
-                                      <span>{formatCurrency(item.line_total)}</span>
-                                    {/if}
-                                  </div>
-                                </div>
-                              {/each}
-                            </div>
-                          </div>
-                        {/each}
-                      </div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              {/if}
-            {/each}
+		{#if selectedOrder}
+			<div class="space-y-4">
+				<div class="text-sm text-muted-foreground">
+					{fmtDate(selectedOrder.created_at)}
+				</div>
 
-            {#if bottomPad > 0}
-              <tr><td colspan={7} style="height: {bottomPad}px;"></td></tr>
-            {/if}
-          {/if}
-        </TableBody>
-      </Table>
-    </div>
-  </Card>
-</PageContent>
+				<div class="rounded-lg border">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>{t("orders.product")}</TableHead>
+								<TableHead class="text-center">{t("orders.quantity")}</TableHead>
+								<TableHead class="text-right">{t("orders.unitPrice")}</TableHead>
+								<TableHead class="text-right">{t("orders.lineTotal")}</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{#each getActiveItems(selectedOrder.order_items) as item (item.id)}
+								<TableRow>
+									<TableCell>
+										<div class="flex items-center gap-2">
+											{item.products?.name ?? "Unknown"}
+											{#if item.is_treat}
+												<Badge variant="secondary" class="text-xs">
+													<Gift class="h-3 w-3 mr-1" />
+													{t("orders.treat")}
+												</Badge>
+											{/if}
+										</div>
+									</TableCell>
+									<TableCell class="text-center">{item.quantity}</TableCell>
+									<TableCell class="text-right">{fmtCurrency(item.unit_price)}</TableCell>
+									<TableCell class="text-right">
+										{#if item.is_treat}
+											<span class="text-muted-foreground">-</span>
+										{:else}
+											{fmtCurrency(item.line_total)}
+										{/if}
+									</TableCell>
+								</TableRow>
+							{:else}
+								<TableRow>
+									<TableCell colspan={4} class="text-center text-muted-foreground py-8">
+										{t("orders.noItems")}
+									</TableCell>
+								</TableRow>
+							{/each}
+						</TableBody>
+					</Table>
+				</div>
+
+				<Separator />
+				<div class="space-y-2 text-sm">
+					<div class="flex justify-between">
+						<span>{t("orders.subtotal")}</span>
+						<span>{fmtCurrency(selectedOrder.subtotal)}</span>
+					</div>
+					{#if selectedOrder.discount_amount > 0}
+						<div class="flex justify-between text-muted-foreground">
+							<span>{t("orders.discount")}</span>
+							<span>-{fmtCurrency(selectedOrder.discount_amount)}</span>
+						</div>
+					{/if}
+					<Separator />
+					<div class="flex justify-between text-lg font-bold">
+						<span>{t("orders.total")}</span>
+						<span>{fmtCurrency(selectedOrder.total_amount)}</span>
+					</div>
+				</div>
+			</div>
+		{/if}
+	</DialogContent>
+</Dialog>

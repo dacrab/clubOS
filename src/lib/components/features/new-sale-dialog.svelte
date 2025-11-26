@@ -1,456 +1,452 @@
 <script lang="ts">
-import { Filter, Minus, Plus, ReceiptText, ShoppingCart, X } from "@lucide/svelte";
-import { Dialog as DialogPrimitive, Separator as SeparatorPrimitive } from "bits-ui";
-import { Button } from "$lib/components/ui/button";
-import {
-	DialogClose,
-	DialogContent,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "$lib/components/ui/dialog";
-import { facilityState } from "$lib/state/facility.svelte";
-import { tt as t } from "$lib/state/i18n.svelte";
-import { collectWithDescendants } from "$lib/utils/category-tree";
-import {
-	subtotal as calcSubtotal,
-	discountAmount,
-	totalAmount,
-} from "$lib/utils/order-calculations";
-import { supabase } from "$lib/utils/supabase";
+	import { t } from "$lib/i18n/index.svelte";
+	import { toast } from "svelte-sonner";
+	import { invalidateAll } from "$app/navigation";
+	import { Button } from "$lib/components/ui/button";
+	import { Input } from "$lib/components/ui/input";
+	import { Badge } from "$lib/components/ui/badge";
+	import { Separator } from "$lib/components/ui/separator";
+	import {
+		Dialog,
+		DialogContent,
+		DialogHeader,
+		DialogTitle,
+	} from "$lib/components/ui/dialog";
+	import { supabase } from "$lib/utils/supabase";
+	import { fmtCurrency } from "$lib/utils/format";
+	import { settings as globalSettings } from "$lib/state/settings.svelte";
+	import {
+		ShoppingCart,
+		Plus,
+		Minus,
+		Gift,
+		X,
+		Search,
+		Check,
+	} from "@lucide/svelte";
+	import type { Product } from "$lib/types/database";
 
-const DialogRoot = DialogPrimitive.Root;
+	type Category = {
+		id: string;
+		name: string;
+		parent_id: string | null;
+	};
 
-type Product = {
-	id: string;
-	name: string;
-	price: number;
-	category_id?: string | null;
-	image_url?: string | null;
-};
+	type Props = {
+		open: boolean;
+		products: Product[];
+		categories?: Category[];
+		activeSession: { id: string } | null;
+		user: { id: string; tenantId: string | null; facilityId: string | null };
+		onOpenChange?: (open: boolean) => void;
+	};
 
-type CartItem = {
-	id: string;
-	name: string;
-	price: number;
-	is_treat?: boolean;
-};
+	let { open = $bindable(), products, categories = [], activeSession, user, onOpenChange }: Props = $props();
 
-type Category = {
-	id: string;
-	name: string;
-	parent_id: string | null;
-};
+	let selectedCategory = $state<string | null>(null);
 
-let {
-	open = $bindable(false),
-	products = [] as Product[],
-	onSubmit,
-} = $props<{
-	open: boolean;
-	products?: Product[];
-	onSubmit: (payload: {
-		items: CartItem[];
-		paymentMethod: "cash";
-		couponCount: number;
-	}) => Promise<void>;
-}>();
+	type CartItem = {
+		product: Product;
+		quantity: number;
+		isTreat: boolean;
+	};
 
-let cart: CartItem[] = $state([]);
-let couponCount = $state(0);
-let selectedCategory = $state<string | null>(null);
-let categories: Category[] = $state([]);
-let internalProducts: Product[] = $state([]);
-let facilityId: string | null = $state(null);
+	let cart = $state<CartItem[]>([]);
+	let couponCount = $state(0);
+	let searchQuery = $state("");
+	let processing = $state(false);
+	let lastOrderId = $state<string | null>(null);
 
-function addToCart(product: Product) {
-	cart = [...cart, { ...product }];
-}
+	const COUPON_VALUE = $derived(globalSettings.current.coupons_value);
 
-function toggleTreat(index: number) {
-	if (index < 0 || index >= cart.length) {
-		return;
+	let filteredProducts = $derived(
+		products.filter((p) => {
+			const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+			const matchesCategory = selectedCategory === null || p.category_id === selectedCategory;
+			return matchesSearch && matchesCategory;
+		})
+	);
+
+	// Get root categories (no parent)
+	let rootCategories = $derived(categories.filter(c => !c.parent_id));
+
+	let subtotal = $derived(
+		cart.reduce((sum, item) => {
+			if (item.isTreat) return sum;
+			return sum + item.product.price * item.quantity;
+		}, 0)
+	);
+
+	let discount = $derived(couponCount * COUPON_VALUE);
+	let total = $derived(Math.max(0, subtotal - discount));
+
+	let treatCount = $derived(
+		cart.reduce((sum, item) => (item.isTreat ? sum + item.quantity : sum), 0)
+	);
+
+	let cartItemCount = $derived(
+		cart.reduce((sum, item) => sum + item.quantity, 0)
+	);
+
+	function addToCart(product: Product) {
+		const existing = cart.find((item) => item.product.id === product.id && !item.isTreat);
+		if (existing) {
+			existing.quantity++;
+			cart = [...cart];
+		} else {
+			cart = [...cart, { product, quantity: 1, isTreat: false }];
+		}
+		lastOrderId = null;
 	}
 
-	const updatedCart = [...cart];
-	const item = updatedCart[index];
-	if (item) {
-		updatedCart[index] = { ...item, is_treat: !item.is_treat };
-		cart = updatedCart;
-	}
-}
-
-function removeFromCart(index: number) {
-	if (index < 0 || index >= cart.length) {
-		return;
+	function removeFromCart(index: number) {
+		cart = cart.filter((_, i) => i !== index);
 	}
 
-	const updatedCart = [...cart];
-	updatedCart.splice(index, 1);
-	cart = updatedCart;
-}
-
-function clearCart() {
-	cart = [];
-	couponCount = 0;
-}
-
-function subtotal() {
-	return calcSubtotal(cart);
-}
-
-function discount() {
-	return discountAmount(couponCount);
-}
-
-function total() {
-	return totalAmount(cart, couponCount);
-}
-
-async function submit() {
-	try {
-		await onSubmit({ items: cart, paymentMethod: "cash", couponCount });
-		const { toast } = await import("svelte-sonner");
-		toast.success(t("orders.toast.success"));
-		clearCart();
-	} catch (error) {
-		const { toast } = await import("svelte-sonner");
-		const message = error instanceof Error ? error.message : t("orders.toast.error");
-		toast.error(message);
-	}
-}
-
-async function ensureFacilityContext(): Promise<void> {
-	facilityId = await facilityState.resolveSelected();
-}
-
-async function loadCategories() {
-	await ensureFacilityContext();
-	if (!facilityId) {
-		categories = [];
-		return;
+	function updateQuantity(index: number, delta: number) {
+		const item = cart[index];
+		item.quantity += delta;
+		if (item.quantity <= 0) {
+			removeFromCart(index);
+		} else {
+			cart = [...cart];
+		}
 	}
 
-	const { data } = await supabase
-		.from("categories")
-		.select("id,name,parent_id")
-		.eq("facility_id", facilityId)
-		.order("name");
-
-	categories = (data ?? []) as Category[];
-}
-
-async function loadProducts() {
-	if (products.length > 0) {
-		return; // External products provided
+	function toggleTreat(index: number) {
+		cart[index].isTreat = !cart[index].isTreat;
+		cart = [...cart];
 	}
 
-	await ensureFacilityContext();
-	if (!facilityId) {
-		internalProducts = [];
-		return;
+	function clearCart() {
+		cart = [];
+		couponCount = 0;
+		lastOrderId = null;
 	}
 
-	const { data } = await supabase
-		.from("products")
-		.select("id,name,price,category_id,image_url")
-		.eq("facility_id", facilityId)
-		.order("name");
-
-	internalProducts = (data ?? []) as Product[];
-}
-
-const allProducts: Product[] = $derived(products.length > 0 ? products : internalProducts);
-
-const filteredProducts: Product[] = $derived(
-	(() => {
-		if (!selectedCategory) {
-			return allProducts;
+	async function submitOrder() {
+		if (cart.length === 0) {
+			toast.error(t("orders.emptyCart"));
+			return;
 		}
 
-		const descendantIds = collectWithDescendants(categories, selectedCategory);
+		if (!activeSession) {
+			toast.error(t("register.noActiveSession"));
+			return;
+		}
 
-		return allProducts.filter(
-			(product) => !product.category_id || descendantIds.has(product.category_id),
-		);
-	})(),
-);
+		processing = true;
+		try {
+			// Create order
+			const { data: order, error: orderError } = await supabase
+				.from("orders")
+				.insert({
+					tenant_id: user.tenantId,
+					facility_id: user.facilityId,
+					session_id: activeSession.id,
+					subtotal,
+					discount_amount: discount,
+					total_amount: total,
+					coupon_count: couponCount,
+					created_by: user.id,
+				})
+				.select()
+				.single();
 
-$effect(() => {
-	if (open) {
-		loadCategories();
-		loadProducts();
+			if (orderError) throw orderError;
+
+			// Create order items
+			const items = cart.map((item) => ({
+				order_id: order.id,
+				product_id: item.product.id,
+				quantity: item.quantity,
+				unit_price: item.product.price,
+				line_total: item.isTreat ? 0 : item.product.price * item.quantity,
+				is_treat: item.isTreat,
+			}));
+
+			const { error: itemsError } = await supabase.from("order_items").insert(items);
+			if (itemsError) throw itemsError;
+
+			// Update stock
+			for (const item of cart) {
+				if (item.product.stock_quantity >= 0) {
+					await supabase
+						.from("products")
+						.update({
+							stock_quantity: item.product.stock_quantity - item.quantity,
+						})
+						.eq("id", item.product.id);
+				}
+			}
+
+			lastOrderId = order.id;
+			toast.success(t("common.success"));
+			clearCart();
+			await invalidateAll();
+		} catch {
+			toast.error(t("common.error"));
+		} finally {
+			processing = false;
+		}
 	}
-});
+
+	function handleClose() {
+		open = false;
+		onOpenChange?.(false);
+	}
 </script>
 
-<DialogRoot bind:open>
-  <DialogContent
-    size="fullscreen"
-    showCloseButton={false}
-    class="flex max-h-[92vh] flex-col overflow-hidden rounded-xl border border-border bg-background p-0 shadow-xl"
-  >
-    <DialogHeader class="flex-none border-b border-border px-6 py-4">
-      <div class="flex items-center justify-between">
-        <DialogTitle class="text-xl font-semibold text-foreground">
-          {t("orders.new")}
-        </DialogTitle>
-        <DialogClose
-          class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label={t("common.close")}
-        >
-          <X class="size-4" />
-        </DialogClose>
-      </div>
-    </DialogHeader>
+<Dialog bind:open onOpenChange={onOpenChange}>
+	<DialogContent class="max-w-[95vw] h-[95vh] flex flex-col p-0 gap-0 [&>button]:hidden">
+		<DialogHeader class="px-6 py-4 border-b shrink-0">
+			<div class="flex items-center justify-between">
+				<DialogTitle class="text-xl flex items-center gap-2">
+					<ShoppingCart class="h-6 w-6" />
+					{t("orders.newSale")}
+				</DialogTitle>
+				<Button variant="ghost" size="icon" onclick={handleClose}>
+					<X class="h-5 w-5" />
+				</Button>
+			</div>
+		</DialogHeader>
 
-    <div
-      class="grid flex-1 min-h-0 grid-cols-1 gap-4 overflow-hidden px-6 pb-6 pt-4 md:grid-cols-[240px_1fr_360px]"
-    >
-      <!-- Categories Sidebar -->
-      <aside
-        class="flex min-h-0 flex-col gap-3 rounded-lg border border-border bg-muted/30 p-3"
-      >
-        <h3
-          class="inline-flex items-center gap-2 text-sm font-semibold text-foreground"
-        >
-          <Filter class="size-4" />
-          {t("nav.categories")}
-        </h3>
+		<div class="flex-1 flex overflow-hidden">
+			<!-- Products Section -->
+			<div class="flex-1 flex flex-col overflow-hidden border-r">
+				<!-- Search -->
+				<div class="p-4 border-b shrink-0">
+					<div class="relative">
+						<Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+						<Input
+							placeholder={t("common.search")}
+							class="pl-10"
+							bind:value={searchQuery}
+						/>
+					</div>
+				</div>
 
-        <button
-          type="button"
-          class={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
-            !selectedCategory ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-muted-foreground hover:text-foreground"
-          }`}
-          onclick={() => (selectedCategory = null)}
-        >
-          {t("date.all")}
-        </button>
+				<!-- Categories -->
+				{#if categories.length > 0}
+					<div class="p-3 border-b shrink-0 overflow-x-auto">
+						<div class="flex gap-2">
+							<Button
+								variant={selectedCategory === null ? "default" : "outline"}
+								size="sm"
+								onclick={() => (selectedCategory = null)}
+							>
+								{t("common.viewAll")}
+							</Button>
+							{#each rootCategories as category (category.id)}
+								<Button
+									variant={selectedCategory === category.id ? "default" : "outline"}
+									size="sm"
+									onclick={() => (selectedCategory = category.id)}
+								>
+									{category.name}
+								</Button>
+							{/each}
+						</div>
+					</div>
+				{/if}
 
-        <div class="space-y-2 overflow-auto pr-1">
-          {#each categories.filter((c) => !c.parent_id) as category (category.id)}
-            <div class="space-y-1">
-              <button
-                type="button"
-                class={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
-                  selectedCategory === category.id
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                }`}
-                onclick={() => (selectedCategory = category.id)}
-              >
-                <span class="block truncate">{category.name}</span>
-              </button>
+				<!-- Products Grid -->
+				<div class="flex-1 overflow-y-auto p-4">
+					<div class="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+						{#each filteredProducts as product (product.id)}
+							<button
+								class="flex flex-col items-start rounded-lg border bg-card p-3 text-left transition-all hover:bg-accent hover:shadow-md active:scale-[0.98]"
+								onclick={() => addToCart(product)}
+							>
+								<span class="font-medium line-clamp-2">{product.name}</span>
+								<span class="text-sm text-primary font-semibold mt-1">
+									{fmtCurrency(product.price)}
+								</span>
+								{#if product.stock_quantity >= 0}
+									<Badge variant="outline" class="mt-2 text-xs">
+										{product.stock_quantity} {t("common.stock").toLowerCase()}
+									</Badge>
+								{/if}
+							</button>
+						{:else}
+							<div class="col-span-full text-center py-12 text-muted-foreground">
+								{t("common.noResults")}
+							</div>
+						{/each}
+					</div>
+				</div>
+			</div>
 
-              {#each categories.filter((c) => c.parent_id === category.id) as subcategory (subcategory.id)}
-                <button
-                  type="button"
-                  class={`ml-4 w-[calc(100%-1rem)] rounded-md px-3 py-1.5 text-left text-xs transition-colors ${
-                    selectedCategory === subcategory.id
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                  }`}
-                  onclick={() => (selectedCategory = subcategory.id)}
-                >
-                  <span class="block truncate">{subcategory.name}</span>
-                </button>
-              {/each}
-            </div>
-          {/each}
-        </div>
-      </aside>
+			<!-- Cart Section -->
+			<div class="w-80 lg:w-96 flex flex-col bg-muted/30">
+				<!-- Cart Header -->
+				<div class="p-4 border-b bg-background">
+					<div class="flex items-center justify-between">
+						<h3 class="font-semibold flex items-center gap-2">
+							<ShoppingCart class="h-4 w-4" />
+							{t("orders.cart")}
+							{#if cartItemCount > 0}
+								<Badge variant="secondary">{cartItemCount}</Badge>
+							{/if}
+						</h3>
+						{#if cart.length > 0}
+							<Button variant="ghost" size="sm" onclick={clearCart}>
+								{t("common.clear")}
+							</Button>
+						{/if}
+					</div>
+				</div>
 
-      <!-- Products Grid -->
-      <section
-        class="min-h-0 overflow-auto rounded-lg border border-border bg-background p-4"
-      >
-        <div
-          class="grid content-start gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-        >
-          {#each filteredProducts as product (product.id)}
-            <button
-              type="button"
-              class="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/50 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              onclick={() => addToCart(product)}
-            >
-              {#if product.image_url}
-                <div
-                  class="flex h-32 w-full items-center justify-center bg-muted"
-                >
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    class="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-              {:else}
-                <div class="h-32 w-full bg-muted/50 flex items-center justify-center text-muted-foreground">
-                  <ShoppingCart class="size-8 opacity-20" />
-                </div>
-              {/if}
+				<!-- Cart Items -->
+				<div class="flex-1 overflow-y-auto p-4 space-y-2">
+					{#if cart.length === 0}
+						<div class="flex flex-col items-center justify-center h-full text-muted-foreground">
+							<ShoppingCart class="h-12 w-12 mb-2 opacity-50" />
+							<p class="text-sm">{t("orders.emptyCart")}</p>
+							<p class="text-xs">{t("orders.addProducts")}</p>
+						</div>
+					{:else}
+						{#each cart as item, index (item.product.id + (item.isTreat ? '-treat' : '') + index)}
+							<div class="flex items-center gap-2 rounded-lg border bg-background p-2">
+								<div class="flex-1 min-w-0">
+									<p class="font-medium text-sm truncate">{item.product.name}</p>
+									<div class="flex items-center gap-2">
+										{#if item.isTreat}
+											<Badge variant="secondary" class="text-xs">
+												<Gift class="h-3 w-3 mr-1" />
+												{t("orders.treat")}
+											</Badge>
+										{:else}
+											<span class="text-sm text-muted-foreground">
+												{fmtCurrency(item.product.price * item.quantity)}
+											</span>
+										{/if}
+									</div>
+								</div>
+								<div class="flex items-center gap-1 shrink-0">
+									<Button
+										variant="outline"
+										size="icon-sm"
+										onclick={() => updateQuantity(index, -1)}
+									>
+										<Minus class="h-3 w-3" />
+									</Button>
+									<span class="w-8 text-center text-sm font-medium">{item.quantity}</span>
+									<Button
+										variant="outline"
+										size="icon-sm"
+										onclick={() => updateQuantity(index, 1)}
+									>
+										<Plus class="h-3 w-3" />
+									</Button>
+									<Button
+										variant={item.isTreat ? "default" : "ghost"}
+										size="icon-sm"
+										onclick={() => toggleTreat(index)}
+										title={item.isTreat ? t("orders.removeTreat") : t("orders.markTreat")}
+									>
+										<Gift class="h-3 w-3" />
+									</Button>
+									<Button
+										variant="ghost"
+										size="icon-sm"
+										onclick={() => removeFromCart(index)}
+									>
+										<X class="h-3 w-3" />
+									</Button>
+								</div>
+							</div>
+						{/each}
+					{/if}
+				</div>
 
-              <div
-                class="flex flex-1 flex-col justify-between gap-2 p-3 text-left"
-              >
-                <span class="line-clamp-2 font-medium text-sm text-card-foreground"
-                  >{product.name}</span
-                >
-                <span class="text-sm font-semibold text-primary">
-                  €{product.price.toFixed(2)}
-                </span>
-              </div>
-            </button>
-          {/each}
-        </div>
-      </section>
+				<!-- Cart Footer -->
+				{#if cart.length > 0}
+					<div class="p-4 border-t bg-background space-y-4">
+						<!-- Coupons -->
+						<div class="flex items-center justify-between">
+							<span class="text-sm font-medium">{t("orders.coupons")}</span>
+							<div class="flex items-center gap-2">
+								<Button
+									variant="outline"
+									size="icon-sm"
+									onclick={() => (couponCount = Math.max(0, couponCount - 1))}
+									disabled={couponCount === 0}
+								>
+									<Minus class="h-3 w-3" />
+								</Button>
+								<span class="w-8 text-center font-medium">{couponCount}</span>
+								<Button
+									variant="outline"
+									size="icon-sm"
+									onclick={() => couponCount++}
+								>
+									<Plus class="h-3 w-3" />
+								</Button>
+							</div>
+						</div>
 
-      <!-- Cart Sidebar -->
-      <aside
-        class="flex min-h-0 flex-col rounded-lg border border-border bg-muted/30 p-4"
-      >
-        <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-foreground">
-            {t("orders.cart")} <span class="text-muted-foreground text-sm font-normal ml-1">({cart.length})</span>
-          </h3>
-          {#if cart.length > 0}
-            <Button type="button" variant="ghost" size="sm" onclick={clearCart} class="h-8 text-muted-foreground hover:text-foreground">
-              {t("common.clear")}
-            </Button>
-          {/if}
-        </div>
+						<Separator />
 
-        <div class="flex-1 space-y-2 overflow-auto pr-1">
-          {#if cart.length === 0}
-            <div
-              class="grid place-items-center gap-2 rounded-lg border border-dashed border-border bg-background px-6 py-12 text-center text-sm text-muted-foreground"
-            >
-              <ShoppingCart class="size-10 opacity-20" />
-              <p>{t("orders.emptyCart")}</p>
-            </div>
-          {:else}
-            {#each cart as item, index (index)}
-              <div
-                class="group flex items-center justify-between gap-3 rounded-lg border border-border bg-background p-3 shadow-sm transition-all hover:border-primary/20"
-              >
-                <div class="min-w-0 flex-1">
-                  <div class="truncate text-sm font-medium text-foreground">
-                    {item.name}
-                  </div>
-                  <div class="text-xs text-muted-foreground">
-                    €{item.is_treat ? "0.00" : item.price.toFixed(2)}
-                  </div>
-                </div>
+						<!-- Totals -->
+						<div class="space-y-1 text-sm">
+							<div class="flex justify-between">
+								<span>{t("orders.subtotal")}</span>
+								<span>{fmtCurrency(subtotal)}</span>
+							</div>
+							{#if discount > 0}
+								<div class="flex justify-between text-green-600">
+									<span>{t("orders.discount")}</span>
+									<span>-{fmtCurrency(discount)}</span>
+								</div>
+							{/if}
+							{#if treatCount > 0}
+								<div class="flex justify-between text-muted-foreground">
+									<span>{t("orders.treats")}</span>
+									<span>{treatCount} {t("common.items")}</span>
+								</div>
+							{/if}
+						</div>
 
-                <div class="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant={item.is_treat ? "secondary" : "ghost"}
-                    size="sm"
-                    class={`h-7 px-2 text-xs ${item.is_treat ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400" : "text-muted-foreground"}`}
-                    onclick={() => toggleTreat(index)}
-                  >
-                    {item.is_treat ? t("orders.treat") : t("orders.free")}
-                  </Button>
+						<Separator />
 
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    class="h-7 w-7 text-muted-foreground hover:text-destructive"
-                    onclick={() => removeFromCart(index)}
-                    aria-label={t("common.delete")}
-                  >
-                    <X class="size-3.5" />
-                  </Button>
-                </div>
-              </div>
-            {/each}
-          {/if}
-        </div>
+						<div class="flex justify-between text-xl font-bold">
+							<span>{t("orders.total")}</span>
+							<span>{fmtCurrency(total)}</span>
+						</div>
 
-        <!-- Coupons and Totals -->
-        <div class="mt-4 space-y-4">
-          <div class="flex items-center justify-between rounded-lg border border-border bg-background p-2">
-            <span class="text-sm font-medium pl-2 text-muted-foreground">{t("orders.coupons")}</span>
-            <div
-              class="flex items-center gap-1"
-            >
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                class="size-7 rounded-md"
-                onclick={() => (couponCount = Math.max(0, couponCount - 1))}
-                aria-label={t("orders.decrementCoupon")}
-                disabled={couponCount <= 0}
-              >
-                <Minus class="size-3.5" />
-              </Button>
-              <span class="w-8 text-center text-sm font-semibold tabular-nums"
-                >{couponCount}</span
-              >
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                class="size-7 rounded-md"
-                onclick={() => (couponCount = couponCount + 1)}
-                aria-label={t("orders.incrementCoupon")}
-              >
-                <Plus class="size-3.5" />
-              </Button>
-            </div>
-          </div>
+						<Button
+							class="w-full h-12 text-lg"
+							onclick={submitOrder}
+							disabled={processing || !activeSession}
+						>
+							{#if processing}
+								{t("common.loading")}
+							{:else}
+								<Check class="h-5 w-5 mr-2" />
+								{t("orders.submitOrder")} - {fmtCurrency(total)}
+							{/if}
+						</Button>
 
-          <div
-            class="space-y-2 rounded-lg border border-border bg-background p-4 shadow-sm"
-          >
-            <div class="flex justify-between text-sm text-muted-foreground">
-              <span>{t("orders.subtotal")}</span>
-              <span>€{subtotal().toFixed(2)}</span>
-            </div>
-            {#if discount() > 0}
-              <div
-                class="flex justify-between text-sm text-emerald-600 dark:text-emerald-400"
-              >
-                <span>{t("orders.discount")}</span>
-                <span>-€{discount().toFixed(2)}</span>
-              </div>
-            {/if}
-            <SeparatorPrimitive.Root class="my-2 h-px bg-border" />
-            <div
-              class="flex justify-between text-lg font-bold text-foreground"
-            >
-              <span>{t("orders.total")}</span>
-              <span class="text-primary">€{total().toFixed(2)}</span>
-            </div>
-          </div>
-        </div>
+						{#if !activeSession}
+							<p class="text-xs text-center text-destructive">
+								{t("register.noActiveSession")}
+							</p>
+						{/if}
+					</div>
+				{/if}
 
-        <DialogFooter
-          class="mt-4 flex gap-2 border-t border-border pt-4"
-        >
-          <Button
-            type="button"
-            variant="outline"
-            class="flex-1"
-            onclick={() => (open = false)}
-          >
-            {t("common.close")}
-          </Button>
-          <Button
-            type="button"
-            class="flex-2"
-            onclick={submit}
-            disabled={cart.length === 0}
-          >
-            <ReceiptText class="mr-2 h-4 w-4" />
-            {t("orders.submit")}
-          </Button>
-        </DialogFooter>
-      </aside>
-    </div>
-  </DialogContent>
-</DialogRoot>
+				<!-- Last Order Success -->
+				{#if lastOrderId}
+					<div class="p-4 bg-green-50 dark:bg-green-950 border-t border-green-200 dark:border-green-800">
+						<div class="flex items-center gap-2 text-green-600 dark:text-green-400">
+							<Check class="h-5 w-5" />
+							<span class="font-medium">{t("common.success")}</span>
+							<span class="text-sm">#{lastOrderId.slice(0, 8)}</span>
+						</div>
+					</div>
+				{/if}
+			</div>
+		</div>
+	</DialogContent>
+</Dialog>

@@ -1,173 +1,133 @@
 <script lang="ts">
-import {
-	Calendar,
-	ChevronLeft,
-	ChevronRight,
-	LayoutDashboard,
-	Package,
-	Settings,
-	ShoppingCart,
-	Trophy,
-	Users,
-} from "@lucide/svelte";
-import { page } from "$app/state";
-import type { TranslationKey } from "$lib/i18n/translations";
-import { t } from "$lib/state/i18n.svelte";
-import { SIDEBAR_DIMENSIONS, sidebarState } from "$lib/state/sidebar.svelte";
-import { type AppUser, userState } from "$lib/state/user.svelte";
-import { cn } from "$lib/utils/utils";
+	import { page } from "$app/state";
+	import { cn } from "$lib/utils/cn";
+	import { t } from "$lib/i18n/index.svelte";
+	import { session } from "$lib/state/session.svelte";
+	import { Button } from "$lib/components/ui/button";
+	import { Separator } from "$lib/components/ui/separator";
+	import {
+		LayoutDashboard,
+		Package,
+		ShoppingCart,
+		DollarSign,
+		Users,
+		Settings,
+		Dribbble,
+		Cake,
+		ChevronLeft,
+		ChevronRight,
+		LogOut,
+	} from "@lucide/svelte";
 
-const userRole = $derived((userState.current?.role ?? null) as AppUser["role"] | null);
+	type NavItem = {
+		label: string;
+		href: string;
+		icon: typeof LayoutDashboard;
+	};
 
-type NavItem = {
-	href: string;
-	icon: typeof LayoutDashboard;
-	labelKey: TranslationKey;
-	roles?: AppUser["role"][];
-};
+	let collapsed = $state(false);
 
-const dashboardHref = $derived(
-	userRole === "secretary" ? "/secretary" : userRole === "staff" ? "/staff" : "/admin",
-);
+	const adminNav: NavItem[] = [
+		{ label: "nav.dashboard", href: "/admin", icon: LayoutDashboard },
+		{ label: "nav.products", href: "/admin/products", icon: Package },
+		{ label: "nav.orders", href: "/admin/orders", icon: ShoppingCart },
+		{ label: "nav.registers", href: "/admin/registers", icon: DollarSign },
+		{ label: "nav.birthdays", href: "/admin/birthdays", icon: Cake },
+		{ label: "nav.football", href: "/admin/football", icon: Dribbble },
+		{ label: "nav.users", href: "/admin/users", icon: Users },
+		{ label: "nav.settings", href: "/admin/settings", icon: Settings },
+	];
 
-const navItems = $derived<{ section?: TranslationKey; items: NavItem[] }[]>([
-	{
-		items: [{ href: dashboardHref, icon: LayoutDashboard, labelKey: "nav.dashboard" }],
-	},
-	{
-		section: "nav.admin",
-		items: [
-			{
-				href: "/admin/products",
-				icon: Package,
-				labelKey: "nav.products",
-				roles: ["admin"],
-			},
-			{
-				href: "/admin/users",
-				icon: Users,
-				labelKey: "nav.users",
-				roles: ["admin"],
-			},
-			{
-				href: "/admin/orders",
-				icon: ShoppingCart,
-				labelKey: "nav.orders",
-				roles: ["admin"],
-			},
-			{
-				href: "/admin/registers",
-				icon: ShoppingCart,
-				labelKey: "nav.registers",
-				roles: ["admin"],
-			},
-			{
-				href: "/admin/settings",
-				icon: Settings,
-				labelKey: "nav.settings",
-				roles: ["admin"],
-			},
-		],
-	},
-	{
-		section: "nav.bookings",
-		items: [
-			{
-				href: "/secretary/birthdays",
-				icon: Calendar,
-				labelKey: "appointments.title",
-				roles: ["admin", "secretary"],
-			},
-			{
-				href: "/secretary/football",
-				icon: Trophy,
-				labelKey: "nav.football",
-				roles: ["admin", "secretary"],
-			},
-		],
-	},
-]);
+	const secretaryNav: NavItem[] = [
+		{ label: "nav.dashboard", href: "/secretary", icon: LayoutDashboard },
+		{ label: "nav.appointments", href: "/secretary/birthdays", icon: Cake },
+		{ label: "nav.football", href: "/secretary/football", icon: Dribbble },
+	];
 
-function isActive(href: string) {
-	return page.url.pathname.startsWith(href);
-}
+	const staffNav: NavItem[] = [
+		{ label: "nav.dashboard", href: "/staff", icon: LayoutDashboard },
+	];
 
-function hasAccess(item: NavItem) {
-	return !item.roles || (userRole && item.roles.includes(userRole));
-}
+	let navItems = $derived.by(() => {
+		const role = session.user?.role;
+		if (role === "admin") return adminNav;
+		if (role === "secretary") return secretaryNav;
+		return staffNav;
+	});
 
-function toggle() {
-	sidebarState.collapsed = !sidebarState.collapsed;
-	localStorage.setItem("sidebar-collapsed", sidebarState.collapsed ? "1" : "0");
-}
+	function isActive(href: string): boolean {
+		if (href === "/admin" || href === "/secretary" || href === "/staff") {
+			return page.url.pathname === href;
+		}
+		return page.url.pathname.startsWith(href);
+	}
 </script>
 
 <aside
-	class="fixed left-0 top-0 z-40 h-screen border-r bg-background transition-all duration-300 ease-in-out"
-	style="width: {sidebarState.collapsed ? SIDEBAR_DIMENSIONS.collapsed : SIDEBAR_DIMENSIONS.expanded}"
+	class={cn(
+		"fixed left-0 top-0 z-40 flex h-screen flex-col border-r bg-sidebar transition-all duration-200",
+		collapsed ? "w-16" : "w-64"
+	)}
 >
-	<div class="flex h-full flex-col">
-		<!-- Brand -->
-		<div class="flex h-16 items-center px-4 border-b border-border/40">
-			<div class={cn("flex items-center overflow-hidden", !sidebarState.collapsed && "gap-3")}>
-				<div class="grid size-8 min-w-8 place-items-center rounded-lg bg-primary text-primary-foreground font-bold">
-					CO
-				</div>
-				<span class={cn("font-semibold truncate transition-opacity duration-200", sidebarState.collapsed ? "opacity-0 w-0" : "opacity-100")}>
-					clubOS
-				</span>
-			</div>
-		</div>
+	<!-- Logo -->
+	<div class="flex h-14 items-center border-b px-4">
+		{#if !collapsed}
+			<span class="text-lg font-bold text-foreground">clubOS</span>
+		{:else}
+			<span class="text-lg font-bold text-foreground">C</span>
+		{/if}
+	</div>
 
-		<!-- Navigation -->
-		<div class="flex-1 overflow-y-auto py-4 px-2 space-y-6 scrollbar-thin">
-			{#each navItems as group (group.section ?? 'main')}
-				{@const visibleItems = group.items.filter(hasAccess)}
-				{#if visibleItems.length > 0}
-					<div class="space-y-1">
-						{#if group.section && !sidebarState.collapsed}
-							<div class="px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 animate-in fade-in duration-200">
-								{t(group.section)}
-							</div>
-						{/if}
-						{#each visibleItems as item (item.href)}
-							{@const active = isActive(item.href)}
-							<a
-								href={item.href}
-								class={cn(
-									"flex items-center px-2.5 py-2 rounded-md text-sm font-medium transition-colors",
-									!sidebarState.collapsed && "gap-3",
-									active 
-										? "bg-primary/10 text-primary" 
-										: "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-									sidebarState.collapsed && "justify-center px-2"
-								)}
-								title={sidebarState.collapsed ? t(item.labelKey) : undefined}
-							>
-								<item.icon class="size-5 shrink-0" />
-								<span class={cn("truncate transition-all duration-200", sidebarState.collapsed ? "w-0 opacity-0" : "w-auto opacity-100")}>
-									{t(item.labelKey)}
-								</span>
-							</a>
-						{/each}
-					</div>
-				{/if}
-			{/each}
-		</div>
-
-		<!-- Toggle -->
-		<div class="p-4 border-t border-border/40">
-			<button
-				onclick={toggle}
-				class="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+	<!-- Navigation -->
+	<nav class="flex-1 space-y-1 overflow-y-auto p-2 scrollbar-thin">
+		{#each navItems as item (item.href)}
+			{@const active = isActive(item.href)}
+			<a
+				href={item.href}
+				class={cn(
+					"flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+					active
+						? "bg-sidebar-accent text-sidebar-accent-foreground"
+						: "text-sidebar-foreground hover:bg-sidebar-accent/50"
+				)}
 			>
-				{#if sidebarState.collapsed}
-					<ChevronRight class="size-5 mx-auto" />
-				{:else}
-					<ChevronLeft class="size-5" />
-					<span>{t("common.collapse")}</span>
+				<item.icon class="h-5 w-5 shrink-0" />
+				{#if !collapsed}
+					<span>{t(item.label)}</span>
 				{/if}
-			</button>
-		</div>
+			</a>
+		{/each}
+	</nav>
+
+	<Separator />
+
+	<!-- Footer -->
+	<div class="p-2">
+		<a
+			href="/logout"
+			class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/50"
+		>
+			<LogOut class="h-5 w-5 shrink-0" />
+			{#if !collapsed}
+				<span>{t("nav.logout")}</span>
+			{/if}
+		</a>
+
+		<!-- Collapse Toggle -->
+		<Button
+			variant="ghost"
+			size="sm"
+			class="mt-2 w-full justify-center"
+			onclick={() => (collapsed = !collapsed)}
+		>
+			{#if collapsed}
+				<ChevronRight class="h-4 w-4" />
+			{:else}
+				<ChevronLeft class="h-4 w-4" />
+			{/if}
+		</Button>
 	</div>
 </aside>
+
+<!-- Spacer for main content -->
+<div class={cn("shrink-0 transition-all duration-200", collapsed ? "w-16" : "w-64")}></div>

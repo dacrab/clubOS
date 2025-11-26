@@ -1,18 +1,7 @@
-export type KeepAliveConfig = {
-	table: string;
-	searchColumn: string;
-	runInsertDelete: boolean;
-	listCount: number;
-	otherEndpoints: string[];
-};
-
-export const KEEP_ALIVE_CONFIG: KeepAliveConfig = {
-	table: "keep-alive",
-	searchColumn: "name",
-	// When true: insert a random row and delete it to exercise writes
-	runInsertDelete: true,
-	// Number of rows to list in the response (0 to skip)
+export const KEEP_ALIVE_CONFIG = {
+	table: "users",
+	searchColumn: "username",
+	runInsertDelete: false,
 	listCount: 1,
-	// Add any other project endpoints to ping (must call their DB)
-	otherEndpoints: [],
+	otherEndpoints: [] as string[],
 };

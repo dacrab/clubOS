@@ -1,20 +1,27 @@
 <script lang="ts">
-import Header from "$lib/components/layout/header.svelte";
-import Sidebar from "$lib/components/layout/sidebar.svelte";
-import { sidebarState } from "$lib/state/sidebar.svelte";
+	import { Sidebar, Header } from "$lib/components/layout";
+	import { session } from "$lib/state/session.svelte";
+	import { settings } from "$lib/state/settings.svelte";
 
-const { children } = $props();
+	const { data, children } = $props();
+
+	// Initialize session and settings from server data
+	$effect(() => {
+		if (data.user) {
+			session.setUser(data.user);
+		}
+		if (data.settings) {
+			settings.setSettings(data.settings);
+		}
+	});
 </script>
 
 <div class="flex min-h-screen bg-background">
 	<Sidebar />
-	<div 
-		class="flex flex-1 flex-col transition-[margin] duration-200 ease-in-out"
-		style="margin-left: {sidebarState.collapsed ? '4rem' : '16rem'}"
-	>
+	<div class="flex flex-1 flex-col">
 		<Header />
-		<main class="flex-1 p-6 md:p-8 animate-in fade-in duration-300">
-			<div class="mx-auto max-w-6xl">
+		<main class="flex-1 p-4 md:p-6">
+			<div class="mx-auto max-w-7xl">
 				{@render children()}
 			</div>
 		</main>

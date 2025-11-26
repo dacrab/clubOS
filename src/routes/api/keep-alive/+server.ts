@@ -106,7 +106,7 @@ export const GET: RequestHandler = async () => {
 	}
 
 	// 4) Ping other endpoints in parallel
-	const endpointResults = await Promise.all(otherEndpoints.map((url) => pingEndpoint(url)));
+	const endpointResults = await Promise.all(otherEndpoints.map((url: string) => pingEndpoint(url)));
 
 	const body = {
 		message: "Keep-alive executed",

@@ -1,6 +1,8 @@
-export { default as Table } from "./table.svelte";
-export { default as TableBody } from "./table-body.svelte";
-export { default as TableCell } from "./table-cell.svelte";
-export { default as TableHead } from "./table-head.svelte";
-export { default as TableHeader } from "./table-header.svelte";
-export { default as TableRow } from "./table-row.svelte";
+import Table from "./table.svelte";
+import TableHeader from "./table-header.svelte";
+import TableBody from "./table-body.svelte";
+import TableRow from "./table-row.svelte";
+import TableHead from "./table-head.svelte";
+import TableCell from "./table-cell.svelte";
+
+export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell };

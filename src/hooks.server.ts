@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
-import type { Handle, HandleServerError } from "@sveltejs/kit";
+import type { Handle } from "@sveltejs/kit";
 import { redirect } from "@sveltejs/kit";
 import { env as publicEnv } from "$env/dynamic/public";
+import type { UserRole } from "$lib/types/database";
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const { PUBLIC_SUPABASE_URL: url, PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: anon } = publicEnv as {
@@ -29,60 +30,84 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	event.locals.supabase = supabase;
 
-	// First, fetch an authenticated user object from Supabase Auth.
 	const {
 		data: { user },
 	} = await supabase.auth.getUser();
 	event.locals.user = user ?? null;
 
-	// Then, fetch the session for access tokens, but avoid using session.user directly.
 	const {
 		data: { session },
 	} = await supabase.auth.getSession();
 	event.locals.session = session ?? null;
 
-	// Centralized guards (run before load)
 	const path = event.url.pathname;
-	const needsAuth =
-		path.startsWith("/admin") || path.startsWith("/staff") || path.startsWith("/secretary");
-	if (needsAuth && !event.locals.user) redirect(307, "/");
 
-	// Role checks
-	async function ensureRole(required: "admin" | "staff" | "secretary"): Promise<void> {
-		const u = event.locals.user;
-		if (!u) redirect(307, "/");
-		const metaRole = (u.user_metadata?.role as string | undefined) ?? null;
-		if (metaRole === required) return;
-		if (metaRole == null) {
-			const { data } = await supabase.from("users").select("role").eq("id", u.id).single();
-			if ((data?.role as string | undefined) !== required) redirect(307, "/");
-			return;
+	// Public routes
+	const publicRoutes = ["/", "/login", "/reset", "/auth/callback", "/logout"];
+	const isPublic = publicRoutes.some(
+		(route) => path === route || path.startsWith("/api/")
+	);
+
+	// Redirect authenticated users from login page to their dashboard
+	if (path === "/" && user) {
+		const role = await getUserRole(supabase, user.id, user.user_metadata?.role as string | undefined);
+		if (role) {
+			throw redirect(307, getHomeForRole(role));
 		}
-		redirect(307, "/");
 	}
 
-	if (path.startsWith("/admin")) {
-		await ensureRole("admin");
-	} else if (path.startsWith("/staff")) {
-		await ensureRole("staff");
-	} else if (path.startsWith("/secretary")) {
-		// Allow admin to access secretary area if desired
-		const u = event.locals.user;
-		const metaRole = (u?.user_metadata?.role as string | undefined) ?? null;
-		if (metaRole === "secretary" || metaRole === "admin") {
-			// ok
-		} else if (metaRole == null && u) {
-			const { data } = await supabase.from("users").select("role").eq("id", u.id).single();
-			const role = data?.role as string | undefined;
-			if (!(role === "secretary" || role === "admin")) redirect(307, "/");
-		} else {
-			redirect(307, "/");
+	// Protected routes require authentication
+	if (!isPublic && !user) {
+		throw redirect(307, "/");
+	}
+
+	// Role-based access control
+	if (user && !isPublic) {
+		const role = await getUserRole(supabase, user.id, user.user_metadata?.role as string | undefined);
+
+		if (path.startsWith("/admin") && role !== "admin") {
+			throw redirect(307, getHomeForRole(role));
+		}
+
+		if (path.startsWith("/secretary") && role !== "admin" && role !== "secretary") {
+			throw redirect(307, getHomeForRole(role));
+		}
+
+		if (path.startsWith("/staff") && role !== "admin" && role !== "staff") {
+			throw redirect(307, getHomeForRole(role));
 		}
 	}
 
 	return resolve(event);
 };
 
-export const handleError: HandleServerError = ({ message }) => {
-	return { message };
-};
+async function getUserRole(
+	supabase: ReturnType<typeof createServerClient>,
+	userId: string,
+	metaRole?: string
+): Promise<UserRole | null> {
+	if (metaRole && ["admin", "secretary", "staff"].includes(metaRole)) {
+		return metaRole as UserRole;
+	}
+
+	const { data } = await supabase
+		.from("users")
+		.select("role")
+		.eq("id", userId)
+		.single();
+
+	return (data?.role as UserRole) ?? null;
+}
+
+function getHomeForRole(role: UserRole | null): string {
+	switch (role) {
+		case "admin":
+			return "/admin";
+		case "secretary":
+			return "/secretary";
+		case "staff":
+			return "/staff";
+		default:
+			return "/";
+	}
+}

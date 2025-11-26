@@ -1,42 +1,132 @@
--- ClubOS: Storage Configuration and Monitoring
+-- ============================================================================
+-- ClubOS Database Schema v2.0
+-- Migration 11: Storage Configuration and Monitoring
+-- ============================================================================
+
 BEGIN;
 
--- Storage configuration
+-- ============================================================================
+-- Storage Buckets
+-- ============================================================================
+
+-- Product images bucket
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES ('product-images', 'product-images', true, 5242880, ARRAY['image/jpeg','image/png','image/webp'])
-ON CONFLICT (id) DO NOTHING;
+VALUES (
+  'product-images', 
+  'product-images', 
+  true, 
+  5242880, -- 5MB
+  ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+ON CONFLICT (id) DO UPDATE SET
+  file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
 
-CREATE POLICY product_images_read ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'product-images');
+-- User avatars bucket
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'avatars', 
+  'avatars', 
+  true, 
+  2097152, -- 2MB
+  ARRAY['image/jpeg', 'image/png', 'image/webp']
+)
+ON CONFLICT (id) DO UPDATE SET
+  file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
 
-CREATE OR REPLACE FUNCTION public.current_tenant_ids_for_user(p_user_id uuid)
-RETURNS TABLE(tenant_id uuid) LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
-  SELECT tm.tenant_id FROM public.tenant_members tm WHERE tm.user_id = p_user_id
-$$;
+-- Tenant logos bucket
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'logos', 
+  'logos', 
+  true, 
+  1048576, -- 1MB
+  ARRAY['image/jpeg', 'image/png', 'image/svg+xml', 'image/webp']
+)
+ON CONFLICT (id) DO UPDATE SET
+  file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
 
-CREATE POLICY product_images_write ON storage.objects FOR ALL TO authenticated
+-- ============================================================================
+-- Storage Policies
+-- ============================================================================
+
+-- Product images: public read, authenticated write within tenant
+CREATE POLICY product_images_read ON storage.objects 
+  FOR SELECT TO public 
+  USING (bucket_id = 'product-images');
+
+CREATE POLICY product_images_write ON storage.objects 
+  FOR ALL TO authenticated
   USING (
-    bucket_id = 'product-images' AND EXISTS (
-      SELECT 1 FROM public.current_tenant_ids_for_user((select auth.uid())) t
-      WHERE position('tenant-' || t.tenant_id::text || '/' IN name) = 1
+    bucket_id = 'product-images' AND 
+    EXISTS (
+      SELECT 1 FROM public.current_user_tenant_ids() t
+      WHERE position('tenant-' || t::text || '/' IN name) = 1
+    )
+  )
+  WITH CHECK (
+    bucket_id = 'product-images' AND 
+    EXISTS (
+      SELECT 1 FROM public.current_user_tenant_ids() t
+      WHERE position('tenant-' || t::text || '/' IN name) = 1
     )
   );
 
--- Monitoring / keep-alive
+-- Avatars: public read, owner write
+CREATE POLICY avatars_read ON storage.objects 
+  FOR SELECT TO public 
+  USING (bucket_id = 'avatars');
+
+CREATE POLICY avatars_write ON storage.objects 
+  FOR ALL TO authenticated
+  USING (bucket_id = 'avatars' AND position(auth.uid()::text || '/' IN name) = 1)
+  WITH CHECK (bucket_id = 'avatars' AND position(auth.uid()::text || '/' IN name) = 1);
+
+-- Logos: public read, admin write within tenant
+CREATE POLICY logos_read ON storage.objects 
+  FOR SELECT TO public 
+  USING (bucket_id = 'logos');
+
+CREATE POLICY logos_write ON storage.objects 
+  FOR ALL TO authenticated
+  USING (
+    bucket_id = 'logos' AND 
+    public.is_admin() AND
+    EXISTS (
+      SELECT 1 FROM public.current_user_tenant_ids() t
+      WHERE position('tenant-' || t::text || '/' IN name) = 1
+    )
+  )
+  WITH CHECK (
+    bucket_id = 'logos' AND 
+    public.is_admin() AND
+    EXISTS (
+      SELECT 1 FROM public.current_user_tenant_ids() t
+      WHERE position('tenant-' || t::text || '/' IN name) = 1
+    )
+  );
+
+-- ============================================================================
+-- Keep-Alive / Health Check Table
+-- ============================================================================
+
 CREATE TABLE IF NOT EXISTS public."keep-alive" (
   id bigserial PRIMARY KEY,
-  name text DEFAULT ''::text,
-  random uuid DEFAULT gen_random_uuid()
+  name text DEFAULT '',
+  random uuid DEFAULT gen_random_uuid(),
+  created_at timestamptz DEFAULT now()
 );
 
+COMMENT ON TABLE public."keep-alive" IS 'Health check table for monitoring';
+
 ALTER TABLE public."keep-alive" ENABLE ROW LEVEL SECURITY;
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'keep-alive' AND policyname = 'deny all by default'
-  ) THEN
-    EXECUTE 'CREATE POLICY "deny all by default" ON public."keep-alive" FOR ALL TO public USING (false) WITH CHECK (false)';
-  END IF;
-END $$;
+
+-- Deny all access by default (only service role can access)
+CREATE POLICY "keep_alive_deny_all" ON public."keep-alive" 
+  FOR ALL TO public 
+  USING (false) 
+  WITH CHECK (false);
 
 COMMIT;
-

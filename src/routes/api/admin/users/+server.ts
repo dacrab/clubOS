@@ -44,7 +44,7 @@ export const DELETE: RequestHandler = async ({ url, locals }) => {
 	return new Response(await res.text(), { status: res.status });
 };
 
-export const PATCH: RequestHandler = async ({ request, locals }) => {
+export const PUT: RequestHandler = async ({ request, locals }) => {
 	const base = getFunctionsBaseUrl();
 	const token = locals.session?.access_token;
 	if (!token) return new Response("Unauthorized", { status: 401 });
@@ -59,3 +59,5 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 	});
 	return new Response(await res.text(), { status: res.status });
 };
+
+export const PATCH: RequestHandler = PUT;

@@ -1,182 +1,60 @@
-import { supabase } from "$lib/utils/supabase";
+import type { FormatSettings } from "$lib/utils/format";
 
-export type TenantSettings = {
-	lowStockThreshold: number;
-	allowUnlimitedStock: boolean;
-	negativeStockAllowed: boolean;
-	defaultCategorySort: "name" | "custom";
-	productsPageSize: number;
-	imageMaxSizeMb: number;
-	couponsValue: number;
-	allowTreats: boolean;
-	requireOpenRegisterForSale: boolean;
-	currencyCode: string;
-	taxRatePercent: number;
-	receiptFooterText: string | null;
-	bookingDefaultDurationMin: number;
-	footballFieldsCount: number;
-	appointmentBufferMin: number;
-	preventOverlaps: boolean;
-	themeDefault: "system" | "light" | "dark";
-	defaultLocale: "en" | "el";
-};
+export interface TenantSettings extends FormatSettings {
+	id?: string;
+	tenant_id?: string;
+	facility_id?: string | null;
+	// Inventory
+	low_stock_threshold: number;
+	allow_unlimited_stock: boolean;
+	negative_stock_allowed: boolean;
+	default_category_sort: string;
+	products_page_size: number;
+	// Sales
+	coupons_value: number;
+	allow_treats: boolean;
+	require_open_register_for_sale: boolean;
+	tax_rate_percent: number;
+	// Bookings
+	booking_default_duration_min: number;
+	football_fields_count: number;
+	appointment_buffer_min: number;
+	prevent_overlaps: boolean;
+}
 
-export type UserPreferences = {
-	collapsedSidebar: boolean;
-	denseTableMode: boolean;
-	defaultLocale?: "en" | "el";
-	theme?: "system" | "light" | "dark";
-};
-
-export type MergedSettings = {
-	tenant: TenantSettings;
-	user: UserPreferences;
-};
-
-const DEFAULT_TENANT_SETTINGS: TenantSettings = {
-	lowStockThreshold: 3,
-	allowUnlimitedStock: true,
-	negativeStockAllowed: false,
-	defaultCategorySort: "name",
-	productsPageSize: 50,
-	imageMaxSizeMb: 5,
-	couponsValue: 2,
-	allowTreats: true,
-	requireOpenRegisterForSale: true,
-	currencyCode: "EUR",
-	taxRatePercent: 0,
-	receiptFooterText: null,
-	bookingDefaultDurationMin: 60,
-	footballFieldsCount: 2,
-	appointmentBufferMin: 15,
-	preventOverlaps: true,
-	themeDefault: "system",
-	defaultLocale: "en",
-};
-
-const DEFAULT_USER_PREFS: UserPreferences = {
-	collapsedSidebar: false,
-	denseTableMode: false,
+const defaultSettings: TenantSettings = {
+	low_stock_threshold: 3,
+	allow_unlimited_stock: true,
+	negative_stock_allowed: false,
+	default_category_sort: "name",
+	products_page_size: 50,
+	coupons_value: 2,
+	allow_treats: true,
+	require_open_register_for_sale: true,
+	currency_code: "EUR",
+	tax_rate_percent: 0,
+	date_format: "DD/MM/YYYY",
+	time_format: "24h",
+	booking_default_duration_min: 120,
+	football_fields_count: 2,
+	appointment_buffer_min: 15,
+	prevent_overlaps: true,
 };
 
 class SettingsState {
-	value = $state<MergedSettings>({
-		tenant: DEFAULT_TENANT_SETTINGS,
-		user: DEFAULT_USER_PREFS,
-	});
+	current = $state<TenantSettings>(defaultSettings);
 
-	get inventorySettings(): { lowStockThreshold: number; allowUnlimitedStock: boolean; negativeStockAllowed: boolean } {
-		return {
-			lowStockThreshold: this.value.tenant.lowStockThreshold,
-			allowUnlimitedStock: this.value.tenant.allowUnlimitedStock,
-			negativeStockAllowed: this.value.tenant.negativeStockAllowed,
-		};
+	setSettings(newSettings: Partial<TenantSettings>): void {
+		this.current = { ...defaultSettings, ...newSettings };
 	}
 
-	async load(): Promise<void> {
-		const { data: sessionData } = await supabase.auth.getUser();
-		const uid = sessionData.user?.id ?? "";
-		if (!uid) {
-			return;
-		}
-		const { data: memberships } = await supabase
-			.from("tenant_members")
-			.select("tenant_id")
-			.eq("user_id", uid);
-		const tenantId = memberships?.[0]?.tenant_id;
-
-		type Row<T> = { data: T | null };
-		type DbTenantSettingsRow = {
-			lowStockThreshold: number;
-			allowUnlimitedStock: boolean;
-			negativeStockAllowed: boolean;
-			defaultCategorySort: "name" | "custom";
-			productsPageSize: number;
-			imageMaxSizeMb: number;
-			couponsValue: number;
-			allowTreats: boolean;
-			requireOpenRegisterForSale: boolean;
-			currencyCode: string;
-			taxRatePercent: number;
-			receiptFooterText: string | null;
-			bookingDefaultDurationMin: number;
-			footballFieldsCount: number;
-			appointmentBufferMin: number;
-			preventOverlaps: boolean;
-			themeDefault: "system" | "light" | "dark";
-			defaultLocale: "en" | "el";
+	get formatSettings(): FormatSettings {
+		return {
+			date_format: this.current.date_format,
+			time_format: this.current.time_format,
+			currency_code: this.current.currency_code,
 		};
-		type DbUserPreferencesRow = {
-			collapsedSidebar: boolean;
-			denseTableMode: boolean;
-			defaultLocale?: "en" | "el" | null;
-			theme?: "system" | "light" | "dark" | null;
-		};
-
-		const tRowPromise = tenantId
-			? supabase
-					.from("tenant_settings")
-					.select(
-						"lowStockThreshold:low_stock_threshold,allowUnlimitedStock:allow_unlimited_stock,negativeStockAllowed:negative_stock_allowed,defaultCategorySort:default_category_sort,productsPageSize:products_page_size,imageMaxSizeMb:image_max_size_mb,couponsValue:coupons_value,allowTreats:allow_treats,requireOpenRegisterForSale:require_open_register_for_sale,currencyCode:currency_code,taxRatePercent:tax_rate_percent,receiptFooterText:receipt_footer_text,bookingDefaultDurationMin:booking_default_duration_min,footballFieldsCount:football_fields_count,appointmentBufferMin:appointment_buffer_min,preventOverlaps:prevent_overlaps,themeDefault:theme_default,defaultLocale:default_locale",
-					)
-					.eq("tenant_id", tenantId)
-					.is("facility_id", null)
-					.limit(1)
-					.maybeSingle()
-			: Promise.resolve<Row<Partial<DbTenantSettingsRow>>>({ data: null });
-		const uRowPromise = supabase
-			.from("user_preferences")
-			.select(
-				"collapsedSidebar:collapsed_sidebar,denseTableMode:dense_table_mode,defaultLocale:default_locale,theme",
-			)
-			.eq("user_id", uid)
-			.maybeSingle();
-
-		const [tenantRow, userRow] = (await Promise.all([tRowPromise, uRowPromise])) as [
-			Row<Partial<DbTenantSettingsRow>>,
-			Row<DbUserPreferencesRow>,
-		];
-
-		function mapTenantSettings(row: Partial<DbTenantSettingsRow> | null): Partial<TenantSettings> {
-			if (!row) {
-				return {};
-			}
-			return row as Partial<TenantSettings>;
-		}
-
-		function mapUserPreferences(
-			row: Partial<DbUserPreferencesRow> | null,
-		): Partial<UserPreferences> {
-			if (!row) {
-				return {};
-			}
-			const mapped: Partial<UserPreferences> = {};
-			if (row.collapsedSidebar !== undefined) {
-				mapped.collapsedSidebar = row.collapsedSidebar;
-			}
-			if (row.denseTableMode !== undefined) {
-				mapped.denseTableMode = row.denseTableMode;
-			}
-			if (row.defaultLocale !== undefined && row.defaultLocale !== null) {
-				mapped.defaultLocale = row.defaultLocale;
-			}
-			if (row.theme !== undefined && row.theme !== null) {
-				mapped.theme = row.theme;
-			}
-			return mapped;
-		}
-
-		const tenantSettings = {
-			...DEFAULT_TENANT_SETTINGS,
-			...mapTenantSettings(tenantRow?.data ?? null),
-		} as TenantSettings;
-		const userPreferences = {
-			...DEFAULT_USER_PREFS,
-			...mapUserPreferences(userRow?.data ?? null),
-		} as UserPreferences;
-
-		this.value = { tenant: tenantSettings, user: userPreferences };
 	}
 }
 
-export const settingsState = new SettingsState();
+export const settings = new SettingsState();

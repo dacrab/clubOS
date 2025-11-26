@@ -1,4 +1,6 @@
-export { default as Select } from "./select.svelte";
-export { default as SelectContent } from "./select-content.svelte";
-export { default as SelectItem } from "./select-item.svelte";
-export { default as SelectTrigger } from "./select-trigger.svelte";
+import Select from "./select.svelte";
+import SelectTrigger from "./select-trigger.svelte";
+import SelectContent from "./select-content.svelte";
+import SelectItem from "./select-item.svelte";
+
+export { Select, SelectTrigger, SelectContent, SelectItem };

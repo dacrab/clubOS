@@ -1,178 +1,207 @@
 <script lang="ts">
-import { Eye, ShoppingCart } from "@lucide/svelte";
-import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
-import { Button } from "$lib/components/ui/button";
-import { Card } from "$lib/components/ui/card";
-import DateRangePicker from "$lib/components/ui/date-picker/date-range-picker.svelte";
-import { DropdownMenuContent, DropdownMenuTrigger } from "$lib/components/ui/dropdown-menu";
-import { PageContent, PageHeader } from "$lib/components/ui/page";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "$lib/components/ui/table";
-import { facilityState } from "$lib/state/facility.svelte";
-import { t } from "$lib/state/i18n.svelte";
-import { supabase } from "$lib/utils/supabase";
-import { formatCurrency, formatDateTime } from "$lib/utils/utils";
-import OrderDetails from "./order-details.svelte";
+	import { t } from "$lib/i18n/index.svelte";
+	import { fmtDate, fmtCurrency } from "$lib/utils/format";
+	import { PageHeader, EmptyState } from "$lib/components/layout";
+	import { Card, CardContent } from "$lib/components/ui/card";
+	import { Badge } from "$lib/components/ui/badge";
+	import { Button } from "$lib/components/ui/button";
+	import {
+		Dialog,
+		DialogContent,
+		DialogHeader,
+		DialogTitle,
+	} from "$lib/components/ui/dialog";
+	import {
+		Table,
+		TableHeader,
+		TableBody,
+		TableRow,
+		TableHead,
+		TableCell,
+	} from "$lib/components/ui/table";
+	import { Separator } from "$lib/components/ui/separator";
+	import { ShoppingCart, Eye, Gift } from "@lucide/svelte";
 
-const DropdownMenu = DropdownMenuPrimitive.Root;
+	const { data } = $props();
 
-type OrderRow = {
-	id: string;
-	created_at: string;
-	subtotal: number;
-	discount_amount: number;
-	total_amount: number;
-	coupon_count: number;
-};
+	type OrderItem = {
+		id: string;
+		quantity: number;
+		unit_price: number;
+		line_total: number;
+		is_treat: boolean;
+		is_deleted: boolean;
+		products: { id: string; name: string } | null;
+	};
 
-let orders: OrderRow[] = $state([]);
-let startDate = $state<string>("");
-let endDate = $state<string>("");
+	type Order = {
+		id: string;
+		created_at: string;
+		subtotal: number;
+		discount_amount: number;
+		total_amount: number;
+		coupon_count: number;
+		order_items: OrderItem[];
+	};
 
-// Virtualization
-let scrollRef: HTMLDivElement | null = null;
-const ROW_HEIGHT = 53;
-const VIEW_BUFFER_ROWS = 6;
-const VIEWPORT_HEIGHT = 600;
-let startIndex = $state(0);
-let endIndex = $state(0);
-const topPad = $derived(startIndex * ROW_HEIGHT);
-const bottomPad = $derived(Math.max(0, (orders.length - endIndex) * ROW_HEIGHT));
+	let selectedOrder = $state<Order | null>(null);
+	let showDialog = $state(false);
 
-function recomputeWindow() {
-	const scrollTop = scrollRef?.scrollTop ?? 0;
-	const visibleCount = Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS;
-	const first = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - Math.ceil(VIEW_BUFFER_ROWS / 2));
-	startIndex = first;
-	endIndex = Math.min(orders.length, first + visibleCount);
-}
-
-$effect(() => {
-	loadAll();
-});
-
-async function loadAll() {
-	const startISO = startDate ? new Date(`${startDate}T00:00:00`).toISOString() : null;
-	const endISO = endDate ? new Date(`${endDate}T23:59:59`).toISOString() : null;
-	const facilityId = await facilityState.resolveSelected();
-
-	let query = supabase
-		.from("orders")
-		.select("id, created_at, subtotal, discount_amount, total_amount, coupon_count")
-		.order("created_at", { ascending: false });
-
-	const { data: sessionData } = await supabase.auth.getUser();
-	const userId = sessionData.user?.id;
-
-	if (userId) {
-		const { data: memberships } = await supabase
-			.from("tenant_members")
-			.select("tenant_id")
-			.eq("user_id", userId);
-		const tenantId = memberships?.[0]?.tenant_id;
-		if (tenantId) query = query.eq("tenant_id", tenantId);
+	function viewOrder(order: Order) {
+		selectedOrder = order;
+		showDialog = true;
 	}
 
-	if (facilityId) query = query.eq("facility_id", facilityId);
-	if (startISO) query = query.gte("created_at", startISO);
-	if (endISO) query = query.lte("created_at", endISO);
-
-	const { data } = await query;
-	orders = (data as OrderRow[]) ?? [];
-	startIndex = 0;
-	endIndex = Math.min(orders.length, Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIEW_BUFFER_ROWS);
-}
+	function getActiveItems(items: OrderItem[]): OrderItem[] {
+		return items?.filter(item => !item.is_deleted) ?? [];
+	}
 </script>
 
-<PageContent>
-  <PageHeader title={t("orders.list.title")}>
-    <div class="flex items-center gap-2">
-      <span class="text-sm text-muted-foreground mr-2">{t("registers.pickDate")}</span>
-      <DateRangePicker bind:start={startDate} bind:end={endDate} onchange={loadAll} />
-    </div>
-  </PageHeader>
+<div class="space-y-6">
+	<PageHeader title={t("orders.title")} description={t("orders.subtitle")} />
 
-  <Card class="overflow-hidden border-border shadow-sm">
-    <div
-      bind:this={scrollRef}
-      onscroll={recomputeWindow}
-      style="max-height: {VIEWPORT_HEIGHT}px; overflow-y: auto;"
-    >
-      <Table>
-        <TableHeader class="sticky top-0 bg-card z-10 shadow-sm">
-          <TableRow class="hover:bg-transparent border-b border-border/60">
-            <TableHead class="w-[100px]">ID</TableHead>
-            <TableHead>{t("orders.list.date")}</TableHead>
-            <TableHead class="text-right">{t("orders.subtotal")}</TableHead>
-            <TableHead class="text-right">{t("orders.discount")}</TableHead>
-            <TableHead class="text-right">{t("orders.total")}</TableHead>
-            <TableHead class="w-[60px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {#if orders.length === 0}
-            <TableRow>
-              <TableCell colspan={6} class="h-96 text-center">
-                <div class="flex flex-col items-center gap-2 text-muted-foreground">
-                  <ShoppingCart class="size-8 opacity-50" />
-                  <p>{t("orders.list.empty.title")}</p>
-                  <p class="text-xs">{t("orders.list.empty.description")}</p>
-                </div>
-              </TableCell>
-            </TableRow>
-          {:else}
-            {#if topPad > 0}
-              <tr><td colspan={6} style="height: {topPad}px;"></td></tr>
-            {/if}
+	{#if data.orders.length === 0}
+		<Card>
+			<CardContent class="pt-6">
+				<EmptyState
+					title={t("orders.empty.title")}
+					description={t("orders.empty.description")}
+					icon={ShoppingCart}
+				/>
+			</CardContent>
+		</Card>
+	{:else}
+		<Card>
+			<Table>
+				<TableHeader>
+					<TableRow>
+						<TableHead>{t("orders.orderNumber")}</TableHead>
+						<TableHead>{t("date.today")}</TableHead>
+						<TableHead>{t("orders.items")}</TableHead>
+						<TableHead>{t("orders.subtotal")}</TableHead>
+						<TableHead>{t("orders.discount")}</TableHead>
+						<TableHead>{t("orders.total")}</TableHead>
+						<TableHead class="w-20">{t("common.actions")}</TableHead>
+					</TableRow>
+				</TableHeader>
+				<TableBody>
+					{#each data.orders as order (order.id)}
+						{@const activeItems = getActiveItems(order.order_items)}
+						<TableRow class="cursor-pointer hover:bg-muted/50" onclick={() => viewOrder(order)}>
+							<TableCell class="font-mono text-sm">
+								{order.id.slice(0, 8)}
+							</TableCell>
+							<TableCell>{fmtDate(order.created_at)}</TableCell>
+							<TableCell>
+								<Badge variant="outline">
+									{activeItems.length} {t("orders.itemsCount")}
+								</Badge>
+							</TableCell>
+							<TableCell>{fmtCurrency(order.subtotal)}</TableCell>
+							<TableCell>
+								{#if order.discount_amount > 0}
+									<Badge variant="secondary">-{fmtCurrency(order.discount_amount)}</Badge>
+								{:else}
+									-
+								{/if}
+							</TableCell>
+							<TableCell class="font-medium">
+								{fmtCurrency(order.total_amount)}
+							</TableCell>
+							<TableCell>
+								<Button variant="ghost" size="icon-sm" onclick={(e: MouseEvent) => { e.stopPropagation(); viewOrder(order); }}>
+									<Eye class="h-4 w-4" />
+								</Button>
+							</TableCell>
+						</TableRow>
+					{/each}
+				</TableBody>
+			</Table>
+		</Card>
+	{/if}
+</div>
 
-            {#each orders.slice(startIndex, endIndex) as order (order.id)}
-              <TableRow class="h-[53px]">
-                <TableCell class="font-mono text-xs text-muted-foreground">
-                  #{order.id.slice(0, 8)}
-                </TableCell>
-                <TableCell>
-                  {formatDateTime(order.created_at)}
-                </TableCell>
-                <TableCell class="text-right">
-                  {formatCurrency(order.subtotal)}
-                </TableCell>
-                <TableCell class="text-right text-destructive">
-                  {#if order.discount_amount > 0}
-                    - {formatCurrency(order.discount_amount)}
-                  {:else}
-                    —
-                  {/if}
-                </TableCell>
-                <TableCell class="text-right font-semibold">
-                  {formatCurrency(order.total_amount)}
-                </TableCell>
-                <TableCell class="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger>
-                      <Button variant="ghost" size="icon">
-                        <Eye class="size-4 text-muted-foreground" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" class="w-[400px] p-0">
-                      <OrderDetails {order} />
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            {/each}
+<!-- Order Details Dialog -->
+<Dialog bind:open={showDialog}>
+	<DialogContent class="max-w-2xl">
+		<DialogHeader>
+			<DialogTitle>
+				{t("orders.orderDetails")} #{selectedOrder?.id.slice(0, 8)}
+			</DialogTitle>
+		</DialogHeader>
 
-            {#if bottomPad > 0}
-              <tr><td colspan={6} style="height: {bottomPad}px;"></td></tr>
-            {/if}
-          {/if}
-        </TableBody>
-      </Table>
-    </div>
-  </Card>
-</PageContent>
+		{#if selectedOrder}
+			<div class="space-y-4">
+				<div class="text-sm text-muted-foreground">
+					{fmtDate(selectedOrder.created_at)}
+				</div>
+
+				<!-- Items List -->
+				<div class="rounded-lg border">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>{t("orders.product")}</TableHead>
+								<TableHead class="text-center">{t("orders.quantity")}</TableHead>
+								<TableHead class="text-right">{t("orders.unitPrice")}</TableHead>
+								<TableHead class="text-right">{t("orders.lineTotal")}</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{#each getActiveItems(selectedOrder.order_items) as item (item.id)}
+								<TableRow>
+									<TableCell>
+										<div class="flex items-center gap-2">
+											{item.products?.name ?? "Unknown"}
+											{#if item.is_treat}
+												<Badge variant="secondary" class="text-xs">
+													<Gift class="h-3 w-3 mr-1" />
+													{t("orders.treat")}
+												</Badge>
+											{/if}
+										</div>
+									</TableCell>
+									<TableCell class="text-center">{item.quantity}</TableCell>
+									<TableCell class="text-right">{fmtCurrency(item.unit_price)}</TableCell>
+									<TableCell class="text-right">
+										{#if item.is_treat}
+											<span class="text-muted-foreground">-</span>
+										{:else}
+											{fmtCurrency(item.line_total)}
+										{/if}
+									</TableCell>
+								</TableRow>
+							{:else}
+								<TableRow>
+									<TableCell colspan={4} class="text-center text-muted-foreground py-8">
+										{t("orders.noItems")}
+									</TableCell>
+								</TableRow>
+							{/each}
+						</TableBody>
+					</Table>
+				</div>
+
+				<!-- Order Totals -->
+				<Separator />
+				<div class="space-y-2 text-sm">
+					<div class="flex justify-between">
+						<span>{t("orders.subtotal")}</span>
+						<span>{fmtCurrency(selectedOrder.subtotal)}</span>
+					</div>
+					{#if selectedOrder.discount_amount > 0}
+						<div class="flex justify-between text-muted-foreground">
+							<span>{t("orders.discount")} ({selectedOrder.coupon_count} {t("orders.coupons").toLowerCase()})</span>
+							<span>-{fmtCurrency(selectedOrder.discount_amount)}</span>
+						</div>
+					{/if}
+					<Separator />
+					<div class="flex justify-between text-lg font-bold">
+						<span>{t("orders.total")}</span>
+						<span>{fmtCurrency(selectedOrder.total_amount)}</span>
+					</div>
+				</div>
+			</div>
+		{/if}
+	</DialogContent>
+</Dialog>

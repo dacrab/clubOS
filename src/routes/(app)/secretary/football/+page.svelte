@@ -1,307 +1,360 @@
 <script lang="ts">
-import { Edit2, Trophy } from "@lucide/svelte";
-import { Button } from "$lib/components/ui/button";
-import { Card } from "$lib/components/ui/card";
-import DateInput from "$lib/components/ui/date-input.svelte";
-import {
-	DialogRoot as Dialog,
-	DialogContent,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "$lib/components/ui/dialog";
-import { Input } from "$lib/components/ui/input";
-import { Label } from "$lib/components/ui/label";
-import { PageContent, PageHeader } from "$lib/components/ui/page";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "$lib/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "$lib/components/ui/tabs";
-import { Textarea } from "$lib/components/ui/textarea";
-import { facilityState } from "$lib/state/facility.svelte";
-import type { TranslationKey } from "$lib/i18n/translations";
-import { t } from "$lib/state/i18n.svelte";
-import { userState } from "$lib/state/user.svelte";
-import { supabase } from "$lib/utils/supabase";
-import { formatDateTime } from "$lib/utils/utils";
+	import { t } from "$lib/i18n/index.svelte";
+	import { toast } from "svelte-sonner";
+	import { invalidateAll } from "$app/navigation";
+	import { PageHeader, EmptyState } from "$lib/components/layout";
+	import { Button } from "$lib/components/ui/button";
+	import { Input } from "$lib/components/ui/input";
+	import { Label } from "$lib/components/ui/label";
+	import { Textarea } from "$lib/components/ui/textarea";
+	import { Badge } from "$lib/components/ui/badge";
+	import { Card, CardContent } from "$lib/components/ui/card";
+	import {
+		Dialog,
+		DialogContent,
+		DialogHeader,
+		DialogTitle,
+		DialogFooter,
+	} from "$lib/components/ui/dialog";
+	import {
+		Select,
+		SelectTrigger,
+		SelectContent,
+		SelectItem,
+	} from "$lib/components/ui/select";
+	import {
+		Table,
+		TableHeader,
+		TableBody,
+		TableRow,
+		TableHead,
+		TableCell,
+	} from "$lib/components/ui/table";
+	import { supabase } from "$lib/utils/supabase";
+	import { DatePicker } from "$lib/components/ui/date-picker";
+	import { fmtDate } from "$lib/utils/format";
+	import { settings } from "$lib/state/settings.svelte";
+	import { Plus, Pencil, Trash2, Dribbble } from "@lucide/svelte";
+	import type { FootballBooking } from "$lib/types/database";
 
-type Booking = {
-	id: string;
-	status: "confirmed" | "cancelled" | "completed";
-	field_number: number;
-	booking_datetime: string;
-	customer_name: string;
-	contact_info: string;
-	num_players: number;
-	notes: string | null;
-};
+	const { data } = $props();
 
-type EditableBooking = Booking & { notes: string };
-
-let list: Booking[] = $state([]);
-let form = $state({
-	customer_name: "",
-	contact_info: "",
-	booking_date: "",
-	booking_time: "",
-	field_number: 1,
-	num_players: 10,
-	notes: "",
-});
-
-let activeTab = $state<"create" | "upcoming">("create");
-let showEdit = $state(false);
-let editing: EditableBooking | null = $state(null);
-let editStatus: "confirmed" | "cancelled" | "completed" = $state("confirmed");
-let editDate = $state("");
-let editTime = $state("");
-
-$effect(() => {
-	userState.load().then(() => {
-		load();
+	let showDialog = $state(false);
+	let editingItem = $state<FootballBooking | null>(null);
+	let formData = $state({
+		customer_name: "",
+		contact_info: "",
+		booking_datetime: "",
+		field_number: 1,
+		num_players: 10,
+		notes: "",
+		status: "confirmed" as FootballBooking["status"],
 	});
-});
+	let saving = $state(false);
 
-async function load() {
-	const { data: sessionData } = await supabase.auth.getUser();
-	const userId = sessionData.user?.id ?? "";
-	const { data: memberships } = await supabase
-		.from("tenant_members")
-		.select("tenant_id")
-		.eq("user_id", userId);
-	const tenantId = memberships?.[0]?.tenant_id;
-	const facilityId = await facilityState.resolveSelected();
-	let query = supabase.from("football_bookings").select("*").order("booking_datetime");
-	if (tenantId) query = query.eq("tenant_id", tenantId);
-	if (facilityId) query = query.eq("facility_id", facilityId);
-	const { data } = await query;
-	list = (data ?? []) as Booking[];
-}
+	function getStatusLabel(status: string) {
+		const labels: Record<string, string> = {
+			confirmed: t("football.status.confirmed"),
+			cancelled: t("football.status.cancelled"),
+			completed: t("football.status.completed"),
+		};
+		return labels[status] || status;
+	}
 
-async function create() {
-	const {
-		data: { user },
-	} = await supabase.auth.getUser();
-	if (!user) return;
-
-	const { data: membership } = await supabase
-		.from("tenant_members")
-		.select("tenant_id")
-		.eq("user_id", user.id);
-	const facId = await facilityState.resolveSelected();
-
-	const payload = {
-		customer_name: form.customer_name,
-		contact_info: form.contact_info,
-		booking_datetime: new Date(`${form.booking_date}T${form.booking_time || "00:00"}`),
-		field_number: Number(form.field_number || 1),
-		num_players: Number(form.num_players || 0),
-		notes: form.notes || null,
-		created_by: user.id,
-		tenant_id: membership?.[0]?.tenant_id,
-		facility_id: facId,
-	};
-
-	const { error } = await supabase.from("football_bookings").insert(payload);
-	if (!error) {
-		form = {
+	function openNewDialog() {
+		editingItem = null;
+		const tomorrow = new Date();
+		tomorrow.setDate(tomorrow.getDate() + 1);
+		tomorrow.setHours(18, 0, 0, 0);
+		formData = {
 			customer_name: "",
 			contact_info: "",
-			booking_date: "",
-			booking_time: "",
+			booking_datetime: tomorrow.toISOString().slice(0, 16),
 			field_number: 1,
 			num_players: 10,
 			notes: "",
+			status: "confirmed",
 		};
-		load();
+		showDialog = true;
 	}
-}
 
-function openEdit(booking: Booking) {
-	editing = { ...booking, notes: booking.notes ?? "" };
-	const date = new Date(booking.booking_datetime);
-	const pad = (n: number) => String(n).padStart(2, "0");
-	editDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-	editTime = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
-	editStatus = booking.status;
-	showEdit = true;
-}
+	function openEditDialog(item: FootballBooking) {
+		editingItem = item;
+		formData = {
+			customer_name: item.customer_name,
+			contact_info: item.contact_info,
+			booking_datetime: item.booking_datetime.slice(0, 16),
+			field_number: item.field_number,
+			num_players: item.num_players,
+			notes: item.notes ?? "",
+			status: item.status,
+		};
+		showDialog = true;
+	}
 
-async function saveEdit() {
-	if (!editing) return;
+	async function checkConflict(): Promise<boolean> {
+		const bookingTime = new Date(formData.booking_datetime);
+		const durationMinutes = 120; // 2 hours default for football
+		const startTime = new Date(bookingTime.getTime() - durationMinutes * 60 * 1000);
+		const endTime = new Date(bookingTime.getTime() + durationMinutes * 60 * 1000);
 
-	await supabase
-		.from("football_bookings")
-		.update({
-			status: editStatus,
-			customer_name: editing.customer_name,
-			contact_info: editing.contact_info,
-			booking_datetime: new Date(`${editDate}T${editTime || "00:00"}`),
-			field_number: Number(editing.field_number || 1),
-			num_players: Number(editing.num_players || 0),
-			notes: editing.notes || null,
-		})
-		.eq("id", editing.id);
+		let query = supabase
+			.from("football_bookings")
+			.select("id")
+			.eq("facility_id", data.user.facilityId)
+			.eq("field_number", formData.field_number)
+			.neq("status", "cancelled")
+			.gte("booking_datetime", startTime.toISOString())
+			.lte("booking_datetime", endTime.toISOString());
 
-	await load();
-	showEdit = false;
-}
+		if (editingItem) {
+			query = query.neq("id", editingItem.id);
+		}
+
+		const { data: conflicts } = await query;
+		return (conflicts?.length ?? 0) > 0;
+	}
+
+	async function handleSave() {
+		if (!formData.customer_name || !formData.contact_info || !formData.booking_datetime) {
+			toast.error(t("common.error"));
+			return;
+		}
+
+		saving = true;
+		try {
+			// Check for conflicts if prevention is enabled
+			if (settings.current.prevent_overlaps) {
+				const hasConflict = await checkConflict();
+				if (hasConflict) {
+					toast.error(t("football.conflict"));
+					saving = false;
+					return;
+				}
+			}
+
+			const payload = {
+				customer_name: formData.customer_name,
+				contact_info: formData.contact_info,
+				booking_datetime: new Date(formData.booking_datetime).toISOString(),
+				field_number: formData.field_number,
+				num_players: formData.num_players,
+				notes: formData.notes || null,
+				status: formData.status,
+				tenant_id: data.user.tenantId,
+				facility_id: data.user.facilityId,
+			};
+
+			if (editingItem) {
+				const { error } = await supabase
+					.from("football_bookings")
+					.update(payload)
+					.eq("id", editingItem.id);
+				if (error) throw error;
+			} else {
+				const { error } = await supabase
+					.from("football_bookings")
+					.insert({ ...payload, created_by: data.user.id });
+				if (error) throw error;
+			}
+
+			toast.success(t("common.success"));
+			showDialog = false;
+			await invalidateAll();
+		} catch {
+			toast.error(t("common.error"));
+		} finally {
+			saving = false;
+		}
+	}
+
+	async function handleDelete(item: FootballBooking) {
+		if (!confirm(t("common.deleteConfirm").replace("{name}", item.customer_name))) return;
+
+		try {
+			const { error } = await supabase.from("football_bookings").delete().eq("id", item.id);
+			if (error) throw error;
+			toast.success(t("common.success"));
+			await invalidateAll();
+		} catch {
+			toast.error(t("common.error"));
+		}
+	}
+
+	function getStatusBadge(status: string) {
+		if (status === "confirmed") return "success" as const;
+		if (status === "cancelled") return "destructive" as const;
+		return "secondary" as const;
+	}
 </script>
 
-<PageContent>
-  <PageHeader title={t("football.title")} subtitle={t("football.subtitle")} />
+<div class="space-y-6">
+	<PageHeader title={t("football.title")} description={t("football.subtitle")}>
+		{#snippet actions()}
+			<Button onclick={openNewDialog}>
+				<Plus class="mr-2 h-4 w-4" />
+				{t("football.createBooking")}
+			</Button>
+		{/snippet}
+	</PageHeader>
 
-  <Tabs bind:value={activeTab} class="w-full">
-    <div class="w-full border-b border-border/60">
-      <TabsList class="bg-transparent p-0">
-        <TabsTrigger
-          value="create"
-          class="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-2"
-        >
-          {t("football.tabsCreate")}
-        </TabsTrigger>
-        <TabsTrigger
-          value="upcoming"
-          class="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-2"
-        >
-          {t("football.tabsUpcoming")}
-        </TabsTrigger>
-      </TabsList>
-    </div>
+	{#if data.bookings.length === 0}
+		<Card>
+			<CardContent class="pt-6">
+				<EmptyState
+					title={t("football.empty.title")}
+					description={t("football.empty.description")}
+					icon={Dribbble}
+				>
+					{#snippet actions()}
+						<Button onclick={openNewDialog}>
+							<Plus class="mr-2 h-4 w-4" />
+							{t("football.createBooking")}
+						</Button>
+					{/snippet}
+				</EmptyState>
+			</CardContent>
+		</Card>
+	{:else}
+		<Card>
+			<Table>
+				<TableHeader>
+					<TableRow>
+						<TableHead>{t("appointments.customerName")}</TableHead>
+						<TableHead>{t("football.bookingTime")}</TableHead>
+						<TableHead>{t("football.field")}</TableHead>
+						<TableHead>{t("football.numPlayers")}</TableHead>
+						<TableHead>{t("common.status")}</TableHead>
+						<TableHead class="w-24">{t("common.actions")}</TableHead>
+					</TableRow>
+				</TableHeader>
+				<TableBody>
+					{#each data.bookings as item (item.id)}
+						<TableRow>
+							<TableCell>
+								<div>
+									<p class="font-medium">{item.customer_name}</p>
+									<p class="text-sm text-muted-foreground">{item.contact_info}</p>
+								</div>
+							</TableCell>
+							<TableCell>{fmtDate(item.booking_datetime)}</TableCell>
+							<TableCell>
+								<Badge variant="outline">{t("common.field").replace("{number}", String(item.field_number))}</Badge>
+							</TableCell>
+							<TableCell>{item.num_players}</TableCell>
+							<TableCell>
+								<Badge variant={getStatusBadge(item.status)}>
+									{t(`football.status.${item.status}`)}
+								</Badge>
+							</TableCell>
+							<TableCell>
+								<div class="flex items-center gap-1">
+									<Button
+										variant="ghost"
+										size="icon-sm"
+										onclick={() => openEditDialog(item)}
+									>
+										<Pencil class="h-4 w-4" />
+									</Button>
+									<Button
+										variant="ghost"
+										size="icon-sm"
+										onclick={() => handleDelete(item)}
+									>
+										<Trash2 class="h-4 w-4" />
+									</Button>
+								</div>
+							</TableCell>
+						</TableRow>
+					{/each}
+				</TableBody>
+			</Table>
+		</Card>
+	{/if}
+</div>
 
-    <TabsContent value="create" class="mt-6">
-      <Card class="border-border shadow-sm">
-        <div class="p-6 space-y-6">
-          <div class="grid gap-6 md:grid-cols-2">
-            <div class="space-y-4">
-              <div class="space-y-2">
-                <Label>{t("common.customerName")}</Label>
-                <Input bind:value={form.customer_name} placeholder={t("common.customerPlaceholder")} />
-              </div>
-              <div class="space-y-2">
-                <Label>{t("common.contactInfo")}</Label>
-                <Input bind:value={form.contact_info} placeholder={t("common.contactPlaceholder")} />
-              </div>
-              <div class="space-y-2">
-                <Label>{t("common.dateTime")}</Label>
-                <div class="flex gap-2">
-                  <DateInput bind:value={form.booking_date} placeholder={t("date.placeholder")} class="flex-1" />
-                  <Input type="time" bind:value={form.booking_time} class="w-32" />
-                </div>
-              </div>
-            </div>
+<!-- Dialog -->
+<Dialog bind:open={showDialog}>
+	<DialogContent>
+		<DialogHeader>
+			<DialogTitle>
+				{editingItem ? t("football.editBooking") : t("football.createBooking")}
+			</DialogTitle>
+		</DialogHeader>
 
-            <div class="space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-2">
-                  <Label>{t("football.field")}</Label>
-                  <Input type="number" min="1" max="5" bind:value={form.field_number} />
-                </div>
-                <div class="space-y-2">
-                  <Label>{t("football.players")}</Label>
-                  <Input type="number" min="2" max="12" bind:value={form.num_players} />
-                </div>
-              </div>
-              <div class="space-y-2">
-                <Label>{t("common.notes")}</Label>
-                <Textarea bind:value={form.notes} placeholder={t("common.notesPlaceholder")} class="min-h-[100px]" />
-              </div>
-              <Button onclick={create} class="w-full">{t("football.createButton")}</Button>
-            </div>
-          </div>
-        </div>
-      </Card>
-    </TabsContent>
+		<form onsubmit={(e) => { e.preventDefault(); handleSave(); }} class="space-y-4">
+			<div class="space-y-2">
+				<Label for="name">{t("appointments.customerName")}</Label>
+				<Input id="name" bind:value={formData.customer_name} required />
+			</div>
 
-    <TabsContent value="upcoming" class="mt-6">
-      <Card class="border-border shadow-sm">
-        <div class="p-6">
-          {#if list.length === 0}
-            <div class="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-              <Trophy class="size-12 opacity-20 mb-4" />
-              <h3 class="text-lg font-medium text-foreground">{t("football.empty.title")}</h3>
-              <p class="text-sm mb-4">{t("football.empty.description")}</p>
-              <Button variant="outline" onclick={() => (activeTab = "create")}>
-                {t("football.createButton")}
-              </Button>
-            </div>
-          {:else}
-            <div class="space-y-4">
-              {#each list as booking (booking.id)}
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border p-4 hover:bg-muted/30 transition-colors">
-                  <div class="space-y-1">
-                    <div class="flex items-center gap-2">
-                      <h4 class="font-semibold">{booking.customer_name}</h4>
-                      <span class={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
-                        booking.status === "confirmed" ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground"
-                      }`}>
-                        {t(`football.status.${booking.status}` as TranslationKey)}
-                      </span>
-                    </div>
-                    <div class="flex gap-3 text-sm text-muted-foreground">
-                      <span>{formatDateTime(booking.booking_datetime)}</span>
-                      <span>{t("football.fieldLabel")} {booking.field_number}</span>
-                      <span>{booking.num_players} {t("football.players").toLowerCase()}</span>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" onclick={() => openEdit(booking)}>
-                    <Edit2 class="size-4 mr-2" />
-                    {t("common.edit")}
-                  </Button>
-                </div>
-              {/each}
-            </div>
-          {/if}
-        </div>
-      </Card>
-    </TabsContent>
-  </Tabs>
+			<div class="space-y-2">
+				<Label for="contact">{t("appointments.contactInfo")}</Label>
+				<Input id="contact" bind:value={formData.contact_info} required />
+			</div>
 
-  <Dialog bind:open={showEdit}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>{t("football.editTitle")}</DialogTitle>
-      </DialogHeader>
-      <div class="grid gap-4 py-4">
-        {#if editing}
-          <div class="grid gap-2">
-            <Label>{t("common.status")}</Label>
-            <Select bind:value={editStatus} type="single">
-              <SelectTrigger>
-                {t(`football.status.${editStatus}` as TranslationKey)}
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="confirmed" label={t("football.status.confirmed")} />
-                <SelectItem value="completed" label={t("football.status.completed")} />
-                <SelectItem value="cancelled" label={t("football.status.cancelled")} />
-              </SelectContent>
-            </Select>
-          </div>
-          <div class="grid gap-2">
-            <Label>{t("common.customerName")}</Label>
-            <Input bind:value={editing.customer_name} />
-          </div>
-          <div class="grid gap-2">
-            <Label>{t("common.dateTime")}</Label>
-            <div class="flex gap-2">
-              <DateInput bind:value={editDate} class="flex-1" />
-              <Input type="time" bind:value={editTime} class="w-32" />
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="grid gap-2">
-              <Label>{t("football.field")}</Label>
-              <Input type="number" min="1" max="5" bind:value={editing.field_number} />
-            </div>
-            <div class="grid gap-2">
-              <Label>{t("football.players")}</Label>
-              <Input type="number" min="2" max="12" bind:value={editing.num_players} />
-            </div>
-          </div>
-        {/if}
-      </div>
-      <DialogFooter>
-        <Button variant="ghost" onclick={() => (showEdit = false)}>{t("common.cancel")}</Button>
-        <Button onclick={saveEdit}>{t("common.save")}</Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-</PageContent>
+			<div class="space-y-2">
+				<Label>{t("football.bookingTime")}</Label>
+				<DatePicker
+					bind:value={formData.booking_datetime}
+					enableTime={true}
+					dateFormat="Y-m-d H:i"
+					placeholder={t("football.bookingTime")}
+				/>
+			</div>
+
+			<div class="grid grid-cols-2 gap-4">
+				<div class="space-y-2">
+					<Label for="field">{t("football.fieldNumber")}</Label>
+					<Input
+						id="field"
+						type="number"
+						min="1"
+						max="5"
+						bind:value={formData.field_number}
+						required
+					/>
+				</div>
+				<div class="space-y-2">
+					<Label for="players">{t("football.numPlayers")}</Label>
+					<Input
+						id="players"
+						type="number"
+						min="2"
+						max="12"
+						bind:value={formData.num_players}
+						required
+					/>
+				</div>
+			</div>
+
+			{#if editingItem}
+				<div class="space-y-2">
+					<Label>{t("common.status")}</Label>
+					<Select bind:value={formData.status}>
+						<SelectTrigger selected={getStatusLabel(formData.status)} />
+						<SelectContent>
+							<SelectItem value="confirmed">{t("football.status.confirmed")}</SelectItem>
+							<SelectItem value="cancelled">{t("football.status.cancelled")}</SelectItem>
+							<SelectItem value="completed">{t("football.status.completed")}</SelectItem>
+						</SelectContent>
+					</Select>
+				</div>
+			{/if}
+
+			<div class="space-y-2">
+				<Label for="notes">{t("common.notes")}</Label>
+				<Textarea id="notes" bind:value={formData.notes} />
+			</div>
+
+			<DialogFooter>
+				<Button type="button" variant="outline" onclick={() => (showDialog = false)}>
+					{t("common.cancel")}
+				</Button>
+				<Button type="submit" disabled={saving}>
+					{saving ? t("common.loading") : t("common.save")}
+				</Button>
+			</DialogFooter>
+		</form>
+	</DialogContent>
+</Dialog>

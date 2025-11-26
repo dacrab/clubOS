@@ -1,68 +1,155 @@
 import type { PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
-	if (!user) return { stats: [] };
-
-	// Get tenant
-	const { data: member } = await supabase
-		.from("tenant_members")
-		.select("tenant_id")
-		.eq("user_id", user.id)
-		.limit(1)
-		.maybeSingle();
-
-	const tenantId = member?.tenant_id;
-	if (!tenantId) return { stats: [] };
+export const load: PageServerLoad = async ({ locals, parent }) => {
+	const { user } = await parent();
+	const { supabase } = locals;
 
 	const today = new Date();
 	today.setHours(0, 0, 0, 0);
 
-	// Parallel fetch
-	const [revenue, activeUsers, lowStock] = await Promise.all([
+	// Calculate date ranges
+	const sevenDaysAgo = new Date(today);
+	sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+	const thirtyDaysAgo = new Date(today);
+	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+
+	// Parallel queries for performance
+	const [
+		{ data: todayOrders },
+		{ count: lowStockCount },
+		{ count: activeUsers },
+		{ data: recentOrders },
+		{ data: weekOrders },
+		{ data: bestSellerItems },
+		{ data: categories },
+		{ data: products },
+		{ data: activeSession },
+	] = await Promise.all([
+		// Today's orders
 		supabase
 			.from("orders")
-			.select("total_amount")
-			.eq("tenant_id", tenantId)
-			.gte("created_at", today.toISOString()),
-		supabase
-			.from("tenant_members")
-			.select("id", { count: "exact", head: true })
-			.eq("tenant_id", tenantId),
+			.select("id, total_amount, created_at")
+			.gte("created_at", today.toISOString())
+			.order("created_at", { ascending: false }),
+
+		// Low stock count
 		supabase
 			.from("products")
 			.select("id", { count: "exact", head: true })
-			.eq("tenant_id", tenantId)
-			.lt("stock_quantity", 5)
-			.neq("stock_quantity", -1),
+			.gte("stock_quantity", 0)
+			.lte("stock_quantity", 3),
+
+		// Active users
+		supabase.from("users").select("id", { count: "exact", head: true }),
+
+		// Recent orders with items
+		supabase
+			.from("orders")
+			.select(`
+				id, total_amount, created_at, created_by, subtotal, discount_amount, coupon_count,
+				order_items(id, quantity, unit_price, line_total, is_treat, is_deleted, products(id, name))
+			`)
+			.order("created_at", { ascending: false })
+			.limit(5),
+
+		// Last 7 days orders for chart
+		supabase
+			.from("orders")
+			.select("total_amount, created_at")
+			.gte("created_at", sevenDaysAgo.toISOString())
+			.order("created_at", { ascending: true }),
+
+		// Best sellers (order items with product info)
+		supabase
+			.from("order_items")
+			.select("product_id, quantity, products(id, name, category_id)")
+			.eq("is_deleted", false)
+			.gte("created_at", thirtyDaysAgo.toISOString()),
+
+		// Categories for sales breakdown and new sale dialog
+		supabase.from("categories").select("id, name, parent_id").eq("facility_id", user.facilityId),
+
+		// Products for new sale dialog
+		supabase.from("products").select("*").order("name"),
+
+		// Active register session
+		supabase
+			.from("register_sessions")
+			.select("*")
+			.is("closed_at", null)
+			.order("opened_at", { ascending: false })
+			.limit(1)
+			.maybeSingle(),
 	]);
 
-	// Calculate revenue
-	const totalRevenue =
-		revenue.data?.reduce((sum, order) => sum + (order.total_amount || 0), 0) ?? 0;
+	const todayRevenue = todayOrders?.reduce((sum, o) => sum + Number(o.total_amount), 0) ?? 0;
+
+	// Process weekly revenue data for chart
+	const revenueByDay: { date: string; revenue: number }[] = [];
+	for (let i = 6; i >= 0; i--) {
+		const date = new Date(today);
+		date.setDate(date.getDate() - i);
+		const dateStr = date.toISOString().split("T")[0];
+
+		const dayRevenue =
+			weekOrders
+				?.filter((o) => o.created_at.startsWith(dateStr))
+				.reduce((sum, o) => sum + Number(o.total_amount), 0) ?? 0;
+
+		revenueByDay.push({
+			date: date.toLocaleDateString("en", { weekday: "short" }),
+			revenue: dayRevenue,
+		});
+	}
+
+	// Process best sellers
+	type ProductInfo = { id: string; name: string; category_id: string | null };
+	const productSales: Record<string, { name: string; quantity: number; categoryId: string | null }> = {};
+	bestSellerItems?.forEach((item) => {
+		const product = item.products as unknown as ProductInfo | null;
+		if (product) {
+			if (!productSales[product.id]) {
+				productSales[product.id] = { name: product.name, quantity: 0, categoryId: product.category_id };
+			}
+			productSales[product.id].quantity += item.quantity;
+		}
+	});
+
+	const bestSellers = Object.entries(productSales)
+		.map(([id, data]) => ({ id, ...data }))
+		.sort((a, b) => b.quantity - a.quantity)
+		.slice(0, 5);
+
+	// Process sales by category
+	const categoryMap = new Map(categories?.map((c) => [c.id, c.name]) ?? []);
+	const salesByCategory: Record<string, number> = { Uncategorized: 0 };
+
+	Object.values(productSales).forEach((product) => {
+		const categoryName = product.categoryId ? categoryMap.get(product.categoryId) ?? "Uncategorized" : "Uncategorized";
+		salesByCategory[categoryName] = (salesByCategory[categoryName] ?? 0) + product.quantity;
+	});
+
+	const categorySales = Object.entries(salesByCategory)
+		.filter(([, qty]) => qty > 0)
+		.map(([name, quantity]) => ({ name, quantity }))
+		.sort((a, b) => b.quantity - a.quantity);
 
 	return {
-		stats: [
-			{
-				title: "dashboard.admin.revenue",
-				value: `€${totalRevenue.toFixed(2)}`,
-				accent: "green",
-				// We'll pass the icon name and resolve it in the component or just pass a string if the component handles it.
-				// Actually stats-cards.svelte expects a component or unknown. I can't pass components from server to client easily.
-				// I'll pass a string 'icon' and handle it in the svelte component.
-				iconName: "Euro",
-			},
-			{
-				title: "admin.activeUsers",
-				value: activeUsers.count?.toString() ?? "0",
-				accent: "blue",
-				iconName: "Users",
-			},
-			{
-				title: "inventory.lowStock.title",
-				value: lowStock.count?.toString() ?? "0",
-				accent: "red",
-				iconName: "AlertTriangle",
-			},
-		],
+		stats: {
+			todayRevenue,
+			todayOrders: todayOrders?.length ?? 0,
+			lowStockCount: lowStockCount ?? 0,
+			activeUsers: activeUsers ?? 0,
+		},
+		recentOrders: recentOrders ?? [],
+		analytics: {
+			revenueByDay,
+			bestSellers,
+			categorySales,
+		},
+		products: products ?? [],
+		categories: categories ?? [],
+		activeSession,
 	};
 };

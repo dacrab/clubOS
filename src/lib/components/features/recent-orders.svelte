@@ -1,237 +1,184 @@
 <script lang="ts">
-import { Eye, Printer, ShoppingCart } from "@lucide/svelte";
-import { Button } from "$lib/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuTrigger,
-} from "$lib/components/ui/dropdown-menu";
-import { facilityState } from "$lib/state/facility.svelte";
-import { t } from "$lib/state/i18n.svelte";
-import { supabase } from "$lib/utils/supabase";
-import { formatDateTime, openPrintWindow } from "$lib/utils/utils";
+	import { t } from "$lib/i18n/index.svelte";
+	import { fmtDate, fmtCurrency } from "$lib/utils/format";
+	import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
+	import { Badge } from "$lib/components/ui/badge";
+	import {
+		Dialog,
+		DialogContent,
+		DialogHeader,
+		DialogTitle,
+	} from "$lib/components/ui/dialog";
+	import {
+		Table,
+		TableHeader,
+		TableBody,
+		TableRow,
+		TableHead,
+		TableCell,
+	} from "$lib/components/ui/table";
+	import { Separator } from "$lib/components/ui/separator";
+	import { Eye, Gift } from "@lucide/svelte";
 
-// Types & Setup same as before...
-type OrderItem = {
-	id: string;
-	quantity: number;
-	unit_price: number;
-	line_total: number;
-	is_treat: boolean;
-	product: {
-		id: string;
-		name: string;
-		price: number;
-	};
-};
-
-type OrderDetails = {
-	id: string;
-	total_amount: number;
-	subtotal: number;
-	discount_amount: number;
-	coupon_count: number;
-	created_at: string;
-	items: OrderItem[];
-};
-
-type RawOrder = {
-	id: string;
-	total_amount: number;
-	subtotal: number;
-	discount_amount: number;
-	coupon_count: number;
-	created_at: string;
-	order_items?: Array<{
+	type OrderItem = {
 		id: string;
 		quantity: number;
 		unit_price: number;
 		line_total: number;
 		is_treat: boolean;
-		products:
-			| { id: string; name: string; price: number }
-			| { id: string; name: string; price: number }[];
-	}>;
-};
+		is_deleted: boolean;
+		products: { id: string; name: string } | { id: string; name: string }[] | null;
+	};
 
-const ORDER_ID_PREFIX_LEN = 8;
-const { limit = 5 } = $props<{ limit?: number }>();
-let orders: OrderDetails[] = $state([]);
+	type Order = {
+		id: string;
+		created_at: string;
+		subtotal: number;
+		discount_amount: number;
+		total_amount: number;
+		coupon_count: number;
+		order_items: OrderItem[];
+	};
 
-function formatMoney(v: number): string {
-	return `€${Number(v).toFixed(2)}`;
-}
+	type Props = {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		orders: any[];
+		title?: string;
+	};
 
-// ... renderReceipt, printReceipt, loadOrders logic remains mostly same but simplified styling
-function renderReceipt(order: OrderDetails): string {
-	const lines = order.items
-		.map(
-			(item) => `
-    <tr>
-      <td>${item.product.name}${item.is_treat ? ' <span class="muted">(free)</span>' : ""}</td>
-      <td style="text-align:right">${formatMoney(item.line_total)}</td>
-    </tr>
-  `,
-		)
-		.join("");
+	let { orders, title }: Props = $props();
 
-	return `
-    <h1>clubOS ${t("common.receipt")}</h1>
-    <div class="muted">#${order.id.slice(0, ORDER_ID_PREFIX_LEN)} — ${formatDateTime(order.created_at)}</div>
-    <hr />
-    <table>${lines}</table>
-    <hr />
-    <table>
-      <tr><td class="muted">${t("orders.subtotal")}</td><td style="text-align:right" class="muted">${formatMoney(order.subtotal)}</td></tr>
-      ${order.discount_amount > 0 ? `<tr><td class="muted">${t("orders.discount")}</td><td style="text-align:right" class="muted">- ${formatMoney(order.discount_amount)}</td></tr>` : ""}
-      <tr><td class="total">${t("orders.total")}</td><td style="text-align:right" class="total">${formatMoney(order.total_amount)}</td></tr>
-    </table>
-  `;
-}
+	let selectedOrder = $state<Order | null>(null);
+	let showOrderDialog = $state(false);
 
-function printReceipt(order: OrderDetails): void {
-	const html = renderReceipt(order);
-	openPrintWindow(html);
-}
-
-async function loadOrders(): Promise<void> {
-	try {
-		const { data: sessionData } = await supabase.auth.getUser();
-		const userId = sessionData.user?.id ?? "";
-		const { data: memberships } = await supabase
-			.from("tenant_members")
-			.select("tenant_id")
-			.eq("user_id", userId);
-		const tenantId = memberships?.[0]?.tenant_id;
-		const facilityId = await facilityState.resolveSelected();
-
-		let base = supabase
-			.from("orders")
-			.select(
-				`
-        id,
-        total_amount,
-        subtotal,
-        discount_amount,
-        coupon_count,
-        created_at,
-        order_items (
-          id,
-          quantity,
-          unit_price,
-          line_total,
-          is_treat,
-          products (
-            id,
-            name,
-            price
-          )
-        )
-      `,
-			)
-			.order("created_at", { ascending: false });
-		if (tenantId) base = base.eq("tenant_id", tenantId);
-		const query = facilityId ? base.eq("facility_id", facilityId) : base;
-		const { data } = await query.limit(limit);
-
-		const rawOrders = (data ?? []) as RawOrder[];
-
-		orders = rawOrders.map((order) => ({
-			id: order.id,
-			total_amount: order.total_amount,
-			subtotal: order.subtotal,
-			discount_amount: order.discount_amount,
-			coupon_count: order.coupon_count,
-			created_at: order.created_at,
-			items:
-				order.order_items?.map((item) => ({
-					id: item.id,
-					quantity: item.quantity,
-					unit_price: item.unit_price,
-					line_total: item.line_total,
-					is_treat: item.is_treat,
-					product: (Array.isArray(item.products) ? item.products[0] : item.products) ?? {
-						id: item.id,
-						name: "Unknown",
-						price: 0,
-					},
-				})) ?? [],
-		}));
-	} catch {
-		orders = [];
+	function viewOrder(order: Order) {
+		selectedOrder = order;
+		showOrderDialog = true;
 	}
-}
-
-$effect(() => {
-	loadOrders();
-});
 </script>
 
-{#if orders.length === 0}
-  <div class="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-    <ShoppingCart class="size-12 opacity-20 mb-4" />
-    <h3 class="text-lg font-medium text-foreground">{t("orders.none")}</h3>
-    <p class="text-sm">{t("orders.latest")}</p>
-  </div>
-{:else}
-  <div class="space-y-4">
-    {#each orders as order (order.id)}
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border p-4 hover:bg-muted/30 transition-colors">
-        <div class="space-y-1">
-          <div class="flex items-center gap-3">
-            <span class="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
-            <span class="font-semibold">{formatMoney(order.total_amount)}</span>
-          </div>
-          <div class="text-xs text-muted-foreground">
-            {formatDateTime(order.created_at)} • {order.items.length} items
-          </div>
-        </div>
+<Card>
+	<CardHeader>
+		<CardTitle>{title ?? t("dashboard.recentOrders")}</CardTitle>
+	</CardHeader>
+	<CardContent>
+		{#if orders.length === 0}
+			<p class="text-sm text-muted-foreground">{t("orders.empty.description")}</p>
+		{:else}
+			<div class="space-y-2">
+				{#each orders as order (order.id)}
+					<button
+						type="button"
+						class="flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors hover:bg-muted/50"
+						onclick={() => viewOrder(order)}
+					>
+						<div class="flex items-center gap-3">
+							<div>
+								<div class="flex items-center gap-2">
+									<p class="font-medium">#{order.id.slice(0, 8)}</p>
+									{#if order.order_items && order.order_items.length > 0}
+										<Badge variant="outline" class="text-xs">
+											{order.order_items.length} {t("orders.itemsCount")}
+										</Badge>
+									{/if}
+								</div>
+								<p class="text-sm text-muted-foreground">
+									{fmtDate(order.created_at)}
+								</p>
+							</div>
+						</div>
+						<div class="flex items-center gap-3">
+							<p class="font-medium">{fmtCurrency(order.total_amount)}</p>
+							<Eye class="h-4 w-4 text-muted-foreground" />
+						</div>
+					</button>
+				{/each}
+			</div>
+		{/if}
+	</CardContent>
+</Card>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <Button variant="ghost" size="icon">
-              <Eye class="size-4 text-muted-foreground" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" class="w-[320px]">
-            <div class="p-4 space-y-4">
-              <div class="flex items-center justify-between border-b pb-2">
-                <span class="font-semibold">Order Details</span>
-                <span class="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
-              </div>
-              <div class="space-y-2">
-                {#each order.items as item (item.id)}
-                  <div class="flex justify-between text-sm">
-                    <span>{item.product.name} <span class="text-muted-foreground">x{item.quantity}</span></span>
-                    <span>{formatMoney(item.line_total)}</span>
-                  </div>
-                {/each}
-              </div>
-              <div class="border-t pt-2 space-y-1 text-sm">
-                <div class="flex justify-between text-muted-foreground">
-                  <span>Subtotal</span>
-                  <span>{formatMoney(order.subtotal)}</span>
-                </div>
-                {#if order.discount_amount > 0}
-                  <div class="flex justify-between text-destructive">
-                    <span>Discount</span>
-                    <span>-{formatMoney(order.discount_amount)}</span>
-                  </div>
-                {/if}
-                <div class="flex justify-between font-bold pt-1">
-                  <span>Total</span>
-                  <span>{formatMoney(order.total_amount)}</span>
-                </div>
-              </div>
-              <div class="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" class="w-full" onclick={() => printReceipt(order)}>
-                  <Printer class="size-4 mr-2" /> Print
-                </Button>
-              </div>
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    {/each}
-  </div>
-{/if}
+<!-- Order Details Dialog -->
+<Dialog bind:open={showOrderDialog}>
+	<DialogContent class="max-w-2xl">
+		<DialogHeader>
+			<DialogTitle>
+				{t("orders.orderDetails")} #{selectedOrder?.id.slice(0, 8)}
+			</DialogTitle>
+		</DialogHeader>
+
+		{#if selectedOrder}
+			<div class="space-y-4">
+				<div class="text-sm text-muted-foreground">
+					{fmtDate(selectedOrder.created_at)}
+				</div>
+
+				<!-- Items List -->
+				<div class="rounded-lg border">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>{t("orders.product")}</TableHead>
+								<TableHead class="text-center">{t("orders.quantity")}</TableHead>
+								<TableHead class="text-right">{t("orders.unitPrice")}</TableHead>
+								<TableHead class="text-right">{t("orders.lineTotal")}</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{#each selectedOrder.order_items.filter((i: OrderItem) => !i.is_deleted) as item (item.id)}
+								<TableRow>
+									<TableCell>
+										<div class="flex items-center gap-2">
+											{Array.isArray(item.products) ? item.products[0]?.name : item.products?.name ?? "Unknown"}
+											{#if item.is_treat}
+												<Badge variant="secondary" class="text-xs">
+													<Gift class="h-3 w-3 mr-1" />
+													{t("orders.treat")}
+												</Badge>
+											{/if}
+										</div>
+									</TableCell>
+									<TableCell class="text-center">{item.quantity}</TableCell>
+									<TableCell class="text-right">{fmtCurrency(item.unit_price)}</TableCell>
+									<TableCell class="text-right">
+										{#if item.is_treat}
+											<span class="text-muted-foreground">-</span>
+										{:else}
+											{fmtCurrency(item.line_total)}
+										{/if}
+									</TableCell>
+								</TableRow>
+							{:else}
+								<TableRow>
+									<TableCell colspan={4} class="text-center text-muted-foreground py-8">
+										{t("orders.noItems")}
+									</TableCell>
+								</TableRow>
+							{/each}
+						</TableBody>
+					</Table>
+				</div>
+
+				<!-- Order Totals -->
+				<Separator />
+				<div class="space-y-2 text-sm">
+					<div class="flex justify-between">
+						<span>{t("orders.subtotal")}</span>
+						<span>{fmtCurrency(selectedOrder.subtotal)}</span>
+					</div>
+					{#if selectedOrder.discount_amount > 0}
+						<div class="flex justify-between text-muted-foreground">
+							<span>{t("orders.discount")} ({selectedOrder.coupon_count} {t("orders.coupons").toLowerCase()})</span>
+							<span>-{fmtCurrency(selectedOrder.discount_amount)}</span>
+						</div>
+					{/if}
+					<Separator />
+					<div class="flex justify-between text-lg font-bold">
+						<span>{t("orders.total")}</span>
+						<span>{fmtCurrency(selectedOrder.total_amount)}</span>
+					</div>
+				</div>
+			</div>
+		{/if}
+	</DialogContent>
+</Dialog>
