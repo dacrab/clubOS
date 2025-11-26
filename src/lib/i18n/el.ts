@@ -153,6 +153,7 @@ export const el: TranslationsStructure = {
 		cart: "Καλάθι",
 		emptyCart: "Το καλάθι είναι άδειο",
 		addProducts: "Προσθέστε προϊόντα για να ξεκινήσετε",
+		viewCart: "Προβολή Καλαθιού",
 		markTreat: "Σήμανση ως κέρασμα",
 		removeTreat: "Αφαίρεση κεράσματος",
 		couponValue: "Αξία κουπονιού",

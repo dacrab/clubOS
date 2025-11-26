@@ -151,6 +151,7 @@ export const en = {
 		cart: "Cart",
 		emptyCart: "Your cart is empty",
 		addProducts: "Add products to get started",
+		viewCart: "View Cart",
 		markTreat: "Mark as treat",
 		removeTreat: "Remove treat",
 		couponValue: "Coupon value",
