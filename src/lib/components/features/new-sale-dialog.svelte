@@ -6,32 +6,15 @@
 	import { Input } from "$lib/components/ui/input";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Separator } from "$lib/components/ui/separator";
-	import {
-		Dialog,
-		DialogContent,
-		DialogHeader,
-		DialogTitle,
-	} from "$lib/components/ui/dialog";
+	import { Dialog, DialogContent, DialogHeader, DialogTitle } from "$lib/components/ui/dialog";
 	import { supabase } from "$lib/utils/supabase";
 	import { fmtCurrency } from "$lib/utils/format";
 	import { settings as globalSettings } from "$lib/state/settings.svelte";
-	import {
-		ShoppingCart,
-		Plus,
-		Minus,
-		Gift,
-		X,
-		Search,
-		Check,
-	} from "@lucide/svelte";
+	import { ShoppingCart, Plus, Minus, Gift, X, Search, Check } from "@lucide/svelte";
 	import type { Product } from "$lib/types/database";
 
-	type Category = {
-		id: string;
-		name: string;
-		parent_id: string | null;
-	};
-
+	type Category = { id: string; name: string; parent_id: string | null };
+	type CartItem = { product: Product; quantity: number; isTreat: boolean };
 	type Props = {
 		open: boolean;
 		products: Product[];
@@ -44,13 +27,6 @@
 	let { open = $bindable(), products, categories = [], activeSession, user, onOpenChange }: Props = $props();
 
 	let selectedCategory = $state<string | null>(null);
-
-	type CartItem = {
-		product: Product;
-		quantity: number;
-		isTreat: boolean;
-	};
-
 	let cart = $state<CartItem[]>([]);
 	let couponCount = $state(0);
 	let searchQuery = $state("");
@@ -58,63 +34,46 @@
 	let lastOrderId = $state<string | null>(null);
 
 	const COUPON_VALUE = $derived(globalSettings.current.coupons_value);
+	const rootCategories = $derived(categories.filter(c => !c.parent_id));
 
-	let filteredProducts = $derived(
-		products.filter((p) => {
-			const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-			const matchesCategory = selectedCategory === null || p.category_id === selectedCategory;
-			return matchesSearch && matchesCategory;
-		})
-	);
+	function getCategoryDescendants(id: string): Set<string> {
+		const result = new Set([id]);
+		for (const c of categories.filter(c => c.parent_id === id)) {
+			getCategoryDescendants(c.id).forEach(d => result.add(d));
+		}
+		return result;
+	}
 
-	// Get root categories (no parent)
-	let rootCategories = $derived(categories.filter(c => !c.parent_id));
+	const filteredProducts = $derived.by(() => {
+		const q = searchQuery.toLowerCase();
+		return products.filter(p => {
+			if (!p.name.toLowerCase().includes(q)) return false;
+			if (!selectedCategory) return true;
+			return p.category_id && getCategoryDescendants(selectedCategory).has(p.category_id);
+		});
+	});
 
-	let subtotal = $derived(
-		cart.reduce((sum, item) => {
-			if (item.isTreat) return sum;
-			return sum + item.product.price * item.quantity;
-		}, 0)
-	);
-
-	let discount = $derived(couponCount * COUPON_VALUE);
-	let total = $derived(Math.max(0, subtotal - discount));
-
-	let treatCount = $derived(
-		cart.reduce((sum, item) => (item.isTreat ? sum + item.quantity : sum), 0)
-	);
-
-	let cartItemCount = $derived(
-		cart.reduce((sum, item) => sum + item.quantity, 0)
-	);
+	const subtotal = $derived(cart.reduce((s, i) => s + (i.isTreat ? 0 : i.product.price * i.quantity), 0));
+	const discount = $derived(couponCount * COUPON_VALUE);
+	const total = $derived(Math.max(0, subtotal - discount));
+	const treatCount = $derived(cart.reduce((s, i) => s + (i.isTreat ? i.quantity : 0), 0));
+	const cartItemCount = $derived(cart.reduce((s, i) => s + i.quantity, 0));
 
 	function addToCart(product: Product) {
-		const existing = cart.find((item) => item.product.id === product.id && !item.isTreat);
-		if (existing) {
-			existing.quantity++;
-			cart = [...cart];
-		} else {
-			cart = [...cart, { product, quantity: 1, isTreat: false }];
-		}
+		const existing = cart.find(i => i.product.id === product.id && !i.isTreat);
+		if (existing) existing.quantity++;
+		else cart.push({ product, quantity: 1, isTreat: false });
+		cart = [...cart];
 		lastOrderId = null;
 	}
 
-	function removeFromCart(index: number) {
-		cart = cart.filter((_, i) => i !== index);
+	function updateQuantity(idx: number, delta: number) {
+		cart[idx].quantity += delta;
+		cart = cart[idx].quantity <= 0 ? cart.filter((_, i) => i !== idx) : [...cart];
 	}
 
-	function updateQuantity(index: number, delta: number) {
-		const item = cart[index];
-		item.quantity += delta;
-		if (item.quantity <= 0) {
-			removeFromCart(index);
-		} else {
-			cart = [...cart];
-		}
-	}
-
-	function toggleTreat(index: number) {
-		cart[index].isTreat = !cart[index].isTreat;
+	function toggleTreat(idx: number) {
+		cart[idx].isTreat = !cart[idx].isTreat;
 		cart = [...cart];
 	}
 
@@ -125,19 +84,11 @@
 	}
 
 	async function submitOrder() {
-		if (cart.length === 0) {
-			toast.error(t("orders.emptyCart"));
-			return;
-		}
-
-		if (!activeSession) {
-			toast.error(t("register.noActiveSession"));
-			return;
-		}
+		if (!cart.length) return toast.error(t("orders.emptyCart"));
+		if (!activeSession) return toast.error(t("register.noActiveSession"));
 
 		processing = true;
 		try {
-			// Create order
 			const { data: order, error: orderError } = await supabase
 				.from("orders")
 				.insert({
@@ -152,33 +103,25 @@
 				})
 				.select()
 				.single();
-
 			if (orderError) throw orderError;
 
-			// Create order items
-			const items = cart.map((item) => ({
-				order_id: order.id,
-				product_id: item.product.id,
-				quantity: item.quantity,
-				unit_price: item.product.price,
-				line_total: item.isTreat ? 0 : item.product.price * item.quantity,
-				is_treat: item.isTreat,
-			}));
-
-			const { error: itemsError } = await supabase.from("order_items").insert(items);
+			const { error: itemsError } = await supabase.from("order_items").insert(
+				cart.map(i => ({
+					order_id: order.id,
+					product_id: i.product.id,
+					quantity: i.quantity,
+					unit_price: i.product.price,
+					line_total: i.isTreat ? 0 : i.product.price * i.quantity,
+					is_treat: i.isTreat,
+				}))
+			);
 			if (itemsError) throw itemsError;
 
-			// Update stock
-			for (const item of cart) {
-				if (item.product.stock_quantity >= 0) {
-					await supabase
-						.from("products")
-						.update({
-							stock_quantity: item.product.stock_quantity - item.quantity,
-						})
-						.eq("id", item.product.id);
-				}
-			}
+			await Promise.all(
+				cart.filter(i => i.product.stock_quantity >= 0).map(i =>
+					supabase.from("products").update({ stock_quantity: i.product.stock_quantity - i.quantity }).eq("id", i.product.id)
+				)
+			);
 
 			lastOrderId = order.id;
 			toast.success(t("common.success"));
@@ -190,14 +133,9 @@
 			processing = false;
 		}
 	}
-
-	function handleClose() {
-		open = false;
-		onOpenChange?.(false);
-	}
 </script>
 
-<Dialog bind:open onOpenChange={onOpenChange}>
+<Dialog bind:open {onOpenChange}>
 	<DialogContent class="max-w-[95vw] h-[95vh] flex flex-col p-0 gap-0 [&>button]:hidden">
 		<DialogHeader class="px-6 py-4 border-b shrink-0">
 			<div class="flex items-center justify-between">
@@ -205,52 +143,37 @@
 					<ShoppingCart class="h-6 w-6" />
 					{t("orders.newSale")}
 				</DialogTitle>
-				<Button variant="ghost" size="icon" onclick={handleClose}>
+				<Button variant="ghost" size="icon" onclick={() => { open = false; onOpenChange?.(false); }}>
 					<X class="h-5 w-5" />
 				</Button>
 			</div>
 		</DialogHeader>
 
 		<div class="flex-1 flex overflow-hidden">
-			<!-- Products Section -->
+			<!-- Products -->
 			<div class="flex-1 flex flex-col overflow-hidden border-r">
-				<!-- Search -->
 				<div class="p-4 border-b shrink-0">
 					<div class="relative">
 						<Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-						<Input
-							placeholder={t("common.search")}
-							class="pl-10"
-							bind:value={searchQuery}
-						/>
+						<Input placeholder={t("common.search")} class="pl-10" bind:value={searchQuery} />
 					</div>
 				</div>
 
-				<!-- Categories -->
 				{#if categories.length > 0}
 					<div class="p-3 border-b shrink-0 overflow-x-auto">
 						<div class="flex gap-2">
-							<Button
-								variant={selectedCategory === null ? "default" : "outline"}
-								size="sm"
-								onclick={() => (selectedCategory = null)}
-							>
+							<Button variant={selectedCategory === null ? "default" : "outline"} size="sm" onclick={() => selectedCategory = null}>
 								{t("common.viewAll")}
 							</Button>
-							{#each rootCategories as category (category.id)}
-								<Button
-									variant={selectedCategory === category.id ? "default" : "outline"}
-									size="sm"
-									onclick={() => (selectedCategory = category.id)}
-								>
-									{category.name}
+							{#each rootCategories as cat (cat.id)}
+								<Button variant={selectedCategory === cat.id ? "default" : "outline"} size="sm" onclick={() => selectedCategory = cat.id}>
+									{cat.name}
 								</Button>
 							{/each}
 						</div>
 					</div>
 				{/if}
 
-				<!-- Products Grid -->
 				<div class="flex-1 overflow-y-auto p-4">
 					<div class="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 						{#each filteredProducts as product (product.id)}
@@ -259,190 +182,91 @@
 								onclick={() => addToCart(product)}
 							>
 								<span class="font-medium line-clamp-2">{product.name}</span>
-								<span class="text-sm text-primary font-semibold mt-1">
-									{fmtCurrency(product.price)}
-								</span>
+								<span class="text-sm text-primary font-semibold mt-1">{fmtCurrency(product.price)}</span>
 								{#if product.stock_quantity >= 0}
-									<Badge variant="outline" class="mt-2 text-xs">
-										{product.stock_quantity} {t("common.stock").toLowerCase()}
-									</Badge>
+									<Badge variant="outline" class="mt-2 text-xs">{product.stock_quantity} {t("common.stock").toLowerCase()}</Badge>
 								{/if}
 							</button>
 						{:else}
-							<div class="col-span-full text-center py-12 text-muted-foreground">
-								{t("common.noResults")}
-							</div>
+							<div class="col-span-full text-center py-12 text-muted-foreground">{t("common.noResults")}</div>
 						{/each}
 					</div>
 				</div>
 			</div>
 
-			<!-- Cart Section -->
+			<!-- Cart -->
 			<div class="w-80 lg:w-96 flex flex-col bg-muted/30">
-				<!-- Cart Header -->
 				<div class="p-4 border-b bg-background">
 					<div class="flex items-center justify-between">
 						<h3 class="font-semibold flex items-center gap-2">
 							<ShoppingCart class="h-4 w-4" />
 							{t("orders.cart")}
-							{#if cartItemCount > 0}
-								<Badge variant="secondary">{cartItemCount}</Badge>
-							{/if}
+							{#if cartItemCount > 0}<Badge variant="secondary">{cartItemCount}</Badge>{/if}
 						</h3>
 						{#if cart.length > 0}
-							<Button variant="ghost" size="sm" onclick={clearCart}>
-								{t("common.clear")}
-							</Button>
+							<Button variant="ghost" size="sm" onclick={clearCart}>{t("common.clear")}</Button>
 						{/if}
 					</div>
 				</div>
 
-				<!-- Cart Items -->
 				<div class="flex-1 overflow-y-auto p-4 space-y-2">
 					{#if cart.length === 0}
 						<div class="flex flex-col items-center justify-center h-full text-muted-foreground">
 							<ShoppingCart class="h-12 w-12 mb-2 opacity-50" />
 							<p class="text-sm">{t("orders.emptyCart")}</p>
-							<p class="text-xs">{t("orders.addProducts")}</p>
 						</div>
 					{:else}
-						{#each cart as item, index (item.product.id + (item.isTreat ? '-treat' : '') + index)}
+						{#each cart as item, idx (item.product.id + (item.isTreat ? '-t' : '') + idx)}
 							<div class="flex items-center gap-2 rounded-lg border bg-background p-2">
 								<div class="flex-1 min-w-0">
 									<p class="font-medium text-sm truncate">{item.product.name}</p>
-									<div class="flex items-center gap-2">
-										{#if item.isTreat}
-											<Badge variant="secondary" class="text-xs">
-												<Gift class="h-3 w-3 mr-1" />
-												{t("orders.treat")}
-											</Badge>
-										{:else}
-											<span class="text-sm text-muted-foreground">
-												{fmtCurrency(item.product.price * item.quantity)}
-											</span>
-										{/if}
-									</div>
+									{#if item.isTreat}
+										<Badge variant="secondary" class="text-xs"><Gift class="h-3 w-3 mr-1" />{t("orders.treat")}</Badge>
+									{:else}
+										<span class="text-sm text-muted-foreground">{fmtCurrency(item.product.price * item.quantity)}</span>
+									{/if}
 								</div>
 								<div class="flex items-center gap-1 shrink-0">
-									<Button
-										variant="outline"
-										size="icon-sm"
-										onclick={() => updateQuantity(index, -1)}
-									>
-										<Minus class="h-3 w-3" />
-									</Button>
+									<Button variant="outline" size="icon-sm" onclick={() => updateQuantity(idx, -1)}><Minus class="h-3 w-3" /></Button>
 									<span class="w-8 text-center text-sm font-medium">{item.quantity}</span>
-									<Button
-										variant="outline"
-										size="icon-sm"
-										onclick={() => updateQuantity(index, 1)}
-									>
-										<Plus class="h-3 w-3" />
-									</Button>
-									<Button
-										variant={item.isTreat ? "default" : "ghost"}
-										size="icon-sm"
-										onclick={() => toggleTreat(index)}
-										title={item.isTreat ? t("orders.removeTreat") : t("orders.markTreat")}
-									>
-										<Gift class="h-3 w-3" />
-									</Button>
-									<Button
-										variant="ghost"
-										size="icon-sm"
-										onclick={() => removeFromCart(index)}
-									>
-										<X class="h-3 w-3" />
-									</Button>
+									<Button variant="outline" size="icon-sm" onclick={() => updateQuantity(idx, 1)}><Plus class="h-3 w-3" /></Button>
+									<Button variant={item.isTreat ? "default" : "ghost"} size="icon-sm" onclick={() => toggleTreat(idx)}><Gift class="h-3 w-3" /></Button>
+									<Button variant="ghost" size="icon-sm" onclick={() => { cart = cart.filter((_, i) => i !== idx); }}><X class="h-3 w-3" /></Button>
 								</div>
 							</div>
 						{/each}
 					{/if}
 				</div>
 
-				<!-- Cart Footer -->
 				{#if cart.length > 0}
 					<div class="p-4 border-t bg-background space-y-4">
-						<!-- Coupons -->
 						<div class="flex items-center justify-between">
 							<span class="text-sm font-medium">{t("orders.coupons")}</span>
 							<div class="flex items-center gap-2">
-								<Button
-									variant="outline"
-									size="icon-sm"
-									onclick={() => (couponCount = Math.max(0, couponCount - 1))}
-									disabled={couponCount === 0}
-								>
-									<Minus class="h-3 w-3" />
-								</Button>
+								<Button variant="outline" size="icon-sm" onclick={() => couponCount = Math.max(0, couponCount - 1)} disabled={couponCount === 0}><Minus class="h-3 w-3" /></Button>
 								<span class="w-8 text-center font-medium">{couponCount}</span>
-								<Button
-									variant="outline"
-									size="icon-sm"
-									onclick={() => couponCount++}
-								>
-									<Plus class="h-3 w-3" />
-								</Button>
+								<Button variant="outline" size="icon-sm" onclick={() => couponCount++}><Plus class="h-3 w-3" /></Button>
 							</div>
 						</div>
-
 						<Separator />
-
-						<!-- Totals -->
 						<div class="space-y-1 text-sm">
-							<div class="flex justify-between">
-								<span>{t("orders.subtotal")}</span>
-								<span>{fmtCurrency(subtotal)}</span>
-							</div>
-							{#if discount > 0}
-								<div class="flex justify-between text-green-600">
-									<span>{t("orders.discount")}</span>
-									<span>-{fmtCurrency(discount)}</span>
-								</div>
-							{/if}
-							{#if treatCount > 0}
-								<div class="flex justify-between text-muted-foreground">
-									<span>{t("orders.treats")}</span>
-									<span>{treatCount} {t("common.items")}</span>
-								</div>
-							{/if}
+							<div class="flex justify-between"><span>{t("orders.subtotal")}</span><span>{fmtCurrency(subtotal)}</span></div>
+							{#if discount > 0}<div class="flex justify-between text-green-600"><span>{t("orders.discount")}</span><span>-{fmtCurrency(discount)}</span></div>{/if}
+							{#if treatCount > 0}<div class="flex justify-between text-muted-foreground"><span>{t("orders.treats")}</span><span>{treatCount} {t("common.items")}</span></div>{/if}
 						</div>
-
 						<Separator />
-
-						<div class="flex justify-between text-xl font-bold">
-							<span>{t("orders.total")}</span>
-							<span>{fmtCurrency(total)}</span>
-						</div>
-
-						<Button
-							class="w-full h-12 text-lg"
-							onclick={submitOrder}
-							disabled={processing || !activeSession}
-						>
-							{#if processing}
-								{t("common.loading")}
-							{:else}
-								<Check class="h-5 w-5 mr-2" />
-								{t("orders.submitOrder")} - {fmtCurrency(total)}
-							{/if}
+						<div class="flex justify-between text-xl font-bold"><span>{t("orders.total")}</span><span>{fmtCurrency(total)}</span></div>
+						<Button class="w-full h-12 text-lg" onclick={submitOrder} disabled={processing || !activeSession}>
+							{#if processing}{t("common.loading")}{:else}<Check class="h-5 w-5 mr-2" />{t("orders.submitOrder")} - {fmtCurrency(total)}{/if}
 						</Button>
-
-						{#if !activeSession}
-							<p class="text-xs text-center text-destructive">
-								{t("register.noActiveSession")}
-							</p>
-						{/if}
+						{#if !activeSession}<p class="text-xs text-center text-destructive">{t("register.noActiveSession")}</p>{/if}
 					</div>
 				{/if}
 
-				<!-- Last Order Success -->
 				{#if lastOrderId}
 					<div class="p-4 bg-green-50 dark:bg-green-950 border-t border-green-200 dark:border-green-800">
 						<div class="flex items-center gap-2 text-green-600 dark:text-green-400">
-							<Check class="h-5 w-5" />
-							<span class="font-medium">{t("common.success")}</span>
-							<span class="text-sm">#{lastOrderId.slice(0, 8)}</span>
+							<Check class="h-5 w-5" /><span class="font-medium">{t("common.success")}</span><span class="text-sm">#{lastOrderId.slice(0, 8)}</span>
 						</div>
 					</div>
 				{/if}
