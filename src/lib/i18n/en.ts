@@ -87,6 +87,7 @@ export const en = {
 		salesByCategory: "Sales by Category",
 		revenueChart: "Revenue Trend",
 		unitsSold: "units sold",
+		revenue: "Revenue",
 	},
 
 	// Products

@@ -89,6 +89,7 @@ export const el: TranslationsStructure = {
 		salesByCategory: "Πωλήσεις ανά Κατηγορία",
 		revenueChart: "Τάση Εσόδων",
 		unitsSold: "πωλήθηκαν",
+		revenue: "Έσοδα",
 	},
 
 	// Products

@@ -109,7 +109,7 @@
 							<Tooltip.Root let:data>
 								<Tooltip.Header>{data.date}</Tooltip.Header>
 								<Tooltip.List>
-									<Tooltip.Item label="Revenue" value={fmtCurrency(data.revenue)} />
+									<Tooltip.Item label={t("dashboard.revenue")} value={fmtCurrency(data.revenue)} />
 								</Tooltip.List>
 							</Tooltip.Root>
 						</Chart>

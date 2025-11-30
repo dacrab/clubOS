@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
+@source "../node_modules/layerchart/dist";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -118,6 +119,11 @@
 	--color-popover-foreground: var(--popover-foreground);
 	--color-primary: var(--primary);
 	--color-primary-foreground: var(--primary-foreground);
+	/* LayerChart surface colors */
+	--color-surface-100: var(--muted);
+	--color-surface-200: var(--border);
+	--color-surface-300: var(--input);
+	--color-surface-content: var(--foreground);
 	--color-secondary: var(--secondary);
 	--color-secondary-foreground: var(--secondary-foreground);
 	--color-muted: var(--muted);
@@ -151,6 +157,10 @@
 	body {
 		@apply bg-background text-foreground antialiased;
 		font-family: var(--font-sans);
+	}
+	/* Fix SVG fill utilities for layerchart */
+	.fill-primary {
+		fill: var(--color-primary);
 	}
 }
 
