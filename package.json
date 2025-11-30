@@ -18,7 +18,7 @@
 	},
 	"devDependencies": {
 		"@internationalized/date": "^3.10.0",
-		"@lucide/svelte": "^0.553.0",
+		"@lucide/svelte": "^0.555.0",
 		"@sveltejs/adapter-vercel": "^6.1.1",
 		"@sveltejs/kit": "^2.48.4",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
@@ -36,12 +36,12 @@
 		"tailwindcss": "^4.1.16",
 		"tailwindcss-animate": "^1.0.7",
 		"typescript": "^5.9.3",
-		"ultracite": "6.3.2",
+		"ultracite": "6.3.8",
 		"vite": "^7.1.12",
 		"vitest": "^4.0.6"
 	},
 	"dependencies": {
-		"@supabase/ssr": "^0.7.0",
+		"@supabase/ssr": "^0.8.0",
 		"@supabase/supabase-js": "^2.78.0",
 		"flatpickr": "^4.6.13",
 		"svelte-sonner": "^1.0.5"
