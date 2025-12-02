@@ -1,51 +1,39 @@
 <script lang="ts" module>
-import { tv, type VariantProps } from "tailwind-variants";
+	import { tv, type VariantProps } from "tailwind-variants";
 
-export const badgeVariants = tv({
-	base: "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-md border px-2 py-0.5 font-medium text-xs transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3",
-	variants: {
-		variant: {
-			default:
-				"border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
-			secondary:
-				"border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
-			destructive:
-				"border-transparent bg-destructive text-white focus-visible:ring-destructive/20 dark:bg-destructive/70 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90",
-			outline:
-				"text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+	export const badgeVariants = tv({
+		base: "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+		variants: {
+			variant: {
+				default: "border-transparent bg-primary text-primary-foreground shadow",
+				secondary: "border-transparent bg-secondary text-secondary-foreground",
+				destructive: "border-transparent bg-destructive text-destructive-foreground shadow",
+				success: "border-transparent bg-success text-success-foreground shadow",
+				warning: "border-transparent bg-warning text-warning-foreground shadow",
+				outline: "text-foreground",
+			},
 		},
-	},
-	defaultVariants: {
-		variant: "default",
-	},
-});
+		defaultVariants: {
+			variant: "default",
+		},
+	});
 
-export type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
+	export type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
 </script>
 
 <script lang="ts">
-	import type { HTMLAnchorAttributes } from "svelte/elements";
-	import { cn, type WithElementRef } from "$lib/utils.js";
+	import type { HTMLAttributes } from "svelte/elements";
+	import type { Snippet } from "svelte";
 
-	let {
-		ref = $bindable(null),
-		href,
-		class: className,
-		variant = "default",
-		children,
-		...restProps
-	}: WithElementRef<HTMLAnchorAttributes> & {
+	type Props = HTMLAttributes<HTMLDivElement> & {
 		variant?: BadgeVariant;
-	} = $props();
+		class?: string;
+		children?: Snippet;
+	};
+
+	let { variant = "default", class: className = "", children, ...restProps }: Props = $props();
 </script>
 
-<svelte:element
-	this={href ? "a" : "span"}
-	bind:this={ref}
-	data-slot="badge"
-	{href}
-	class={cn(badgeVariants({ variant }), className)}
-	{...restProps}
->
+<div class={badgeVariants({ variant, class: className })} {...restProps}>
 	{@render children?.()}
-</svelte:element>
+</div>

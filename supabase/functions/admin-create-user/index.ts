@@ -76,17 +76,16 @@ async function createAuthUser(
 	adminClient: SupabaseClient<Database>,
 	body: CreateUserRequired,
 ): Promise<string | Response> {
-	const { data: created, error: createErr } =
-		await adminClient.auth.admin.createUser({
-			email: body.email,
-			password: body.password,
-			email_confirm: true,
-			user_metadata: {
-				role: body.role,
-				username: body.username,
-				active: body.active ?? true,
-			},
-		});
+	const { data: created, error: createErr } = await adminClient.auth.admin.createUser({
+		email: body.email,
+		password: body.password,
+		email_confirm: true,
+		user_metadata: {
+			role: body.role,
+			username: body.username,
+			active: body.active ?? true,
+		},
+	});
 	if (createErr) {
 		return new Response(createErr.message, { status: 400 });
 	}
@@ -145,16 +144,12 @@ async function maybeAssignFacilities(
 	if (error) {
 		return new Response(error.message, { status: 400 });
 	}
-	const allowed = (facilities ?? [])
-		.filter((f) => f.tenant_id === tenantId)
-		.map((f) => f.id);
+	const allowed = (facilities ?? []).filter((f) => f.tenant_id === tenantId).map((f) => f.id);
 	if (!allowed.length) {
 		return null;
 	}
 	const rows = allowed.map((fid) => ({ facility_id: fid, user_id: newUserId }));
-	const { error: fmErr } = await adminClient
-		.from("facility_members")
-		.insert(rows);
+	const { error: fmErr } = await adminClient.from("facility_members").insert(rows);
 	if (fmErr) {
 		return new Response(fmErr.message, { status: 400 });
 	}
@@ -170,10 +165,7 @@ async function createUserFlow(
 	if (!(body?.email && body?.password && body?.role && body?.username)) {
 		return new Response("Missing required fields", { status: 400 });
 	}
-	const idOrResp = await createAuthUser(
-		adminClient,
-		body as CreateUserRequired,
-	);
+	const idOrResp = await createAuthUser(adminClient, body as CreateUserRequired);
 	if (idOrResp instanceof Response) {
 		return idOrResp;
 	}
@@ -183,12 +175,7 @@ async function createUserFlow(
 	if (tmErr) {
 		return tmErr;
 	}
-	const fmErr = await maybeAssignFacilities(
-		adminClient,
-		tenantId,
-		body.facility_ids,
-		newUserId,
-	);
+	const fmErr = await maybeAssignFacilities(adminClient, tenantId, body.facility_ids, newUserId);
 	if (fmErr) {
 		return fmErr;
 	}

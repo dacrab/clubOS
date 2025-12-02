@@ -83,10 +83,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 	}
 	const { error: tmErr } = await adminClient
 		.from("tenant_members")
-		.upsert(
-			{ tenant_id: tenantId, user_id: userId },
-			{ onConflict: "tenant_id,user_id" },
-		);
+		.upsert({ tenant_id: tenantId, user_id: userId }, { onConflict: "tenant_id,user_id" });
 	if (tmErr) {
 		return new Response(tmErr.message, { status: 400 });
 	}
@@ -111,10 +108,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 	}
 	const { error: fmErr } = await adminClient
 		.from("facility_members")
-		.upsert(
-			{ facility_id: facilityId, user_id: userId },
-			{ onConflict: "facility_id,user_id" },
-		);
+		.upsert({ facility_id: facilityId, user_id: userId }, { onConflict: "facility_id,user_id" });
 	if (fmErr) {
 		return new Response(fmErr.message, { status: 400 });
 	}

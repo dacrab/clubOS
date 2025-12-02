@@ -1,103 +1,58 @@
 <script lang="ts" module>
-import type {
-	HTMLAnchorAttributes,
-	HTMLAttributes,
-	HTMLButtonAttributes,
-} from "svelte/elements";
-import { tv, type VariantProps } from "tailwind-variants";
-import type { WithElementRef } from "$lib/utils.js";
+	import { tv, type VariantProps } from "tailwind-variants";
 
-export const buttonVariants = tv({
-	base: "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium text-sm outline-none transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
-	variants: {
-		variant: {
-			default:
-				"bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
-			destructive:
-				"bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
-			outline:
-				"border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
-			secondary:
-				"bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
-			ghost:
-				"hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-			link: "text-primary underline-offset-4 hover:underline",
+	export const buttonVariants = tv({
+		base: "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 transition-[color,background-color,border-color,box-shadow,transform] duration-[--duration-fast] ease-[--ease-out] active:scale-[0.97]",
+		variants: {
+			variant: {
+				default: "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md",
+				destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md",
+				outline: "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground hover:border-accent",
+				secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+				ghost: "hover:bg-accent hover:text-accent-foreground",
+				link: "text-primary underline-offset-4 hover:underline",
+				success: "bg-success text-success-foreground shadow-sm hover:bg-success/90 hover:shadow-md",
+			},
+			size: {
+				default: "h-9 px-4 py-2",
+				sm: "h-8 rounded-md px-3 text-xs",
+				lg: "h-10 rounded-md px-6",
+				xl: "h-12 rounded-lg px-8 text-base",
+				icon: "h-9 w-9",
+				"icon-sm": "h-8 w-8",
+			},
 		},
-		size: {
-			default: "h-9 px-4 py-2 has-[>svg]:px-3",
-			sm: "h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5",
-			lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-			icon: "size-9",
+		defaultVariants: {
+			variant: "default",
+			size: "default",
 		},
-	},
-	defaultVariants: {
-		variant: "default",
-		size: "default",
-	},
-});
+	});
 
-export type ButtonVariant = VariantProps<typeof buttonVariants>["variant"];
-export type ButtonSize = VariantProps<typeof buttonVariants>["size"];
-
-export type ButtonProps = WithElementRef<HTMLButtonAttributes> &
-	WithElementRef<HTMLAnchorAttributes> &
-	WithElementRef<HTMLAttributes<HTMLSpanElement>> & {
-		variant?: ButtonVariant;
-		size?: ButtonSize;
-		as?: "button" | "a" | "span";
-	};
+	export type ButtonVariant = VariantProps<typeof buttonVariants>["variant"];
+	export type ButtonSize = VariantProps<typeof buttonVariants>["size"];
 </script>
 
 <script lang="ts">
-	import { cn } from "$lib/utils.js";
-	let {
-		class: className,
-		variant = "default",
-		size = "default",
-		ref = $bindable(null),
-		href = undefined,
-		type = "button",
-		disabled,
-		children,
-		as = undefined,
-		...restProps
-	}: ButtonProps = $props();
+	import type { HTMLButtonAttributes, HTMLAnchorAttributes } from "svelte/elements";
+	import type { Snippet } from "svelte";
+
+	type Props = (HTMLButtonAttributes | HTMLAnchorAttributes) & {
+		variant?: ButtonVariant;
+		size?: ButtonSize;
+		class?: string;
+		href?: string;
+		children?: Snippet;
+	};
+
+	let { variant = "default", size = "default", class: className = "", href, children, ...restProps }: Props = $props();
 </script>
 
 {#if href}
-	<a
-		bind:this={ref}
-		data-slot="button"
-		class={cn(buttonVariants({ variant, size }), className)}
-		href={disabled ? undefined : href}
-		aria-disabled={disabled}
-		role={disabled ? "link" : undefined}
-		tabindex={disabled ? -1 : undefined}
-		{...restProps}
-	>
+	<a href={href} class={buttonVariants({ variant, size, class: className })} {...restProps as HTMLAnchorAttributes}>
 		{@render children?.()}
 	</a>
-{:else if as === "span"}
-	<span
-		bind:this={ref}
-		data-slot="button"
-		class={cn(buttonVariants({ variant, size }), className)}
-		role="button"
-		aria-disabled={disabled}
-		tabindex={disabled ? -1 : 0}
-		{...restProps}
-	>
-		{@render children?.()}
-	</span>
 {:else}
-	<button
-		bind:this={ref}
-		data-slot="button"
-		class={cn(buttonVariants({ variant, size }), className)}
-		{type}
-		{disabled}
-		{...restProps}
-	>
+	<button class={buttonVariants({ variant, size, class: className })} {...restProps as HTMLButtonAttributes}>
 		{@render children?.()}
 	</button>
 {/if}

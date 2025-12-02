@@ -1,1 +1,2 @@
-export { default as Switch } from "./switch.svelte";
+import Switch from "./switch.svelte";
+export { Switch };

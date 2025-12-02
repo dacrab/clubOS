@@ -19,9 +19,7 @@ function getClients(req: Request) {
 	const adminClient = createClient<Database>(supabaseUrl, serviceRole);
 	return { authedClient, adminClient };
 }
-async function requireAdmin(
-	req: Request,
-): Promise<{ status: number; error?: string }> {
+async function requireAdmin(req: Request): Promise<{ status: number; error?: string }> {
 	const { authedClient } = getClients(req);
 	const { data: userData } = await authedClient.auth.getUser();
 	if (!userData?.user) {
