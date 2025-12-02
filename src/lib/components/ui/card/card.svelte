@@ -1,25 +1,20 @@
 <script lang="ts">
-import type { HTMLAttributes } from "svelte/elements";
-import type { WithElementRef } from "$lib/utils";
-import { cn } from "$lib/utils";
+	import { cn } from "$lib/utils/cn";
+	import type { Snippet } from "svelte";
+	import type { HTMLAttributes } from "svelte/elements";
 
-let {
-	ref = $bindable(null),
-	class: className,
-	children,
-	...restProps
-}: WithElementRef<HTMLAttributes<HTMLDivElement>> = $props();
-((..._args: unknown[]) => {
-	return;
-})(cn, ref, className, children, restProps);
+	type Props = HTMLAttributes<HTMLDivElement> & {
+		class?: string;
+		children?: Snippet;
+	};
+
+	let { class: className = "", children, ...restProps }: Props = $props();
 </script>
 
 <div
-	bind:this={ref}
-	data-slot="card"
 	class={cn(
-		"bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
-		className,
+		"rounded-lg border bg-card text-card-foreground shadow-sm",
+		className
 	)}
 	{...restProps}
 >

@@ -26,11 +26,7 @@ function forbidden(message = "Forbidden"): Response {
 	return new Response(message, { status: 403 });
 }
 
-async function handlePost(
-	req: Request,
-	supaAdmin: Supa,
-	callerId: string,
-): Promise<Response> {
+async function handlePost(req: Request, supaAdmin: Supa, callerId: string): Promise<Response> {
 	const body = await req.json();
 	if (!(body.email && body.password && body.role && body.username)) {
 		return badRequest("Missing required fields");
@@ -63,10 +59,7 @@ async function handlePost(
 	if (tenantId) {
 		await supaAdmin
 			.from("tenant_members")
-			.upsert(
-				{ tenant_id: tenantId, user_id: newUserId },
-				{ onConflict: "tenant_id,user_id" },
-			);
+			.upsert({ tenant_id: tenantId, user_id: newUserId }, { onConflict: "tenant_id,user_id" });
 	}
 	const facilities = Array.isArray(body.facility_ids) ? body.facility_ids : [];
 	if (facilities.length > 0) {
@@ -74,9 +67,7 @@ async function handlePost(
 			facility_id: fid,
 			user_id: newUserId,
 		}));
-		await supaAdmin
-			.from("facility_members")
-			.upsert(rows, { onConflict: "facility_id,user_id" });
+		await supaAdmin.from("facility_members").upsert(rows, { onConflict: "facility_id,user_id" });
 	}
 	return json({ id: newUserId }, { status: 201 });
 }
@@ -102,10 +93,7 @@ type PatchBody = {
 	remove_facility_ids?: string[];
 };
 
-async function updateProfilePatch(
-	supaAdmin: Supa,
-	body: PatchBody,
-): Promise<void> {
+async function updateProfilePatch(supaAdmin: Supa, body: PatchBody): Promise<void> {
 	const profileUpdates: { role?: string; username?: string } = {};
 	if (body.role) {
 		profileUpdates.role = body.role;
@@ -116,19 +104,13 @@ async function updateProfilePatch(
 	if (!Object.keys(profileUpdates).length) {
 		return;
 	}
-	const { error } = await supaAdmin
-		.from("users")
-		.update(profileUpdates)
-		.eq("id", body.id);
+	const { error } = await supaAdmin.from("users").update(profileUpdates).eq("id", body.id);
 	if (error) {
 		throw new Error(error.message);
 	}
 }
 
-async function updateAuthPatch(
-	supaAdmin: Supa,
-	body: PatchBody,
-): Promise<void> {
+async function updateAuthPatch(supaAdmin: Supa, body: PatchBody): Promise<void> {
 	const adminAttrs: {
 		password?: string;
 		user_metadata?: Record<string, unknown>;
@@ -152,25 +134,15 @@ async function updateAuthPatch(
 	if (!Object.keys(adminAttrs).length) {
 		return;
 	}
-	const { error } = await supaAdmin.auth.admin.updateUserById(
-		body.id,
-		adminAttrs,
-	);
+	const { error } = await supaAdmin.auth.admin.updateUserById(body.id, adminAttrs);
 	if (error) {
 		throw new Error(error.message);
 	}
 }
 
-async function updateFacilitiesPatch(
-	supaAdmin: Supa,
-	body: PatchBody,
-): Promise<void> {
-	const addFids = Array.isArray(body.add_facility_ids)
-		? body.add_facility_ids
-		: [];
-	const removeFids = Array.isArray(body.remove_facility_ids)
-		? body.remove_facility_ids
-		: [];
+async function updateFacilitiesPatch(supaAdmin: Supa, body: PatchBody): Promise<void> {
+	const addFids = Array.isArray(body.add_facility_ids) ? body.add_facility_ids : [];
+	const removeFids = Array.isArray(body.remove_facility_ids) ? body.remove_facility_ids : [];
 	if (addFids.length) {
 		const rows = addFids.map((fid: string) => ({
 			facility_id: fid,
@@ -195,10 +167,7 @@ async function updateFacilitiesPatch(
 	}
 }
 
-async function handleDelete(
-	searchParams: URLSearchParams,
-	supaAdmin: Supa,
-): Promise<Response> {
+async function handleDelete(searchParams: URLSearchParams, supaAdmin: Supa): Promise<Response> {
 	const id = searchParams.get("id");
 	if (!id) {
 		return badRequest("Missing id");

@@ -1,96 +1,116 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
+@source "../node_modules/layerchart/dist";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-	--radius: 0.75rem;
-	--font-sans:
-		"Inter", "SF Pro Text", "Segoe UI", system-ui, -apple-system, sans-serif;
-	--background: oklch(0.985 0.012 245);
-	--foreground: oklch(0.18 0.012 245);
-	--muted: oklch(0.95 0.008 245);
-	--muted-foreground: oklch(0.53 0.012 245);
-	--accent: oklch(0.94 0.02 245);
-	--accent-foreground: oklch(0.27 0.012 245);
-	--card: color-mix(in oklch, var(--background) 96%, white 4%);
+	--radius: 0.5rem;
+	--font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+	/* Animation timing */
+	--duration-fast: 150ms;
+	--duration-normal: 200ms;
+	--duration-slow: 300ms;
+	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+	--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+	/* Light Mode - Clean & Minimal */
+	--background: oklch(0.99 0 0);
+	--foreground: oklch(0.15 0.01 250);
+
+	--muted: oklch(0.96 0.005 250);
+	--muted-foreground: oklch(0.5 0.01 250);
+
+	--card: oklch(1 0 0);
 	--card-foreground: var(--foreground);
-	--popover: color-mix(in oklch, white 96%, var(--background) 4%);
+
+	--popover: oklch(1 0 0);
 	--popover-foreground: var(--foreground);
-	--primary: oklch(0.59 0.12 245);
-	/* Ensure button text has strong contrast on primary bg in light mode */
-	--primary-foreground: oklch(0.98 0.004 245);
-	--secondary: oklch(0.92 0.008 245);
-	--secondary-foreground: oklch(0.32 0.01 245);
-	--destructive: oklch(0.63 0.18 25);
-	--border: oklch(0.91 0.006 245);
-	--outline-strong: color-mix(in oklch, var(--border) 55%, transparent);
-	--outline-soft: color-mix(in oklch, var(--border) 30%, transparent);
-	--input: color-mix(in oklch, var(--card) 92%, white 8%);
-	--ring: color-mix(in oklch, var(--primary) 55%, transparent);
-	--chart-1: oklch(0.6 0.14 245);
-	--chart-2: oklch(0.66 0.12 170);
-	--chart-3: oklch(0.63 0.12 90);
-	--chart-4: oklch(0.68 0.1 320);
-	--chart-5: oklch(0.7 0.1 35);
-	--surface-soft: color-mix(in oklch, var(--background) 90%, white 10%);
-	--surface-strong: color-mix(in oklch, var(--background) 80%, white 20%);
-	--sidebar: color-mix(in oklch, var(--background) 70%, white 30%);
-	--sidebar-foreground: oklch(0.22 0.01 245);
-	--sidebar-border: color-mix(in oklch, var(--border) 55%, transparent);
-	--sidebar-muted: color-mix(in oklch, var(--sidebar) 70%, var(--muted) 30%);
-	--sidebar-muted-foreground: oklch(0.46 0.01 245);
-	--sidebar-accent: color-mix(in oklch, var(--primary) 12%, var(--sidebar) 88%);
+
+	--border: oklch(0.92 0.005 250);
+	--input: oklch(0.92 0.005 250);
+
+	/* Primary - Clean Indigo */
+	--primary: oklch(0.5 0.16 270);
+	--primary-foreground: oklch(0.98 0 0);
+
+	/* Secondary */
+	--secondary: oklch(0.96 0.005 250);
+	--secondary-foreground: oklch(0.25 0.01 250);
+
+	/* Accent */
+	--accent: oklch(0.96 0.005 250);
+	--accent-foreground: oklch(0.25 0.01 250);
+
+	/* Destructive */
+	--destructive: oklch(0.55 0.2 25);
+	--destructive-foreground: oklch(0.98 0 0);
+
+	/* Success */
+	--success: oklch(0.55 0.15 145);
+	--success-foreground: oklch(0.98 0 0);
+
+	/* Warning */
+	--warning: oklch(0.7 0.15 75);
+	--warning-foreground: oklch(0.2 0.05 75);
+
+	--ring: oklch(0.5 0.16 270 / 0.25);
+
+	/* Sidebar */
+	--sidebar: oklch(0.98 0.002 250);
+	--sidebar-foreground: oklch(0.35 0.01 250);
+	--sidebar-border: var(--border);
+	--sidebar-accent: oklch(0.94 0.01 270);
 	--sidebar-accent-foreground: var(--primary);
-	--sidebar-primary: var(--primary);
-	--sidebar-primary-foreground: var(--primary-foreground);
 }
 
 .dark {
-	--background: oklch(0.17 0.012 245);
-	--foreground: oklch(0.9 0.01 245);
-	--muted: oklch(0.24 0.008 245);
-	--muted-foreground: oklch(0.73 0.012 245);
-	--accent: oklch(0.26 0.02 245);
-	--accent-foreground: oklch(0.9 0.01 245);
-	--card: color-mix(in oklch, var(--background) 70%, black 30%);
+	/* Dark Mode - Deep & Professional */
+	--background: oklch(0.13 0.01 250);
+	--foreground: oklch(0.95 0.005 250);
+
+	--muted: oklch(0.18 0.01 250);
+	--muted-foreground: oklch(0.6 0.01 250);
+
+	--card: oklch(0.16 0.01 250);
 	--card-foreground: var(--foreground);
-	--popover: color-mix(in oklch, var(--background) 65%, black 35%);
+
+	--popover: oklch(0.16 0.01 250);
 	--popover-foreground: var(--foreground);
-	--primary: oklch(0.72 0.1 245);
-	/* Ensure button text has strong contrast on primary bg in dark mode */
-	--primary-foreground: oklch(0.98 0.004 245);
-	--secondary: oklch(0.3 0.008 245);
-	--secondary-foreground: oklch(0.82 0.012 245);
-	--destructive: oklch(0.58 0.16 25);
-	--border: oklch(0.32 0.01 245);
-	--outline-strong: color-mix(in oklch, var(--border) 70%, transparent);
-	--outline-soft: color-mix(in oklch, var(--border) 45%, transparent);
-	--input: color-mix(in oklch, var(--card) 85%, black 15%);
-	--ring: color-mix(in oklch, var(--primary) 55%, transparent);
-	--chart-1: oklch(0.72 0.12 245);
-	--chart-2: oklch(0.7 0.14 170);
-	--chart-3: oklch(0.68 0.14 90);
-	--chart-4: oklch(0.7 0.12 320);
-	--chart-5: oklch(0.68 0.12 35);
-	--surface-soft: color-mix(in oklch, var(--background) 82%, black 18%);
-	--surface-strong: color-mix(in oklch, var(--background) 68%, black 32%);
-	--sidebar: color-mix(in oklch, var(--surface-strong) 55%, black 45%);
-	--sidebar-foreground: var(--foreground);
-	--sidebar-border: color-mix(in oklch, var(--border) 70%, transparent);
-	--sidebar-muted: color-mix(in oklch, var(--sidebar) 70%, var(--muted) 30%);
-	--sidebar-muted-foreground: oklch(0.76 0.014 245);
-	--sidebar-accent: color-mix(in oklch, var(--primary) 22%, var(--sidebar) 78%);
-	--sidebar-accent-foreground: var(--primary-foreground);
-	--sidebar-primary: var(--primary);
-	--sidebar-primary-foreground: var(--primary-foreground);
+
+	--border: oklch(0.24 0.01 250);
+	--input: oklch(0.24 0.01 250);
+
+	--primary: oklch(0.65 0.16 270);
+	--primary-foreground: oklch(0.13 0.01 250);
+
+	--secondary: oklch(0.22 0.01 250);
+	--secondary-foreground: oklch(0.9 0.005 250);
+
+	--accent: oklch(0.22 0.01 250);
+	--accent-foreground: oklch(0.95 0.005 250);
+
+	--destructive: oklch(0.5 0.2 25);
+	--destructive-foreground: oklch(0.95 0 0);
+
+	--success: oklch(0.5 0.15 145);
+	--success-foreground: oklch(0.95 0 0);
+
+	--warning: oklch(0.65 0.15 75);
+	--warning-foreground: oklch(0.15 0.05 75);
+
+	--ring: oklch(0.65 0.16 270 / 0.3);
+
+	--sidebar: oklch(0.11 0.01 250);
+	--sidebar-foreground: oklch(0.75 0.01 250);
+	--sidebar-border: var(--border);
+	--sidebar-accent: oklch(0.18 0.02 270);
+	--sidebar-accent-foreground: var(--primary);
 }
 
 @theme inline {
-	--radius-sm: calc(var(--radius) - 6px);
-	--radius-md: calc(var(--radius) - 3px);
-	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) + 4px);
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 	--color-card: var(--card);
@@ -99,6 +119,11 @@
 	--color-popover-foreground: var(--popover-foreground);
 	--color-primary: var(--primary);
 	--color-primary-foreground: var(--primary-foreground);
+	/* LayerChart surface colors */
+	--color-surface-100: var(--muted);
+	--color-surface-200: var(--border);
+	--color-surface-300: var(--input);
+	--color-surface-content: var(--foreground);
 	--color-secondary: var(--secondary);
 	--color-secondary-foreground: var(--secondary-foreground);
 	--color-muted: var(--muted);
@@ -106,249 +131,142 @@
 	--color-accent: var(--accent);
 	--color-accent-foreground: var(--accent-foreground);
 	--color-destructive: var(--destructive);
+	--color-destructive-foreground: var(--destructive-foreground);
+	--color-success: var(--success);
+	--color-success-foreground: var(--success-foreground);
+	--color-warning: var(--warning);
+	--color-warning-foreground: var(--warning-foreground);
 	--color-border: var(--border);
-	--color-outline-soft: var(--outline-soft);
-	--color-outline-strong: var(--outline-strong);
-	--color-surface: var(--surface-soft);
-	--color-surface-strong: var(--surface-strong);
 	--color-input: var(--input);
 	--color-ring: var(--ring);
-	--color-chart-1: var(--chart-1);
-	--color-chart-2: var(--chart-2);
-	--color-chart-3: var(--chart-3);
-	--color-chart-4: var(--chart-4);
-	--color-chart-5: var(--chart-5);
 	--color-sidebar: var(--sidebar);
 	--color-sidebar-foreground: var(--sidebar-foreground);
-	--color-sidebar-primary: var(--sidebar-primary);
-	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-accent: var(--sidebar-accent);
 	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-	--color-sidebar-border: var(--sidebar-border);
-	--color-sidebar-ring: var(--ring);
-	--color-sidebar-muted: var(--sidebar-muted);
-	--color-sidebar-muted-foreground: var(--sidebar-muted-foreground);
+	--radius-sm: calc(var(--radius) - 2px);
+	--radius-md: var(--radius);
+	--radius-lg: calc(var(--radius) + 2px);
+	--radius-xl: calc(var(--radius) + 6px);
 }
 
 @layer base {
-	*,
-	*::before,
-	*::after {
-		@apply border-border outline-ring/40 antialiased;
-		box-sizing: border-box;
+	* {
+		@apply border-border;
 	}
-
 	body {
+		@apply bg-background text-foreground antialiased;
 		font-family: var(--font-sans);
-		@apply bg-background text-foreground min-h-screen font-normal;
-		font-feature-settings:
-			"ss01" on,
-			"ss02" on,
-			"liga" on;
 	}
-
-	h1,
-	h2,
-	h3,
-	h4,
-	h5,
-	h6 {
-		font-weight: 600;
-	}
-
-	::selection {
-		background: color-mix(in oklch, var(--primary) 25%, transparent);
-	}
-
-	a {
-		color: inherit;
-		text-decoration: none;
-	}
-
-	:is(button, [role="button"]) {
-		font-family: inherit;
-	}
-
-	/* Ensure all buttons show pointer cursor when interactive */
-	:is(button, [role="button"], [data-slot="button"]) {
-		cursor: pointer;
-	}
-	:is(button, [role="button"], [data-slot="button"])[aria-disabled="true"],
-	:is(button, [role="button"], [data-slot="button"])[disabled] {
-		cursor: not-allowed;
+	/* Fix SVG fill utilities for layerchart */
+	.fill-primary {
+		fill: var(--color-primary);
 	}
 }
 
 @layer utilities {
-	/* NewSaleDialog — reusable UI tokens */
-	.category-pill {
-		@apply flex items-center justify-between rounded-full border border-outline-soft/60 bg-surface-strong/60 px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:border-outline-soft;
-	}
-	.category-pill--active {
-		@apply border-primary/30 bg-primary/10 text-primary;
-	}
-	.category-pill--child {
-		@apply ml-4;
-	}
-	.product-card {
-		@apply flex h-full flex-col overflow-hidden rounded-2xl border border-outline-soft/60 bg-surface-strong/40 text-left shadow-xs transition-all hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40;
-	}
-	.product-card__image {
-		@apply h-28 w-full overflow-hidden bg-muted/40;
-	}
-	.product-card__body {
-		@apply flex flex-1 flex-col justify-between gap-1 p-4 text-sm;
-	}
-	.product-card__name {
-		@apply truncate font-semibold text-foreground;
-	}
-	.product-card__price {
-		@apply text-xs uppercase text-muted-foreground;
-	}
-	.control-pill {
-		@apply rounded-full border border-outline-soft/60 bg-background/60;
-	}
-	.cart-scroll {
-		@apply flex-1 overflow-y-auto;
-	}
-	.cart-line {
-		@apply flex items-center justify-between gap-3 rounded-2xl border border-outline-soft/60 bg-surface-strong/40 px-4 py-3;
-	}
-	.cart-line__name {
-		@apply truncate text-sm font-semibold text-foreground;
-	}
-	.cart-line__meta {
-		@apply flex items-center gap-3 text-xs uppercase text-muted-foreground;
-	}
-	.treat-pill {
-		@apply rounded-full bg-primary/10 px-2 py-1 text-[10px] font-medium text-primary;
-	}
-
-	/* DataTable */
-	.data-table__table {
-		@apply w-full;
-	}
-	.data-table__table--zebra tbody tr:nth-child(odd) {
-		@apply bg-surface-strong/40;
-	}
-	.data-table__head {
-		@apply text-xs font-medium text-muted-foreground; /* headers */
-	}
-	.data-table__cell {
-		@apply text-sm;
-	}
-	.data-table__empty {
-		@apply py-10 text-center text-sm text-muted-foreground;
-	}
-	.data-table__empty-state {
-		@apply mx-auto flex max-w-md flex-col items-center gap-3 text-center;
-	}
-	.data-table--dense .data-table__cell {
-		@apply h-10;
-	}
-	.data-table__caption {
-		@apply mb-2 text-left text-xs uppercase text-muted-foreground;
-	}
-
-	/* EmptyState */
-	.empty-card {
-		@apply rounded-3xl border border-outline-soft bg-surface shadow-sm;
-	}
-	.empty-card__header {
-		@apply flex items-center gap-4 border-b border-outline-soft/60 p-5;
-	}
-	.empty-card__icon {
-		@apply grid size-10 place-items-center rounded-xl bg-primary/10 text-primary;
-	}
-	.empty-card__pulse {
-		@apply block size-2 rounded-full bg-primary shadow-[0_0_0_6px_rgba(0,0,0,0.05)];
-	}
-	.empty-card__titles {
-		@apply flex min-w-0 flex-1 flex-col;
-	}
-	.empty-card__title {
-		@apply truncate text-base font-semibold;
-	}
-	.empty-card__description {
-		@apply text-xs text-muted-foreground;
-	}
-	.empty-card__badge {
-		@apply rounded-full px-3 py-1 text-xs font-medium;
-	}
-	.empty-card__content {
-		@apply p-5;
-	}
-	.empty-card__action {
-		@apply mt-4 rounded-full px-6;
-	}
-	.surface {
-		background-color: var(--surface-soft);
-		border: 1px solid var(--outline-soft);
-	}
-
-	.surface-strong {
-		background-color: var(--surface-strong);
-		border: 1px solid var(--outline-strong);
-	}
-
-	.card-hover {
-		transition:
-			transform 0.18s ease,
-			box-shadow 0.18s ease;
-	}
-
-	.card-hover:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 18px 34px -24px
-			color-mix(in oklch, var(--foreground) 30%, transparent);
-	}
-
-	.grid-fade {
-		background-image:
-			linear-gradient(
-				to right,
-				color-mix(in oklch, var(--border) 22%, transparent) 1px,
-				transparent 1px
-			),
-			linear-gradient(
-				to bottom,
-				color-mix(in oklch, var(--border) 22%, transparent) 1px,
-				transparent 1px
-			);
-		background-size: 28px 28px;
-	}
-
 	.scrollbar-thin {
 		scrollbar-width: thin;
-		scrollbar-color: color-mix(in oklch, var(--border) 50%, transparent)
-			transparent;
+		scrollbar-color: var(--muted) transparent;
 	}
-
 	.scrollbar-thin::-webkit-scrollbar {
 		width: 6px;
+		height: 6px;
 	}
-
 	.scrollbar-thin::-webkit-scrollbar-track {
 		background: transparent;
 	}
-
 	.scrollbar-thin::-webkit-scrollbar-thumb {
-		background: color-mix(in oklch, var(--border) 55%, transparent);
-		border-radius: 999px;
+		background: var(--muted);
+		border-radius: 3px;
 	}
 
-	.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-		background: color-mix(in oklch, var(--border) 75%, transparent);
+	/* Smooth transitions for interactive elements */
+	.transition-smooth {
+		transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+		transition-duration: var(--duration-fast);
+		transition-timing-function: var(--ease-out);
 	}
 
-	.muted-text {
-		color: var(--muted-foreground);
+	/* Press effect */
+	.press-effect {
+		transition: transform var(--duration-fast) var(--ease-spring);
+	}
+	.press-effect:active {
+		transform: scale(0.97);
 	}
 
-	.eyebrow {
-		font-size: 0.75rem;
-		font-weight: 500;
-		text-transform: uppercase;
-		color: var(--muted-foreground);
+	/* Hover lift effect */
+	.hover-lift {
+		transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+	}
+	.hover-lift:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 8px 24px -4px oklch(0 0 0 / 0.12);
+	}
+
+	/* Fade in animation */
+	.animate-fade-in {
+		animation: fadeIn var(--duration-normal) var(--ease-out);
+	}
+
+	/* Slide up animation */
+	.animate-slide-up {
+		animation: slideUp var(--duration-normal) var(--ease-out);
+	}
+
+	/* Scale in animation */
+	.animate-scale-in {
+		animation: scaleIn var(--duration-normal) var(--ease-spring);
+	}
+
+	/* Stagger children animation */
+	.stagger-children > * {
+		animation: fadeSlideIn var(--duration-normal) var(--ease-out) backwards;
+	}
+	.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+	.stagger-children > *:nth-child(2) { animation-delay: 30ms; }
+	.stagger-children > *:nth-child(3) { animation-delay: 60ms; }
+	.stagger-children > *:nth-child(4) { animation-delay: 90ms; }
+	.stagger-children > *:nth-child(5) { animation-delay: 120ms; }
+	.stagger-children > *:nth-child(6) { animation-delay: 150ms; }
+	.stagger-children > *:nth-child(n+7) { animation-delay: 180ms; }
+}
+
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+@keyframes slideUp {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes scaleIn {
+	from {
+		opacity: 0;
+		transform: scale(0.96);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes fadeSlideIn {
+	from {
+		opacity: 0;
+		transform: scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
 	}
 }

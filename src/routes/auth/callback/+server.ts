@@ -13,10 +13,7 @@ export const POST: RequestHandler = async ({ request, cookies, url }) => {
 	};
 
 	if (!(supabaseUrl && supabaseAnonKey)) {
-		return json(
-			{ success: false, error: "Missing PUBLIC_SUPABASE env" },
-			{ status: 500 },
-		);
+		return json({ success: false, error: "Missing PUBLIC_SUPABASE env" }, { status: 500 });
 	}
 
 	const { event, session } = (await request.json()) as {

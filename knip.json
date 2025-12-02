@@ -2,21 +2,13 @@
 	"$schema": "https://unpkg.com/knip@latest/schema.json",
 	"workspaces": {
 		".": {
-			"entry": [
-				"src/routes/**/*.{svelte,ts}",
-				"src/lib/**/*.{ts,svelte}",
-				"scripts/**/*.ts"
-			],
+			"entry": ["src/routes/**/*.{svelte,ts}", "src/lib/**/*.{ts,svelte}", "scripts/**/*.ts"],
 			"project": ["src/**/*.{ts,svelte}", "scripts/**/*.ts"],
 			"ignoreDependencies": ["tailwindcss-animate"],
 			"ignoreBinaries": ["supabase"],
 			"ignore": [
 				".svelte-kit/**",
-				"**/$types.d.ts",
-				"src/lib/components/ui/**/index.ts",
-				"src/lib/components/ui/**/*.svelte",
-				"vitest-setup-client.ts",
-				"src/demo.spec.ts"
+				"**/$types.d.ts"
 			],
 			"paths": {
 				"$lib/*": ["src/lib/*"],
