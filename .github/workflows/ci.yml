@@ -34,7 +34,7 @@ jobs:
         run: npm run check
       
       - name: Run unit tests
-        run: npx echo "vitest removed" && exit 0 # vitest run
+        run: npm test
       
       - name: Build
         run: npm run build
