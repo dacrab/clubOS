@@ -28,10 +28,10 @@
 
 	let { type, bookings, user, icon = Package }: Props = $props();
 
-	const isAppt = type === "appointment";
-	const table = isAppt ? "appointments" : "football_bookings";
-	const dateField = isAppt ? "appointment_date" : "booking_datetime";
-	const prefix = isAppt ? "appointments" : "football";
+	const isAppt = $derived(type === "appointment");
+	const table = $derived(isAppt ? "appointments" : "football_bookings");
+	const dateField = $derived(isAppt ? "appointment_date" : "booking_datetime");
+	const prefix = $derived(isAppt ? "appointments" : "football");
 
 	let showDialog = $state(false);
 	let editingItem = $state<Booking | null>(null);

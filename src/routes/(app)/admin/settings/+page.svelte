@@ -15,8 +15,15 @@
 
 	const { data } = $props();
 
-	let settings = $state({ ...data.settings });
+	// eslint-disable-next-line svelte/prefer-writable-derived -- Form state needs two-way binding
+	let settings = $state(structuredClone(data.settings));
 	let saving = $state(false);
+
+	// Sync form state when server data changes (e.g., after save + invalidateAll)
+	$effect(() => {
+		settings = structuredClone(data.settings);
+	});
+
 	const hasChanges = $derived(JSON.stringify(settings) !== JSON.stringify(data.settings));
 
 	const dateFormats = [
