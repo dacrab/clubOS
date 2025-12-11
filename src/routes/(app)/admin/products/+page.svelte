@@ -13,6 +13,7 @@
 	import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table";
 	import { supabase } from "$lib/utils/supabase";
 	import { fmtCurrency } from "$lib/utils/format";
+	import { settings } from "$lib/state/settings.svelte";
 	import { Plus, Pencil, Trash2, Package, FolderTree } from "@lucide/svelte";
 	import type { Product, Category } from "$lib/types/database";
 
@@ -32,7 +33,10 @@
 
 	const getCategoryLabel = (id: string | null) => id ? data.categories.find(c => c.id === id)?.name ?? t("products.noCategory") : t("products.noCategory");
 	const getParentLabel = (id: string | null) => id ? data.categories.find(c => c.id === id)?.name ?? t("categories.noParent") : t("categories.noParent");
-	const getStockBadge = (stock: number) => stock <= 0 ? { variant: "destructive" as const, label: t("products.outOfStock") } : stock <= 3 ? { variant: "warning" as const, label: t("products.lowStock") } : { variant: "success" as const, label: t("products.inStock") };
+	const getStockBadge = (stock: number) => {
+		const threshold = settings.current.low_stock_threshold;
+		return stock <= 0 ? { variant: "destructive" as const, label: t("products.outOfStock") } : stock <= threshold ? { variant: "warning" as const, label: t("products.lowStock") } : { variant: "success" as const, label: t("products.inStock") };
+	};
 
 	function openProductDialog(product?: Product) {
 		editingProduct = product ?? null;

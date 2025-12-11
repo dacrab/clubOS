@@ -5,4 +5,4 @@
 	const { data } = $props();
 </script>
 
-<BookingPage type="appointment" bookings={data.appointments} user={data.user} icon={Cake} />
+<BookingPage type="birthday" bookings={data.bookings} user={data.user} icon={Cake} />

@@ -1,8 +1,10 @@
 import type { PageServerLoad } from "./$types";
+import { mergeSettings, type TenantSettings } from "$lib/config/settings";
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
-	const { user } = await parent();
+	const { user, settings: tenantSettings } = await parent();
 	const { supabase } = locals;
+	const s = mergeSettings(tenantSettings as Partial<TenantSettings> | null);
 
 	const today = new Date();
 	today.setHours(0, 0, 0, 0);
@@ -33,12 +35,12 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 			.gte("created_at", today.toISOString())
 			.order("created_at", { ascending: false }),
 
-		// Low stock count
+		// Low stock count (uses settings threshold)
 		supabase
 			.from("products")
 			.select("id", { count: "exact", head: true })
 			.gte("stock_quantity", 0)
-			.lte("stock_quantity", 3),
+			.lte("stock_quantity", s.low_stock_threshold),
 
 		// Active users
 		supabase.from("users").select("id", { count: "exact", head: true }),

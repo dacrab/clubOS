@@ -66,6 +66,9 @@ describe("i18n translations", () => {
 			expect(en.users.title).toBe("Users");
 			expect(en.users.addUser).toBe("Add User");
 			expect(en.users.roles.admin).toBe("Admin");
+			expect(en.users.roles.owner).toBe("Owner");
+			expect(en.users.roles.manager).toBe("Manager");
+			expect(en.users.roles.staff).toBe("Staff");
 		});
 
 		it("should have settings translations", () => {
@@ -75,16 +78,12 @@ describe("i18n translations", () => {
 			expect(en.settings.sections.sales).toBe("Sales");
 		});
 
-		it("should have appointment translations", () => {
-			expect(en.appointments).toBeDefined();
-			expect(en.appointments.title).toBe("Appointments");
-			expect(en.appointments.status.confirmed).toBe("Confirmed");
-		});
-
-		it("should have football translations", () => {
-			expect(en.football).toBeDefined();
-			expect(en.football.title).toBe("Football Bookings");
-			expect(en.football.field).toBe("Field");
+		it("should have bookings translations", () => {
+			expect(en.bookings).toBeDefined();
+			expect(en.bookings.title).toBe("Bookings");
+			expect(en.bookings.status.confirmed).toBe("Confirmed");
+			expect(en.bookings.birthday.title).toBe("Birthday Parties");
+			expect(en.bookings.football.title).toBe("Football Bookings");
 		});
 
 		it("should have error translations", () => {
@@ -120,6 +119,13 @@ describe("i18n translations", () => {
 			expect(el.settings.timeFormats).toBeDefined();
 			expect(el.settings.timeFormats["24h"]).toBeDefined();
 			expect(el.settings.timeFormats["12h"]).toBeDefined();
+		});
+
+		it("should have bookings translations", () => {
+			expect(el.bookings).toBeDefined();
+			expect(el.bookings.title).toBeDefined();
+			expect(el.bookings.birthday.title).toBeDefined();
+			expect(el.bookings.football.title).toBeDefined();
 		});
 	});
 
@@ -184,7 +190,6 @@ describe("i18n translations", () => {
 
 	describe("placeholder patterns", () => {
 		it("should have consistent placeholder format in en", () => {
-			// Check for {placeholder} pattern
 			expect(en.common.deleteConfirm).toMatch(/\{name\}/);
 			expect(en.common.field).toMatch(/\{number\}/);
 			expect(en.common.inStockCount).toMatch(/\{count\}/);
@@ -203,7 +208,6 @@ describe("i18n translations", () => {
 });
 
 describe("getNestedValue helper function behavior", () => {
-	// Test the expected behavior of key path resolution
 	it("should resolve simple keys", () => {
 		expect(en.common.add).toBe("Add");
 	});

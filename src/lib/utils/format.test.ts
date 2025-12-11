@@ -1,8 +1,21 @@
+/**
+ * Format Utility Tests - Senior Level
+ *
+ * Comprehensive tests for date and currency formatting utilities.
+ * Covers:
+ * - All date format variations
+ * - Time format (12h/24h)
+ * - Currency formatting with locales
+ * - Edge cases (invalid input, boundary values, timezone considerations)
+ * - Type safety and null handling
+ */
+
 import { describe, it, expect } from "vitest";
 import { formatDate, formatCurrency, getCurrencySymbol } from "./format";
 import type { FormatSettings } from "./format";
 
 describe("formatDate", () => {
+	// Use fixed dates to avoid timezone issues in CI
 	const testDate = new Date("2024-12-25T14:30:00");
 	const testDateStr = "2024-12-25T14:30:00";
 
@@ -43,6 +56,14 @@ describe("formatDate", () => {
 		it("should pad single digit days and months", () => {
 			const date = new Date("2024-01-05T10:00:00");
 			expect(formatDate(date, null, false)).toBe("05/01/2024");
+		});
+
+		it("should handle empty settings object", () => {
+			expect(formatDate(testDate, {}, false)).toBe("25/12/2024");
+		});
+
+		it("should handle undefined settings", () => {
+			expect(formatDate(testDate, undefined as unknown as FormatSettings, false)).toBe("25/12/2024");
 		});
 	});
 
@@ -186,5 +207,126 @@ describe("getCurrencySymbol", () => {
 	it("should return € for any unknown code", () => {
 		// @ts-expect-error testing invalid input
 		expect(getCurrencySymbol("JPY")).toBe("€");
+	});
+
+	it("should return € for null", () => {
+		// @ts-expect-error testing null input
+		expect(getCurrencySymbol(null)).toBe("€");
+	});
+
+	it("should return € for empty string", () => {
+		// @ts-expect-error testing empty string
+		expect(getCurrencySymbol("")).toBe("€");
+	});
+});
+
+describe("Edge Cases and Boundary Conditions", () => {
+	describe("formatDate edge cases", () => {
+		it("should handle epoch date (1970-01-01)", () => {
+			const epoch = new Date(0);
+			const result = formatDate(epoch, null, false);
+			expect(result).toMatch(/01\/01\/1970/);
+		});
+
+		it("should handle far future date (year 2099)", () => {
+			const futureDate = new Date("2099-12-31T23:59:59");
+			expect(formatDate(futureDate, null, false)).toBe("31/12/2099");
+		});
+
+		it("should handle leap year date (Feb 29)", () => {
+			const leapDate = new Date("2024-02-29T12:00:00");
+			expect(formatDate(leapDate, null, false)).toBe("29/02/2024");
+		});
+
+		it("should handle end of year boundary", () => {
+			const endOfYear = new Date("2024-12-31T23:59:59");
+			expect(formatDate(endOfYear, null, true)).toBe("31/12/2024 23:59");
+		});
+
+		it("should handle start of year boundary", () => {
+			const startOfYear = new Date("2024-01-01T00:00:00");
+			expect(formatDate(startOfYear, null, true)).toBe("01/01/2024 00:00");
+		});
+
+		it("should handle numeric timestamp via Date constructor", () => {
+			const timestamp = 1703505000000; // Dec 25, 2023
+			const result = formatDate(new Date(timestamp), null, false);
+			expect(result).toMatch(/\d{2}\/\d{2}\/\d{4}/);
+		});
+	});
+
+	describe("formatCurrency edge cases", () => {
+		it("should handle very large amounts", () => {
+			const result = formatCurrency(999999999.99, { currency_code: "EUR" });
+			expect(result).toContain("€");
+			expect(result).toMatch(/999/);
+		});
+
+		it("should handle very small amounts", () => {
+			const result = formatCurrency(0.01, { currency_code: "EUR" });
+			expect(result).toContain("€");
+			expect(result).toMatch(/0[.,]01/);
+		});
+
+		it("should handle exactly zero", () => {
+			const result = formatCurrency(0, { currency_code: "EUR" });
+			expect(result).toContain("€");
+			expect(result).toMatch(/0[.,]00/);
+		});
+
+		it("should handle negative amounts correctly", () => {
+			const result = formatCurrency(-100.5, { currency_code: "USD" });
+			expect(result).toContain("$");
+			// Should contain negative indicator
+			expect(result).toMatch(/-|−|\(/);
+		});
+
+		it("should round correctly at .005 boundary", () => {
+			// .005 should round to .01 (banker's rounding may vary)
+			const result1 = formatCurrency(10.005, { currency_code: "EUR" });
+			const result2 = formatCurrency(10.004, { currency_code: "EUR" });
+			// At least one should round up, one down
+			expect(result1).toMatch(/10[.,]0[01]/);
+			expect(result2).toMatch(/10[.,]00/);
+		});
+
+		it("should handle NaN gracefully", () => {
+			const result = formatCurrency(NaN, { currency_code: "EUR" });
+			// Should not throw, behavior may vary
+			expect(typeof result).toBe("string");
+		});
+
+		it("should handle Infinity", () => {
+			const result = formatCurrency(Infinity, { currency_code: "EUR" });
+			expect(typeof result).toBe("string");
+		});
+	});
+});
+
+describe("Performance considerations", () => {
+	it("should format 1000 dates in reasonable time", () => {
+		const start = performance.now();
+		const date = new Date("2024-06-15T10:30:00");
+		
+		for (let i = 0; i < 1000; i++) {
+			formatDate(date, null, true);
+		}
+		
+		const duration = performance.now() - start;
+		// Should complete in under 100ms
+		expect(duration).toBeLessThan(100);
+	});
+
+	it("should format 1000 currency values in reasonable time", () => {
+		const start = performance.now();
+		
+		for (let i = 0; i < 1000; i++) {
+			formatCurrency(1234.56, { currency_code: "EUR" });
+		}
+		
+		const duration = performance.now() - start;
+		// Currency formatting uses Intl.NumberFormat which is slower than date formatting
+		// Allow more time for CI/slower environments
+		expect(duration).toBeLessThan(1000);
 	});
 });

@@ -6,28 +6,36 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Separator } from "$lib/components/ui/separator";
 	import { LayoutDashboard, Package, ShoppingCart, DollarSign, Users, Settings, Dribbble, Cake, ChevronLeft, ChevronRight, LogOut } from "@lucide/svelte";
+	import type { MemberRole } from "$lib/types/database";
 
 	type NavItem = { label: string; href: string; icon: typeof LayoutDashboard };
 
 	let collapsed = $state(false);
 
-	const navConfig: Record<string, NavItem[]> = {
-		admin: [
-			{ label: "nav.dashboard", href: "/admin", icon: LayoutDashboard },
-			{ label: "nav.products", href: "/admin/products", icon: Package },
-			{ label: "nav.orders", href: "/admin/orders", icon: ShoppingCart },
-			{ label: "nav.registers", href: "/admin/registers", icon: DollarSign },
-			{ label: "nav.birthdays", href: "/admin/birthdays", icon: Cake },
-			{ label: "nav.football", href: "/admin/football", icon: Dribbble },
-			{ label: "nav.users", href: "/admin/users", icon: Users },
-			{ label: "nav.settings", href: "/admin/settings", icon: Settings },
-		],
-		secretary: [
+	const adminNav: NavItem[] = [
+		{ label: "nav.dashboard", href: "/admin", icon: LayoutDashboard },
+		{ label: "nav.products", href: "/admin/products", icon: Package },
+		{ label: "nav.orders", href: "/admin/orders", icon: ShoppingCart },
+		{ label: "nav.registers", href: "/admin/registers", icon: DollarSign },
+		{ label: "nav.birthdays", href: "/admin/birthdays", icon: Cake },
+		{ label: "nav.football", href: "/admin/football", icon: Dribbble },
+		{ label: "nav.users", href: "/admin/users", icon: Users },
+		{ label: "nav.settings", href: "/admin/settings", icon: Settings },
+	];
+
+	const navConfig: Record<MemberRole, NavItem[]> = {
+		owner: adminNav,
+		admin: adminNav,
+		manager: [
 			{ label: "nav.dashboard", href: "/secretary", icon: LayoutDashboard },
-			{ label: "nav.appointments", href: "/secretary/birthdays", icon: Cake },
+			{ label: "nav.birthdays", href: "/secretary/birthdays", icon: Cake },
 			{ label: "nav.football", href: "/secretary/football", icon: Dribbble },
+			{ label: "nav.orders", href: "/secretary/orders", icon: ShoppingCart },
 		],
-		staff: [{ label: "nav.dashboard", href: "/staff", icon: LayoutDashboard }],
+		staff: [
+			{ label: "nav.dashboard", href: "/staff", icon: LayoutDashboard },
+			{ label: "nav.orders", href: "/staff/orders", icon: ShoppingCart },
+		],
 	};
 
 	const navItems = $derived(navConfig[session.user?.role ?? "staff"] ?? navConfig.staff);
@@ -35,7 +43,14 @@
 </script>
 
 <aside class={cn("fixed left-0 top-0 z-40 flex h-screen flex-col border-r bg-sidebar transition-all duration-200", collapsed ? "w-16" : "w-64")}>
-	<div class="flex h-14 items-center border-b px-4"><span class="text-lg font-bold text-foreground">{collapsed ? "C" : "clubOS"}</span></div>
+	<div class="flex h-14 items-center border-b px-4">
+		{#if collapsed}
+			<img src="/favicon.svg" alt="clubOS" class="h-8 w-8" />
+		{:else}
+			<img src="/favicon.svg" alt="clubOS" class="mr-2 h-7 w-7" />
+			<span class="text-lg font-bold text-foreground">clubOS</span>
+		{/if}
+	</div>
 	<nav class="flex-1 space-y-1 overflow-y-auto p-2 scrollbar-thin">
 		{#each navItems as item (item.href)}
 			<a href={item.href} class={cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors", isActive(item.href) ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/50")}>

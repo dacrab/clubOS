@@ -2,26 +2,38 @@ import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
-	// If user is already logged in, redirect to appropriate dashboard
-	if (locals.user) {
-		const role = locals.user.user_metadata?.role as string | undefined;
-		
-		if (role === "admin") throw redirect(307, "/admin");
-		if (role === "secretary") throw redirect(307, "/secretary");
-		if (role === "staff") throw redirect(307, "/staff");
-		
-		// Fallback: check database
-		const { data } = await locals.supabase
-			.from("users")
-			.select("role")
-			.eq("id", locals.user.id)
-			.single();
-		
-		const dbRole = data?.role as string | undefined;
-		if (dbRole === "admin") throw redirect(307, "/admin");
-		if (dbRole === "secretary") throw redirect(307, "/secretary");
-		if (dbRole === "staff") throw redirect(307, "/staff");
+	const { user, supabase } = locals;
+
+	// Not logged in - show login page
+	if (!user) {
+		return {};
 	}
 
-	return {};
+	// Get user's membership to determine redirect
+	const { data: membership } = await supabase
+		.from("memberships")
+		.select("role")
+		.eq("user_id", user.id)
+		.order("is_primary", { ascending: false })
+		.limit(1)
+		.single();
+
+	if (!membership) {
+		// No membership - redirect to onboarding
+		throw redirect(307, "/onboarding");
+	}
+
+	// Redirect based on role
+	const role = membership.role as string;
+	
+	switch (role) {
+		case "owner":
+		case "admin":
+			throw redirect(307, "/admin");
+		case "manager":
+			throw redirect(307, "/secretary");
+		case "staff":
+		default:
+			throw redirect(307, "/staff");
+	}
 };

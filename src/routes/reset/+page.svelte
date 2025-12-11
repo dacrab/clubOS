@@ -16,7 +16,7 @@
 		e.preventDefault();
 
 		if (!password || !confirmPassword) {
-			toast.error("Please fill in all fields");
+			toast.error(t("auth.fillAllFields"));
 			return;
 		}
 
@@ -44,7 +44,7 @@
 	<Card class="w-full max-w-sm">
 		<CardHeader class="text-center">
 			<CardTitle>{t("auth.resetPassword")}</CardTitle>
-			<CardDescription>Enter your new password</CardDescription>
+			<CardDescription>{t("auth.resetPasswordDesc")}</CardDescription>
 		</CardHeader>
 		<CardContent>
 			<form onsubmit={handleReset} class="space-y-4">

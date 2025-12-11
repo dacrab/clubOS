@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <rect width="200" height="200" rx="40" fill="#6366f1"/>
+  <!-- Soccer ball -->
+  <circle cx="100" cy="85" r="45" stroke="white" stroke-width="4" fill="none"/>
+  <!-- Pentagon in center -->
+  <polygon points="100,55 118,68 111,90 89,90 82,68" fill="white"/>
+  <!-- Connecting lines from pentagon to edge -->
+  <path d="M100 55 L100 40" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M118 68 L138 58" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M111 90 L125 110" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M89 90 L75 110" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M82 68 L62 58" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <!-- Outer pentagons partial -->
+  <path d="M100 40 L115 42 M100 40 L85 42" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <path d="M138 58 L140 73 M138 58 L130 48" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <path d="M125 110 L115 120 M125 110 L135 105" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <path d="M75 110 L85 120 M75 110 L65 105" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <path d="M62 58 L60 73 M62 58 L70 48" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <!-- Brand text -->
+  <text x="100" y="165" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="700" fill="white">clubOS</text>
+</svg>

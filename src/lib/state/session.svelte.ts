@@ -1,4 +1,10 @@
-export type UserRole = "admin" | "secretary" | "staff";
+/**
+ * Session State Management
+ * Handles user authentication state and role-based access control
+ */
+
+// Role hierarchy: owner > admin > manager > staff
+export type UserRole = "owner" | "admin" | "manager" | "staff";
 
 export type SessionUser = {
 	id: string;
@@ -18,28 +24,57 @@ class SessionState {
 		return this.user !== null;
 	}
 
+	// Role checks
+	get isOwner(): boolean {
+		return this.user?.role === "owner";
+	}
+
 	get isAdmin(): boolean {
 		return this.user?.role === "admin";
 	}
 
-	get isSecretary(): boolean {
-		return this.user?.role === "secretary";
+	get isManager(): boolean {
+		return this.user?.role === "manager";
 	}
 
 	get isStaff(): boolean {
 		return this.user?.role === "staff";
 	}
 
+	// Access level checks (hierarchical)
 	get canAccessAdmin(): boolean {
-		return this.isAdmin;
+		return this.isOwner || this.isAdmin;
 	}
 
 	get canAccessSecretary(): boolean {
-		return this.isAdmin || this.isSecretary;
+		return this.isOwner || this.isAdmin || this.isManager;
 	}
 
 	get canAccessStaff(): boolean {
-		return this.isAdmin || this.isStaff;
+		// All authenticated users can access staff area
+		return this.isAuthenticated;
+	}
+
+	// Permission helpers
+	get canManageUsers(): boolean {
+		return this.isOwner || this.isAdmin;
+	}
+
+	get canManageSettings(): boolean {
+		return this.isOwner || this.isAdmin;
+	}
+
+	get canManageProducts(): boolean {
+		return this.isOwner || this.isAdmin;
+	}
+
+	get canManageBookings(): boolean {
+		return this.isOwner || this.isAdmin || this.isManager;
+	}
+
+	get canProcessOrders(): boolean {
+		// All staff can process orders
+		return this.isAuthenticated;
 	}
 
 	setUser(user: SessionUser | null): void {
@@ -58,13 +93,13 @@ export const session = new SessionState();
 
 export function getHomePathForRole(role: UserRole | null): string {
 	switch (role) {
+		case "owner":
 		case "admin":
 			return "/admin";
-		case "secretary":
+		case "manager":
 			return "/secretary";
 		case "staff":
-			return "/staff";
 		default:
-			return "/";
+			return "/staff";
 	}
 }
