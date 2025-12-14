@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import svelte from "eslint-plugin-svelte";
 import globals from "globals";
+import vitest from "@vitest/eslint-plugin";
 
 export default tseslint.config(
 	// Ignore generated and external directories
@@ -100,6 +101,16 @@ export default tseslint.config(
 					ignoreRestSiblings: true,
 				},
 			],
+		},
+	},
+	// Vitest-specific lint rules for test files
+	{
+		files: ["src/**/*.{test,spec}.{js,ts}"],
+		plugins: {
+			vitest,
+		},
+		rules: {
+			...vitest.configs.recommended.rules,
 		},
 	},
 	// Node-focused config for tooling and scripts

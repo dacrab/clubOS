@@ -18,6 +18,14 @@ export default defineConfig({
 				"src/lib/types/**",
 				"src/lib/server/**",
 			],
+			thresholds: {
+				global: {
+					lines: 55,
+					branches: 45,
+					functions: 45,
+					statements: 55,
+				},
+			},
 		},
 		typecheck: {
 			enabled: true,

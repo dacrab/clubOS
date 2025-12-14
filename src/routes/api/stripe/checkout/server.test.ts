@@ -132,12 +132,7 @@ describe("POST /api/stripe/checkout", () => {
 	describe("Stripe Configuration", () => {
 		// Note: Testing missing Stripe key requires module reload which isn't fully
 		// supported in bun's vitest. This test documents expected behavior.
-		it.skip("should return 500 when Stripe key is not configured", async () => {
-			// This test would verify that when STRIPE_SECRET_KEY is missing,
-			// the endpoint returns a 500 error with "Stripe not configured" message.
-			// Skipped because bun doesn't support vi.doMock for dynamic module re-mocking.
-			expect(true).toBe(true);
-		});
+		it.todo("should return 500 when Stripe key is not configured");
 	});
 
 	describe("New Customer Flow", () => {

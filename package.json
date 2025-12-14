@@ -15,6 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "quality": "npm run test:coverage && npm run check",
     "db:seed": "bunx tsx scripts/seed.ts",
     "db:reset": "supabase db reset && bunx tsx scripts/seed.ts",
     "db:restart": "supabase stop && supabase start"
@@ -30,6 +31,8 @@
     "@testing-library/svelte": "^5.2.9",
     "@types/d3-scale": "^4.0.9",
     "@types/node": "^24.10.3",
+    "@vitest/coverage-v8": "^4.0.15",
+    "@vitest/eslint-plugin": "^1.5.2",
     "bits-ui": "^2.14.4",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
