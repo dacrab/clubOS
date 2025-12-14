@@ -20,29 +20,37 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
 	auth: { autoRefreshToken: false, persistSession: false },
 });
 
-// Demo credentials - change these in production!
+const getRequiredEnv = (name: string): string => {
+	const value = process.env[name];
+	if (!value) {
+		throw new Error(`Missing ${name} in .env.local`);
+	}
+	return value;
+};
+
+// Demo credentials - passwords are configured via environment variables
 const DEMO_USERS = [
 	{
 		email: "owner@clubos.app",
-		password: "Owner123!",
+		password: getRequiredEnv("SEED_OWNER_PASSWORD"),
 		fullName: "Demo Owner",
 		role: "owner" as const,
 	},
 	{
 		email: "admin@clubos.app",
-		password: "Admin123!",
+		password: getRequiredEnv("SEED_ADMIN_PASSWORD"),
 		fullName: "Demo Admin",
 		role: "admin" as const,
 	},
 	{
 		email: "manager@clubos.app",
-		password: "Manager123!",
+		password: getRequiredEnv("SEED_MANAGER_PASSWORD"),
 		fullName: "Demo Manager",
 		role: "manager" as const,
 	},
 	{
 		email: "staff@clubos.app",
-		password: "Staff123!",
+		password: getRequiredEnv("SEED_STAFF_PASSWORD"),
 		fullName: "Demo Staff",
 		role: "staff" as const,
 	},
