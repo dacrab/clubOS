@@ -18,7 +18,8 @@
     "quality": "npm run test:coverage && npm run check",
     "db:seed": "bunx tsx scripts/seed.ts",
     "db:reset": "supabase db reset && bunx tsx scripts/seed.ts",
-    "db:restart": "supabase stop && supabase start"
+    "db:restart": "supabase stop && supabase start",
+    "db:introspect": "drizzle-kit introspect"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -36,6 +37,7 @@
     "bits-ui": "^2.14.4",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
+    "drizzle-kit": "^0.31.8",
     "eslint": "^9.39.1",
     "eslint-plugin-svelte": "^3.13.1",
     "globals": "^16.5.0",
@@ -56,7 +58,9 @@
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.87.1",
     "d3-scale": "^4.0.2",
+    "drizzle-orm": "^0.45.1",
     "layerchart": "^1.0.12",
+    "postgres": "^3.4.7",
     "svelte-sonner": "^1.0.7"
   }
 }

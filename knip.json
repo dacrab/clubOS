@@ -10,7 +10,7 @@
 				"vitest.config.ts"
 			],
 			"project": ["src/**/*.{ts,svelte}", "scripts/**/*.ts"],
-			"ignoreDependencies": ["tailwindcss-animate", "@testing-library/svelte", "@vitest/coverage-v8"],
+			"ignoreDependencies": ["tailwindcss-animate", "@testing-library/svelte"],
 			"ignoreBinaries": ["supabase"],
 			"ignore": [
 				".svelte-kit/**",

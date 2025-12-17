@@ -36,5 +36,6 @@ export default defineConfig({
 			$lib: "/src/lib",
 			$app: "/src/app-mocks",
 		},
+		conditions: ["browser"],
 	},
 });

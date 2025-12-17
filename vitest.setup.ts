@@ -11,10 +11,56 @@
  */
 
 import { vi, beforeEach, afterEach } from "vitest";
+import * as dotenv from "dotenv";
+
+dotenv.config({ path: ".env.local" });
 
 // ============================================================================
-// SVELTE STATE MOCK (must be before any imports that use $state)
+// SVELTEKIT MODULE MOCKS
 // ============================================================================
+
+vi.mock("$app/environment", () => ({
+	browser: true,
+	dev: true,
+	building: false,
+	version: "test",
+}));
+
+vi.mock("$app/navigation", () => ({
+	goto: vi.fn(),
+	invalidate: vi.fn(),
+	invalidateAll: vi.fn(),
+	preloadData: vi.fn(),
+	preloadCode: vi.fn(),
+	afterNavigate: vi.fn(),
+	beforeNavigate: vi.fn(),
+	pushState: vi.fn(),
+	replaceState: vi.fn(),
+}));
+
+vi.mock("$app/stores", () => {
+	const { readable, writable } = require("svelte/store");
+	return {
+		getStores: () => ({
+			page: readable({ url: new URL("http://localhost"), params: {}, route: { id: null } }),
+			navigating: readable(null),
+			updated: readable(false),
+		}),
+		page: readable({ url: new URL("http://localhost"), params: {}, route: { id: null } }),
+		navigating: readable(null),
+		updated: readable(false),
+	};
+});
+
+// ============================================================================
+// SVELTE STATE MOCKS & SVELTE 5 RUNES
+// (must be registered before any imports that use $state)
+// ============================================================================
+
+// Minimal runtime implementation of the Svelte 5 $state rune for tests.
+// It simply returns the initial value and allows direct reassignment,
+// which is sufficient for our class-based state containers in tests.
+vi.stubGlobal("$state", ((value: unknown) => value) as <T>(value: T) => T);
 
 vi.mock("$lib/state/settings.svelte", () => ({
 	settings: {
@@ -22,7 +68,7 @@ vi.mock("$lib/state/settings.svelte", () => ({
 		formatSettings: { currency_code: "EUR", date_format: "DD/MM/YYYY", time_format: "24h" },
 		load: vi.fn(),
 		save: vi.fn(),
-	}
+	},
 }));
 
 // ============================================================================
