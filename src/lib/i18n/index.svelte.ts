@@ -2,10 +2,6 @@ import { browser } from "$app/environment";
 import { en, type TranslationsStructure } from "./en";
 import { el } from "./el";
 
-// Minimal runtime shim for Svelte's $state rune so tests can execute
-// .svelte.ts modules without the Svelte compiler.
-const $state = <T>(value: T): T => value;
-
 export type Locale = "en" | "el";
 
 const translations: Record<Locale, TranslationsStructure> = { en, el };

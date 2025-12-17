@@ -5,7 +5,7 @@ import { el } from "./el";
 describe("i18n translations", () => {
 	function getKeys(obj: unknown, prefix = ""): string[] {
 		const keys: string[] = [];
-		if (obj && typeof obj === "object") {
+		if (obj && typeof obj === "object" && obj !== null) {
 			for (const [key, value] of Object.entries(obj)) {
 				const fullKey = prefix ? `${prefix}.${key}` : key;
 				if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -16,6 +16,15 @@ describe("i18n translations", () => {
 			}
 		}
 		return keys;
+	}
+
+	function getValue(obj: unknown, path: string): unknown {
+		return path.split(".").reduce((acc, part) => {
+			if (acc && typeof acc === "object" && part in (acc as object)) {
+				return (acc as Record<string, unknown>)[part];
+			}
+			return undefined;
+		}, obj);
 	}
 
 	describe("consistency", () => {
@@ -30,36 +39,40 @@ describe("i18n translations", () => {
 			expect(missingInEn, `Missing keys in EN: ${missingInEn.join(", ")}`).toEqual([]);
 		});
 
-		it("should have non-empty string values", () => {
-			// Random sample check to ensure values are strings, not deep validation
-			const sampleKey = "common.save";
-			// @ts-ignore - structural check
-			if (en.common?.save) expect(typeof en.common.save).toBe("string");
+		it("should have non-empty string values for known keys", () => {
+			const save = (en as unknown as { common: { save: string } }).common?.save;
+			expect(typeof save).toBe("string");
+			expect(save.length).toBeGreaterThan(0);
 		});
 	});
 
 	describe("placeholders", () => {
 		it("should share consistent placeholder variables between locales", () => {
-			// If English has {name}, Greek should also have {name}
 			const enKeys = getKeys(en);
-			
-			enKeys.forEach(key => {
-				const getVal = (obj: any, k: string) => k.split('.').reduce((o, i) => o?.[i], obj);
-				const enVal = getVal(en, key);
-				const elVal = getVal(el, key);
+			const inconsistencies: string[] = [];
 
-				if (typeof enVal === 'string' && typeof elVal === 'string') {
+			for (const key of enKeys) {
+				const enVal = getValue(en, key);
+				const elVal = getValue(el, key);
+
+				if (typeof enVal === "string" && typeof elVal === "string") {
 					const enMatch = enVal.match(/\{(\w+)\}/g);
 					const elMatch = elVal.match(/\{(\w+)\}/g);
-					
+
 					if (enMatch) {
-						expect(elMatch, `Key ${key} missing placeholders`).toBeDefined();
 						const enPlaceholders = [...new Set(enMatch)].sort();
 						const elPlaceholders = [...new Set(elMatch || [])].sort();
-						expect(elPlaceholders).toEqual(enPlaceholders);
+
+						if (JSON.stringify(enPlaceholders) !== JSON.stringify(elPlaceholders)) {
+							inconsistencies.push(
+								`${key}: EN[${enPlaceholders.join(", ")}] != EL[${elPlaceholders.join(", ")}]`
+							);
+						}
 					}
 				}
-			});
+			}
+
+			expect(inconsistencies).toEqual([]);
 		});
 	});
 });
