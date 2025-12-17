@@ -28,19 +28,19 @@ vi.mock("$env/dynamic/private", () => ({
 // Mock fetch for Stripe API calls
 const mockFetch = vi.fn();
 const originalFetch = globalThis.fetch;
-(globalThis as any).fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 describe("POST /api/stripe/checkout", () => {
 	beforeEach(() => {
 		resetIdCounter();
 		vi.clearAllMocks();
 		// Ensure our mock is always attached between tests
-		(globalThis as any).fetch = mockFetch;
+		globalThis.fetch = mockFetch;
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		(globalThis as any).fetch = originalFetch;
+		globalThis.fetch = originalFetch;
 	});
 
 	// Helper to setup mock fetch responses

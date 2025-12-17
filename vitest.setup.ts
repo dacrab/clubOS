@@ -38,8 +38,8 @@ vi.mock("$app/navigation", () => ({
 	replaceState: vi.fn(),
 }));
 
-vi.mock("$app/stores", () => {
-	const { readable, writable } = require("svelte/store");
+vi.mock("$app/stores", async () => {
+	const { readable } = await import("svelte/store");
 	return {
 		getStores: () => ({
 			page: readable({ url: new URL("http://localhost"), params: {}, route: { id: null } }),
