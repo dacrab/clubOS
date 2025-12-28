@@ -9,17 +9,29 @@
  *
  * NOTE: These tests require a running Supabase instance and use the service role
  * to test RLS policies by impersonating different users.
+ * 
+ * To run these tests locally:
+ * 1. Start local Supabase: `supabase start`
+ * 2. Run tests: `npm run test`
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 // Test configuration - uses local Supabase instance
 const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL || "http://localhost:54321";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SECRET_KEY || "";
 
-// Skip tests if no service key (CI without local Supabase)
-const shouldSkip = !SUPABASE_SERVICE_KEY;
+// Skip tests if:
+// - No service key configured
+// - Running in CI environment
+// - Not pointing to a local Supabase instance
+// - SKIP_DB_TESTS env var is set (for local development without Supabase running)
+const isLocalUrl = SUPABASE_URL.includes("localhost") || SUPABASE_URL.includes("127.0.0.1");
+const shouldSkip = !SUPABASE_SERVICE_KEY || 
+	process.env.CI === "true" || 
+	process.env.SKIP_DB_TESTS === "true" ||
+	!isLocalUrl;
 
 // Helper to assert value exists and narrow type
 function assertDefined<T>(value: T | null | undefined, message: string): asserts value is T {
@@ -43,6 +55,7 @@ const testData: Partial<TestData> = {};
 
 // Type guard to ensure test data is initialized
 function getTestData(): TestData {
+	if (shouldSkip) return testData as TestData;
 	assertDefined(testData.adminClient, "adminClient not initialized");
 	assertDefined(testData.tenantId, "tenantId not initialized");
 	assertDefined(testData.facilityId, "facilityId not initialized");
@@ -53,10 +66,20 @@ function getTestData(): TestData {
 
 describe.skipIf(shouldSkip)("Database Integration Tests", () => {
 	beforeAll(async () => {
+		if (shouldSkip || !SUPABASE_SERVICE_KEY) {
+			return;
+		}
+		
 		// Create admin client for setup
 		testData.adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
 			auth: { persistSession: false, autoRefreshToken: false },
 		});
+
+		// Test connection first - if this fails, the test suite will be skipped
+		const { error: connError } = await testData.adminClient.from("tenants").select("id").limit(1);
+		if (connError) {
+			throw new Error(`Supabase not reachable: ${connError.message}. Start local Supabase with 'supabase start'`);
+		}
 
 		// Create test tenant
 		const { data: tenant } = await testData.adminClient
@@ -122,6 +145,7 @@ describe.skipIf(shouldSkip)("Database Integration Tests", () => {
 	});
 
 	afterAll(async () => {
+		if (shouldSkip) return;
 		// Cleanup test data
 		if (testData.adminClient && testData.tenantId) {
 			await testData.adminClient.from("tenants").delete().eq("id", testData.tenantId);
