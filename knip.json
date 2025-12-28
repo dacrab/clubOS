@@ -6,8 +6,7 @@
 				"src/routes/**/*.{svelte,ts}",
 				"src/lib/**/*.{ts,svelte}",
 				"src/**/*.{test,spec}.ts",
-				"scripts/**/*.ts",
-				"vitest.config.ts"
+				"scripts/**/*.ts"
 			],
 			"project": ["src/**/*.{ts,svelte}", "scripts/**/*.ts"],
 			"ignoreDependencies": ["tailwindcss-animate", "@testing-library/svelte"],
