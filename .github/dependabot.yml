@@ -4,31 +4,35 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "sunday"
+      day: "monday"
       time: "02:00"
       timezone: "UTC"
     open-pull-requests-limit: 10
     groups:
-      bun-deps:
+      dependencies:
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
+    labels:
+      - "dependencies"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "sunday"
+      day: "monday"
       time: "02:00"
       timezone: "UTC"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     groups:
-      actions-minor-patch:
+      dependencies:
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
-
+    labels:
+      - "dependencies"
 
