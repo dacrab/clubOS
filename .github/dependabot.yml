@@ -17,20 +17,6 @@ updates:
           - "minor"
           - "patch"
   - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      day: "sunday"
-      time: "02:00"
-      timezone: "UTC"
     open-pull-requests-limit: 5
-    groups:
       actions-minor-patch:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-
 
