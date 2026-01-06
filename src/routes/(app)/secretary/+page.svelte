@@ -29,11 +29,11 @@
 	<div class="grid gap-4 md:grid-cols-2">
 		<Card>
 			<CardHeader><CardTitle class="flex items-center gap-2"><Cake class="h-5 w-5" />{t("nav.birthdays")}</CardTitle><CardDescription>{t("bookings.birthdaysDesc")}</CardDescription></CardHeader>
-			<CardContent><Button href="/secretary/birthdays" class="w-full">{t("common.viewAll")}</Button></CardContent>
+			<CardContent><Button href="/bookings/birthday" class="w-full">{t("common.viewAll")}</Button></CardContent>
 		</Card>
 		<Card>
 			<CardHeader><CardTitle class="flex items-center gap-2"><Dribbble class="h-5 w-5" />{t("nav.football")}</CardTitle><CardDescription>{t("bookings.footballDesc")}</CardDescription></CardHeader>
-			<CardContent><Button href="/secretary/football" class="w-full">{t("common.viewAll")}</Button></CardContent>
+			<CardContent><Button href="/bookings/football" class="w-full">{t("common.viewAll")}</Button></CardContent>
 		</Card>
 	</div>
 </div>
