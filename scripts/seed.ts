@@ -1,87 +1,32 @@
-/**
- * ClubOS Database Seeder
- * Creates demo data for development and testing
- */
-
 /* eslint-disable no-console */
 import { createClient } from "@supabase/supabase-js";
-import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.local" });
-
-const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SECRET_KEY;
-
-if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-	throw new Error("Missing PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY in .env.local");
-}
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-	auth: { autoRefreshToken: false, persistSession: false },
-});
-
-const getRequiredEnv = (name: string): string => {
+const env = (name: string): string => {
 	const value = process.env[name];
-	if (!value) {
-		throw new Error(`Missing ${name} in .env.local`);
-	}
+	if (!value) throw new Error(`Missing ${name}`);
 	return value;
 };
 
-// Demo credentials - passwords are configured via environment variables
-const DEMO_USERS = [
-	{
-		email: "owner@clubos.app",
-		password: getRequiredEnv("SEED_OWNER_PASSWORD"),
-		fullName: "Demo Owner",
-		role: "owner" as const,
-	},
-	{
-		email: "admin@clubos.app",
-		password: getRequiredEnv("SEED_ADMIN_PASSWORD"),
-		fullName: "Demo Admin",
-		role: "admin" as const,
-	},
-	{
-		email: "manager@clubos.app",
-		password: getRequiredEnv("SEED_MANAGER_PASSWORD"),
-		fullName: "Demo Manager",
-		role: "manager" as const,
-	},
-	{
-		email: "staff@clubos.app",
-		password: getRequiredEnv("SEED_STAFF_PASSWORD"),
-		fullName: "Demo Staff",
-		role: "staff" as const,
-	},
-] as const;
+const supabase = createClient(env("PUBLIC_SUPABASE_URL"), env("SUPABASE_SECRET_KEY"), {
+	auth: { autoRefreshToken: false, persistSession: false },
+});
 
-const DEMO_TENANT = {
-	name: "Demo Club",
-	slug: "demo-club",
-	settings: {
-		currency_code: "EUR",
-		date_format: "DD/MM/YYYY",
-		time_format: "24h",
-	},
-};
+const PASSWORD = env("SEED_PASSWORD");
 
-const DEMO_FACILITY = {
-	name: "Main Facility",
-	timezone: "Europe/Athens",
-	settings: {
-		opening_time: "08:00",
-		closing_time: "23:00",
-	},
-};
+const USERS = [
+	{ email: "owner@clubos.app", name: "Demo Owner", role: "owner" },
+	{ email: "admin@clubos.app", name: "Demo Admin", role: "admin" },
+	{ email: "manager@clubos.app", name: "Demo Manager", role: "manager" },
+	{ email: "staff@clubos.app", name: "Demo Staff", role: "staff" },
+];
 
-const DEMO_CATEGORIES = [
+const CATEGORIES = [
 	{ name: "Καφέδες", color: "#8B4513" },
 	{ name: "Σνακ", color: "#FFD700" },
 	{ name: "Αναψυκτικά", color: "#00CED1" },
 ];
 
-const DEMO_PRODUCTS = [
+const PRODUCTS = [
 	{ name: "Espresso", price: 2.0, category: "Καφέδες" },
 	{ name: "Cappuccino", price: 3.0, category: "Καφέδες" },
 	{ name: "Freddo Espresso", price: 3.0, category: "Καφέδες" },
@@ -95,171 +40,112 @@ const DEMO_PRODUCTS = [
 ];
 
 async function seed(): Promise<void> {
-	console.log("\n🚀 ClubOS Database Seeder\n");
-	console.log("=".repeat(50));
+	console.log("\n🌱 Seeding ClubOS...\n");
 
-	// 1. Create Tenant
-	console.log("\n📦 Creating tenant...");
-	const { data: tenant, error: tenantError } = await supabase
+	// Tenant
+	const { data: tenant } = await supabase
 		.from("tenants")
-		.upsert(
-			{
-				name: DEMO_TENANT.name,
-				slug: DEMO_TENANT.slug,
-				settings: DEMO_TENANT.settings,
-			},
-			{ onConflict: "slug" }
-		)
+		.upsert({ name: "Demo Club", slug: "demo-club", settings: { currency_code: "EUR" } }, { onConflict: "slug" })
 		.select("id")
-		.single();
+		.single()
+		.throwOnError();
 
-	if (tenantError || !tenant) {
-		throw new Error(`Failed to create tenant: ${tenantError?.message}`);
-	}
-	console.log(`   ✓ Tenant: ${DEMO_TENANT.name} (${tenant.id})`);
+	if (!tenant) throw new Error("Failed to create tenant");
+	console.log("✓ Tenant");
 
-	// 2. Create Subscription (14-day trial)
-	console.log("\n💳 Creating subscription...");
-	const trialEnd = new Date();
-	trialEnd.setDate(trialEnd.getDate() + 14);
+	// Subscription (14-day trial)
+	const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+	await supabase
+		.from("subscriptions")
+		.upsert(
+			{ tenant_id: tenant.id, status: "trialing", plan_name: "Trial", trial_end: trialEnd, current_period_end: trialEnd },
+			{ onConflict: "tenant_id" }
+		)
+		.throwOnError();
+	console.log("✓ Subscription");
 
-	await supabase.from("subscriptions").upsert(
-		{
-			tenant_id: tenant.id,
-			status: "trialing",
-			plan_name: "Trial",
-			trial_end: trialEnd.toISOString(),
-			current_period_end: trialEnd.toISOString(),
-		},
-		{ onConflict: "tenant_id" }
-	);
-	console.log(`   ✓ Trial subscription (expires: ${trialEnd.toLocaleDateString()})`);
-
-	// 3. Create Facility
-	console.log("\n🏢 Creating facility...");
-	const { data: facility, error: facilityError } = await supabase
+	// Facility
+	const { data: facility } = await supabase
 		.from("facilities")
 		.upsert(
-			{
-				tenant_id: tenant.id,
-				name: DEMO_FACILITY.name,
-				timezone: DEMO_FACILITY.timezone,
-				settings: DEMO_FACILITY.settings,
-			},
+			{ tenant_id: tenant.id, name: "Main Facility", timezone: "Europe/Athens", settings: { opening_time: "08:00", closing_time: "23:00" } },
 			{ onConflict: "tenant_id,name" }
 		)
 		.select("id")
-		.single();
+		.single()
+		.throwOnError();
 
-	if (facilityError || !facility) {
-		throw new Error(`Failed to create facility: ${facilityError?.message}`);
-	}
-	console.log(`   ✓ Facility: ${DEMO_FACILITY.name} (${facility.id})`);
+	if (!facility) throw new Error("Failed to create facility");
+	console.log("✓ Facility");
 
-	// 4. Create Users and Memberships
-	console.log("\n👥 Creating users...");
-	const userIds: Record<string, string> = {};
+	// Users
+	const { data: existingUsers } = await supabase.auth.admin.listUsers();
+	const existingEmails = new Set(existingUsers.users.map((u) => u.email));
+	let ownerId: string | undefined;
 
-	for (const userData of DEMO_USERS) {
-		// Check if user exists
-		const { data: existingUsers } = await supabase.auth.admin.listUsers();
-		let userId = existingUsers.users.find((u) => u.email === userData.email)?.id;
+	for (const user of USERS) {
+		let userId = existingUsers.users.find((u) => u.email === user.email)?.id;
 
-		// Create user if not exists
-		if (!userId) {
-			const { data: newUser, error: userError } = await supabase.auth.admin.createUser({
-				email: userData.email,
-				password: userData.password,
+		if (!existingEmails.has(user.email)) {
+			const { data } = await supabase.auth.admin.createUser({
+				email: user.email,
+				password: PASSWORD,
 				email_confirm: true,
-				user_metadata: { full_name: userData.fullName, role: userData.role },
+				user_metadata: { full_name: user.name },
 			});
-
-			if (userError || !newUser.user) {
-				console.error(`   ✗ Failed to create ${userData.email}: ${userError?.message}`);
-				continue;
-			}
-			userId = newUser.user.id;
+			userId = data.user?.id;
 		}
 
-		// Upsert user profile
-		await supabase.from("users").upsert(
-			{
-				id: userId,
-				email: userData.email,
-				full_name: userData.fullName,
-			},
-			{ onConflict: "id" }
-		);
+		if (!userId) continue;
+		if (user.role === "owner") ownerId = userId;
 
-		// Create membership
-		const isPrimary = userData.role === "owner";
-		const facilityIdForMembership = userData.role === "staff" ? facility.id : null;
-
+		await supabase.from("users").upsert({ id: userId, email: user.email, full_name: user.name }, { onConflict: "id" });
 		await supabase.from("memberships").upsert(
 			{
 				user_id: userId,
 				tenant_id: tenant.id,
-				facility_id: facilityIdForMembership,
-				role: userData.role,
-				is_primary: isPrimary,
+				facility_id: user.role === "staff" ? facility.id : null,
+				role: user.role,
+				is_primary: user.role === "owner",
 			},
 			{ onConflict: "user_id,tenant_id,facility_id" }
 		);
-
-		userIds[userData.role] = userId;
-		console.log(`   ✓ ${userData.role.padEnd(8)} ${userData.email}`);
 	}
+	console.log("✓ Users (4)");
 
-	// 5. Create Categories
-	console.log("\n📂 Creating categories...");
+	// Categories
 	const categoryIds: Record<string, string> = {};
-
-	for (const cat of DEMO_CATEGORIES) {
+	for (const cat of CATEGORIES) {
 		const { data } = await supabase
 			.from("categories")
 			.upsert({ facility_id: facility.id, name: cat.name, color: cat.color }, { onConflict: "facility_id,name" })
 			.select("id")
 			.single();
-
-		if (data) {
-			categoryIds[cat.name] = data.id;
-		}
+		if (data) categoryIds[cat.name] = data.id;
 	}
-	console.log(`   ✓ ${DEMO_CATEGORIES.length} categories created`);
+	console.log("✓ Categories (3)");
 
-	// 6. Create Products
-	console.log("\n🛍️  Creating products...");
-	for (const product of DEMO_PRODUCTS) {
+	// Products
+	for (const p of PRODUCTS) {
 		await supabase.from("products").upsert(
 			{
 				facility_id: facility.id,
-				category_id: categoryIds[product.category],
-				name: product.name,
-				price: product.price,
-				stock_quantity: product.stock ?? 0,
-				track_inventory: !!product.stock,
-				created_by: userIds.owner,
+				category_id: categoryIds[p.category],
+				name: p.name,
+				price: p.price,
+				stock_quantity: p.stock ?? 0,
+				track_inventory: !!p.stock,
+				created_by: ownerId,
 			},
 			{ onConflict: "facility_id,name" }
 		);
 	}
-	console.log(`   ✓ ${DEMO_PRODUCTS.length} products created`);
+	console.log("✓ Products (10)");
 
-	// Summary
-	console.log("\n" + "=".repeat(50));
-	console.log("\n✅ Seeding complete!\n");
-	console.log("📋 Demo Credentials:");
-	console.log("-".repeat(50));
-	console.log("Role     | Email                | Password");
-	console.log("-".repeat(50));
-	for (const user of DEMO_USERS) {
-		console.log(`${user.role.padEnd(8)} | ${user.email.padEnd(20)} | ${user.password}`);
-	}
-	console.log("-".repeat(50));
-	console.log("\n");
+	console.log("\n✅ Done! Login: owner@clubos.app / " + PASSWORD + "\n");
 }
 
-seed().catch((error) => {
-	console.error("\n❌ Seeding failed:", error.message);
+seed().catch((e: Error) => {
+	console.error("❌", e.message);
 	process.exit(1);
 });

@@ -159,49 +159,6 @@ $$;
 -- Using (SELECT auth.role()) and splitting FOR ALL into specific operations
 -- ===================
 
--- Drop existing policies
-DROP POLICY IF EXISTS "Users can view their tenants" ON public.tenants;
-DROP POLICY IF EXISTS "Admins can update their tenants" ON public.tenants;
-DROP POLICY IF EXISTS "Service role manages tenants" ON public.tenants;
-
-DROP POLICY IF EXISTS "Users can view their subscription" ON public.subscriptions;
-DROP POLICY IF EXISTS "Service role manages subscriptions" ON public.subscriptions;
-
-DROP POLICY IF EXISTS "Users can view their facilities" ON public.facilities;
-DROP POLICY IF EXISTS "Admins can manage facilities" ON public.facilities;
-DROP POLICY IF EXISTS "Service role manages facilities" ON public.facilities;
-
-DROP POLICY IF EXISTS "Users can view themselves" ON public.users;
-DROP POLICY IF EXISTS "Users can view colleagues" ON public.users;
-DROP POLICY IF EXISTS "Users can update themselves" ON public.users;
-DROP POLICY IF EXISTS "Service role manages users" ON public.users;
-
-DROP POLICY IF EXISTS "Users can view their memberships" ON public.memberships;
-DROP POLICY IF EXISTS "Admins can manage memberships" ON public.memberships;
-DROP POLICY IF EXISTS "Service role manages memberships" ON public.memberships;
-
-DROP POLICY IF EXISTS "Users can view categories" ON public.categories;
-DROP POLICY IF EXISTS "Admins can manage categories" ON public.categories;
-
-DROP POLICY IF EXISTS "Users can view products" ON public.products;
-DROP POLICY IF EXISTS "Admins can manage products" ON public.products;
-
-DROP POLICY IF EXISTS "Users can view sessions" ON public.register_sessions;
-DROP POLICY IF EXISTS "Users can open sessions" ON public.register_sessions;
-DROP POLICY IF EXISTS "Users can close their sessions" ON public.register_sessions;
-
-DROP POLICY IF EXISTS "Users can view orders" ON public.orders;
-DROP POLICY IF EXISTS "Users can create orders" ON public.orders;
-DROP POLICY IF EXISTS "Users can update their orders" ON public.orders;
-
-DROP POLICY IF EXISTS "Users can view order items" ON public.order_items;
-DROP POLICY IF EXISTS "Users can manage order items" ON public.order_items;
-
-DROP POLICY IF EXISTS "Users can view bookings" ON public.bookings;
-DROP POLICY IF EXISTS "Users can create bookings" ON public.bookings;
-DROP POLICY IF EXISTS "Users can update bookings" ON public.bookings;
-DROP POLICY IF EXISTS "Admins can delete bookings" ON public.bookings;
-
 -- TENANTS: Single policy per operation
 CREATE POLICY "tenants_select" ON public.tenants FOR SELECT
   USING ((SELECT auth.role()) = 'service_role' OR id IN (SELECT user_tenant_ids()));
@@ -416,19 +373,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
--- Drop existing triggers if they exist (idempotent)
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP TRIGGER IF EXISTS set_updated_at ON public.tenants;
-DROP TRIGGER IF EXISTS set_updated_at ON public.subscriptions;
-DROP TRIGGER IF EXISTS set_updated_at ON public.facilities;
-DROP TRIGGER IF EXISTS set_updated_at ON public.users;
-DROP TRIGGER IF EXISTS set_updated_at ON public.categories;
-DROP TRIGGER IF EXISTS set_updated_at ON public.products;
-DROP TRIGGER IF EXISTS set_updated_at ON public.bookings;
-DROP TRIGGER IF EXISTS on_order_item_change ON public.order_items;
-DROP TRIGGER IF EXISTS on_order_item_totals ON public.order_items;
-DROP TRIGGER IF EXISTS validate_booking_before_insert ON public.bookings;
 
 -- Auth user sync trigger
 CREATE TRIGGER on_auth_user_created

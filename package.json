@@ -35,7 +35,6 @@
 		"@vitest/eslint-plugin": "^1.6.4",
 		"bits-ui": "^2.14.4",
 		"clsx": "^2.1.1",
-		"dotenv": "^17.2.3",
 		"eslint": "^9.39.2",
 		"eslint-plugin-svelte": "^3.13.1",
 		"globals": "^16.5.0",

@@ -9,6 +9,7 @@ export default tseslint.config(
 		ignores: [
 			"node_modules",
 			".svelte-kit",
+			".vercel",
 			"build",
 			"coverage",
 			"supabase",
