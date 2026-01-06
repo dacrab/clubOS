@@ -8,14 +8,16 @@
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"sourceMap": true,
-		"strict": true,
 		"moduleResolution": "bundler",
 		"moduleDetection": "force",
 		"isolatedModules": true,
 		"verbatimModuleSyntax": true,
 		"noEmit": true,
 		"types": ["svelte", "node"],
-		"strictNullChecks": true
+		"strict": true,
+		"strictNullChecks": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true
 	},
-	"exclude": ["supabase/functions/**"]
+	"exclude": ["supabase/**", "e2e/**"]
 }

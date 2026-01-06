@@ -77,21 +77,14 @@ export const el: TranslationsStructure = {
 
 	// Signup
 	signup: {
-		choosePlan: "Επιλέξτε πλάνο",
-		choosePlanDesc: "Ξεκινήστε τη δωρεάν δοκιμή 14 ημερών. Δεν απαιτείται κάρτα.",
 		popular: "Δημοφιλές",
 		perMonth: "μήνα",
-		selectPlan: "Επιλογή Πλάνου",
 		alreadyHaveAccount: "Έχετε ήδη λογαριασμό;",
-		backToPlans: "Πίσω στα πλάνα",
 		createAccount: "Δημιουργία λογαριασμού",
-		selectedPlan: "Επιλεγμένο πλάνο",
 		fullName: "Ονοματεπώνυμο",
 		fullNamePlaceholder: "Γιάννης Παπαδόπουλος",
 		passwordPlaceholder: "Τουλάχιστον 8 χαρακτήρες",
 		confirmPasswordPlaceholder: "Επιβεβαίωση κωδικού",
-		continueToPayment: "Συνέχεια στην πληρωμή",
-		processing: "Επεξεργασία...",
 		termsNotice: "Εγγραφόμενοι, αποδέχεστε τους Όρους Χρήσης και την Πολιτική Απορρήτου",
 		fillAllFields: "Παρακαλώ συμπληρώστε όλα τα πεδία",
 		passwordTooShort: "Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες",

@@ -29,25 +29,9 @@ export interface Tenant {
 	updated_at: string;
 }
 
-export interface TenantSettings {
-	currency_code?: string;
-	date_format?: string;
-	time_format?: string;
-	low_stock_threshold?: number;
-	allow_unlimited_stock?: boolean;
-	negative_stock_allowed?: boolean;
-	allow_treats?: boolean;
-	coupons_value?: number;
-	require_open_register_for_sale?: boolean;
-	tax_rate_percent?: number;
-	football_fields_count?: number;
-	appointment_buffer_min?: number;
-	booking_default_duration_min?: number;
-	birthday_duration_min?: number;
-	football_duration_min?: number;
-	prevent_overlaps?: boolean;
-	[key: string]: unknown;
-}
+// TenantSettings is defined in $lib/config/settings.ts - import from there
+import type { TenantSettings } from "$lib/config/settings";
+export type { TenantSettings };
 
 export interface Subscription {
 	id: string;
@@ -274,34 +258,3 @@ export interface FormatSettings {
 	time_format?: string;
 	currency_code?: string;
 }
-
-// =============================================================================
-// INSERT/UPDATE TYPES
-// =============================================================================
-
-export type TenantInsert = Omit<Tenant, "id" | "created_at" | "updated_at">;
-export type TenantUpdate = Partial<Omit<Tenant, "id" | "created_at">>;
-
-export type FacilityInsert = Omit<Facility, "id" | "created_at" | "updated_at">;
-export type FacilityUpdate = Partial<Omit<Facility, "id" | "created_at">>;
-
-export type UserInsert = Omit<User, "created_at" | "updated_at">;
-export type UserUpdate = Partial<Omit<User, "id" | "created_at">>;
-
-export type MembershipInsert = Omit<Membership, "id" | "created_at" | "updated_at" | "user" | "tenant" | "facility">;
-export type MembershipUpdate = Partial<Omit<Membership, "id" | "created_at" | "user" | "tenant" | "facility">>;
-
-export type ProductInsert = Omit<Product, "id" | "created_at" | "updated_at" | "category">;
-export type ProductUpdate = Partial<Omit<Product, "id" | "created_at" | "category">>;
-
-export type CategoryInsert = Omit<Category, "id" | "created_at" | "updated_at">;
-export type CategoryUpdate = Partial<Omit<Category, "id" | "created_at">>;
-
-export type OrderInsert = Omit<Order, "id" | "created_at" | "updated_at" | "items" | "created_by_user">;
-export type OrderUpdate = Partial<Omit<Order, "id" | "created_at" | "items" | "created_by_user">>;
-
-export type OrderItemInsert = Omit<OrderItem, "id" | "created_at" | "updated_at" | "product">;
-export type OrderItemUpdate = Partial<Omit<OrderItem, "id" | "created_at" | "product">>;
-
-export type BookingInsert = Omit<Booking, "id" | "created_at" | "updated_at" | "created_by_user">;
-export type BookingUpdate = Partial<Omit<Booking, "id" | "created_at" | "created_by_user">>;

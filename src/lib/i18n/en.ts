@@ -75,21 +75,14 @@ export const en = {
 
 	// Signup
 	signup: {
-		choosePlan: "Choose your plan",
-		choosePlanDesc: "Start your 14-day free trial. No credit card required.",
 		popular: "Most Popular",
 		perMonth: "month",
-		selectPlan: "Select Plan",
 		alreadyHaveAccount: "Already have an account?",
-		backToPlans: "Back to plans",
 		createAccount: "Create your account",
-		selectedPlan: "Selected plan",
 		fullName: "Full Name",
 		fullNamePlaceholder: "John Doe",
 		passwordPlaceholder: "Minimum 8 characters",
 		confirmPasswordPlaceholder: "Confirm your password",
-		continueToPayment: "Continue to Payment",
-		processing: "Processing...",
 		termsNotice: "By signing up, you agree to our Terms of Service and Privacy Policy",
 		fillAllFields: "Please fill in all fields",
 		passwordTooShort: "Password must be at least 8 characters",

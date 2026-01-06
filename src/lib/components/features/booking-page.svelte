@@ -100,15 +100,15 @@
 		return (data?.length ?? 0) > 0;
 	}
 
-	async function handleSave() {
+	async function handleSave(): Promise<void> {
 		if (!formData.customer_name || !formData.customer_phone || !formData.starts_at) {
-			return toast.error(t("common.error"));
+			toast.error(t("common.error")); return;
 		}
 		saving = true;
 		try {
 			if (settings.current.prevent_overlaps && (await checkConflict())) {
 				saving = false;
-				return toast.error(t(`${prefix}.conflict`));
+				toast.error(t(`${prefix}.conflict`)); return;
 			}
 
 			const startsAt = new Date(formData.starts_at);

@@ -2,5 +2,6 @@ import Sidebar from "./sidebar.svelte";
 import Header from "./header.svelte";
 import PageHeader from "./page-header.svelte";
 import EmptyState from "./empty-state.svelte";
+import PublicHeader from "./public-header.svelte";
 
-export { Sidebar, Header, PageHeader, EmptyState };
+export { Sidebar, Header, PageHeader, EmptyState, PublicHeader };

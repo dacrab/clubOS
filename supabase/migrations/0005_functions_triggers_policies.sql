@@ -1,5 +1,11 @@
 -- ============================================================================
--- ClubOS Linter Fixes - Security & Performance Optimizations
+-- ClubOS Functions, Triggers & RLS Policies
+-- ============================================================================
+-- This is the consolidated migration for all database logic:
+-- - Helper functions for RLS
+-- - Trigger functions (updated_at, stock, order totals, booking validation)
+-- - All RLS policies (one per table per operation)
+-- - Triggers
 -- ============================================================================
 
 BEGIN;
@@ -383,5 +389,87 @@ CREATE INDEX IF NOT EXISTS idx_register_sessions_opened_by ON public.register_se
 CREATE INDEX IF NOT EXISTS idx_register_sessions_closed_by ON public.register_sessions(closed_by) WHERE closed_by IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_categories_parent ON public.categories(parent_id) WHERE parent_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_register_sessions_facility ON public.register_sessions(facility_id);
+
+-- ===================
+-- 5. CREATE TRIGGERS
+-- ===================
+
+-- User sync from auth.users
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.users (id, email, full_name, avatar_url)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name'),
+    NEW.raw_user_meta_data->>'avatar_url'
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    full_name = COALESCE(EXCLUDED.full_name, users.full_name),
+    avatar_url = COALESCE(EXCLUDED.avatar_url, users.avatar_url);
+  RETURN NEW;
+END;
+$$;
+
+-- Drop existing triggers if they exist (idempotent)
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP TRIGGER IF EXISTS set_updated_at ON public.tenants;
+DROP TRIGGER IF EXISTS set_updated_at ON public.subscriptions;
+DROP TRIGGER IF EXISTS set_updated_at ON public.facilities;
+DROP TRIGGER IF EXISTS set_updated_at ON public.users;
+DROP TRIGGER IF EXISTS set_updated_at ON public.categories;
+DROP TRIGGER IF EXISTS set_updated_at ON public.products;
+DROP TRIGGER IF EXISTS set_updated_at ON public.bookings;
+DROP TRIGGER IF EXISTS on_order_item_change ON public.order_items;
+DROP TRIGGER IF EXISTS on_order_item_totals ON public.order_items;
+DROP TRIGGER IF EXISTS validate_booking_before_insert ON public.bookings;
+
+-- Auth user sync trigger
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Updated_at triggers
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.tenants
+  FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
+
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.subscriptions
+  FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
+
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.facilities
+  FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
+
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.users
+  FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
+
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.categories
+  FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
+
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.products
+  FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
+
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.bookings
+  FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
+
+-- Stock management trigger
+CREATE TRIGGER on_order_item_change
+  AFTER INSERT OR UPDATE ON public.order_items
+  FOR EACH ROW EXECUTE FUNCTION public.update_product_stock();
+
+-- Order totals trigger
+CREATE TRIGGER on_order_item_totals
+  AFTER INSERT OR UPDATE OR DELETE ON public.order_items
+  FOR EACH ROW EXECUTE FUNCTION public.calculate_order_totals();
+
+-- Booking validation trigger
+CREATE TRIGGER validate_booking_before_insert
+  BEFORE INSERT OR UPDATE ON public.bookings
+  FOR EACH ROW EXECUTE FUNCTION public.validate_booking();
 
 COMMIT;

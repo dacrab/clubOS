@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 	import { enhance } from "$app/forms";
-	import { t } from "$lib/i18n/index.svelte";
+	import { t, i18n, type Locale } from "$lib/i18n/index.svelte";
+	import { theme, type Theme } from "$lib/state/theme.svelte";
 	import { toast } from "svelte-sonner";
 	import { invalidateAll } from "$app/navigation";
 	import { PageHeader } from "$lib/components/layout";
@@ -14,6 +15,16 @@
 	import { Separator } from "$lib/components/ui/separator";
 	import { CURRENCY_OPTIONS, DATE_FORMAT_OPTIONS, TIME_FORMAT_OPTIONS } from "$lib/config/settings";
 	import { Save, RotateCcw } from "@lucide/svelte";
+
+	const THEME_OPTIONS: { value: Theme; labelKey: string }[] = [
+		{ value: "system", labelKey: "settings.themes.system" },
+		{ value: "light", labelKey: "settings.themes.light" },
+		{ value: "dark", labelKey: "settings.themes.dark" },
+	];
+	const LANGUAGE_OPTIONS: { value: Locale; labelKey: string }[] = [
+		{ value: "en", labelKey: "settings.languages.en" },
+		{ value: "el", labelKey: "settings.languages.el" },
+	];
 
 	const { data } = $props();
 
@@ -36,6 +47,14 @@
 	const getTimeLabel = (v: string | null) => {
 		const f = TIME_FORMAT_OPTIONS.find((f) => f.value === v);
 		return f ? t(f.labelKey) : "";
+	};
+	const getThemeLabel = () => {
+		const o = THEME_OPTIONS.find((o) => o.value === theme.current);
+		return o ? t(o.labelKey) : "";
+	};
+	const getLanguageLabel = () => {
+		const o = LANGUAGE_OPTIONS.find((o) => o.value === i18n.locale);
+		return o ? t(o.labelKey) : "";
 	};
 
 	function handleReset() {
@@ -216,6 +235,36 @@
 				<CardDescription>{t("settings.sections.regionalDesc")}</CardDescription>
 			</CardHeader>
 			<CardContent class="space-y-4">
+				<div class="flex items-center justify-between">
+					<div>
+						<Label>{t("settings.theme")}</Label>
+						<p class="text-xs text-muted-foreground">{t("settings.themeDesc")}</p>
+					</div>
+					<Select value={theme.current} onValueChange={(v) => theme.setTheme(v as Theme)}>
+						<SelectTrigger class="w-40" selected={getThemeLabel()} />
+						<SelectContent>
+							{#each THEME_OPTIONS as o (o.value)}
+								<SelectItem value={o.value}>{t(o.labelKey)}</SelectItem>
+							{/each}
+						</SelectContent>
+					</Select>
+				</div>
+				<Separator />
+				<div class="flex items-center justify-between">
+					<div>
+						<Label>{t("settings.language")}</Label>
+						<p class="text-xs text-muted-foreground">{t("settings.languageDesc")}</p>
+					</div>
+					<Select value={i18n.locale} onValueChange={(v) => i18n.setLocale(v as Locale)}>
+						<SelectTrigger class="w-40" selected={getLanguageLabel()} />
+						<SelectContent>
+							{#each LANGUAGE_OPTIONS as o (o.value)}
+								<SelectItem value={o.value}>{t(o.labelKey)}</SelectItem>
+							{/each}
+						</SelectContent>
+					</Select>
+				</div>
+				<Separator />
 				<div class="flex items-center justify-between">
 					<div>
 						<Label>{t("settings.currencyCode")}</Label>

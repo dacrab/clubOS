@@ -1,26 +1,19 @@
 {
 	"$schema": "https://unpkg.com/knip@latest/schema.json",
-	"workspaces": {
-		".": {
-			"entry": [
-				"src/routes/**/*.{svelte,ts}",
-				"src/lib/**/*.{ts,svelte}",
-				"src/**/*.{test,spec}.ts",
-				"scripts/**/*.ts"
-			],
-			"project": ["src/**/*.{ts,svelte}", "scripts/**/*.ts"],
-			"ignoreDependencies": ["tailwindcss-animate", "@testing-library/svelte"],
-			"ignoreBinaries": ["supabase"],
-			"ignore": [
-				".svelte-kit/**",
-				"**/$types.d.ts",
-				"src/app-mocks/**"
-			],
-			"paths": {
-				"$lib/*": ["src/lib/*"],
-				"$app/*": [".svelte-kit/types/app/*"],
-				"$env/*": [".svelte-kit/ambient.d.ts"]
-			}
-		}
+	"entry": [
+		"src/routes/**/*.{svelte,ts}",
+		"src/lib/**/*.{ts,svelte}",
+		"src/**/*.{test,spec}.ts",
+		"scripts/**/*.ts",
+		"e2e/**/*.ts"
+	],
+	"project": ["src/**/*.{ts,svelte}", "scripts/**/*.ts", "e2e/**/*.ts"],
+	"ignoreDependencies": ["tailwindcss-animate"],
+	"ignoreBinaries": ["supabase"],
+	"ignore": [".svelte-kit/**", "**/$types.d.ts"],
+	"paths": {
+		"$lib/*": ["src/lib/*"],
+		"$app/*": [".svelte-kit/types/app/*"],
+		"$env/*": [".svelte-kit/ambient.d.ts"]
 	}
 }

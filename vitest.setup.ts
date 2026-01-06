@@ -1,13 +1,6 @@
 /**
  * Vitest Global Setup
- *
- * Configures global mocks and test utilities for the entire test suite.
- * Includes:
- * - localStorage mock with full Storage API
- * - document mock for SSR compatibility
- * - Global test reset between tests
- * - Environment variable mocks
- * - Svelte state module mocks
+ * Configures mocks for SvelteKit and browser APIs
  */
 
 import { vi, beforeEach, afterEach } from "vitest";
@@ -38,29 +31,11 @@ vi.mock("$app/navigation", () => ({
 	replaceState: vi.fn(),
 }));
 
-vi.mock("$app/stores", async () => {
-	const { readable } = await import("svelte/store");
-	return {
-		getStores: () => ({
-			page: readable({ url: new URL("http://localhost"), params: {}, route: { id: null } }),
-			navigating: readable(null),
-			updated: readable(false),
-		}),
-		page: readable({ url: new URL("http://localhost"), params: {}, route: { id: null } }),
-		navigating: readable(null),
-		updated: readable(false),
-	};
-});
-
 // ============================================================================
-// SVELTE STATE MOCKS & SVELTE 5 RUNES
-// (must be registered before any imports that use $state)
+// SVELTE 5 RUNES MOCK
 // ============================================================================
 
-// Minimal runtime implementation of the Svelte 5 $state rune for tests.
-// It simply returns the initial value and allows direct reassignment,
-// which is sufficient for our class-based state containers in tests.
-vi.stubGlobal("$state", ((value: unknown) => value) as <T>(value: T) => T);
+vi.stubGlobal("$state", (<T>(value: T): T => value) as <T>(value: T) => T);
 
 vi.mock("$lib/state/settings.svelte", () => ({
 	settings: {
@@ -75,43 +50,23 @@ vi.mock("$lib/state/settings.svelte", () => ({
 // LOCALSTORAGE MOCK
 // ============================================================================
 
-interface StorageMock extends Storage {
-	clear: ReturnType<typeof vi.fn>;
-}
-
-const createLocalStorageMock = (): StorageMock => {
+const createStorageMock = (): Storage => {
 	let store: Record<string, string> = {};
-
 	return {
-		getItem: vi.fn((key: string): string | null => store[key] ?? null),
-		setItem: vi.fn((key: string, value: string): void => {
-			store[key] = String(value);
-		}),
-		removeItem: vi.fn((key: string): void => {
-			store = Object.fromEntries(Object.entries(store).filter(([k]) => k !== key));
-		}),
-		clear: vi.fn((): void => {
-			store = {};
-		}),
-		get length(): number {
-			return Object.keys(store).length;
-		},
-		key: vi.fn((index: number): string | null => Object.keys(store)[index] ?? null),
+		getItem: (key: string): string | null => store[key] ?? null,
+		setItem: (key: string, value: string): void => { store[key] = String(value); },
+		removeItem: (key: string): void => { store = Object.fromEntries(Object.entries(store).filter(([k]) => k !== key)); },
+		clear: (): void => { store = {}; },
+		get length(): number { return Object.keys(store).length; },
+		key: (index: number): string | null => Object.keys(store)[index] ?? null,
 	};
 };
 
-const localStorageMock = createLocalStorageMock();
+const localStorageMock = createStorageMock();
 vi.stubGlobal("localStorage", localStorageMock);
 
 // ============================================================================
-// SESSIONSTORAGE MOCK
-// ============================================================================
-
-const sessionStorageMock = createLocalStorageMock();
-vi.stubGlobal("sessionStorage", sessionStorageMock);
-
-// ============================================================================
-// DOCUMENT MOCK
+// DOCUMENT & WINDOW MOCKS
 // ============================================================================
 
 vi.stubGlobal("document", {
@@ -119,28 +74,15 @@ vi.stubGlobal("document", {
 	documentElement: {
 		setAttribute: vi.fn(),
 		getAttribute: vi.fn().mockReturnValue(null),
-		classList: {
-			add: vi.fn(),
-			remove: vi.fn(),
-			toggle: vi.fn(),
-			contains: vi.fn().mockReturnValue(false),
-		},
+		classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn(), contains: vi.fn().mockReturnValue(false) },
 		style: {},
 	},
 	cookie: "",
 	querySelector: vi.fn().mockReturnValue(null),
 	querySelectorAll: vi.fn().mockReturnValue([]),
 	getElementById: vi.fn().mockReturnValue(null),
-	createElement: vi.fn().mockReturnValue({
-		setAttribute: vi.fn(),
-		appendChild: vi.fn(),
-		style: {},
-	}),
+	createElement: vi.fn().mockReturnValue({ setAttribute: vi.fn(), appendChild: vi.fn(), style: {} }),
 });
-
-// ============================================================================
-// WINDOW MOCK ADDITIONS
-// ============================================================================
 
 vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
 	matches: false,
@@ -154,70 +96,14 @@ vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
 })));
 
 // ============================================================================
-// PERFORMANCE API (for performance tests)
-// ============================================================================
-
-if (typeof performance === "undefined") {
-	vi.stubGlobal("performance", {
-		now: vi.fn(() => Date.now()),
-		mark: vi.fn(),
-		measure: vi.fn(),
-		getEntriesByName: vi.fn().mockReturnValue([]),
-		getEntriesByType: vi.fn().mockReturnValue([]),
-		clearMarks: vi.fn(),
-		clearMeasures: vi.fn(),
-	});
-}
-
-// ============================================================================
-// TEST LIFECYCLE HOOKS
+// TEST LIFECYCLE
 // ============================================================================
 
 beforeEach(() => {
-	// Reset storage mocks
 	localStorageMock.clear();
-	sessionStorageMock.clear();
-
-	// Clear all mock call history
 	vi.clearAllMocks();
 });
 
 afterEach(() => {
-	// Restore any spied functions
 	vi.restoreAllMocks();
 });
-
-// ============================================================================
-// GLOBAL TEST UTILITIES
-// ============================================================================
-
-// Make vi available globally for convenience
-declare global {
-	var testUtils: {
-		createMockResponse: (body: unknown, init?: ResponseInit) => Response;
-		createMockRequest: (url: string, init?: RequestInit) => Request;
-		waitFor: (ms: number) => Promise<void>;
-	};
-}
-
-globalThis.testUtils = {
-	createMockResponse: (body: unknown, init: ResponseInit = {}): Response => {
-		return new Response(JSON.stringify(body), {
-			status: 200,
-			headers: { "Content-Type": "application/json" },
-			...init,
-		});
-	},
-
-	createMockRequest: (url: string, init: RequestInit = {}): Request => {
-		return new Request(url, {
-			method: "GET",
-			headers: { "Content-Type": "application/json" },
-			...init,
-		});
-	},
-
-	waitFor: (ms: number): Promise<void> => {
-		return new Promise((resolve) => setTimeout(resolve, ms));
-	},
-};

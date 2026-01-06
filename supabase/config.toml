@@ -86,9 +86,10 @@ port = 54324
 # sender_name = "Admin"
 
 [storage]
-enabled = true
+enabled = false
+# Storage is not used in this app - images are external URLs
 # The maximum file size allowed (e.g. "5MB", "500KB").
-file_size_limit = "50MiB"
+# file_size_limit = "50MiB"
 
 # Image transformation API is available to Supabase Pro plan.
 # [storage.image_transformation]
@@ -195,15 +196,13 @@ message_service_sid = ""
 # DO NOT commit your Twilio auth token to git. Use environment variable substitution instead:
 auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN)"
 
-# Multi-factor-authentication is available to Supabase Pro plan.
+# Multi-factor-authentication - not used in this app
 [auth.mfa]
-# Control how many MFA factors can be enrolled at once per user.
-max_enrolled_factors = 10
+max_enrolled_factors = 0
 
-# Control MFA via App Authenticator (TOTP)
 [auth.mfa.totp]
-enroll_enabled = true
-verify_enabled = true
+enroll_enabled = false
+verify_enabled = false
 
 # Configure MFA via Phone Messaging
 [auth.mfa.phone]
@@ -252,12 +251,10 @@ enabled = false
 # user_pool_region = "us-east-1"
 
 [edge_runtime]
-enabled = true
-# Configure one of the supported request policies: `oneshot`, `per_worker`.
-# Use `oneshot` for hot reload, or `per_worker` for load testing.
-policy = "oneshot"
-# Port to attach the Chrome inspector for debugging edge functions.
-inspector_port = 8083
+enabled = false
+# Edge functions disabled - user management moved to server-side API routes
+# policy = "oneshot"
+# inspector_port = 8083
 
 # Use these configurations to customize your Edge Function.
 # [functions.MY_FUNCTION_NAME]

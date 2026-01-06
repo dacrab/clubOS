@@ -83,9 +83,9 @@
 		lastOrderId = null;
 	}
 
-	async function submitOrder() {
-		if (!cart.length) return toast.error(t("orders.emptyCart"));
-		if (!activeSession) return toast.error(t("register.noActiveSession"));
+	async function submitOrder(): Promise<void> {
+		if (!cart.length) { toast.error(t("orders.emptyCart")); return; }
+		if (!activeSession) { toast.error(t("register.noActiveSession")); return; }
 
 		processing = true;
 		try {

@@ -10,9 +10,9 @@
 	import { Separator } from "$lib/components/ui/separator";
 	import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "$lib/components/ui/dialog";
 	import { NewSaleDialog, RecentOrders } from "$lib/components/features";
+	import { registerSessions } from "$lib/services/db";
 	import { supabase } from "$lib/utils/supabase";
 	import { fmtDate, fmtCurrency } from "$lib/utils/format";
-	import type { OrderItem } from "$lib/types/database";
 	import { DollarSign, Plus } from "@lucide/svelte";
 
 	const { data } = $props();
@@ -28,43 +28,41 @@
 
 	const cashDifference = $derived(countedCash - expectedCash);
 
-	async function openRegister() {
+	async function openRegister(): Promise<void> {
+		if (!data.user.facilityId) return;
 		processing = true;
-		try {
-			const { error } = await supabase.from("register_sessions").insert({ tenant_id: data.user.tenantId, facility_id: data.user.facilityId, opened_by: data.user.id });
-			if (error) throw error;
-			toast.success(t("common.success")); showOpenDialog = false; await invalidateAll();
-		} catch { toast.error(t("common.error")); } finally { processing = false; }
+		const { error } = await registerSessions.open(data.user.facilityId, data.user.id);
+		processing = false;
+		if (error) { toast.error(t("common.error")); return; }
+		toast.success(t("common.success"));
+		showOpenDialog = false;
+		await invalidateAll();
 	}
 
-	async function openCloseDialog() {
+	async function openCloseDialog(): Promise<void> {
 		const { data: orders } = await supabase.from("orders").select("total_amount").eq("session_id", data.activeSession?.id);
 		expectedCash = orders?.reduce((sum, o) => sum + Number(o.total_amount), 0) ?? 0;
 		countedCash = expectedCash;
 		showCloseDialog = true;
 	}
 
-	async function closeRegister() {
-		if (!closingName) return toast.error(t("common.error"));
+	async function closeRegister(): Promise<void> {
+		if (!closingName || !data.activeSession) { toast.error(t("common.error")); return; }
 		processing = true;
-		try {
-			const { data: orders } = await supabase.from("orders").select("*, order_items(*)").eq("session_id", data.activeSession?.id);
-			const ordersTotal = orders?.reduce((sum, o) => sum + Number(o.total_amount), 0) ?? 0;
-			const totalDiscounts = orders?.reduce((sum, o) => sum + Number(o.discount_amount), 0) ?? 0;
-			let treatCount = 0, treatTotal = 0;
-			orders?.forEach(o => o.order_items?.forEach((i: OrderItem) => { if (i.is_treat && !i.is_deleted) { treatCount += i.quantity; treatTotal += i.unit_price * i.quantity; } }));
-
-			const { error: closingError } = await supabase.from("register_closings").insert({
-				session_id: data.activeSession?.id, orders_count: orders?.length ?? 0, orders_total: ordersTotal, treat_count: treatCount, treat_total: treatTotal, total_discounts: totalDiscounts,
-				notes: { closedBy: closingName, notes: closingNotes, countedCash, expectedCash, difference: countedCash - expectedCash },
-			});
-			if (closingError) throw closingError;
-
-			const { error: sessionError } = await supabase.from("register_sessions").update({ closed_at: new Date().toISOString() }).eq("id", data.activeSession?.id);
-			if (sessionError) throw sessionError;
-
-			toast.success(t("common.success")); showCloseDialog = false; closingName = ""; closingNotes = ""; countedCash = 0; await invalidateAll();
-		} catch { toast.error(t("common.error")); } finally { processing = false; }
+		const { error } = await registerSessions.close(data.activeSession.id, {
+			closed_by: data.user.id,
+			closing_cash: countedCash,
+			expected_cash: expectedCash,
+			notes: closingNotes || undefined,
+		});
+		processing = false;
+		if (error) { toast.error(t("common.error")); return; }
+		toast.success(t("common.success"));
+		showCloseDialog = false;
+		closingName = "";
+		closingNotes = "";
+		countedCash = 0;
+		await invalidateAll();
 	}
 </script>
 

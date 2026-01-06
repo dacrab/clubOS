@@ -8,10 +8,9 @@ BEGIN;
 -- EXTENSIONS & TYPES
 -- ===================
 
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- Note: gen_random_uuid() is built into Postgres 13+, no extension needed
 
 CREATE TYPE public.user_role AS ENUM ('owner', 'admin', 'manager', 'staff');
-CREATE TYPE public.membership_scope AS ENUM ('tenant', 'facility');
 CREATE TYPE public.booking_type AS ENUM ('birthday', 'football', 'event', 'other');
 CREATE TYPE public.booking_status AS ENUM ('pending', 'confirmed', 'cancelled', 'completed', 'no_show');
 CREATE TYPE public.order_status AS ENUM ('pending', 'completed', 'refunded', 'voided');
@@ -253,6 +252,7 @@ CREATE INDEX idx_facilities_tenant ON public.facilities(tenant_id);
 CREATE INDEX idx_memberships_user ON public.memberships(user_id);
 CREATE INDEX idx_memberships_tenant ON public.memberships(tenant_id);
 CREATE INDEX idx_memberships_facility ON public.memberships(facility_id) WHERE facility_id IS NOT NULL;
+CREATE INDEX idx_memberships_primary ON public.memberships(user_id) WHERE is_primary = true;
 
 -- Products & Categories
 CREATE INDEX idx_categories_facility ON public.categories(facility_id);
@@ -273,6 +273,9 @@ CREATE INDEX idx_bookings_status ON public.bookings(status) WHERE status NOT IN 
 
 -- Subscriptions
 CREATE INDEX idx_subscriptions_status ON public.subscriptions(status);
+
+-- Users
+CREATE INDEX idx_users_email ON public.users(email) WHERE email IS NOT NULL;
 
 -- Prevent double-booking for football fields
 CREATE UNIQUE INDEX idx_bookings_no_football_overlap 

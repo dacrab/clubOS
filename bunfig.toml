@@ -1,4 +1,0 @@
-[test]
-preload = ["./test/bun-test-setup.ts"]
-
-

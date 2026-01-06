@@ -1,35 +1,25 @@
 <script lang="ts">
 	import { supabase } from "$lib/utils/supabase";
 	import { toast } from "svelte-sonner";
-	import { i18n, t } from "$lib/i18n/index.svelte";
+	import { t } from "$lib/i18n/index.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card";
-	import { theme } from "$lib/state/theme.svelte";
-	import { Sun, Moon, Globe } from "@lucide/svelte";
-	import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "$lib/components/ui/dropdown-menu";
+	import { PublicHeader } from "$lib/components/layout";
+	import { getHomeForRole } from "$lib/config/auth";
 
 	let email = $state("");
 	let password = $state("");
 	let loading = $state(false);
 
-	async function handleLogin(e: Event) {
+	async function handleLogin(e: Event): Promise<void> {
 		e.preventDefault();
-
-		if (!email || !password) {
-			toast.error(t("auth.invalidCredentials"));
-			return;
-		}
+		if (!email || !password) { toast.error(t("auth.invalidCredentials")); return; }
 
 		loading = true;
-
 		try {
-			const { data: authData, error } = await supabase.auth.signInWithPassword({
-				email,
-				password,
-			});
-
+			const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
 			if (error || !authData.user) {
 				toast.error(t("auth.invalidCredentials"));
 				loading = false;
@@ -37,8 +27,6 @@
 			}
 
 			toast.success(t("auth.welcomeBack"));
-
-			// Get user's membership to determine redirect
 			const { data: membership } = await supabase
 				.from("memberships")
 				.select("role")
@@ -47,40 +35,17 @@
 				.limit(1)
 				.single();
 
-			// Redirect based on role
-			let route = "/staff";
-			if (membership) {
-				switch (membership.role) {
-					case "owner":
-					case "admin":
-						route = "/admin";
-						break;
-					case "manager":
-						route = "/secretary";
-						break;
-					default:
-						route = "/staff";
-				}
-			}
-
-			window.location.href = route;
+			window.location.href = membership ? getHomeForRole(membership.role) : "/onboarding";
 		} catch {
 			toast.error(t("common.error"));
 			loading = false;
 		}
 	}
 
-	async function handleForgotPassword() {
-		if (!email) {
-			toast.error(t("auth.enterEmailFirst"));
-			return;
-		}
-
+	async function handleForgotPassword(): Promise<void> {
+		if (!email) { toast.error(t("auth.enterEmailFirst")); return; }
 		try {
-			const { error } = await supabase.auth.resetPasswordForEmail(email, {
-				redirectTo: `${window.location.origin}/reset`,
-			});
-
+			const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset` });
 			if (error) throw error;
 			toast.success(t("auth.resetEmailSent"));
 		} catch {
@@ -90,28 +55,7 @@
 </script>
 
 <div class="flex min-h-screen flex-col bg-background">
-	<header class="flex items-center justify-between border-b px-4 py-3">
-		<span class="text-lg font-bold">clubOS</span>
-		<div class="flex items-center gap-2">
-			<DropdownMenu>
-				<DropdownMenuTrigger>
-					<Globe class="h-4 w-4" />
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end">
-					<DropdownMenuItem onSelect={() => i18n.setLocale("en")}>English</DropdownMenuItem>
-					<DropdownMenuItem onSelect={() => i18n.setLocale("el")}>Ελληνικά</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
-			<Button variant="ghost" size="icon" onclick={() => theme.toggle()}>
-				{#if theme.isDark}
-					<Sun class="h-4 w-4" />
-				{:else}
-					<Moon class="h-4 w-4" />
-				{/if}
-			</Button>
-		</div>
-	</header>
-
+	<PublicHeader />
 	<main class="flex flex-1 items-center justify-center p-4">
 		<Card class="w-full max-w-sm">
 			<CardHeader class="text-center">
@@ -127,19 +71,14 @@
 					<div class="space-y-2">
 						<div class="flex items-center justify-between">
 							<Label for="password">{t("auth.password")}</Label>
-							<button type="button" class="text-xs text-primary hover:underline" onclick={handleForgotPassword}>
-								{t("auth.forgotPassword")}
-							</button>
+							<button type="button" class="text-xs text-primary hover:underline" onclick={handleForgotPassword}>{t("auth.forgotPassword")}</button>
 						</div>
 						<Input id="password" type="password" bind:value={password} required />
 					</div>
-					<Button type="submit" class="w-full" disabled={loading}>
-						{loading ? t("auth.signingIn") : t("auth.login")}
-					</Button>
+					<Button type="submit" class="w-full" disabled={loading}>{loading ? t("auth.signingIn") : t("auth.login")}</Button>
 				</form>
 				<p class="mt-4 text-center text-sm text-muted-foreground">
-					{t("signup.dontHaveAccount")}
-					<a href="/signup" class="text-primary hover:underline">{t("signup.signUpNow")}</a>
+					{t("signup.dontHaveAccount")} <a href="/signup" class="text-primary hover:underline">{t("signup.signUpNow")}</a>
 				</p>
 			</CardContent>
 		</Card>

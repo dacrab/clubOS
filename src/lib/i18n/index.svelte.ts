@@ -51,6 +51,3 @@ export const i18n = new I18n();
 export function t(key: string): string {
 	return i18n.t(key);
 }
-
-export { en, el };
-export type { TranslationsStructure };

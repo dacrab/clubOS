@@ -17,8 +17,8 @@
 		{ label: "nav.products", href: "/admin/products", icon: Package },
 		{ label: "nav.orders", href: "/admin/orders", icon: ShoppingCart },
 		{ label: "nav.registers", href: "/admin/registers", icon: DollarSign },
-		{ label: "nav.birthdays", href: "/admin/birthdays", icon: Cake },
-		{ label: "nav.football", href: "/admin/football", icon: Dribbble },
+		{ label: "nav.birthdays", href: "/bookings/birthday", icon: Cake },
+		{ label: "nav.football", href: "/bookings/football", icon: Dribbble },
 		{ label: "nav.users", href: "/admin/users", icon: Users },
 		{ label: "nav.settings", href: "/admin/settings", icon: Settings },
 	];
@@ -28,13 +28,11 @@
 		admin: adminNav,
 		manager: [
 			{ label: "nav.dashboard", href: "/secretary", icon: LayoutDashboard },
-			{ label: "nav.birthdays", href: "/secretary/birthdays", icon: Cake },
-			{ label: "nav.football", href: "/secretary/football", icon: Dribbble },
-			{ label: "nav.orders", href: "/secretary/orders", icon: ShoppingCart },
+			{ label: "nav.birthdays", href: "/bookings/birthday", icon: Cake },
+			{ label: "nav.football", href: "/bookings/football", icon: Dribbble },
 		],
 		staff: [
 			{ label: "nav.dashboard", href: "/staff", icon: LayoutDashboard },
-			{ label: "nav.orders", href: "/staff/orders", icon: ShoppingCart },
 		],
 	};
 

@@ -1,15 +1,12 @@
 import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
+import { getHomeForRole } from "$lib/config/auth";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const { user, supabase } = locals;
 
-	// Not logged in - show login page
-	if (!user) {
-		return {};
-	}
+	if (!user) return {};
 
-	// Get user's membership to determine redirect
 	const { data: membership } = await supabase
 		.from("memberships")
 		.select("role")
@@ -18,22 +15,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.limit(1)
 		.single();
 
-	if (!membership) {
-		// No membership - redirect to onboarding
-		throw redirect(307, "/onboarding");
-	}
-
-	// Redirect based on role
-	const role = membership.role as string;
-	
-	switch (role) {
-		case "owner":
-		case "admin":
-			throw redirect(307, "/admin");
-		case "manager":
-			throw redirect(307, "/secretary");
-		case "staff":
-		default:
-			throw redirect(307, "/staff");
-	}
+	if (!membership) throw redirect(307, "/onboarding");
+	throw redirect(307, getHomeForRole(membership.role));
 };
