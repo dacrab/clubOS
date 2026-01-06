@@ -28,3 +28,4 @@ supabase/.branches/
 # IDE
 .idea/
 *.swp
+package-lock.json
