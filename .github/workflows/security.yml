@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: GitGuardian Scan
-        uses: GitGuardian/ggshield/actions/secret@v1.46.0
+        uses: GitGuardian/ggshield/actions/secret@v1
         env:
           GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
         with:
