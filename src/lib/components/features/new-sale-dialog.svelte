@@ -89,41 +89,24 @@
 
 		processing = true;
 		try {
-			const { data: order, error: orderError } = await supabase
-				.from("orders")
-				.insert({
-					tenant_id: user.tenantId,
-					facility_id: user.facilityId,
-					session_id: activeSession.id,
-					subtotal,
-					discount_amount: discount,
-					total_amount: total,
-					coupon_count: couponCount,
-					created_by: user.id,
-				})
-				.select()
-				.single();
-			if (orderError) throw orderError;
-
-			const { error: itemsError } = await supabase.from("order_items").insert(
-				cart.map(i => ({
-					order_id: order.id,
+			const { data, error } = await supabase.rpc("create_order", {
+				p_facility_id: user.facilityId,
+				p_session_id: activeSession.id,
+				p_user_id: user.id,
+				p_items: cart.map(i => ({
 					product_id: i.product.id,
 					quantity: i.quantity,
 					unit_price: i.product.price,
-					line_total: i.isTreat ? 0 : i.product.price * i.quantity,
 					is_treat: i.isTreat,
-				}))
-			);
-			if (itemsError) throw itemsError;
+				})),
+				p_coupon_count: couponCount,
+				p_coupon_value: COUPON_VALUE,
+			});
 
-			await Promise.all(
-				cart.filter(i => i.product.stock_quantity >= 0).map(i =>
-					supabase.from("products").update({ stock_quantity: i.product.stock_quantity - i.quantity }).eq("id", i.product.id)
-				)
-			);
+			if (error) throw error;
+			if (data?.error) { toast.error(data.error); return; }
 
-			lastOrderId = order.id;
+			lastOrderId = data.id;
 			toast.success(t("common.success"));
 			clearCart();
 			showCart = false;

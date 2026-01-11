@@ -1,13 +1,7 @@
--- ============================================================================
--- ClubOS RLS Policies - STUB (see 0005_linter_fixes.sql for actual policies)
--- ============================================================================
--- This migration originally defined RLS policies but they were consolidated
--- and optimized in 0005_linter_fixes.sql. Keeping this file for migration
--- history compatibility.
+-- RLS Setup
 
 BEGIN;
 
--- Enable RLS on all tables (policies defined in 0005)
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.facilities ENABLE ROW LEVEL SECURITY;

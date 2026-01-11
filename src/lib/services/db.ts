@@ -43,8 +43,13 @@ export const registerSessions = {
 	open: (facilityId: string, userId: string) =>
 		supabase.from("register_sessions").insert({ facility_id: facilityId, opened_by: userId }),
 
-	close: (id: string, data: { closed_by: string; closing_cash: number; expected_cash: number; notes?: string }) =>
-		supabase.from("register_sessions").update({ closed_at: new Date().toISOString(), ...data }).eq("id", id),
+	close: (sessionId: string, userId: string, closingCash: number, notes?: string) =>
+		supabase.rpc("close_register_session", {
+			p_session_id: sessionId,
+			p_user_id: userId,
+			p_closing_cash: closingCash,
+			p_notes: notes || null,
+		}),
 };
 
 // ============================================================================

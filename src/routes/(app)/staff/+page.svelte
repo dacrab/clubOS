@@ -49,14 +49,14 @@
 	async function closeRegister(): Promise<void> {
 		if (!closingName || !data.activeSession) { toast.error(t("common.error")); return; }
 		processing = true;
-		const { error } = await registerSessions.close(data.activeSession.id, {
-			closed_by: data.user.id,
-			closing_cash: countedCash,
-			expected_cash: expectedCash,
-			notes: closingNotes || undefined,
-		});
+		const { data: result, error } = await registerSessions.close(
+			data.activeSession.id,
+			data.user.id,
+			countedCash,
+			closingNotes
+		);
 		processing = false;
-		if (error) { toast.error(t("common.error")); return; }
+		if (error || result?.error) { toast.error(result?.error || t("common.error")); return; }
 		toast.success(t("common.success"));
 		showCloseDialog = false;
 		closingName = "";
