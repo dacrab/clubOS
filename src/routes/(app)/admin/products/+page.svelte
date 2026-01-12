@@ -14,7 +14,7 @@
 	import { products, categories } from "$lib/services/db";
 	import { fmtCurrency } from "$lib/utils/format";
 	import { settings } from "$lib/state/settings.svelte";
-	import { Plus, Pencil, Trash2, Package, FolderTree } from "@lucide/svelte";
+	import { Plus, Pencil, Trash2, Package, FolderTree, AlertTriangle } from "@lucide/svelte";
 	import type { Product } from "$lib/types/database";
 
 	type CategoryPartial = { id: string; name: string; parent_id: string | null; description: string | null };
@@ -41,7 +41,8 @@
 	});
 
 	const filtered = $derived(data.products.filter((p: Product) => p.name.toLowerCase().includes(searchQuery.toLowerCase())));
-	const getCategoryName = (id: string | null) => id ? (data.categories as CategoryPartial[]).find((c) => c.id === id)?.name ?? "-" : "-";
+	const lowStockProducts = $derived(data.products.filter((p: Product) => p.stock_quantity >= 0 && p.stock_quantity <= settings.current.low_stock_threshold));
+	const getCategoryName = (id: string | null): string => id ? (data.categories as CategoryPartial[]).find((c) => c.id === id)?.name ?? "-" : "-";
 	const getStockBadge = (stock: number) => {
 		const threshold = settings.current.low_stock_threshold;
 		return stock <= 0 ? { variant: "destructive" as const, label: t("products.outOfStock") }
@@ -78,6 +79,20 @@
 			<Button onclick={() => crud.openCreate()}><Plus class="mr-2 h-4 w-4" />{t("products.addProduct")}</Button>
 		{/snippet}
 	</PageHeader>
+
+	{#if lowStockProducts.length > 0}
+		<Card class="border-amber-500 bg-amber-50 dark:bg-amber-950/20 p-4">
+			<div class="flex items-center gap-3">
+				<div class="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50">
+					<AlertTriangle class="h-5 w-5 text-amber-600" />
+				</div>
+				<div class="flex-1">
+					<p class="font-semibold text-amber-800 dark:text-amber-200">{t("products.lowStockAlert")}</p>
+					<p class="text-sm text-amber-700 dark:text-amber-300">{lowStockProducts.map((p: Product) => `${p.name} (${p.stock_quantity})`).join(", ")}</p>
+				</div>
+			</div>
+		</Card>
+	{/if}
 
 	<Input placeholder={t("common.search")} bind:value={searchQuery} class="max-w-sm" />
 

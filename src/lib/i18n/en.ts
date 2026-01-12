@@ -197,6 +197,7 @@ export const en = {
 		noCategory: "No category",
 		imageUrl: "Image URL",
 		lowStock: "Low Stock",
+		lowStockAlert: "Low stock alert",
 		outOfStock: "Out of Stock",
 		inStock: "In Stock",
 		manageCategories: "Manage Categories",
@@ -253,6 +254,9 @@ export const en = {
 		couponValue: "Coupon value",
 		treatsCount: "{count} treats",
 		noItems: "No items in this order",
+		receipt: "Receipt",
+		printReceipt: "Print Receipt",
+		thankYou: "Thank you for your purchase!",
 		empty: {
 			title: "No orders yet",
 			description: "Orders will appear here after sales",

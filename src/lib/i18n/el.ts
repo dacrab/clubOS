@@ -199,6 +199,7 @@ export const el: TranslationsStructure = {
 		noCategory: "Χωρίς κατηγορία",
 		imageUrl: "URL Εικόνας",
 		lowStock: "Χαμηλό Απόθεμα",
+		lowStockAlert: "Ειδοποίηση χαμηλού αποθέματος",
 		outOfStock: "Εξαντλημένο",
 		inStock: "Σε Απόθεμα",
 		manageCategories: "Διαχείριση Κατηγοριών",
@@ -255,6 +256,9 @@ export const el: TranslationsStructure = {
 		couponValue: "Αξία κουπονιού",
 		treatsCount: "{count} κεράσματα",
 		noItems: "Δεν υπάρχουν είδη σε αυτή την παραγγελία",
+		receipt: "Απόδειξη",
+		printReceipt: "Εκτύπωση Απόδειξης",
+		thankYou: "Ευχαριστούμε για την αγορά σας!",
 		empty: {
 			title: "Δεν υπάρχουν παραγγελίες",
 			description: "Οι παραγγελίες θα εμφανιστούν εδώ",

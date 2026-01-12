@@ -9,7 +9,7 @@
 	import { supabase } from "$lib/utils/supabase";
 	import { fmtCurrency } from "$lib/utils/format";
 	import { settings as globalSettings } from "$lib/state/settings.svelte";
-	import { ShoppingCart, Plus, Minus, Gift, X, Search, Check, Trash2, ChevronRight, Tag } from "@lucide/svelte";
+	import { ShoppingCart, Plus, Minus, Gift, X, Search, Check, Trash2, ChevronRight, Tag, Printer } from "@lucide/svelte";
 	import type { Product } from "$lib/types/database";
 
 	type Category = { id: string; name: string; parent_id: string | null };
@@ -31,7 +31,25 @@
 	let searchQuery = $state("");
 	let processing = $state(false);
 	let lastOrderId = $state<string | null>(null);
+	let lastOrderData = $state<{ items: CartItem[]; total: number; discount: number; couponCount: number } | null>(null);
 	let showCart = $state(false);
+
+	function printReceipt(): void {
+		if (!lastOrderData) return;
+		const w = window.open("", "_blank", "width=300,height=600");
+		if (!w) return;
+		const html = `<!DOCTYPE html><html><head><title>${t("orders.receipt")}</title><style>body{font-family:monospace;font-size:12px;padding:10px;max-width:280px}h2{text-align:center;margin:0 0 10px}hr{border:none;border-top:1px dashed #000;margin:8px 0}.item{display:flex;justify-content:space-between}.total{font-weight:bold;font-size:14px}.center{text-align:center}</style></head><body>
+		<h2>${t("orders.receipt")}</h2><p class="center">${new Date().toLocaleString()}</p><hr>
+		${lastOrderData.items.map(i => `<div class="item"><span>${i.quantity}x ${i.product.name}${i.isTreat ? " (${t('orders.treat')})" : ""}</span><span>${i.isTreat ? "-" : fmtCurrency(i.product.price * i.quantity)}</span></div>`).join("")}
+		<hr><div class="item"><span>${t("orders.subtotal")}</span><span>${fmtCurrency(lastOrderData.total + lastOrderData.discount)}</span></div>
+		${lastOrderData.discount > 0 ? `<div class="item"><span>${t("orders.discount")} (${lastOrderData.couponCount} ${t("orders.coupons").toLowerCase()})</span><span>-${fmtCurrency(lastOrderData.discount)}</span></div>` : ""}
+		<div class="item total"><span>${t("orders.total")}</span><span>${fmtCurrency(lastOrderData.total)}</span></div>
+		<hr><p class="center">${t("orders.thankYou")}</p><p class="center">#${lastOrderId?.slice(0, 8)}</p>
+		</body></html>`;
+		w.document.write(html);
+		w.document.close();
+		w.print();
+	}
 
 	const COUPON_VALUE = $derived(globalSettings.current.coupons_value);
 	const rootCategories = $derived(categories.filter(c => !c.parent_id));
@@ -107,6 +125,7 @@
 			if (data?.error) { toast.error(data.error); return; }
 
 			lastOrderId = data.id;
+			lastOrderData = { items: [...cart], total, discount, couponCount };
 			toast.success(t("common.success"));
 			clearCart();
 			showCart = false;
@@ -404,14 +423,19 @@
 				<!-- Success Message -->
 				{#if lastOrderId}
 					<div class="p-4 bg-green-50 dark:bg-green-950/50 border-t border-green-200 dark:border-green-800">
-						<div class="flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
-							<div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-								<Check class="h-5 w-5" />
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-2 text-green-600 dark:text-green-400">
+								<div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+									<Check class="h-5 w-5" />
+								</div>
+								<div>
+									<p class="font-bold">{t("common.success")}</p>
+									<p class="text-xs opacity-70">#{lastOrderId.slice(0, 8)}</p>
+								</div>
 							</div>
-							<div>
-								<p class="font-bold">{t("common.success")}</p>
-								<p class="text-xs opacity-70">#{lastOrderId.slice(0, 8)}</p>
-							</div>
+							<Button variant="outline" size="sm" onclick={printReceipt}>
+								<Printer class="h-4 w-4 mr-1" />{t("orders.printReceipt")}
+							</Button>
 						</div>
 					</div>
 				{/if}
