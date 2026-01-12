@@ -24,8 +24,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.supabase = supabase;
 	const { data: { user } } = await supabase.auth.getUser();
 	const { data: { session } } = await supabase.auth.getSession();
-	event.locals.user = user ?? null;
-	event.locals.session = session ?? null;
+	event.locals.user = user;
+	event.locals.session = session;
 
 	if (session?.expires_at && new Date(session.expires_at * 1000) < new Date()) {
 		throw redirect(307, "/login");
