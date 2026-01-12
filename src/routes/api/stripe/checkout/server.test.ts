@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createMockUser, createMockTenant, createMockLocals, createMockRequest, resetIdCounter } from "$lib/testing/mocks";
+import { createMockUser, createMockTenant, createMockLocals, createMockRequest } from "$lib/testing/mocks";
 
 vi.mock("$env/dynamic/private", () => ({ env: { STRIPE_SECRET_KEY: "sk_test_mock" } }));
 
@@ -7,7 +7,7 @@ const mockFetch = vi.fn();
 const originalFetch = globalThis.fetch;
 
 describe("POST /api/stripe/checkout", () => {
-	beforeEach(() => { resetIdCounter(); vi.clearAllMocks(); globalThis.fetch = mockFetch; });
+	beforeEach(() => { vi.clearAllMocks(); globalThis.fetch = mockFetch; });
 	afterEach(() => { globalThis.fetch = originalFetch; });
 
 	const setupMocks = (opts: { customerOk?: boolean; sessionOk?: boolean; customerId?: string } = {}) => {

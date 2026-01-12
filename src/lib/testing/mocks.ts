@@ -11,7 +11,6 @@ export interface MockSubscription { tenantId: string; status: SubStatus; trialEn
 
 export const generateId = () => `test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const futureDate = (days: number) => { const d = new Date(); d.setDate(d.getDate() + days); return d; };
-export const resetIdCounter = (): void => { /* no-op for backwards compat */ };
 
 export const createMockUser = (o: Partial<MockUser> = {}): MockUser => ({ id: generateId(), email: `test-${Date.now()}@example.com`, role: "staff", ...o });
 export const createMockTenant = (o: Partial<MockTenant> = {}): MockTenant => ({ id: generateId(), name: `Tenant ${Date.now()}`, slug: `tenant-${Date.now()}`, ...o });

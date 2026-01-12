@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createSupabaseMock, scenarios, resetIdCounter, createMockUser, createMockTenant, createMockMembership, createMockSubscription } from "$lib/testing/mocks";
+import { createSupabaseMock, scenarios, createMockUser, createMockTenant, createMockMembership, createMockSubscription } from "$lib/testing/mocks";
 
 vi.mock("$env/dynamic/public", () => ({ env: { PUBLIC_SUPABASE_URL: "https://test.supabase.co", PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: "test-key" } }));
 
@@ -7,7 +7,7 @@ const mockSupabaseClient = vi.fn();
 vi.mock("@supabase/ssr", () => ({ createServerClient: (...args: unknown[]) => mockSupabaseClient(...args) }));
 
 describe("hooks.server", () => {
-	beforeEach(() => { resetIdCounter(); vi.clearAllMocks(); });
+	beforeEach(() => { vi.clearAllMocks(); });
 
 	const createEvent = (pathname: string, config = {}) => {
 		mockSupabaseClient.mockReturnValue(createSupabaseMock(config));

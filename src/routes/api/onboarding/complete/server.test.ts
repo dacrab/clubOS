@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createMockUser, createMockTenant, createMockMembership, createMockLocals, createMockRequest, generateId, resetIdCounter } from "$lib/testing/mocks";
+import { createMockUser, createMockTenant, createMockMembership, createMockLocals, createMockRequest, generateId } from "$lib/testing/mocks";
 
 const mockAdmin = { from: vi.fn() };
 vi.mock("$lib/server/supabase-admin", () => ({ getSupabaseAdmin: () => mockAdmin }));
@@ -7,7 +7,7 @@ vi.mock("$lib/server/supabase-admin", () => ({ getSupabaseAdmin: () => mockAdmin
 const { POST } = await import("./+server");
 
 describe("POST /api/onboarding/complete", () => {
-	beforeEach(() => { resetIdCounter(); vi.clearAllMocks(); });
+	beforeEach(() => { vi.clearAllMocks(); });
 
 	const req = (body: object, user = createMockUser()) => ({ request: createMockRequest({ method: "POST", body }), locals: createMockLocals({ user }) });
 
