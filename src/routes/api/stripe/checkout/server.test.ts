@@ -10,7 +10,7 @@ describe("POST /api/stripe/checkout", () => {
 	beforeEach(() => { vi.clearAllMocks(); globalThis.fetch = mockFetch; });
 	afterEach(() => { globalThis.fetch = originalFetch; });
 
-	const setupMocks = (opts: { customerOk?: boolean; sessionOk?: boolean; customerId?: string } = {}) => {
+	const setupMocks = (opts: { customerOk?: boolean; sessionOk?: boolean; customerId?: string } = {}): void => {
 		const { customerOk = true, sessionOk = true, customerId = "cus_test" } = opts;
 		mockFetch.mockImplementation((url: string) => {
 			if (url.includes("/v1/customers")) return Promise.resolve({ ok: customerOk, json: () => Promise.resolve(customerOk ? { id: customerId } : { error: { message: "Customer failed" } }) });
@@ -19,7 +19,7 @@ describe("POST /api/stripe/checkout", () => {
 		});
 	};
 
-	const req = (body: object, user = createMockUser()) => ({ request: createMockRequest({ method: "POST", body }), locals: createMockLocals({ user }) });
+	const req = (body: object, user = createMockUser()): { request: Request; locals: ReturnType<typeof createMockLocals> } => ({ request: createMockRequest({ method: "POST", body }), locals: createMockLocals({ user }) });
 
 	it("creates customer and session for new user", async () => {
 		setupMocks();

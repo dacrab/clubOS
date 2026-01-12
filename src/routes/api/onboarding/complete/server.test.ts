@@ -9,9 +9,9 @@ const { POST } = await import("./+server");
 describe("POST /api/onboarding/complete", () => {
 	beforeEach(() => { vi.clearAllMocks(); });
 
-	const req = (body: object, user = createMockUser()) => ({ request: createMockRequest({ method: "POST", body }), locals: createMockLocals({ user }) });
+	const req = (body: object, user = createMockUser()): { request: Request; locals: ReturnType<typeof createMockLocals> } => ({ request: createMockRequest({ method: "POST", body }), locals: createMockLocals({ user }) });
 
-	const mockTables = (overrides: Record<string, object> = {}) => {
+	const mockTables = (overrides: Record<string, object> = {}): { tenantId: string; facilityId: string } => {
 		const tenantId = generateId(), facilityId = generateId();
 		const defaults: Record<string, object> = {
 			tenants: { insert: () => ({ select: () => ({ single: () => Promise.resolve({ data: { id: tenantId }, error: null }) }) }) },

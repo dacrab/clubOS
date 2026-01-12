@@ -9,12 +9,12 @@ vi.mock("@supabase/ssr", () => ({ createServerClient: (...args: unknown[]) => mo
 describe("hooks.server", () => {
 	beforeEach(() => { vi.clearAllMocks(); });
 
-	const createEvent = (pathname: string, config = {}) => {
+	const createEvent = (pathname: string, config = {}): { url: URL; cookies: { get: ReturnType<typeof vi.fn>; set: ReturnType<typeof vi.fn>; delete: ReturnType<typeof vi.fn> }; locals: object; request: Request } => {
 		mockSupabaseClient.mockReturnValue(createSupabaseMock(config));
 		return { url: new URL(`http://localhost${pathname}`), cookies: { get: vi.fn(), set: vi.fn(), delete: vi.fn() }, locals: {}, request: new Request(`http://localhost${pathname}`) };
 	};
 	const resolve = vi.fn().mockResolvedValue(new Response());
-	const runHandle = async (event: ReturnType<typeof createEvent>) => (await import("./hooks.server")).handle({ event, resolve } as never);
+	const runHandle = async (event: ReturnType<typeof createEvent>): Promise<Response> => (await import("./hooks.server")).handle({ event, resolve } as never);
 
 	describe("auth redirects", () => {
 		it.each(["/admin", "/staff", "/secretary"])("redirects unauthenticated from %s to /", async (route) => {

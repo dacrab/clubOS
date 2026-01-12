@@ -23,7 +23,7 @@ export const registerSessions = {
 		supabase.rpc("close_register_session", { p_session_id: sessionId, p_user_id: userId, p_closing_cash: closingCash, p_notes: notes || null }),
 };
 
-const api = (method: string, body: object) => fetch("/api/admin/users", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(r => ({ data: null, error: r.ok ? null : new Error("Failed") }));
+const api = (method: string, body: object): Promise<{ data: null; error: Error | null }> => fetch("/api/admin/users", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(r => ({ data: null, error: r.ok ? null : new Error("Failed") }));
 
 export const users = {
 	create: (data: { email: string; full_name: string; password: string; role: string }) => api("POST", data),

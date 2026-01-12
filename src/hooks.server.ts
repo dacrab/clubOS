@@ -6,7 +6,7 @@ import type { MemberRole, SubscriptionStatus } from "$lib/types/database";
 const publicRoutes = ["/", "/login", "/reset", "/auth/callback", "/logout", "/signup"];
 const authOnlyRoutes = ["/onboarding", "/billing"];
 
-const getHome = (role: MemberRole | null) =>
+const getHome = (role: MemberRole | null): string =>
 	role === "owner" || role === "admin" ? "/admin" : role === "manager" ? "/secretary" : "/staff";
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -31,7 +31,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const isPublic = publicRoutes.includes(path) || path.startsWith("/api/");
 	const isAuthOnly = authOnlyRoutes.includes(path);
 
-	const getMembership = async () => {
+	const getMembership = async (): Promise<{ role: MemberRole | null; tenantId: string | null; facilityId: string | null; active: boolean }> => {
 		if (!user) return { role: null as MemberRole | null, tenantId: null as string | null, facilityId: null as string | null, active: false };
 		
 		const { data: m } = await supabase.from("memberships").select("role, tenant_id, facility_id").eq("user_id", user.id).order("is_primary", { ascending: false }).limit(1).single();

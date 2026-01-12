@@ -11,14 +11,25 @@ type CrudConfig<T, F> = {
 	getName?: (item: T) => string;
 };
 
-export function createCrud<T, F>(config: CrudConfig<T, F>) {
+export function createCrud<T, F>(config: CrudConfig<T, F>): {
+	open: boolean;
+	editing: T | null;
+	form: F;
+	saving: boolean;
+	isEdit: boolean;
+	openCreate: () => void;
+	openEdit: (item: T) => void;
+	close: () => void;
+	save: () => Promise<boolean>;
+	remove: (item: T) => Promise<boolean>;
+} {
 	let open = $state(false);
 	let editing = $state<T | null>(null);
 	let form = $state<F>(config.toForm(null));
 	let saving = $state(false);
 
-	const success = async () => { toast.success(t("common.success")); await invalidateAll(); };
-	const fail = () => toast.error(t("common.error"));
+	const success = async (): Promise<void> => { toast.success(t("common.success")); await invalidateAll(); };
+	const fail = (): void => { toast.error(t("common.error")); };
 
 	return {
 		get open() { return open; },
@@ -29,9 +40,9 @@ export function createCrud<T, F>(config: CrudConfig<T, F>) {
 		get saving() { return saving; },
 		get isEdit() { return editing !== null; },
 
-		openCreate() { editing = null; form = config.toForm(null); open = true; },
-		openEdit(item: T) { editing = item; form = config.toForm(item); open = true; },
-		close() { open = false; },
+		openCreate(): void { editing = null; form = config.toForm(null); open = true; },
+		openEdit(item: T): void { editing = item; form = config.toForm(item); open = true; },
+		close(): void { open = false; },
 
 		async save() {
 			saving = true;

@@ -18,15 +18,15 @@ class SessionState {
 	loading = $state(true);
 	initialized = $state(false);
 
-	get isAuthenticated() { return this.user !== null; }
+	get isAuthenticated(): boolean { return this.user !== null; }
 
-	setUser(user: SessionUser | null) {
+	setUser(user: SessionUser | null): void {
 		this.user = user;
 		this.loading = false;
 		this.initialized = true;
 	}
 
-	clear() {
+	clear(): void {
 		this.user = null;
 		this.loading = false;
 	}

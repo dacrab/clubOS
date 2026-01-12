@@ -9,8 +9,8 @@ export interface MockTenant { id: string; name: string; slug: string }
 export interface MockMembership { userId: string; tenantId: string; facilityId: string | null; role: Role; isPrimary: boolean }
 export interface MockSubscription { tenantId: string; status: SubStatus; trialEnd?: Date; currentPeriodEnd?: Date; stripeCustomerId?: string }
 
-export const generateId = () => `test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-const futureDate = (days: number) => { const d = new Date(); d.setDate(d.getDate() + days); return d; };
+export const generateId = (): string => `test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const futureDate = (days: number): Date => { const d = new Date(); d.setDate(d.getDate() + days); return d; };
 
 export const createMockUser = (o: Partial<MockUser> = {}): MockUser => ({ id: generateId(), email: `test-${Date.now()}@example.com`, role: "staff", ...o });
 export const createMockTenant = (o: Partial<MockTenant> = {}): MockTenant => ({ id: generateId(), name: `Tenant ${Date.now()}`, slug: `tenant-${Date.now()}`, ...o });
@@ -19,19 +19,29 @@ export const createMockSubscription = (tenantId: string, o: Partial<Omit<MockSub
 
 export interface SupabaseMockConfig { user?: MockUser | null; memberships?: MockMembership[]; subscriptions?: MockSubscription[]; tenants?: MockTenant[] }
 
-export const createSupabaseMock = (config: SupabaseMockConfig = {}) => {
+export const createSupabaseMock = (config: SupabaseMockConfig = {}): {
+	auth: { getUser: ReturnType<typeof vi.fn>; getSession: ReturnType<typeof vi.fn> };
+	from: ReturnType<typeof vi.fn>;
+} => {
 	const { user, memberships = [], subscriptions = [], tenants = [] } = config;
 	const authUser: User | null = user ? { id: user.id, email: user.email, aud: "authenticated", role: "authenticated", email_confirmed_at: new Date().toISOString(), phone: "", confirmed_at: new Date().toISOString(), last_sign_in_at: new Date().toISOString(), app_metadata: {}, user_metadata: { full_name: "Test" }, identities: [], created_at: new Date().toISOString(), updated_at: new Date().toISOString() } : null;
 	const session: Session | null = authUser ? { access_token: `token-${Date.now()}`, refresh_token: `refresh-${Date.now()}`, expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, token_type: "bearer", user: authUser } : null;
 
-	const getData = (table: string) => {
+	const getData = (table: string): Record<string, unknown>[] => {
 		if (table === "memberships") return memberships.map(m => ({ user_id: m.userId, tenant_id: m.tenantId, facility_id: m.facilityId, role: m.role, is_primary: m.isPrimary }));
 		if (table === "subscriptions") return subscriptions.map(s => ({ tenant_id: s.tenantId, status: s.status, trial_end: s.trialEnd?.toISOString(), current_period_end: s.currentPeriodEnd?.toISOString() }));
 		if (table === "tenants") return tenants.map(t => ({ id: t.id, name: t.name, slug: t.slug }));
 		return [];
 	};
 
-	const createBuilder = (table: string) => {
+	const createBuilder = (table: string): {
+		select: ReturnType<typeof vi.fn>;
+		eq: ReturnType<typeof vi.fn>;
+		order: ReturnType<typeof vi.fn>;
+		limit: ReturnType<typeof vi.fn>;
+		single: ReturnType<typeof vi.fn>;
+		maybeSingle: ReturnType<typeof vi.fn>;
+	} => {
 		let filters: Array<{ col: string; val: unknown }> = [];
 		const b = {
 			select: vi.fn().mockReturnThis(),
@@ -55,7 +65,7 @@ export const createMockRequest = (o: { method?: string; body?: unknown; headers?
 	return new Request("http://localhost", { method, headers: { "Content-Type": "application/json", ...headers }, ...(body && method !== "GET" ? { body: JSON.stringify(body) } : {}) });
 };
 
-export const createMockLocals = (config: SupabaseMockConfig = {}) => {
+export const createMockLocals = (config: SupabaseMockConfig = {}): { user: User | null; session: Session | null; supabase: ReturnType<typeof createSupabaseMock> } => {
 	const supabase = createSupabaseMock(config);
 	const authUser = config.user ? { id: config.user.id, email: config.user.email, aud: "authenticated", role: "authenticated" } as User : null;
 	return { user: authUser, session: authUser ? { access_token: "x", user: authUser } as Session : null, supabase };

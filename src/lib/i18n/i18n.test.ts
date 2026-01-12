@@ -10,7 +10,7 @@ const getKeys = (obj: unknown, prefix = ""): string[] => {
 	});
 };
 
-const getValue = (obj: unknown, path: string) => path.split(".").reduce((a: unknown, p) => (a as Record<string, unknown>)?.[p], obj);
+const getValue = (obj: unknown, path: string): unknown => path.split(".").reduce((a: unknown, p) => (a as Record<string, unknown>)?.[p], obj);
 
 describe("i18n", () => {
 	it("en and el have matching keys", () => {

@@ -9,7 +9,7 @@ import { GET } from "./+server";
 const mockFetch = vi.fn();
 beforeEach(() => { vi.clearAllMocks(); globalThis.fetch = mockFetch; });
 
-const makeUrl = (sessionId: string) => new URL(`http://localhost?session_id=${sessionId}`);
+const makeUrl = (sessionId: string): URL => new URL(`http://localhost?session_id=${sessionId}`);
 const mockLocals = { user: { id: "u1" } } as App.Locals;
 
 describe("GET /api/stripe/success", () => {

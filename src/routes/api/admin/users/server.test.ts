@@ -15,7 +15,7 @@ vi.mock("$lib/server/supabase-admin", () => ({
 
 import { POST } from "./+server";
 
-const json = (body: object) => new Request("http://localhost", { method: "POST", body: JSON.stringify(body) });
+const json = (body: object): Request => new Request("http://localhost", { method: "POST", body: JSON.stringify(body) });
 const adminLocals = { user: { id: "u1" } } as App.Locals;
 
 beforeEach(() => { vi.clearAllMocks(); mockMembershipSelect.mockResolvedValue({ data: { tenant_id: "t1", role: "owner" } }); });
