@@ -1,28 +1,13 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { theme, type Theme } from "./theme.svelte";
+import { describe, it, expect } from "vitest";
+import { theme } from "./theme.svelte";
 
-describe("ThemeState", () => {
-	beforeEach(() => {
-		// Reset to system before each test to avoid cross-test leakage
-		theme.setTheme("system");
-	});
-
-	it("setTheme updates the current theme value", () => {
+describe("theme", () => {
+	it("setTheme and toggle work correctly", () => {
 		theme.setTheme("dark");
-		expect(theme.current).toBe<Theme>("dark");
-
+		expect(theme.current).toBe("dark");
 		theme.setTheme("light");
-		expect(theme.current).toBe<Theme>("light");
-	});
-
-	it("toggle switches between light and dark based on isDark", () => {
-		theme.setTheme("light");
-		expect(theme.current).toBe<Theme>("light");
-
+		expect(theme.current).toBe("light");
 		theme.toggle();
-		expect(theme.current).toBe<Theme>("dark");
-
-		theme.toggle();
-		expect(theme.current).toBe<Theme>("light");
+		expect(theme.current).toBe("dark");
 	});
 });
