@@ -46,15 +46,16 @@ describe("hooks.server", () => {
 		});
 	});
 
-	describe("RBAC", () => {
-		it.each([
-			["/admin", "owner", true], ["/admin", "admin", true], ["/admin", "manager", false], ["/admin", "staff", false],
-			["/secretary", "manager", true], ["/secretary", "staff", false],
-			["/staff", "staff", true],
-		] as const)("%s access for %s = %s", async (route, role, allowed) => {
-			const event = createEvent(route, scenarios.activeSubscription(role));
-			if (allowed) { await runHandle(event); expect(resolve).toHaveBeenCalled(); }
-			else { await expect(runHandle(event)).rejects.toMatchObject({ status: 307 }); }
+	describe("RBAC - allowed", () => {
+		it.each([["/admin", "owner"], ["/admin", "admin"], ["/secretary", "manager"], ["/staff", "staff"]] as const)("%s allows %s", async (route, role) => {
+			await runHandle(createEvent(route, scenarios.activeSubscription(role)));
+			expect(resolve).toHaveBeenCalled();
+		});
+	});
+
+	describe("RBAC - denied", () => {
+		it.each([["/admin", "manager"], ["/admin", "staff"], ["/secretary", "staff"]] as const)("%s denies %s", async (route, role) => {
+			await expect(runHandle(createEvent(route, scenarios.activeSubscription(role)))).rejects.toMatchObject({ status: 307 });
 		});
 	});
 });

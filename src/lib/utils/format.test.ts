@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { formatDate, formatCurrency, getCurrencySymbol } from "./format";
+import { formatDate, formatCurrency, getCurrencySymbol, type FormatSettings, type CurrencyCodeType } from "./format";
 
 describe("formatDate", () => {
 	const d = new Date("2024-12-25T14:30:00");
 
-	it.each([
+	it.each<[FormatSettings | null, string]>([
 		[null, "25/12/2024"],
 		[{ date_format: "MM/DD/YYYY" }, "12/25/2024"],
 		[{ date_format: "YYYY-MM-DD" }, "2024-12-25"],
@@ -19,7 +19,7 @@ describe("formatDate", () => {
 });
 
 describe("formatCurrency", () => {
-	it.each([
+	it.each<[number, FormatSettings | null, string]>([
 		[1234.56, null, "€"],
 		[1234.56, { currency_code: "USD" }, "$"],
 		[1234.56, { currency_code: "GBP" }, "£"],
@@ -29,7 +29,7 @@ describe("formatCurrency", () => {
 });
 
 describe("getCurrencySymbol", () => {
-	it.each([["EUR", "€"], ["USD", "$"], ["GBP", "£"]])("%s → %s", (code, symbol) => {
+	it.each<[CurrencyCodeType, string]>([["EUR", "€"], ["USD", "$"], ["GBP", "£"]])("%s → %s", (code, symbol) => {
 		expect(getCurrencySymbol(code)).toBe(symbol);
 	});
 });

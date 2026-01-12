@@ -11,9 +11,9 @@ describe("POST /api/onboarding/complete", () => {
 
 	const req = (body: object, user = createMockUser()) => ({ request: createMockRequest({ method: "POST", body }), locals: createMockLocals({ user }) });
 
-	const mockTables = (overrides: Record<string, unknown> = {}) => {
+	const mockTables = (overrides: Record<string, object> = {}) => {
 		const tenantId = generateId(), facilityId = generateId();
-		const defaults: Record<string, unknown> = {
+		const defaults: Record<string, object> = {
 			tenants: { insert: () => ({ select: () => ({ single: () => Promise.resolve({ data: { id: tenantId }, error: null }) }) }) },
 			facilities: { insert: () => ({ select: () => ({ single: () => Promise.resolve({ data: { id: facilityId }, error: null }) }) }) },
 			memberships: { insert: () => Promise.resolve({ error: null }) },
