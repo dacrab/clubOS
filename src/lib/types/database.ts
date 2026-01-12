@@ -200,11 +200,5 @@ export interface BookingDetails {
 // SESSION/AUTH TYPES
 // =============================================================================
 
-export interface SessionUser {
-	id: string;
-	email: string;
-	username: string;
-	role: MemberRole;
-	tenantId: string | null;
-	facilityId: string | null;
-}
+// SessionUser is defined in $lib/state/session.svelte.ts
+export type { SessionUser } from "$lib/state/session.svelte";

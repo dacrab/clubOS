@@ -1,29 +1,23 @@
 import { createServerClient } from "@supabase/ssr";
-import type { Handle } from "@sveltejs/kit";
-import { redirect } from "@sveltejs/kit";
+import { redirect, type Handle } from "@sveltejs/kit";
 import { env as publicEnv } from "$env/dynamic/public";
-
-type MemberRole = "owner" | "admin" | "manager" | "staff";
-type SubscriptionStatus = "trialing" | "active" | "canceled" | "past_due" | "unpaid" | "paused";
+import type { MemberRole, SubscriptionStatus } from "$lib/types/database";
 
 const publicRoutes = ["/", "/login", "/reset", "/auth/callback", "/logout", "/signup"];
 const authOnlyRoutes = ["/onboarding", "/billing"];
 
-const getHome = (role: MemberRole | null): string => {
-	if (role === "owner" || role === "admin") return "/admin";
-	if (role === "manager") return "/secretary";
-	return "/staff";
-};
+const getHome = (role: MemberRole | null) =>
+	role === "owner" || role === "admin" ? "/admin" : role === "manager" ? "/secretary" : "/staff";
 
 export const handle: Handle = async ({ event, resolve }) => {
-	const { PUBLIC_SUPABASE_URL: url, PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: anon } = publicEnv as { PUBLIC_SUPABASE_URL?: string; PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY?: string };
+	const { PUBLIC_SUPABASE_URL: url, PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: anon } = publicEnv;
 	if (!(url && anon)) throw new Error("Missing PUBLIC_SUPABASE env");
 
 	const supabase = createServerClient(url, anon, {
 		cookies: {
-			get: (key: string) => event.cookies.get(key),
-			set: (key: string, value: string, opts?: Record<string, unknown>) => event.cookies.set(key, value, { ...opts, httpOnly: true, sameSite: "lax", secure: event.url.protocol === "https:", path: "/" }),
-			remove: (key: string, opts?: Record<string, unknown>) => event.cookies.delete(key, { ...opts, path: "/" }),
+			get: (key) => event.cookies.get(key),
+			set: (key, value, opts) => event.cookies.set(key, value, { ...opts, httpOnly: true, sameSite: "lax", secure: event.url.protocol === "https:", path: "/" }),
+			remove: (key, opts) => event.cookies.delete(key, { ...opts, path: "/" }),
 		},
 	});
 
@@ -37,87 +31,37 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const isPublic = publicRoutes.includes(path) || path.startsWith("/api/");
 	const isAuthOnly = authOnlyRoutes.includes(path);
 
-	// Get membership info (role, tenant, subscription status)
-	const getMembershipInfo = async (): Promise<{ 
-		role: MemberRole | null; 
-		tenantId: string | null; 
-		facilityId: string | null;
-		hasActiveSubscription: boolean;
-	}> => {
-		if (!user) return { role: null, tenantId: null, facilityId: null, hasActiveSubscription: false };
+	const getMembership = async () => {
+		if (!user) return { role: null as MemberRole | null, tenantId: null as string | null, facilityId: null as string | null, active: false };
 		
-		// Get user's primary membership
-		const { data: membership } = await supabase
-			.from("memberships")
-			.select("role, tenant_id, facility_id")
-			.eq("user_id", user.id)
-			.order("is_primary", { ascending: false })
-			.limit(1)
-			.single();
-		
-		if (!membership) return { role: null, tenantId: null, facilityId: null, hasActiveSubscription: false };
+		const { data: m } = await supabase.from("memberships").select("role, tenant_id, facility_id").eq("user_id", user.id).order("is_primary", { ascending: false }).limit(1).single();
+		if (!m) return { role: null, tenantId: null, facilityId: null, active: false };
 
-		// Get subscription status
-		const { data: subscription } = await supabase
-			.from("subscriptions")
-			.select("status, current_period_end, trial_end")
-			.eq("tenant_id", membership.tenant_id)
-			.single();
+		const { data: s } = await supabase.from("subscriptions").select("status, current_period_end, trial_end").eq("tenant_id", m.tenant_id).single();
+		const now = Date.now();
+		const active = s && ["trialing", "active"].includes(s.status as SubscriptionStatus) && 
+			((s.current_period_end && new Date(s.current_period_end).getTime() > now) || (s.trial_end && new Date(s.trial_end).getTime() > now));
 
-		let hasActiveSubscription = false;
-		if (subscription) {
-			const activeStatuses: SubscriptionStatus[] = ["trialing", "active"];
-			const isActive = activeStatuses.includes(subscription.status as SubscriptionStatus);
-			const now = new Date();
-			const periodEnd = subscription.current_period_end ? new Date(subscription.current_period_end) : null;
-			const trialEnd = subscription.trial_end ? new Date(subscription.trial_end) : null;
-			const notExpired = (periodEnd && periodEnd > now) || (trialEnd && trialEnd > now);
-			hasActiveSubscription = isActive && !!notExpired;
-		}
-
-		return { 
-			role: membership.role as MemberRole, 
-			tenantId: membership.tenant_id, 
-			facilityId: membership.facility_id,
-			hasActiveSubscription 
-		};
+		return { role: m.role as MemberRole, tenantId: m.tenant_id, facilityId: m.facility_id, active: !!active };
 	};
 
-	// Redirect logged-in users from login page
 	if (path === "/" && user) {
-		const { role } = await getMembershipInfo();
+		const { role } = await getMembership();
 		if (role) throw redirect(307, getHome(role));
 	}
 
-	// Public routes - allow access
 	if (isPublic) return resolve(event);
-
-	// Not logged in - redirect to login
 	if (!user) throw redirect(307, "/");
 
-	// Check membership and subscription status
-	const { role, tenantId, hasActiveSubscription } = await getMembershipInfo();
+	const { role, tenantId, active } = await getMembership();
 
-	// User hasn't completed onboarding
-	if (!tenantId && !isAuthOnly) {
-		throw redirect(307, "/onboarding");
-	}
-
-	// User completed onboarding but no active subscription
-	if (tenantId && !hasActiveSubscription && !isAuthOnly) {
-		throw redirect(307, "/billing");
-	}
-
-	// Auth-only routes (onboarding, billing) - allow if logged in
+	if (!tenantId && !isAuthOnly) throw redirect(307, "/onboarding");
+	if (tenantId && !active && !isAuthOnly) throw redirect(307, "/billing");
 	if (isAuthOnly) return resolve(event);
 
-	// Role-based access control
-	const isAdminRole = role === "owner" || role === "admin";
-	const isManagerRole = isAdminRole || role === "manager";
-	
-	if (path.startsWith("/admin") && !isAdminRole) throw redirect(307, getHome(role));
-	if (path.startsWith("/secretary") && !isManagerRole) throw redirect(307, getHome(role));
-	// Staff routes are accessible to all authenticated users with a membership
+	const isAdmin = role === "owner" || role === "admin";
+	if (path.startsWith("/admin") && !isAdmin) throw redirect(307, getHome(role));
+	if (path.startsWith("/secretary") && !(isAdmin || role === "manager")) throw redirect(307, getHome(role));
 
 	return resolve(event);
 };

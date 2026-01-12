@@ -1,15 +1,14 @@
 /**
  * Session State Management
- * Handles user authentication state and role-based access control
  */
 
-export type UserRole = "owner" | "admin" | "manager" | "staff";
+import type { MemberRole } from "$lib/types/database";
 
 export type SessionUser = {
 	id: string;
 	email: string;
 	username: string;
-	role: UserRole;
+	role: MemberRole;
 	tenantId: string | null;
 	facilityId: string | null;
 };
@@ -19,17 +18,15 @@ class SessionState {
 	loading = $state(true);
 	initialized = $state(false);
 
-	get isAuthenticated(): boolean {
-		return this.user !== null;
-	}
+	get isAuthenticated() { return this.user !== null; }
 
-	setUser(user: SessionUser | null): void {
+	setUser(user: SessionUser | null) {
 		this.user = user;
 		this.loading = false;
 		this.initialized = true;
 	}
 
-	clear(): void {
+	clear() {
 		this.user = null;
 		this.loading = false;
 	}
