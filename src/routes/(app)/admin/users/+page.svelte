@@ -63,8 +63,8 @@
 							<TableCell><Badge variant={getRoleBadge(user.role)}>{getRoleLabel(user.role)}</Badge></TableCell>
 							<TableCell>
 								<div class="flex items-center gap-1">
-									<Button variant="ghost" size="icon-sm" onclick={() => crud.openEdit(user)}><Pencil class="h-4 w-4" /></Button>
-									{#if user.role !== "owner"}<Button variant="ghost" size="icon-sm" onclick={() => crud.remove(user)}><Trash2 class="h-4 w-4" /></Button>{/if}
+									<Button variant="ghost" size="icon-sm" onclick={() => crud.openEdit(user)} aria-label={t("common.edit")}><Pencil class="h-4 w-4" /></Button>
+									{#if user.role !== "owner"}<Button variant="ghost" size="icon-sm" onclick={() => crud.remove(user)} aria-label={t("common.delete")}><Trash2 class="h-4 w-4" /></Button>{/if}
 								</div>
 							</TableCell>
 						</TableRow>

@@ -122,8 +122,8 @@
 							<TableCell><Badge variant={badge.variant}>{product.stock_quantity < 0 ? "∞" : product.stock_quantity}</Badge></TableCell>
 							<TableCell>
 								<div class="flex items-center gap-1">
-									<Button variant="ghost" size="icon-sm" onclick={() => crud.openEdit(product)}><Pencil class="h-4 w-4" /></Button>
-									<Button variant="ghost" size="icon-sm" onclick={() => crud.remove(product)}><Trash2 class="h-4 w-4" /></Button>
+									<Button variant="ghost" size="icon-sm" onclick={() => crud.openEdit(product)} aria-label={t("common.edit")}><Pencil class="h-4 w-4" /></Button>
+									<Button variant="ghost" size="icon-sm" onclick={() => crud.remove(product)} aria-label={t("common.delete")}><Trash2 class="h-4 w-4" /></Button>
 								</div>
 							</TableCell>
 						</TableRow>
@@ -161,8 +161,8 @@
 				<div class="flex items-center justify-between rounded-lg border p-2 hover:bg-accent">
 					<span class="font-medium">{cat.name}</span>
 					<div class="flex items-center gap-1">
-						<Button variant="ghost" size="icon-sm" onclick={() => openCategoryDialog(cat)}><Pencil class="h-4 w-4" /></Button>
-						<Button variant="ghost" size="icon-sm" onclick={() => deleteCategory(cat)}><Trash2 class="h-4 w-4" /></Button>
+						<Button variant="ghost" size="icon-sm" onclick={() => openCategoryDialog(cat)} aria-label={t("common.edit")}><Pencil class="h-4 w-4" /></Button>
+						<Button variant="ghost" size="icon-sm" onclick={() => deleteCategory(cat)} aria-label={t("common.delete")}><Trash2 class="h-4 w-4" /></Button>
 					</div>
 				</div>
 			{/each}

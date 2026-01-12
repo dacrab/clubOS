@@ -1,7 +1,8 @@
 import type { PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, parent }) => {
 	const { supabase } = locals;
+	const { user } = await parent();
 
 	const { data: orders } = await supabase
 		.from("orders")
@@ -20,6 +21,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				)
 			)
 		`)
+		.eq("facility_id", user.facilityId)
 		.order("created_at", { ascending: false })
 		.limit(100);
 

@@ -41,7 +41,7 @@
 						<TableCell>{fmtCurrency(order.subtotal)}</TableCell>
 						<TableCell>{#if order.discount_amount > 0}<Badge variant="secondary">-{fmtCurrency(order.discount_amount)}</Badge>{:else}-{/if}</TableCell>
 						<TableCell class="font-medium">{fmtCurrency(order.total_amount)}</TableCell>
-						<TableCell><Button variant="ghost" size="icon-sm" onclick={(e: MouseEvent) => { e.stopPropagation(); selectedOrder = order; showDialog = true; }}><Eye class="h-4 w-4" /></Button></TableCell>
+						<TableCell><Button variant="ghost" size="icon-sm" onclick={(e: MouseEvent) => { e.stopPropagation(); selectedOrder = order; showDialog = true; }} aria-label={t("common.view")}><Eye class="h-4 w-4" /></Button></TableCell>
 					</TableRow>
 				{/each}
 			</TableBody>

@@ -27,6 +27,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.user = user ?? null;
 	event.locals.session = session ?? null;
 
+	if (session?.expires_at && new Date(session.expires_at * 1000) < new Date()) {
+		throw redirect(307, "/login");
+	}
+
 	const path = event.url.pathname;
 	const isPublic = publicRoutes.includes(path) || path.startsWith("/api/");
 	const isAuthOnly = authOnlyRoutes.includes(path);

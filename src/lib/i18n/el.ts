@@ -27,6 +27,7 @@ export const el: TranslationsStructure = {
 		stock: "Απόθεμα",
 		submit: "Υποβολή",
 		unlimited: "Απεριόριστο",
+		view: "Προβολή",
 		viewAll: "Προβολή όλων",
 		noResults: "Δεν βρέθηκαν αποτελέσματα",
 		error: "Κάτι πήγε στραβά",

@@ -25,6 +25,7 @@ export const en = {
 		stock: "Stock",
 		submit: "Submit",
 		unlimited: "Unlimited",
+		view: "View",
 		viewAll: "View All",
 		noResults: "No results found",
 		error: "Something went wrong",

@@ -60,7 +60,7 @@
 											<TableCell class="text-sm">{fmtDate(order.created_at)}</TableCell>
 											<TableCell><Badge variant="outline">{getActiveItems(order.order_items).length} {t("orders.itemsCount")}</Badge></TableCell>
 											<TableCell class="font-medium">{fmtCurrency(order.total_amount)}</TableCell>
-											<TableCell><Button variant="ghost" size="icon-sm" onclick={(e: MouseEvent) => { e.stopPropagation(); selectedOrder = order; showDialog = true; }}><Eye class="h-4 w-4" /></Button></TableCell>
+											<TableCell><Button variant="ghost" size="icon-sm" onclick={(e: MouseEvent) => { e.stopPropagation(); selectedOrder = order; showDialog = true; }} aria-label={t("common.view")}><Eye class="h-4 w-4" /></Button></TableCell>
 										</TableRow>
 									{/each}
 								</TableBody>
