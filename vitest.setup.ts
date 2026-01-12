@@ -1,20 +1,6 @@
-/**
- * Vitest Global Setup
- * Configures mocks for SvelteKit and browser APIs
- */
-
 import { vi, beforeEach, afterEach } from "vitest";
 
-// ============================================================================
-// SVELTEKIT MODULE MOCKS
-// ============================================================================
-
-vi.mock("$app/environment", () => ({
-	browser: true,
-	dev: true,
-	building: false,
-	version: "test",
-}));
+vi.mock("$app/environment", () => ({ browser: true, dev: true, building: false, version: "test" }));
 
 vi.mock("$app/navigation", () => ({
 	goto: vi.fn(),
@@ -28,10 +14,6 @@ vi.mock("$app/navigation", () => ({
 	replaceState: vi.fn(),
 }));
 
-// ============================================================================
-// SVELTE 5 RUNES MOCK
-// ============================================================================
-
 vi.stubGlobal("$state", (<T>(value: T): T => value) as <T>(value: T) => T);
 
 vi.mock("$lib/state/settings.svelte", () => ({
@@ -42,10 +24,6 @@ vi.mock("$lib/state/settings.svelte", () => ({
 		save: vi.fn(),
 	},
 }));
-
-// ============================================================================
-// LOCALSTORAGE MOCK
-// ============================================================================
 
 const createStorageMock = (): Storage => {
 	let store: Record<string, string> = {};
@@ -61,10 +39,6 @@ const createStorageMock = (): Storage => {
 
 const localStorageMock = createStorageMock();
 vi.stubGlobal("localStorage", localStorageMock);
-
-// ============================================================================
-// DOCUMENT & WINDOW MOCKS
-// ============================================================================
 
 vi.stubGlobal("document", {
 	...document,
@@ -92,15 +66,5 @@ vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
 	dispatchEvent: vi.fn(),
 })));
 
-// ============================================================================
-// TEST LIFECYCLE
-// ============================================================================
-
-beforeEach(() => {
-	localStorageMock.clear();
-	vi.clearAllMocks();
-});
-
-afterEach(() => {
-	vi.restoreAllMocks();
-});
+beforeEach(() => { localStorageMock.clear(); vi.clearAllMocks(); });
+afterEach(() => { vi.restoreAllMocks(); });
