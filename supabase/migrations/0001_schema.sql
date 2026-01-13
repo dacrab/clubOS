@@ -183,4 +183,9 @@ CREATE UNIQUE INDEX idx_bookings_no_overlap
   ON public.bookings (facility_id, (details->>'field_number'), starts_at) 
   WHERE type = 'football' AND status NOT IN ('cancelled');
 
+-- Keep-alive table for cron health checks
+CREATE TABLE public."keep-alive" (
+  name text PRIMARY KEY
+);
+
 COMMIT;

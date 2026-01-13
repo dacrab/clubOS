@@ -1,9 +1,14 @@
-import { json } from "@sveltejs/kit";
+import { json, error } from "@sveltejs/kit";
+import { env } from "$env/dynamic/private";
 import { generateRandomString } from "$lib/server/keep-alive-helper";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 import type { RequestHandler } from "./$types";
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ request }) => {
+	const authHeader = request.headers.get("authorization");
+	if (env.CRON_SECRET && authHeader !== `Bearer ${env.CRON_SECRET}`) {
+		throw error(401, "Unauthorized");
+	}
 	const admin = getSupabaseAdmin();
 	const val = generateRandomString();
 	const table = "keep-alive";
