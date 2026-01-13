@@ -47,7 +47,7 @@
 	});
 
 	const getStatusBadge = (s: BookingStatus) =>
-		s === "confirmed" ? ("success" as const) : s === "cancelled" ? ("destructive" as const) : ("secondary" as const);
+		s === "confirmed" ? ("success" as const) : s === "canceled" ? ("destructive" as const) : ("secondary" as const);
 
 	function openDialog(item?: Booking) {
 		editingItem = item ?? null;

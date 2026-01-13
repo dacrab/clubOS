@@ -9,7 +9,7 @@
 
 export type MemberRole = "owner" | "admin" | "manager" | "staff";
 export type BookingType = "birthday" | "football" | "event" | "other";
-export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
+export type BookingStatus = "pending" | "confirmed" | "canceled" | "completed" | "no_show";
 export type SubscriptionStatus = "trialing" | "active" | "canceled" | "past_due" | "unpaid" | "paused";
 
 // =============================================================================
@@ -113,14 +113,14 @@ export interface RegisterSession {
 	facility_id: string;
 	opened_by: string;
 	closed_by: string | null;
-	opened_at: string;
+	opened_at: string | null; // When first order was placed (auto-set)
 	closed_at: string | null;
 	opening_cash: number;
 	closing_cash: number | null;
 	expected_cash: number | null;
 	notes: string | null;
 	summary: RegisterSummary | null;
-	created_at: string;
+	created_at: string; // When session was created/opened by staff
 	opened_by_user?: User;
 	closed_by_user?: User;
 }

@@ -11,7 +11,7 @@ export const GET: RequestHandler = async ({ request }) => {
 	}
 	const admin = getSupabaseAdmin();
 	const val = generateRandomString();
-	const table = "keep-alive";
+	const table = "keep_alive";
 	const col = "name";
 
 	const sel = await admin.from(table).select(col).eq(col, val).limit(1);

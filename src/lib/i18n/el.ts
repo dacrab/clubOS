@@ -334,7 +334,7 @@ export const el: TranslationsStructure = {
 		status: {
 			pending: "Σε Αναμονή",
 			confirmed: "Επιβεβαιωμένη",
-			cancelled: "Ακυρωμένη",
+			canceled: "Ακυρωμένη",
 			completed: "Ολοκληρωμένη",
 			no_show: "Δεν Εμφανίστηκε",
 		},

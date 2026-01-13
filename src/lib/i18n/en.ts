@@ -332,7 +332,7 @@ export const en = {
 		status: {
 			pending: "Pending",
 			confirmed: "Confirmed",
-			cancelled: "Cancelled",
+			canceled: "Canceled",
 			completed: "Completed",
 			no_show: "No Show",
 		},
