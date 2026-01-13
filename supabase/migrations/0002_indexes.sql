@@ -19,9 +19,13 @@ CREATE INDEX idx_register_sessions_facility ON public.register_sessions(facility
 CREATE UNIQUE INDEX memberships_user_tenant_facility_idx 
   ON public.memberships (user_id, tenant_id, COALESCE(facility_id, '00000000-0000-0000-0000-000000000000'::uuid));
 
--- Prevent double-booking for football fields
-CREATE UNIQUE INDEX idx_bookings_no_overlap 
-  ON public.bookings (facility_id, (details->>'field_number'), starts_at) 
-  WHERE type = 'football' AND status NOT IN ('canceled');
+-- Prevent double-booking for football fields (actual time range overlap)
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+ALTER TABLE public.bookings ADD CONSTRAINT bookings_no_overlap 
+  EXCLUDE USING gist (
+    facility_id WITH =,
+    (details->>'field_number') WITH =,
+    tstzrange(starts_at, ends_at) WITH &&
+  ) WHERE (type = 'football' AND status != 'canceled');
 
 COMMIT;

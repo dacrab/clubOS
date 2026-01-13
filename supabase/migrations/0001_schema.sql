@@ -109,10 +109,9 @@ CREATE TABLE public.register_sessions (
   expected_cash numeric(10,2),
   notes text,
   summary jsonb,
-  created_at timestamptz NOT NULL DEFAULT now()
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CHECK (closed_at IS NULL OR closed_at > opened_at)
 );
-COMMENT ON COLUMN public.register_sessions.created_at IS 'When session was created by staff';
-COMMENT ON COLUMN public.register_sessions.opened_at IS 'When first order was placed (auto-set)';
 
 -- Orders
 CREATE TABLE public.orders (

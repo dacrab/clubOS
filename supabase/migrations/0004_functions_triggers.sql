@@ -5,7 +5,7 @@ BEGIN;
 -- Helper: get user's tenant IDs
 CREATE FUNCTION public.user_tenant_ids() RETURNS SETOF uuid 
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
-  SELECT DISTINCT tenant_id FROM memberships WHERE user_id = (SELECT auth.uid());
+  SELECT DISTINCT tenant_id FROM memberships WHERE user_id = auth.uid();
 $$;
 
 -- Helper: get user's facility IDs
@@ -13,13 +13,13 @@ CREATE FUNCTION public.user_facility_ids() RETURNS SETOF uuid
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT DISTINCT f.id FROM facilities f
   JOIN memberships m ON m.tenant_id = f.tenant_id
-  WHERE m.user_id = (SELECT auth.uid()) AND (m.facility_id IS NULL OR m.facility_id = f.id);
+  WHERE m.user_id = auth.uid() AND (m.facility_id IS NULL OR m.facility_id = f.id);
 $$;
 
 -- Helper: check facility access
 CREATE FUNCTION public.has_facility_access(fid uuid) RETURNS boolean 
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
-  SELECT EXISTS (SELECT 1 FROM public.user_facility_ids() WHERE user_facility_ids = fid);
+  SELECT EXISTS (SELECT 1 FROM user_facility_ids() AS id WHERE id = fid);
 $$;
 
 -- Helper: check if user is admin for facility
@@ -27,7 +27,7 @@ CREATE FUNCTION public.is_facility_admin(fid uuid) RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT EXISTS (
     SELECT 1 FROM memberships m JOIN facilities f ON f.tenant_id = m.tenant_id
-    WHERE m.user_id = (SELECT auth.uid()) AND f.id = fid AND m.role IN ('owner', 'admin')
+    WHERE m.user_id = auth.uid() AND f.id = fid AND m.role IN ('owner', 'admin')
     AND (m.facility_id IS NULL OR m.facility_id = fid)
   );
 $$;
@@ -80,28 +80,29 @@ DECLARE
   v_subtotal numeric(10,2) := 0;
   v_discount numeric(10,2);
   v_total numeric(10,2);
-  v_item jsonb;
-  v_product record;
+  v_item record;
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM register_sessions WHERE id = p_session_id AND facility_id = p_facility_id AND closed_at IS NULL) THEN
     RETURN jsonb_build_object('error', 'No active register session');
   END IF;
 
-  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
-    SELECT * INTO v_product FROM products WHERE id = (v_item->>'product_id')::uuid AND facility_id = p_facility_id;
-    IF v_product IS NULL THEN RETURN jsonb_build_object('error', 'Product not found'); END IF;
-    IF v_product.track_inventory AND v_product.stock_quantity < (v_item->>'quantity')::integer THEN
-      RETURN jsonb_build_object('error', 'Insufficient stock for: ' || v_product.name);
+  FOR v_item IN 
+    SELECT i.*, p.name, p.stock_quantity, p.track_inventory
+    FROM jsonb_to_recordset(p_items) AS i(product_id uuid, quantity int, unit_price numeric, is_treat boolean)
+    JOIN products p ON p.id = i.product_id AND p.facility_id = p_facility_id
+  LOOP
+    IF v_item.name IS NULL THEN RETURN jsonb_build_object('error', 'Product not found'); END IF;
+    IF v_item.track_inventory AND v_item.stock_quantity < v_item.quantity THEN
+      RETURN jsonb_build_object('error', 'Insufficient stock for: ' || v_item.name);
     END IF;
-    IF NOT COALESCE((v_item->>'is_treat')::boolean, false) THEN
-      v_subtotal := v_subtotal + (v_item->>'unit_price')::numeric * (v_item->>'quantity')::integer;
+    IF NOT COALESCE(v_item.is_treat, false) THEN
+      v_subtotal := v_subtotal + v_item.unit_price * v_item.quantity;
     END IF;
   END LOOP;
 
   v_discount := p_coupon_count * p_coupon_value;
   v_total := GREATEST(0, v_subtotal - v_discount);
 
-  -- Auto-set opened_at on first order
   UPDATE register_sessions SET opened_at = now() WHERE id = p_session_id AND opened_at IS NULL;
 
   INSERT INTO orders (facility_id, session_id, subtotal, discount_amount, total_amount, coupon_count, created_by)
@@ -109,10 +110,11 @@ BEGIN
   RETURNING id INTO v_order_id;
 
   INSERT INTO order_items (order_id, product_id, product_name, quantity, unit_price, line_total, is_treat)
-  SELECT v_order_id, (item->>'product_id')::uuid, p.name, (item->>'quantity')::integer, (item->>'unit_price')::numeric,
-    CASE WHEN COALESCE((item->>'is_treat')::boolean, false) THEN 0 ELSE (item->>'unit_price')::numeric * (item->>'quantity')::integer END,
-    COALESCE((item->>'is_treat')::boolean, false)
-  FROM jsonb_array_elements(p_items) item JOIN products p ON p.id = (item->>'product_id')::uuid;
+  SELECT v_order_id, i.product_id, p.name, i.quantity, i.unit_price,
+    CASE WHEN COALESCE(i.is_treat, false) THEN 0 ELSE i.unit_price * i.quantity END,
+    COALESCE(i.is_treat, false)
+  FROM jsonb_to_recordset(p_items) AS i(product_id uuid, quantity int, unit_price numeric, is_treat boolean)
+  JOIN products p ON p.id = i.product_id;
 
   RETURN jsonb_build_object('id', v_order_id, 'subtotal', v_subtotal, 'discount_amount', v_discount, 'total_amount', v_total);
 END;
