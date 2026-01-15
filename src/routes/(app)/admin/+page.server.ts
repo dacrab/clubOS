@@ -1,154 +1,62 @@
 import type { PageServerLoad } from "./$types";
-import { mergeSettings, type TenantSettings } from "$lib/config/settings";
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
-	const { user, settings: tenantSettings } = await parent();
+	const { user } = await parent();
 	const { supabase } = locals;
-	const s = mergeSettings(tenantSettings as Partial<TenantSettings> | null);
+	const fid = user.facilityId;
 
-	const today = new Date();
-	today.setHours(0, 0, 0, 0);
-
-	// Calculate date ranges
-	const sevenDaysAgo = new Date(today);
-	sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-
-	const thirtyDaysAgo = new Date(today);
-	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
-
-	// Parallel queries for performance
 	const [
-		{ data: todayOrders },
-		{ count: lowStockCount },
+		{ data: dailyStats },
+		{ data: lowStock },
 		{ count: activeUsers },
 		{ data: recentOrders },
-		{ data: weekOrders },
-		{ data: bestSellerItems },
+		{ data: weeklyRevenue },
+		{ data: bestSellers },
 		{ data: categories },
 		{ data: products },
 		{ data: activeSession },
 	] = await Promise.all([
-		// Today's orders
-		supabase
-			.from("orders")
-			.select("id, total_amount, created_at")
-			.gte("created_at", today.toISOString())
-			.order("created_at", { ascending: false }),
-
-		// Low stock count (uses settings threshold)
-		supabase
-			.from("products")
-			.select("id", { count: "exact", head: true })
-			.gte("stock_quantity", 0)
-			.lte("stock_quantity", s.low_stock_threshold),
-
-		// Active users
+		supabase.from("v_daily_stats").select("*").eq("facility_id", fid).maybeSingle(),
+		supabase.from("v_low_stock").select("count").eq("facility_id", fid).maybeSingle(),
 		supabase.from("users").select("id", { count: "exact", head: true }),
-
-		// Recent orders with items
-		supabase
-			.from("orders")
-			.select(`
-				id, total_amount, created_at, created_by, subtotal, discount_amount, coupon_count,
-				order_items(id, quantity, unit_price, line_total, is_treat, is_deleted, products(id, name))
-			`)
-			.order("created_at", { ascending: false })
-			.limit(5),
-
-		// Last 7 days orders for chart
-		supabase
-			.from("orders")
-			.select("total_amount, created_at")
-			.gte("created_at", sevenDaysAgo.toISOString())
-			.order("created_at", { ascending: true }),
-
-		// Best sellers (order items with product info)
-		supabase
-			.from("order_items")
-			.select("product_id, quantity, products(id, name, category_id)")
-			.eq("is_deleted", false)
-			.gte("created_at", thirtyDaysAgo.toISOString()),
-
-		// Categories for sales breakdown and new sale dialog
-		supabase.from("categories").select("id, name, parent_id").eq("facility_id", user.facilityId),
-
-		// Products for new sale dialog
-		supabase.from("products").select("*").order("name"),
-
-		// Active register session
-		supabase
-			.from("register_sessions")
-			.select("*")
-			.is("closed_at", null)
-			.order("opened_at", { ascending: false })
-			.limit(1)
-			.maybeSingle(),
+		supabase.from("v_recent_orders").select("*").eq("facility_id", fid).order("created_at", { ascending: false }).limit(5),
+		supabase.from("v_weekly_revenue").select("date, revenue").eq("facility_id", fid).order("date"),
+		supabase.from("mv_best_sellers").select("*").eq("facility_id", fid).order("total_sold", { ascending: false }).limit(5),
+		supabase.from("categories").select("id, name, parent_id").eq("facility_id", fid),
+		supabase.from("products").select("*").eq("facility_id", fid).order("name"),
+		supabase.from("register_sessions").select("*").eq("facility_id", fid).is("closed_at", null).limit(1).maybeSingle(),
 	]);
 
-	const todayRevenue = todayOrders?.reduce((sum, o) => sum + Number(o.total_amount), 0) ?? 0;
-
-	// Process weekly revenue data for chart
-	const revenueByDay: { date: string; revenue: number }[] = [];
-	for (let i = 6; i >= 0; i--) {
-		const date = new Date(today);
-		date.setDate(date.getDate() - i);
-		const dateStr = date.toISOString().split("T")[0];
-
-		const dayRevenue =
-			weekOrders
-				?.filter((o) => o.created_at.startsWith(dateStr))
-				.reduce((sum, o) => sum + Number(o.total_amount), 0) ?? 0;
-
-		revenueByDay.push({
-			date: date.toLocaleDateString("en", { weekday: "short" }),
-			revenue: dayRevenue,
-		});
-	}
-
-	// Process best sellers
-	type ProductInfo = { id: string; name: string; category_id: string | null };
-	const productSales: Record<string, { name: string; quantity: number; categoryId: string | null }> = {};
-	bestSellerItems?.forEach((item) => {
-		const product = item.products as unknown as ProductInfo | null;
-		if (product) {
-			if (!productSales[product.id]) {
-				productSales[product.id] = { name: product.name, quantity: 0, categoryId: product.category_id };
-			}
-			productSales[product.id].quantity += item.quantity;
-		}
+	// Build 7-day revenue chart
+	const today = new Date();
+	const revenueByDay = Array.from({ length: 7 }, (_, i) => {
+		const d = new Date(today);
+		d.setDate(d.getDate() - (6 - i));
+		const dateStr = d.toISOString().split("T")[0];
+		const found = weeklyRevenue?.find((r) => r.date === dateStr);
+		return { date: d.toLocaleDateString("en", { weekday: "short" }), revenue: Number(found?.revenue ?? 0) };
 	});
 
-	const bestSellers = Object.entries(productSales)
-		.map(([id, data]) => ({ id, ...data }))
-		.sort((a, b) => b.quantity - a.quantity)
-		.slice(0, 5);
-
-	// Process sales by category
+	// Category sales from best sellers
 	const categoryMap = new Map(categories?.map((c) => [c.id, c.name]) ?? []);
-	const salesByCategory: Record<string, number> = { Uncategorized: 0 };
-
-	Object.values(productSales).forEach((product) => {
-		const categoryName = product.categoryId ? categoryMap.get(product.categoryId) ?? "Uncategorized" : "Uncategorized";
-		salesByCategory[categoryName] = (salesByCategory[categoryName] ?? 0) + product.quantity;
+	const salesByCategory: Record<string, number> = {};
+	bestSellers?.forEach((p) => {
+		const name = p.category_id ? categoryMap.get(p.category_id) ?? "Uncategorized" : "Uncategorized";
+		salesByCategory[name] = (salesByCategory[name] ?? 0) + Number(p.total_sold);
 	});
-
-	const categorySales = Object.entries(salesByCategory)
-		.filter(([, qty]) => qty > 0)
-		.map(([name, quantity]) => ({ name, quantity }))
-		.sort((a, b) => b.quantity - a.quantity);
 
 	return {
 		stats: {
-			todayRevenue,
-			todayOrders: todayOrders?.length ?? 0,
-			lowStockCount: lowStockCount ?? 0,
+			todayRevenue: Number(dailyStats?.revenue ?? 0),
+			todayOrders: Number(dailyStats?.orders_count ?? 0),
+			lowStockCount: Number(lowStock?.count ?? 0),
 			activeUsers: activeUsers ?? 0,
 		},
 		recentOrders: recentOrders ?? [],
 		analytics: {
 			revenueByDay,
-			bestSellers,
-			categorySales,
+			bestSellers: bestSellers?.map((p) => ({ id: p.product_id, name: p.product_name, quantity: Number(p.total_sold), categoryId: p.category_id })) ?? [],
+			categorySales: Object.entries(salesByCategory).map(([name, quantity]) => ({ name, quantity })).sort((a, b) => b.quantity - a.quantity),
 		},
 		products: products ?? [],
 		categories: categories ?? [],

@@ -30,6 +30,7 @@
 	let couponCount = $state(0);
 	let searchQuery = $state("");
 	let processing = $state(false);
+	let submitDebounce = $state<ReturnType<typeof setTimeout> | null>(null);
 	let lastOrderId = $state<string | null>(null);
 	let lastOrderData = $state<{ items: CartItem[]; total: number; discount: number; couponCount: number } | null>(null);
 	let showCart = $state(false);
@@ -54,21 +55,36 @@
 	const COUPON_VALUE = $derived(globalSettings.current.coupons_value);
 	const rootCategories = $derived(categories.filter(c => !c.parent_id));
 
-	function getCategoryDescendants(id: string): Set<string> {
-		const result = new Set([id]);
-		for (const c of categories.filter(c => c.parent_id === id)) {
-			getCategoryDescendants(c.id).forEach(d => result.add(d));
+	// Use DB full-text search when query exists, otherwise filter by category client-side
+	let searchResults = $state<Product[]>([]);
+
+	async function searchProducts(query: string) {
+		if (!query.trim() || !user.facilityId) {
+			searchResults = [];
+			return;
 		}
-		return result;
+		const { data } = await supabase.rpc("search_products", { facility_uuid: user.facilityId, search_text: query });
+		searchResults = (data as Product[]) ?? [];
 	}
 
+	// Debounced search
+	let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+	$effect(() => {
+		if (searchTimeout) clearTimeout(searchTimeout);
+		if (searchQuery.trim()) {
+			searchTimeout = setTimeout(() => searchProducts(searchQuery), 200);
+		} else {
+			searchResults = [];
+		}
+	});
+
 	const filteredProducts = $derived.by(() => {
-		const q = searchQuery.toLowerCase();
-		return products.filter(p => {
-			if (!p.name.toLowerCase().includes(q)) return false;
-			if (!selectedCategory) return true;
-			return p.category_id && getCategoryDescendants(selectedCategory).has(p.category_id);
-		});
+		// If searching, use DB results
+		if (searchQuery.trim()) return searchResults;
+		// Otherwise filter by category only
+		if (!selectedCategory) return products;
+		// Simple category filter (parent only, descendants handled by DB if needed)
+		return products.filter(p => p.category_id === selectedCategory);
 	});
 
 	const subtotal = $derived(cart.reduce((s, i) => s + (i.isTreat ? 0 : i.product.price * i.quantity), 0));
@@ -104,37 +120,44 @@
 	async function submitOrder(): Promise<void> {
 		if (!cart.length) { toast.error(t("orders.emptyCart")); return; }
 		if (!activeSession) { toast.error(t("register.noActiveSession")); return; }
+		if (processing) return; // Prevent double-submit
 
+		// Debounce rapid clicks
+		if (submitDebounce) clearTimeout(submitDebounce);
+		
 		processing = true;
-		try {
-			const { data, error } = await supabase.rpc("create_order", {
-				p_facility_id: user.facilityId,
-				p_session_id: activeSession.id,
-				p_user_id: user.id,
-				p_items: cart.map(i => ({
-					product_id: i.product.id,
-					quantity: i.quantity,
-					unit_price: i.product.price,
-					is_treat: i.isTreat,
-				})),
-				p_coupon_count: couponCount,
-				p_coupon_value: COUPON_VALUE,
-			});
+		submitDebounce = setTimeout(async () => {
+			try {
+				const { data, error } = await supabase.rpc("create_order", {
+					p_facility_id: user.facilityId,
+					p_session_id: activeSession.id,
+					p_user_id: user.id,
+					p_items: cart.map(i => ({
+						product_id: i.product.id,
+						quantity: i.quantity,
+						unit_price: i.product.price,
+						is_treat: i.isTreat,
+					})),
+					p_coupon_count: couponCount,
+					p_coupon_value: COUPON_VALUE,
+				});
 
-			if (error) throw error;
-			if (data?.error) { toast.error(data.error); return; }
+				if (error) throw error;
+				if (data?.error) { toast.error(data.error); return; }
 
-			lastOrderId = data.id;
-			lastOrderData = { items: [...cart], total, discount, couponCount };
-			toast.success(t("common.success"));
-			clearCart();
-			showCart = false;
-			await invalidateAll();
-		} catch {
-			toast.error(t("common.error"));
-		} finally {
-			processing = false;
-		}
+				lastOrderId = data.id;
+				lastOrderData = { items: [...cart], total, discount, couponCount };
+				toast.success(t("common.success"));
+				clearCart();
+				showCart = false;
+				await invalidateAll();
+			} catch {
+				toast.error(t("common.error"));
+			} finally {
+				processing = false;
+				submitDebounce = null;
+			}
+		}, 300);
 	}
 </script>
 

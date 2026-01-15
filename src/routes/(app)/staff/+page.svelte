@@ -11,7 +11,6 @@
 	import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "$lib/components/ui/dialog";
 	import { NewSaleDialog, RecentOrders } from "$lib/components/features";
 	import { registerSessions } from "$lib/services/db";
-	import { supabase } from "$lib/utils/supabase";
 	import { fmtDate, fmtCurrency } from "$lib/utils/format";
 	import { DollarSign, Plus } from "@lucide/svelte";
 
@@ -40,8 +39,8 @@
 	}
 
 	async function openCloseDialog(): Promise<void> {
-		const { data: orders } = await supabase.from("orders").select("total_amount").eq("session_id", data.activeSession?.id);
-		expectedCash = orders?.reduce((sum, o) => sum + Number(o.total_amount), 0) ?? 0;
+		// Expected cash is calculated by close_register_session RPC, just set initial value
+		expectedCash = (data.activeSession?.opening_cash ?? 0);
 		countedCash = expectedCash;
 		showCloseDialog = true;
 	}
@@ -49,14 +48,14 @@
 	async function closeRegister(): Promise<void> {
 		if (!closingName || !data.activeSession) { toast.error(t("common.error")); return; }
 		processing = true;
-		const { data: result, error } = await registerSessions.close(
+		const { error } = await registerSessions.close(
 			data.activeSession.id,
 			data.user.id,
 			countedCash,
 			closingNotes
 		);
 		processing = false;
-		if (error || result?.error) { toast.error(result?.error || t("common.error")); return; }
+		if (error) { toast.error(typeof error === "string" ? error : t("common.error")); return; }
 		toast.success(t("common.success"));
 		showCloseDialog = false;
 		closingName = "";

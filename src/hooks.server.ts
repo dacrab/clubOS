@@ -27,8 +27,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.user = user;
 	event.locals.session = session;
 
-	if (session?.expires_at && new Date(session.expires_at * 1000) < new Date()) {
-		throw redirect(307, "/login");
+	// Fix: Reject sessions without expires_at OR expired sessions
+	if (session && (!session.expires_at || new Date(session.expires_at * 1000) < new Date())) {
+		await supabase.auth.signOut();
+		throw redirect(307, "/");
 	}
 
 	const path = event.url.pathname;

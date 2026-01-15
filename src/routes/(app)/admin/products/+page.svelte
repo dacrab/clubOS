@@ -40,8 +40,8 @@
 		getName: (p) => p.name,
 	});
 
-	const filtered = $derived(data.products.filter((p: Product) => p.name.toLowerCase().includes(searchQuery.toLowerCase())));
-	const lowStockProducts = $derived(data.products.filter((p: Product) => p.stock_quantity >= 0 && p.stock_quantity <= settings.current.low_stock_threshold));
+	const filtered = $derived(searchQuery ? data.products.filter((p: Product) => p.name.toLowerCase().includes(searchQuery.toLowerCase())) : data.products);
+	const lowStockProducts = $derived(data.lowStockProducts ?? []);
 	const getCategoryName = (id: string | null): string => id ? (data.categories as CategoryPartial[]).find((c) => c.id === id)?.name ?? "-" : "-";
 	const getStockBadge = (stock: number) => {
 		const threshold = settings.current.low_stock_threshold;

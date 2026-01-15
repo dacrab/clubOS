@@ -6,8 +6,8 @@
 import type { RequestHandler } from "@sveltejs/kit";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 
-// Check if user is admin/owner
-async function requireAdmin(locals: App.Locals): Promise<{ ok: boolean; error?: string; tenantId?: string }> {
+// Check if user is admin/owner and get their role for privilege checks
+async function requireAdmin(locals: App.Locals): Promise<{ ok: boolean; error?: string; tenantId?: string; callerRole?: string }> {
 	if (!locals.user) return { ok: false, error: "Unauthorized" };
 
 	const admin = getSupabaseAdmin();
@@ -22,7 +22,14 @@ async function requireAdmin(locals: App.Locals): Promise<{ ok: boolean; error?: 
 		return { ok: false, error: "Forbidden" };
 	}
 
-	return { ok: true, tenantId: membership.tenant_id };
+	return { ok: true, tenantId: membership.tenant_id, callerRole: membership.role };
+}
+
+// Prevent privilege escalation - admins can't create owners
+function getAllowedRoles(callerRole: string): string[] {
+	return callerRole === "owner" 
+		? ["owner", "admin", "manager", "staff"] 
+		: ["admin", "manager", "staff"]; // admins can't create owners
 }
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -34,6 +41,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	if (!email || !password || !role || !full_name) {
 		return new Response("Missing required fields", { status: 400 });
+	}
+
+	// Prevent privilege escalation
+	if (!getAllowedRoles(check.callerRole ?? "staff").includes(role)) {
+		return new Response("Cannot create user with higher privileges", { status: 403 });
 	}
 
 	const admin = getSupabaseAdmin();
@@ -74,6 +86,11 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 	const { id, full_name, role, password } = body;
 
 	if (!id) return new Response("Missing id", { status: 400 });
+
+	// Prevent privilege escalation on role update
+	if (role && !getAllowedRoles(check.callerRole ?? "staff").includes(role)) {
+		return new Response("Cannot assign higher privileges", { status: 403 });
+	}
 
 	const admin = getSupabaseAdmin();
 
