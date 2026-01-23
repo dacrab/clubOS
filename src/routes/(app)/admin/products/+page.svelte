@@ -3,11 +3,11 @@
 	import { invalidateAll } from "$app/navigation";
 	import { PageHeader, EmptyState } from "$lib/components/layout";
 	import { Button } from "$lib/components/ui/button";
-	import { Input } from "$lib/components/ui/input";
-	import { Label } from "$lib/components/ui/label";
+	import Input from "$lib/components/ui/input/input.svelte";
+	import Label from "$lib/components/ui/label/label.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Card } from "$lib/components/ui/card";
-	import { FormDialog } from "$lib/components/ui/form-dialog";
+	import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
 	import { Select, SelectTrigger, SelectContent, SelectItem } from "$lib/components/ui/select";
 	import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table";
 	import { createCrud } from "$lib/state/crud.svelte";
@@ -15,9 +15,7 @@
 	import { fmtCurrency } from "$lib/utils/format";
 	import { settings } from "$lib/state/settings.svelte";
 	import { Plus, Pencil, Trash2, Package, FolderTree, AlertTriangle } from "@lucide/svelte";
-	import type { Product } from "$lib/types/database";
-
-	type CategoryPartial = { id: string; name: string; parent_id: string | null; description: string | null };
+	import { type Product, type CategoryPartial, type ProductForm } from "$lib/types/database";
 
 	const { data } = $props();
 
@@ -27,7 +25,6 @@
 	let categoryForm = $state({ name: "", description: "", parent_id: "" });
 	let categorySaving = $state(false);
 
-	type ProductForm = { name: string; description: string; price: number; stock_quantity: number; category_id: string; image_url: string };
 
 	const crud = createCrud<Product, ProductForm>({
 		toForm: (p) => p

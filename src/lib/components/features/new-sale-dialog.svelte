@@ -3,17 +3,17 @@
 	import { toast } from "svelte-sonner";
 	import { invalidateAll } from "$app/navigation";
 	import { Button } from "$lib/components/ui/button";
-	import { Input } from "$lib/components/ui/input";
+	import Input from "$lib/components/ui/input/input.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Dialog, DialogContent } from "$lib/components/ui/dialog";
 	import { supabase } from "$lib/utils/supabase";
 	import { fmtCurrency } from "$lib/utils/format";
+	import { printReceipt, type ReceiptData } from "$lib/utils/receipt";
 	import { settings as globalSettings } from "$lib/state/settings.svelte";
 	import { ShoppingCart, Plus, Minus, Gift, X, Search, Check, Trash2, ChevronRight, Tag, Printer } from "@lucide/svelte";
-	import type { Product } from "$lib/types/database";
+	import type { Product, CartItem } from "$lib/types/database";
 
 	type Category = { id: string; name: string; parent_id: string | null };
-	type CartItem = { product: Product; quantity: number; isTreat: boolean };
 	type Props = {
 		open: boolean;
 		products: Product[];
@@ -32,24 +32,11 @@
 	let processing = $state(false);
 	let submitDebounce = $state<ReturnType<typeof setTimeout> | null>(null);
 	let lastOrderId = $state<string | null>(null);
-	let lastOrderData = $state<{ items: CartItem[]; total: number; discount: number; couponCount: number } | null>(null);
+	let lastOrderData = $state<ReceiptData | null>(null);
 	let showCart = $state(false);
 
-	function printReceipt(): void {
-		if (!lastOrderData) return;
-		const w = window.open("", "_blank", "width=300,height=600");
-		if (!w) return;
-		const html = `<!DOCTYPE html><html><head><title>${t("orders.receipt")}</title><style>body{font-family:monospace;font-size:12px;padding:10px;max-width:280px}h2{text-align:center;margin:0 0 10px}hr{border:none;border-top:1px dashed #000;margin:8px 0}.item{display:flex;justify-content:space-between}.total{font-weight:bold;font-size:14px}.center{text-align:center}</style></head><body>
-		<h2>${t("orders.receipt")}</h2><p class="center">${new Date().toLocaleString()}</p><hr>
-		${lastOrderData.items.map(i => `<div class="item"><span>${i.quantity}x ${i.product.name}${i.isTreat ? " (${t('orders.treat')})" : ""}</span><span>${i.isTreat ? "-" : fmtCurrency(i.product.price * i.quantity)}</span></div>`).join("")}
-		<hr><div class="item"><span>${t("orders.subtotal")}</span><span>${fmtCurrency(lastOrderData.total + lastOrderData.discount)}</span></div>
-		${lastOrderData.discount > 0 ? `<div class="item"><span>${t("orders.discount")} (${lastOrderData.couponCount} ${t("orders.coupons").toLowerCase()})</span><span>-${fmtCurrency(lastOrderData.discount)}</span></div>` : ""}
-		<div class="item total"><span>${t("orders.total")}</span><span>${fmtCurrency(lastOrderData.total)}</span></div>
-		<hr><p class="center">${t("orders.thankYou")}</p><p class="center">#${lastOrderId?.slice(0, 8)}</p>
-		</body></html>`;
-		w.document.write(html);
-		w.document.close();
-		w.print();
+	function handlePrintReceipt(): void {
+		if (lastOrderData) printReceipt(lastOrderData);
 	}
 
 	const COUPON_VALUE = $derived(globalSettings.current.coupons_value);
@@ -146,7 +133,7 @@
 				if (data?.error) { toast.error(data.error); return; }
 
 				lastOrderId = data.id;
-				lastOrderData = { items: [...cart], total, discount, couponCount };
+				lastOrderData = { items: [...cart], total, discount, couponCount, orderId: data.id };
 				toast.success(t("common.success"));
 				clearCart();
 				showCart = false;
@@ -456,7 +443,7 @@
 									<p class="text-xs opacity-70">#{lastOrderId.slice(0, 8)}</p>
 								</div>
 							</div>
-							<Button variant="outline" size="sm" onclick={printReceipt}>
+							<Button variant="outline" size="sm" onclick={handlePrintReceipt}>
 								<Printer class="h-4 w-4 mr-1" />{t("orders.printReceipt")}
 							</Button>
 						</div>

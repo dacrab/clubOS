@@ -13,24 +13,10 @@
 	} from "$lib/components/ui/dropdown-menu";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Sun, Moon, Globe, User, LogOut } from "@lucide/svelte";
-	import type { MemberRole } from "$lib/types/database";
-
+	import { getRoleBadgeVariant, type MemberRole } from "$lib/types/database";
 
 	const roleLabel = $derived(session.user?.role ? t(`users.roles.${session.user.role}`) : "");
-
-	const roleBadgeVariant = $derived.by(() => {
-		const role = session.user?.role as MemberRole | undefined;
-		switch (role) {
-			case "owner":
-				return "destructive" as const;
-			case "admin":
-				return "default" as const;
-			case "manager":
-				return "secondary" as const;
-			default:
-				return "outline" as const;
-		}
-	});
+	const roleBadgeVariant = $derived(getRoleBadgeVariant(session.user?.role as MemberRole | undefined));
 </script>
 
 <header

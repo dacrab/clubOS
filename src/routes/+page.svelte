@@ -3,8 +3,8 @@
 	import { toast } from "svelte-sonner";
 	import { t } from "$lib/i18n/index.svelte";
 	import { Button } from "$lib/components/ui/button";
-	import { Input } from "$lib/components/ui/input";
-	import { Label } from "$lib/components/ui/label";
+	import Input from "$lib/components/ui/input/input.svelte";
+	import Label from "$lib/components/ui/label/label.svelte";
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card";
 	import { PublicHeader } from "$lib/components/layout";
 	import { getHomeForRole } from "$lib/config/auth";

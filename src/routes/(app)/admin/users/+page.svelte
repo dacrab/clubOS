@@ -2,31 +2,29 @@
 	import { t } from "$lib/i18n/index.svelte";
 	import { PageHeader, EmptyState } from "$lib/components/layout";
 	import { Button } from "$lib/components/ui/button";
-	import { Input } from "$lib/components/ui/input";
-	import { Label } from "$lib/components/ui/label";
+	import Input from "$lib/components/ui/input/input.svelte";
+	import Label from "$lib/components/ui/label/label.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Card, CardContent } from "$lib/components/ui/card";
-	import { FormDialog } from "$lib/components/ui/form-dialog";
+	import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
 	import { Select, SelectTrigger, SelectContent, SelectItem } from "$lib/components/ui/select";
 	import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table";
 	import { createCrud } from "$lib/state/crud.svelte";
 	import { users } from "$lib/services/db";
 	import { Plus, Pencil, Trash2, Users } from "@lucide/svelte";
-	import type { MemberRole } from "$lib/types/database";
 
-	type User = { id: string; email: string; full_name: string | null; role: MemberRole };
-	type UserForm = { full_name: string; email: string; password: string; role: MemberRole };
+	import { type UserView, type UserForm, getRoleBadgeVariant, type MemberRole } from "$lib/types/database";
+	import { USER_ROLE } from "$lib/constants";
 
 	const { data } = $props();
 
-	const ROLES: MemberRole[] = ["owner", "admin", "manager", "staff"];
+	const ROLES = Object.values(USER_ROLE) as MemberRole[];
 	const getRoleLabel = (role: MemberRole) => t(`users.roles.${role}`);
-	const getRoleBadge = (role: MemberRole) => ({ owner: "destructive", admin: "default", manager: "secondary", staff: "outline" })[role] as "destructive" | "default" | "secondary" | "outline";
 
-	const crud = createCrud<User, UserForm>({
+	const crud = createCrud<UserView, UserForm>({
 		toForm: (u) => u
 			? { full_name: u.full_name ?? "", email: u.email, password: "", role: u.role }
-			: { full_name: "", email: "", password: "", role: "staff" },
+			: { full_name: "", email: "", password: "", role: USER_ROLE.STAFF },
 		onCreate: (f) => users.create({ email: f.email, full_name: f.full_name, password: f.password, role: f.role }),
 		onUpdate: (id, f) => users.update(id, { full_name: f.full_name, role: f.role, ...(f.password ? { password: f.password } : {}) }),
 		onDelete: (id) => users.remove(id),
@@ -60,11 +58,11 @@
 						<TableRow>
 							<TableCell class="font-medium">{user.full_name ?? "-"}</TableCell>
 							<TableCell class="text-muted-foreground">{user.email}</TableCell>
-							<TableCell><Badge variant={getRoleBadge(user.role)}>{getRoleLabel(user.role)}</Badge></TableCell>
+							<TableCell><Badge variant={getRoleBadgeVariant(user.role)}>{getRoleLabel(user.role)}</Badge></TableCell>
 							<TableCell>
 								<div class="flex items-center gap-1">
 									<Button variant="ghost" size="icon-sm" onclick={() => crud.openEdit(user)} aria-label={t("common.edit")}><Pencil class="h-4 w-4" /></Button>
-									{#if user.role !== "owner"}<Button variant="ghost" size="icon-sm" onclick={() => crud.remove(user)} aria-label={t("common.delete")}><Trash2 class="h-4 w-4" /></Button>{/if}
+									{#if user.role !== USER_ROLE.OWNER}<Button variant="ghost" size="icon-sm" onclick={() => crud.remove(user)} aria-label={t("common.delete")}><Trash2 class="h-4 w-4" /></Button>{/if}
 								</div>
 							</TableCell>
 						</TableRow>

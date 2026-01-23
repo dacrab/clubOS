@@ -4,11 +4,12 @@
 	import { invalidateAll } from "$app/navigation";
 	import { PageHeader } from "$lib/components/layout";
 	import { Button } from "$lib/components/ui/button";
-	import { Input } from "$lib/components/ui/input";
-	import { Label } from "$lib/components/ui/label";
+	import Input from "$lib/components/ui/input/input.svelte";
+	import Label from "$lib/components/ui/label/label.svelte";
 	import { Card, CardContent } from "$lib/components/ui/card";
-	import { Separator } from "$lib/components/ui/separator";
+	import Separator from "$lib/components/ui/separator/separator.svelte";
 	import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "$lib/components/ui/dialog";
+	import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
 	import { NewSaleDialog, RecentOrders } from "$lib/components/features";
 	import { registerSessions } from "$lib/services/db";
 	import { fmtDate, fmtCurrency } from "$lib/utils/format";
@@ -108,27 +109,18 @@
 	</DialogContent>
 </Dialog>
 
-<Dialog bind:open={showCloseDialog}>
-	<DialogContent>
-		<DialogHeader><DialogTitle>{t("register.closeRegister")}</DialogTitle><DialogDescription>{t("register.closeDescription")}</DialogDescription></DialogHeader>
-		<div class="space-y-4 py-4">
-			<div class="space-y-2"><Label for="closingName">{t("common.yourName")} *</Label><Input id="closingName" bind:value={closingName} required /></div>
-			<Separator />
-			<div class="grid grid-cols-2 gap-4">
-				<div class="space-y-2"><Label>{t("register.expectedCash")}</Label><div class="text-lg font-bold">{fmtCurrency(expectedCash)}</div></div>
-				<div class="space-y-2"><Label for="countedCash">{t("register.countedCash")}</Label><Input id="countedCash" type="number" step="0.01" min="0" bind:value={countedCash} /></div>
-			</div>
-			{#if cashDifference !== 0}
-				<div class="rounded-lg border p-3 {cashDifference > 0 ? 'bg-green-50 dark:bg-green-950 border-green-200' : 'bg-red-50 dark:bg-red-950 border-red-200'}">
-					<div class="flex justify-between items-center"><span class="font-medium">{t("register.difference")}</span><span class="font-bold {cashDifference > 0 ? 'text-green-600' : 'text-red-600'}">{cashDifference > 0 ? '+' : ''}{fmtCurrency(cashDifference)}</span></div>
-				</div>
-			{/if}
-			<Separator />
-			<div class="space-y-2"><Label for="closingNotes">{t("register.closingNotes")}</Label><Input id="closingNotes" bind:value={closingNotes} /></div>
+<FormDialog bind:open={showCloseDialog} title={t("register.closeRegister")} description={t("register.closeDescription")} saving={processing} onsubmit={closeRegister} onclose={() => showCloseDialog = false}>
+	<div class="space-y-2"><Label for="closingName">{t("common.yourName")} *</Label><Input id="closingName" bind:value={closingName} required /></div>
+	<Separator />
+	<div class="grid grid-cols-2 gap-4">
+		<div class="space-y-2"><Label>{t("register.expectedCash")}</Label><div class="text-lg font-bold">{fmtCurrency(expectedCash)}</div></div>
+		<div class="space-y-2"><Label for="countedCash">{t("register.countedCash")}</Label><Input id="countedCash" type="number" step="0.01" min="0" bind:value={countedCash} /></div>
+	</div>
+	{#if cashDifference !== 0}
+		<div class="rounded-lg border p-3 {cashDifference > 0 ? 'bg-green-50 dark:bg-green-950 border-green-200' : 'bg-red-50 dark:bg-red-950 border-red-200'}">
+			<div class="flex justify-between items-center"><span class="font-medium">{t("register.difference")}</span><span class="font-bold {cashDifference > 0 ? 'text-green-600' : 'text-red-600'}">{cashDifference > 0 ? '+' : ''}{fmtCurrency(cashDifference)}</span></div>
 		</div>
-		<DialogFooter>
-			<Button variant="outline" onclick={() => showCloseDialog = false}>{t("common.cancel")}</Button>
-			<Button onclick={closeRegister} disabled={processing || !closingName}>{processing ? t("common.loading") : t("register.confirmClose")}</Button>
-		</DialogFooter>
-	</DialogContent>
-</Dialog>
+	{/if}
+	<Separator />
+	<div class="space-y-2"><Label for="closingNotes">{t("register.closingNotes")}</Label><Input id="closingNotes" bind:value={closingNotes} /></div>
+</FormDialog>

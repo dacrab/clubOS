@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Popover, PopoverContent, PopoverTrigger } from "$lib/components/ui/popover";
-	import { Calendar } from "$lib/components/ui/calendar";
+	import Calendar from "$lib/components/ui/calendar/calendar.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { cn } from "$lib/utils/cn";
 	import { CalendarIcon } from "@lucide/svelte";

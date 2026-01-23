@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "../app.css";
-	import { Sonner } from "$lib/components/ui/sonner";
+	import Sonner from "$lib/components/ui/sonner/sonner.svelte";
 	import { browser } from "$app/environment";
 	import favicon from "$lib/assets/favicon.svg";
 	import { theme } from "$lib/state/theme.svelte";

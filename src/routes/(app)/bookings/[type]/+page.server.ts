@@ -1,8 +1,9 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import type { BookingType } from "$lib/types/database";
+import { BOOKING_TYPE } from "$lib/constants";
 
-const VALID_TYPES: BookingType[] = ["birthday", "football", "event", "other"];
+const VALID_TYPES: BookingType[] = [BOOKING_TYPE.BIRTHDAY, BOOKING_TYPE.FOOTBALL, "event", "other"];
 
 export const load: PageServerLoad = async ({ locals, params, parent }) => {
 	const type = params.type as BookingType;

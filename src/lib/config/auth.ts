@@ -3,6 +3,7 @@
  */
 
 import type { MemberRole } from "$lib/types/database";
+import { USER_ROLE } from "$lib/constants";
 
 export type Plan = "basic" | "pro" | "enterprise";
 
@@ -58,10 +59,10 @@ export const PLANS = [
 
 export function getHomeForRole(role: MemberRole | string | null): string {
 	switch (role) {
-		case "owner":
-		case "admin":
+		case USER_ROLE.OWNER:
+		case USER_ROLE.ADMIN:
 			return "/admin";
-		case "manager":
+		case USER_ROLE.MANAGER:
 			return "/secretary";
 		default:
 			return "/staff";

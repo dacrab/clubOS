@@ -8,11 +8,11 @@
 	import { PageHeader } from "$lib/components/layout";
 	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
 	import { Button } from "$lib/components/ui/button";
-	import { Input } from "$lib/components/ui/input";
-	import { Label } from "$lib/components/ui/label";
-	import { Switch } from "$lib/components/ui/switch";
+	import Input from "$lib/components/ui/input/input.svelte";
+	import Switch from "$lib/components/ui/switch/switch.svelte";
 	import { Select, SelectTrigger, SelectContent, SelectItem } from "$lib/components/ui/select";
-	import { Separator } from "$lib/components/ui/separator";
+	import Separator from "$lib/components/ui/separator/separator.svelte";
+	import SettingRow from "$lib/components/ui/setting-row/setting-row.svelte";
 	import { CURRENCY_OPTIONS, DATE_FORMAT_OPTIONS, TIME_FORMAT_OPTIONS } from "$lib/config/settings";
 	import { Save, RotateCcw } from "@lucide/svelte";
 
@@ -104,29 +104,17 @@
 				<CardDescription>{t("settings.sections.inventoryDesc")}</CardDescription>
 			</CardHeader>
 			<CardContent class="space-y-4">
-				<div class="flex items-center justify-between">
-					<div>
-						<Label for="lowStock">{t("settings.lowStockThreshold")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.lowStockThresholdDesc")}</p>
-					</div>
+				<SettingRow id="lowStock" label={t("settings.lowStockThreshold")} description={t("settings.lowStockThresholdDesc")}>
 					<Input id="lowStock" type="number" min="0" bind:value={settings.low_stock_threshold} class="w-20" />
-				</div>
+				</SettingRow>
 				<Separator />
-				<div class="flex items-center justify-between">
-					<div>
-						<Label>{t("settings.allowUnlimitedStock")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.allowUnlimitedStockDesc")}</p>
-					</div>
+				<SettingRow label={t("settings.allowUnlimitedStock")} description={t("settings.allowUnlimitedStockDesc")}>
 					<Switch bind:checked={settings.allow_unlimited_stock} />
-				</div>
+				</SettingRow>
 				<Separator />
-				<div class="flex items-center justify-between">
-					<div>
-						<Label>{t("settings.negativeStockAllowed")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.negativeStockAllowedDesc")}</p>
-					</div>
+				<SettingRow label={t("settings.negativeStockAllowed")} description={t("settings.negativeStockAllowedDesc")}>
 					<Switch bind:checked={settings.negative_stock_allowed} />
-				</div>
+				</SettingRow>
 			</CardContent>
 		</Card>
 
@@ -137,37 +125,21 @@
 				<CardDescription>{t("settings.sections.salesDesc")}</CardDescription>
 			</CardHeader>
 			<CardContent class="space-y-4">
-				<div class="flex items-center justify-between">
-					<div>
-						<Label for="coupon">{t("settings.couponsValue")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.couponsValueDesc")}</p>
-					</div>
+				<SettingRow id="coupon" label={t("settings.couponsValue")} description={t("settings.couponsValueDesc")}>
 					<Input id="coupon" type="number" step="0.01" min="0" bind:value={settings.coupons_value} class="w-20" />
-				</div>
+				</SettingRow>
 				<Separator />
-				<div class="flex items-center justify-between">
-					<div>
-						<Label>{t("settings.allowTreats")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.allowTreatsDesc")}</p>
-					</div>
+				<SettingRow label={t("settings.allowTreats")} description={t("settings.allowTreatsDesc")}>
 					<Switch bind:checked={settings.allow_treats} />
-				</div>
+				</SettingRow>
 				<Separator />
-				<div class="flex items-center justify-between">
-					<div>
-						<Label>{t("settings.requireOpenRegister")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.requireOpenRegisterDesc")}</p>
-					</div>
+				<SettingRow label={t("settings.requireOpenRegister")} description={t("settings.requireOpenRegisterDesc")}>
 					<Switch bind:checked={settings.require_open_register_for_sale} />
-				</div>
+				</SettingRow>
 				<Separator />
-				<div class="flex items-center justify-between">
-					<div>
-						<Label for="tax">{t("settings.taxRate")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.taxRateDesc")}</p>
-					</div>
+				<SettingRow id="tax" label={t("settings.taxRate")} description={t("settings.taxRateDesc")}>
 					<Input id="tax" type="number" step="0.01" min="0" max="100" bind:value={settings.tax_rate_percent} class="w-20" />
-				</div>
+				</SettingRow>
 			</CardContent>
 		</Card>
 
@@ -178,53 +150,29 @@
 				<CardDescription>{t("settings.sections.bookingsDesc")}</CardDescription>
 			</CardHeader>
 			<CardContent class="space-y-4">
-				<div class="flex items-center justify-between">
-					<div>
-						<Label for="fields">{t("settings.footballFieldsCount")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.footballFieldsCountDesc")}</p>
-					</div>
+				<SettingRow id="fields" label={t("settings.footballFieldsCount")} description={t("settings.footballFieldsCountDesc")}>
 					<Input id="fields" type="number" min="1" max="20" bind:value={settings.football_fields_count} class="w-20" />
-				</div>
+				</SettingRow>
 				<Separator />
-				<div class="flex items-center justify-between">
-					<div>
-						<Label for="buffer">{t("settings.appointmentBuffer")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.appointmentBufferDesc")}</p>
-					</div>
+				<SettingRow id="buffer" label={t("settings.appointmentBuffer")} description={t("settings.appointmentBufferDesc")}>
 					<Input id="buffer" type="number" min="0" max="120" bind:value={settings.appointment_buffer_min} class="w-20" />
-				</div>
+				</SettingRow>
 				<Separator />
-				<div class="flex items-center justify-between">
-					<div>
-						<Label for="dur">{t("settings.bookingDuration")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.bookingDurationDesc")}</p>
-					</div>
+				<SettingRow id="dur" label={t("settings.bookingDuration")} description={t("settings.bookingDurationDesc")}>
 					<Input id="dur" type="number" min="10" max="600" bind:value={settings.booking_default_duration_min} class="w-20" />
-				</div>
+				</SettingRow>
 				<Separator />
-				<div class="flex items-center justify-between">
-					<div>
-						<Label for="bdur">{t("settings.birthdayDuration")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.birthdayDurationDesc")}</p>
-					</div>
+				<SettingRow id="bdur" label={t("settings.birthdayDuration")} description={t("settings.birthdayDurationDesc")}>
 					<Input id="bdur" type="number" min="30" max="480" bind:value={settings.birthday_duration_min} class="w-20" />
-				</div>
+				</SettingRow>
 				<Separator />
-				<div class="flex items-center justify-between">
-					<div>
-						<Label for="fdur">{t("settings.footballDuration")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.footballDurationDesc")}</p>
-					</div>
+				<SettingRow id="fdur" label={t("settings.footballDuration")} description={t("settings.footballDurationDesc")}>
 					<Input id="fdur" type="number" min="30" max="300" bind:value={settings.football_duration_min} class="w-20" />
-				</div>
+				</SettingRow>
 				<Separator />
-				<div class="flex items-center justify-between">
-					<div>
-						<Label>{t("settings.preventOverlaps")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.preventOverlapsDesc")}</p>
-					</div>
+				<SettingRow label={t("settings.preventOverlaps")} description={t("settings.preventOverlapsDesc")}>
 					<Switch bind:checked={settings.prevent_overlaps} />
-				</div>
+				</SettingRow>
 			</CardContent>
 		</Card>
 
@@ -235,11 +183,7 @@
 				<CardDescription>{t("settings.sections.regionalDesc")}</CardDescription>
 			</CardHeader>
 			<CardContent class="space-y-4">
-				<div class="flex items-center justify-between">
-					<div>
-						<Label>{t("settings.theme")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.themeDesc")}</p>
-					</div>
+				<SettingRow label={t("settings.theme")} description={t("settings.themeDesc")}>
 					<Select value={theme.current} onValueChange={(v) => theme.setTheme(v as Theme)}>
 						<SelectTrigger class="w-40" selected={getThemeLabel()} />
 						<SelectContent>
@@ -248,13 +192,9 @@
 							{/each}
 						</SelectContent>
 					</Select>
-				</div>
+				</SettingRow>
 				<Separator />
-				<div class="flex items-center justify-between">
-					<div>
-						<Label>{t("settings.language")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.languageDesc")}</p>
-					</div>
+				<SettingRow label={t("settings.language")} description={t("settings.languageDesc")}>
 					<Select value={i18n.locale} onValueChange={(v) => i18n.setLocale(v as Locale)}>
 						<SelectTrigger class="w-40" selected={getLanguageLabel()} />
 						<SelectContent>
@@ -263,13 +203,9 @@
 							{/each}
 						</SelectContent>
 					</Select>
-				</div>
+				</SettingRow>
 				<Separator />
-				<div class="flex items-center justify-between">
-					<div>
-						<Label>{t("settings.currencyCode")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.currencyCodeDesc")}</p>
-					</div>
+				<SettingRow label={t("settings.currencyCode")} description={t("settings.currencyCodeDesc")}>
 					<Select bind:value={settings.currency_code}>
 						<SelectTrigger class="w-40" selected={getCurrencyLabel(settings.currency_code)} />
 						<SelectContent>
@@ -278,13 +214,9 @@
 							{/each}
 						</SelectContent>
 					</Select>
-				</div>
+				</SettingRow>
 				<Separator />
-				<div class="flex items-center justify-between">
-					<div>
-						<Label>{t("settings.dateFormat")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.dateFormatDesc")}</p>
-					</div>
+				<SettingRow label={t("settings.dateFormat")} description={t("settings.dateFormatDesc")}>
 					<Select bind:value={settings.date_format}>
 						<SelectTrigger class="w-48" selected={getDateLabel(settings.date_format)} />
 						<SelectContent>
@@ -293,13 +225,9 @@
 							{/each}
 						</SelectContent>
 					</Select>
-				</div>
+				</SettingRow>
 				<Separator />
-				<div class="flex items-center justify-between">
-					<div>
-						<Label>{t("settings.timeFormat")}</Label>
-						<p class="text-xs text-muted-foreground">{t("settings.timeFormatDesc")}</p>
-					</div>
+				<SettingRow label={t("settings.timeFormat")} description={t("settings.timeFormatDesc")}>
 					<Select bind:value={settings.time_format}>
 						<SelectTrigger class="w-32" selected={getTimeLabel(settings.time_format)} />
 						<SelectContent>
@@ -308,7 +236,7 @@
 							{/each}
 						</SelectContent>
 					</Select>
-				</div>
+				</SettingRow>
 			</CardContent>
 		</Card>
 	</div>

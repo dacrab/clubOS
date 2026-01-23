@@ -1,18 +1,19 @@
 <script lang="ts">
 	import { BookingPage } from "$lib/components/features";
 	import { Cake, Dribbble, Calendar, MoreHorizontal } from "@lucide/svelte";
+	import { BOOKING_TYPE, type BookingTypeValue } from "$lib/constants";
 
 	const { data } = $props();
 
 	const icons = {
-		birthday: Cake,
-		football: Dribbble,
+		[BOOKING_TYPE.BIRTHDAY]: Cake,
+		[BOOKING_TYPE.FOOTBALL]: Dribbble,
 		event: Calendar,
 		other: MoreHorizontal,
 	} as const;
 
-	const validTypes = ["birthday", "football"] as const;
-	type ValidType = (typeof validTypes)[number];
+	const validTypes = Object.values(BOOKING_TYPE);
+	type ValidType = BookingTypeValue;
 	const isValidType = (t: string): t is ValidType => validTypes.includes(t as ValidType);
 </script>
 

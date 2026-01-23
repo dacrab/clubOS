@@ -4,23 +4,24 @@
 	import { invalidateAll } from "$app/navigation";
 	import { PageHeader, EmptyState } from "$lib/components/layout";
 	import { Button } from "$lib/components/ui/button";
-	import { Input } from "$lib/components/ui/input";
-	import { Label } from "$lib/components/ui/label";
-	import { Textarea } from "$lib/components/ui/textarea";
+	import Input from "$lib/components/ui/input/input.svelte";
+	import Label from "$lib/components/ui/label/label.svelte";
+	import Textarea from "$lib/components/ui/textarea/textarea.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Card, CardContent } from "$lib/components/ui/card";
-	import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "$lib/components/ui/dialog";
+	import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
 	import { Select, SelectTrigger, SelectContent, SelectItem } from "$lib/components/ui/select";
 	import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table";
 	import { supabase } from "$lib/utils/supabase";
-	import { DatePicker } from "$lib/components/ui/date-picker";
+	import DatePicker from "$lib/components/ui/date-picker/date-time-picker.svelte";
 	import { fmtDate } from "$lib/utils/format";
 	import { settings } from "$lib/state/settings.svelte";
 	import { Plus, Pencil, Trash2, Package } from "@lucide/svelte";
 	import type { Booking, BookingStatus, BookingType, BookingDetails } from "$lib/types/database";
+	import { BOOKING_STATUS, BOOKING_TYPE, type BookingTypeValue } from "$lib/constants";
 
 	type Props = {
-		type: "birthday" | "football";
+		type: BookingTypeValue;
 		bookings: Booking[];
 		user: { id: string; tenantId: string | null; facilityId: string | null };
 		icon?: typeof Package;
@@ -28,7 +29,7 @@
 
 	let { type, bookings, user, icon = Package }: Props = $props();
 
-	const isBirthday = $derived(type === "birthday");
+	const isBirthday = $derived(type === BOOKING_TYPE.BIRTHDAY);
 	const prefix = $derived(isBirthday ? "bookings.birthday" : "bookings.football");
 
 	let showDialog = $state(false);
@@ -39,15 +40,15 @@
 		customer_phone: "",
 		starts_at: "",
 		notes: "",
-		status: "confirmed" as BookingStatus,
+		status: BOOKING_STATUS.CONFIRMED as BookingStatus,
 		num_children: 1,
 		num_adults: 0,
 		field_number: "1",
-		num_players: 10,
+		num_players: settings.current.football_default_players,
 	});
 
 	const getStatusBadge = (s: BookingStatus) =>
-		s === "confirmed" ? ("success" as const) : s === "canceled" ? ("destructive" as const) : ("secondary" as const);
+		s === BOOKING_STATUS.CONFIRMED ? ("success" as const) : s === BOOKING_STATUS.CANCELED ? ("destructive" as const) : ("secondary" as const);
 
 	function openDialog(item?: Booking) {
 		editingItem = item ?? null;
@@ -67,17 +68,18 @@
 		} else {
 			const tomorrow = new Date();
 			tomorrow.setDate(tomorrow.getDate() + 1);
-			tomorrow.setHours(isBirthday ? 15 : 18, 0, 0, 0);
+			const defaultHour = isBirthday ? settings.current.birthday_default_hour : settings.current.football_default_hour;
+			tomorrow.setHours(defaultHour, 0, 0, 0);
 			formData = {
 				customer_name: "",
 				customer_phone: "",
 				starts_at: tomorrow.toISOString().slice(0, 16),
 				notes: "",
-				status: "confirmed",
+				status: BOOKING_STATUS.CONFIRMED,
 				num_children: 1,
 				num_adults: 0,
 				field_number: "1",
-				num_players: 10,
+				num_players: settings.current.football_default_players,
 			};
 		}
 		showDialog = true;
@@ -91,7 +93,7 @@
 			.select("id")
 			.eq("facility_id", user.facilityId)
 			.eq("type", type)
-			.neq("status", "cancelled")
+			.neq("status", BOOKING_STATUS.CANCELED)
 			.gte("starts_at", new Date(time.getTime() - buffer * 60000).toISOString())
 			.lte("starts_at", new Date(time.getTime() + buffer * 60000).toISOString());
 
@@ -239,70 +241,57 @@
 	{/if}
 </div>
 
-<Dialog bind:open={showDialog}>
-	<DialogContent>
-		<DialogHeader>
-			<DialogTitle>{editingItem ? t(`${prefix}.edit`) : t(`${prefix}.create`)}</DialogTitle>
-		</DialogHeader>
-		<form onsubmit={(e) => { e.preventDefault(); handleSave(); }} class="space-y-4">
+<FormDialog bind:open={showDialog} title={editingItem ? t(`${prefix}.edit`) : t(`${prefix}.create`)} {saving} onsubmit={handleSave} onclose={() => showDialog = false}>
+	<div class="space-y-2">
+		<Label for="name">{t("bookings.customerName")}</Label>
+		<Input id="name" bind:value={formData.customer_name} required />
+	</div>
+	<div class="space-y-2">
+		<Label for="phone">{t("bookings.customerPhone")}</Label>
+		<Input id="phone" bind:value={formData.customer_phone} required />
+	</div>
+	<div class="space-y-2">
+		<Label>{t("bookings.dateTime")}</Label>
+		<DatePicker bind:value={formData.starts_at} enableTime={true} />
+	</div>
+	{#if isBirthday}
+		<div class="grid grid-cols-2 gap-4">
 			<div class="space-y-2">
-				<Label for="name">{t("bookings.customerName")}</Label>
-				<Input id="name" bind:value={formData.customer_name} required />
+				<Label for="children">{t("bookings.birthday.numChildren")}</Label>
+				<Input id="children" type="number" min="1" bind:value={formData.num_children} required />
 			</div>
 			<div class="space-y-2">
-				<Label for="phone">{t("bookings.customerPhone")}</Label>
-				<Input id="phone" bind:value={formData.customer_phone} required />
+				<Label for="adults">{t("bookings.birthday.numAdults")}</Label>
+				<Input id="adults" type="number" min="0" bind:value={formData.num_adults} />
+			</div>
+		</div>
+	{:else}
+		<div class="grid grid-cols-2 gap-4">
+			<div class="space-y-2">
+				<Label for="field">{t("bookings.football.fieldNumber")}</Label>
+				<Input id="field" type="number" min="1" max={settings.current.football_fields_count} bind:value={formData.field_number} required />
 			</div>
 			<div class="space-y-2">
-				<Label>{t("bookings.dateTime")}</Label>
-				<DatePicker bind:value={formData.starts_at} enableTime={true} />
+				<Label for="players">{t("bookings.football.numPlayers")}</Label>
+				<Input id="players" type="number" min={settings.current.football_min_players} max={settings.current.football_max_players} bind:value={formData.num_players} required />
 			</div>
-			{#if isBirthday}
-				<div class="grid grid-cols-2 gap-4">
-					<div class="space-y-2">
-						<Label for="children">{t("bookings.birthday.numChildren")}</Label>
-						<Input id="children" type="number" min="1" bind:value={formData.num_children} required />
-					</div>
-					<div class="space-y-2">
-						<Label for="adults">{t("bookings.birthday.numAdults")}</Label>
-						<Input id="adults" type="number" min="0" bind:value={formData.num_adults} />
-					</div>
-				</div>
-			{:else}
-				<div class="grid grid-cols-2 gap-4">
-					<div class="space-y-2">
-						<Label for="field">{t("bookings.football.fieldNumber")}</Label>
-						<Input id="field" type="number" min="1" max={settings.current.football_fields_count} bind:value={formData.field_number} required />
-					</div>
-					<div class="space-y-2">
-						<Label for="players">{t("bookings.football.numPlayers")}</Label>
-						<Input id="players" type="number" min="2" max="22" bind:value={formData.num_players} required />
-					</div>
-				</div>
-			{/if}
-			{#if editingItem}
-				<div class="space-y-2">
-					<Label>{t("common.status")}</Label>
-					<Select bind:value={formData.status}>
-						<SelectTrigger selected={t(`bookings.status.${formData.status}`)} />
-						<SelectContent>
-							<SelectItem value="pending">{t("bookings.status.pending")}</SelectItem>
-							<SelectItem value="confirmed">{t("bookings.status.confirmed")}</SelectItem>
-							<SelectItem value="cancelled">{t("bookings.status.cancelled")}</SelectItem>
-							<SelectItem value="completed">{t("bookings.status.completed")}</SelectItem>
-							<SelectItem value="no_show">{t("bookings.status.no_show")}</SelectItem>
-						</SelectContent>
-					</Select>
-				</div>
-			{/if}
-			<div class="space-y-2">
-				<Label for="notes">{t("common.notes")}</Label>
-				<Textarea id="notes" bind:value={formData.notes} />
-			</div>
-			<DialogFooter>
-				<Button type="button" variant="outline" onclick={() => (showDialog = false)}>{t("common.cancel")}</Button>
-				<Button type="submit" disabled={saving}>{saving ? t("common.loading") : t("common.save")}</Button>
-			</DialogFooter>
-		</form>
-	</DialogContent>
-</Dialog>
+		</div>
+	{/if}
+	{#if editingItem}
+		<div class="space-y-2">
+			<Label>{t("common.status")}</Label>
+			<Select bind:value={formData.status}>
+				<SelectTrigger selected={t(`bookings.status.${formData.status}`)} />
+				<SelectContent>
+					{#each Object.values(BOOKING_STATUS) as status (status)}
+						<SelectItem value={status}>{t(`bookings.status.${status}`)}</SelectItem>
+					{/each}
+				</SelectContent>
+			</Select>
+		</div>
+	{/if}
+	<div class="space-y-2">
+		<Label for="notes">{t("common.notes")}</Label>
+		<Textarea id="notes" bind:value={formData.notes} />
+	</div>
+</FormDialog>

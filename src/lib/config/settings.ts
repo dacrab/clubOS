@@ -26,6 +26,12 @@ export interface TenantSettings {
 	prevent_overlaps: boolean;
 	birthday_duration_min: number;
 	football_duration_min: number;
+	// Booking defaults
+	birthday_default_hour: number;
+	football_default_hour: number;
+	football_default_players: number;
+	football_min_players: number;
+	football_max_players: number;
 }
 
 export const DEFAULT_SETTINGS: TenantSettings = {
@@ -49,6 +55,12 @@ export const DEFAULT_SETTINGS: TenantSettings = {
 	prevent_overlaps: true,
 	birthday_duration_min: 180,
 	football_duration_min: 120,
+	// Booking defaults
+	birthday_default_hour: 15,
+	football_default_hour: 18,
+	football_default_players: 10,
+	football_min_players: 2,
+	football_max_players: 22,
 };
 
 /** Merge tenant settings with defaults */
