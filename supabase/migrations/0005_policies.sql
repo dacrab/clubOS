@@ -228,4 +228,59 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.get_register_sessions TO authenticated;
 
+-- User context RPC - single call for layout data
+CREATE FUNCTION public.get_user_context(p_user_id uuid)
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  result jsonb; v_membership record; v_profile record; v_subscription record; v_session record; v_tenant record;
+BEGIN
+  SELECT m.role, m.tenant_id, m.facility_id INTO v_membership FROM memberships m WHERE m.user_id = p_user_id ORDER BY m.is_primary DESC LIMIT 1;
+  IF v_membership IS NULL THEN RETURN jsonb_build_object('membership', null); END IF;
+  SELECT full_name, avatar_url INTO v_profile FROM users WHERE id = p_user_id;
+  SELECT id, name, slug, settings INTO v_tenant FROM tenants WHERE id = v_membership.tenant_id;
+  SELECT status, plan_name, current_period_end, trial_end INTO v_subscription FROM subscriptions WHERE tenant_id = v_membership.tenant_id;
+  SELECT * INTO v_session FROM register_sessions WHERE facility_id = v_membership.facility_id AND closed_at IS NULL ORDER BY opened_at DESC LIMIT 1;
+  result := jsonb_build_object(
+    'membership', jsonb_build_object('role', v_membership.role, 'tenantId', v_membership.tenant_id, 'facilityId', v_membership.facility_id),
+    'profile', jsonb_build_object('fullName', v_profile.full_name, 'avatarUrl', v_profile.avatar_url),
+    'tenant', CASE WHEN v_tenant.id IS NOT NULL THEN jsonb_build_object('id', v_tenant.id, 'name', v_tenant.name, 'slug', v_tenant.slug, 'settings', v_tenant.settings) ELSE null END,
+    'subscription', CASE WHEN v_subscription.status IS NOT NULL THEN jsonb_build_object('status', v_subscription.status, 'planName', v_subscription.plan_name, 'periodEnd', v_subscription.current_period_end, 'trialEnd', v_subscription.trial_end) ELSE null END,
+    'activeSession', CASE WHEN v_session.id IS NOT NULL THEN row_to_json(v_session) ELSE null END
+  );
+  RETURN result;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_user_context TO authenticated;
+
+-- Booking stats RPC for secretary dashboard
+CREATE FUNCTION public.get_booking_stats(p_facility_id uuid)
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_upcoming_birthdays integer; v_upcoming_football integer; v_this_month_total integer;
+BEGIN
+  SELECT COUNT(*)::integer INTO v_upcoming_birthdays FROM bookings WHERE facility_id = p_facility_id AND type = 'birthday' AND starts_at >= NOW() AND status = 'confirmed';
+  SELECT COUNT(*)::integer INTO v_upcoming_football FROM bookings WHERE facility_id = p_facility_id AND type = 'football' AND starts_at >= NOW() AND status = 'confirmed';
+  SELECT COUNT(*)::integer INTO v_this_month_total FROM bookings WHERE facility_id = p_facility_id AND starts_at >= date_trunc('month', CURRENT_DATE);
+  RETURN jsonb_build_object('upcomingBirthdays', v_upcoming_birthdays, 'upcomingFootball', v_upcoming_football, 'thisMonthTotal', v_this_month_total);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_booking_stats TO authenticated;
+
+-- Tenant users view
+CREATE VIEW public.v_tenant_users AS
+SELECT m.tenant_id, m.user_id, m.role, m.facility_id, m.is_primary, u.full_name, u.avatar_url, u.created_at
+FROM memberships m JOIN users u ON u.id = m.user_id;
+
+-- Orders list view
+CREATE VIEW public.v_orders_list AS
+SELECT o.id, o.facility_id, o.session_id, o.subtotal, o.discount_amount, o.total_amount, o.coupon_count, o.created_at, o.created_by,
+  COALESCE(jsonb_agg(jsonb_build_object(
+    'id', oi.id, 'quantity', oi.quantity, 'unit_price', oi.unit_price, 'line_total', oi.line_total,
+    'is_treat', oi.is_treat, 'is_deleted', oi.is_deleted, 'products', jsonb_build_object('id', p.id, 'name', p.name)
+  ) ORDER BY oi.created_at) FILTER (WHERE oi.id IS NOT NULL), '[]'::jsonb) AS order_items
+FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.id LEFT JOIN products p ON p.id = oi.product_id
+GROUP BY o.id;
+
 COMMIT;

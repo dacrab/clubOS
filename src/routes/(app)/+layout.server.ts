@@ -9,69 +9,44 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		throw redirect(307, "/");
 	}
 
-	// Get user's primary membership with tenant info
-	const { data: membership } = await supabase
-		.from("memberships")
-		.select(`
-			role,
-			tenant_id,
-			facility_id,
-			is_primary,
-			tenants (
-				id,
-				name,
-				slug,
-				settings
-			)
-		`)
-		.eq("user_id", user.id)
-		.order("is_primary", { ascending: false })
-		.limit(1)
-		.single();
+	// Single RPC call for user context (membership, profile, tenant, subscription, activeSession)
+	const { data: ctx } = await supabase.rpc("get_user_context", { p_user_id: user.id });
 
-	if (!membership) {
+	if (!ctx?.membership) {
 		throw redirect(307, "/onboarding");
 	}
 
-	// Get user profile and subscription in parallel
-	const [{ data: profile }, { data: subscription }] = await Promise.all([
-		supabase.from("users").select("full_name, avatar_url").eq("id", user.id).single(),
-		supabase.from("subscriptions").select("status, plan_name, current_period_end, trial_end").eq("tenant_id", membership.tenant_id).single(),
-	]);
-
 	// Check subscription
+	const sub = ctx.subscription;
 	const now = new Date();
-	const isActive = subscription && 
-		["trialing", "active"].includes(subscription.status) &&
-		((subscription.current_period_end && new Date(subscription.current_period_end) > now) ||
-		 (subscription.trial_end && new Date(subscription.trial_end) > now));
+	const isActive = sub && 
+		["trialing", "active"].includes(sub.status) &&
+		((sub.periodEnd && new Date(sub.periodEnd) > now) ||
+		 (sub.trialEnd && new Date(sub.trialEnd) > now));
 
 	if (!isActive) throw redirect(307, "/billing");
 
 	const sessionUser: SessionUser = {
 		id: user.id,
 		email: user.email ?? "",
-		username: profile?.full_name ?? user.email ?? "",
-		role: membership.role as SessionUser["role"],
-		tenantId: membership.tenant_id,
-		facilityId: membership.facility_id,
+		username: ctx.profile?.fullName ?? user.email ?? "",
+		role: ctx.membership.role as SessionUser["role"],
+		tenantId: ctx.membership.tenantId,
+		facilityId: ctx.membership.facilityId,
 	};
 
-	const tenant = membership.tenants as unknown as { id: string; name: string; slug: string; settings: Record<string, unknown> | null } | null;
-
-	// Fetch common data used across multiple pages
-	const [{ data: products }, { data: categories }, { data: activeSession }] = await Promise.all([
-		supabase.from("products").select("*").eq("facility_id", membership.facility_id).order("name"),
-		supabase.from("categories").select("id, name, parent_id, description").eq("facility_id", membership.facility_id),
-		supabase.from("register_sessions").select("*").eq("facility_id", membership.facility_id).is("closed_at", null).order("opened_at", { ascending: false }).limit(1).maybeSingle(),
+	// Fetch products and categories (still needed for forms)
+	const [{ data: products }, { data: categories }] = await Promise.all([
+		supabase.from("products").select("*").eq("facility_id", ctx.membership.facilityId).order("name"),
+		supabase.from("categories").select("id, name, parent_id, description").eq("facility_id", ctx.membership.facilityId),
 	]);
 
 	return {
 		user: sessionUser,
-		settings: tenant?.settings ?? null,
-		subscription: subscription ? { status: subscription.status, planName: subscription.plan_name, periodEnd: subscription.current_period_end, trialEnd: subscription.trial_end } : null,
+		settings: ctx.tenant?.settings ?? null,
+		subscription: sub ? { status: sub.status, planName: sub.planName, periodEnd: sub.periodEnd, trialEnd: sub.trialEnd } : null,
 		products: products ?? [],
 		categories: categories ?? [],
-		activeSession,
+		activeSession: ctx.activeSession,
 	};
 };
