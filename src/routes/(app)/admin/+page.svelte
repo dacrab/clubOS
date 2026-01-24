@@ -7,12 +7,11 @@
 	import { Button } from "$lib/components/ui/button";
 	import { NewSaleDialog, RecentOrders } from "$lib/components/features";
 	import { DollarSign, ShoppingCart, Package, TrendingUp, Plus, BarChart3, Star, Layers } from "@lucide/svelte";
-	import { Chart, Svg, Axis, Bars, Tooltip } from "layerchart";
-	import { scaleBand } from "d3-scale";
 
 	const { data } = $props();
 
 	let showNewSaleDialog = $state(false);
+	let tooltipData = $state<{ x: number; y: number; date: string; revenue: number } | null>(null);
 
 	const maxRevenue = $derived(Math.max(...data.analytics.revenueByDay.map(d => d.revenue), 1));
 	const totalCategorySales = $derived(data.analytics.categorySales.reduce((sum, c) => sum + c.quantity, 0));
@@ -90,29 +89,53 @@
 			</CardHeader>
 			<CardContent>
 				{#if data.analytics.revenueByDay.some(d => d.revenue > 0)}
-					<div class="h-64">
-						<Chart
-							data={data.analytics.revenueByDay}
-							x="date"
-							xScale={scaleBand().padding(0.4)}
-							y="revenue"
-							yDomain={[0, maxRevenue * 1.1]}
-							yNice
-							padding={{ left: 48, bottom: 24, right: 8, top: 8 }}
-							tooltip={{ mode: "band" }}
-						>
-							<Svg>
-								<Axis placement="left" grid rule format={(v) => `${currentCurrencySymbol()}${v}`} />
-								<Axis placement="bottom" rule />
-								<Bars radius={4} strokeWidth={0} class="fill-primary" />
-							</Svg>
-							<Tooltip.Root let:data>
-								<Tooltip.Header>{data.date}</Tooltip.Header>
-								<Tooltip.List>
-									<Tooltip.Item label={t("dashboard.revenue")} value={fmtCurrency(data.revenue)} />
-								</Tooltip.List>
-							</Tooltip.Root>
-						</Chart>
+					{@const chartHeight = 240}
+					{@const chartPadding = { top: 8, right: 8, bottom: 32, left: 56 }}
+					{@const barCount = data.analytics.revenueByDay.length}
+					{@const barGap = 0.3}
+					{@const barWidth = (100 - barGap * 100) / barCount}
+					<div class="relative h-64" role="img" aria-label={t("dashboard.weeklyRevenue")}>
+						<svg class="w-full h-full" viewBox="0 0 400 {chartHeight}">
+							<!-- Y-axis grid lines and labels -->
+							{#each [0, 0.25, 0.5, 0.75, 1] as tick (tick)}
+								{@const y = chartPadding.top + (1 - tick) * (chartHeight - chartPadding.top - chartPadding.bottom)}
+								{@const value = Math.round(tick * maxRevenue)}
+								<line x1={chartPadding.left} x2={400 - chartPadding.right} y1={y} y2={y} class="stroke-border" stroke-dasharray="4 4" />
+								<text x={chartPadding.left - 8} y={y + 4} text-anchor="end" class="fill-muted-foreground text-[10px]">
+									{currentCurrencySymbol()}{value}
+								</text>
+							{/each}
+							<!-- Bars -->
+							{#each data.analytics.revenueByDay as day, i (day.date)}
+								{@const barHeight = maxRevenue > 0 ? (day.revenue / maxRevenue) * (chartHeight - chartPadding.top - chartPadding.bottom) : 0}
+								{@const x = chartPadding.left + (i / barCount) * (400 - chartPadding.left - chartPadding.right) + (barGap * (400 - chartPadding.left - chartPadding.right)) / barCount / 2}
+								{@const y = chartHeight - chartPadding.bottom - barHeight}
+								{@const width = (barWidth / 100) * (400 - chartPadding.left - chartPadding.right)}
+								<rect
+									{x} {y} {width} height={barHeight}
+									rx="4"
+									role="graphics-symbol"
+									aria-label="{day.date}: {fmtCurrency(day.revenue)}"
+									class="fill-primary transition-all duration-200 hover:fill-primary/80 cursor-pointer"
+									onmouseenter={(e) => tooltipData = { x: e.clientX, y: e.clientY, date: day.date, revenue: day.revenue }}
+									onmouseleave={() => tooltipData = null}
+								/>
+								<!-- X-axis labels -->
+								<text x={x + width / 2} y={chartHeight - 8} text-anchor="middle" class="fill-muted-foreground text-[10px]">
+									{day.date}
+								</text>
+							{/each}
+						</svg>
+						<!-- Tooltip -->
+						{#if tooltipData}
+							<div
+								class="fixed z-50 px-3 py-2 text-sm bg-popover border rounded-lg shadow-lg pointer-events-none"
+								style="left: {tooltipData.x + 12}px; top: {tooltipData.y - 40}px;"
+							>
+								<p class="font-medium">{tooltipData.date}</p>
+								<p class="text-muted-foreground">{t("dashboard.revenue")}: {fmtCurrency(tooltipData.revenue)}</p>
+							</div>
+						{/if}
 					</div>
 				{:else}
 					<div class="flex h-64 flex-col items-center justify-center text-muted-foreground">
