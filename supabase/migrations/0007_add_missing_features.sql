@@ -123,4 +123,72 @@ GROUP BY p.facility_id, p.id, p.name, p.category_id;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_best_sellers_product ON public.mv_best_sellers(product_id);
 CREATE INDEX IF NOT EXISTS idx_mv_best_sellers_facility ON public.mv_best_sellers(facility_id);
 
+-- ============================================================================
+-- 4. Dashboard views
+-- ============================================================================
+
+-- Daily stats: today's orders summary per facility
+CREATE OR REPLACE VIEW public.v_daily_stats AS
+SELECT 
+  facility_id,
+  COUNT(*) AS orders_count,
+  COALESCE(SUM(total_amount), 0) AS revenue,
+  COALESCE(SUM(discount_amount), 0) AS discounts,
+  COALESCE(SUM(coupon_count), 0) AS coupons_used
+FROM orders
+WHERE created_at >= CURRENT_DATE
+GROUP BY facility_id;
+
+-- Low stock: count of products below threshold per facility
+CREATE OR REPLACE VIEW public.v_low_stock AS
+SELECT 
+  p.facility_id,
+  COUNT(*) AS count
+FROM products p
+JOIN facilities f ON f.id = p.facility_id
+JOIN tenants t ON t.id = f.tenant_id
+WHERE p.track_inventory 
+  AND p.stock_quantity <= COALESCE((t.settings->>'low_stock_threshold')::integer, 5)
+GROUP BY p.facility_id;
+
+-- Recent orders: orders with items as JSON
+CREATE OR REPLACE VIEW public.v_recent_orders AS
+SELECT 
+  o.id,
+  o.facility_id,
+  o.total_amount,
+  o.subtotal,
+  o.discount_amount,
+  o.coupon_count,
+  o.created_at,
+  o.created_by,
+  COALESCE(
+    jsonb_agg(
+      jsonb_build_object(
+        'id', oi.id,
+        'quantity', oi.quantity,
+        'unit_price', oi.unit_price,
+        'line_total', oi.line_total,
+        'is_treat', oi.is_treat,
+        'is_deleted', oi.is_deleted,
+        'product', jsonb_build_object('id', p.id, 'name', p.name)
+      ) ORDER BY oi.created_at
+    ) FILTER (WHERE oi.id IS NOT NULL),
+    '[]'::jsonb
+  ) AS items
+FROM orders o
+LEFT JOIN order_items oi ON oi.order_id = o.id
+LEFT JOIN products p ON p.id = oi.product_id
+GROUP BY o.id;
+
+-- Weekly revenue: last 7 days revenue per facility
+CREATE OR REPLACE VIEW public.v_weekly_revenue AS
+SELECT 
+  facility_id,
+  DATE(created_at) AS date,
+  COALESCE(SUM(total_amount), 0) AS revenue
+FROM orders
+WHERE created_at >= CURRENT_DATE - INTERVAL '6 days'
+GROUP BY facility_id, DATE(created_at);
+
 COMMIT;
