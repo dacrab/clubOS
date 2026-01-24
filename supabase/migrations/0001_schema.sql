@@ -90,6 +90,7 @@ CREATE TABLE public.products (
   stock_quantity integer NOT NULL DEFAULT 0 CHECK (stock_quantity >= 0),
   track_inventory boolean NOT NULL DEFAULT true,
   image_url text,
+  search_vector tsvector,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   created_by uuid REFERENCES public.users(id) ON DELETE SET NULL,
@@ -167,5 +168,32 @@ CREATE TABLE public.bookings (
 CREATE TABLE public.keep_alive (
   name text PRIMARY KEY
 );
+
+-- Audit Log
+CREATE TABLE public.audit_log (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  table_name text NOT NULL,
+  record_id uuid NOT NULL,
+  action text NOT NULL,
+  old_data jsonb,
+  new_data jsonb,
+  changed_by uuid REFERENCES public.users(id) ON DELETE SET NULL,
+  changed_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Table Documentation
+COMMENT ON TABLE public.tenants IS 'Organizations/companies using the platform (multi-tenant root)';
+COMMENT ON TABLE public.subscriptions IS 'Stripe billing subscriptions per tenant';
+COMMENT ON TABLE public.facilities IS 'Physical locations belonging to a tenant (clubs, venues)';
+COMMENT ON TABLE public.users IS 'User profiles synced from auth.users';
+COMMENT ON TABLE public.memberships IS 'User-to-tenant/facility assignments with roles';
+COMMENT ON TABLE public.categories IS 'Product categories per facility (hierarchical)';
+COMMENT ON TABLE public.products IS 'Inventory items for sale at POS';
+COMMENT ON TABLE public.register_sessions IS 'Cash register shift sessions';
+COMMENT ON TABLE public.orders IS 'POS sales transactions';
+COMMENT ON TABLE public.order_items IS 'Line items within an order';
+COMMENT ON TABLE public.bookings IS 'Reservations (birthdays, football fields, events)';
+COMMENT ON TABLE public.audit_log IS 'Change history for orders, bookings, products';
+COMMENT ON TABLE public.keep_alive IS 'Heartbeat table for cron health checks';
 
 COMMIT;

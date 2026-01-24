@@ -152,6 +152,40 @@ $$;
 GRANT EXECUTE ON FUNCTION public.create_order TO authenticated;
 GRANT EXECUTE ON FUNCTION public.close_register_session TO authenticated;
 
+-- Audit trigger function
+CREATE FUNCTION public.audit_trigger() 
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    INSERT INTO audit_log(table_name, record_id, action, old_data, changed_by)
+    VALUES (TG_TABLE_NAME, OLD.id, 'DELETE', to_jsonb(OLD), auth.uid());
+    RETURN OLD;
+  ELSIF TG_OP = 'UPDATE' THEN
+    INSERT INTO audit_log(table_name, record_id, action, old_data, new_data, changed_by)
+    VALUES (TG_TABLE_NAME, NEW.id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW), auth.uid());
+    RETURN NEW;
+  ELSIF TG_OP = 'INSERT' THEN
+    INSERT INTO audit_log(table_name, record_id, action, new_data, changed_by)
+    VALUES (TG_TABLE_NAME, NEW.id, 'INSERT', to_jsonb(NEW), auth.uid());
+    RETURN NEW;
+  END IF;
+END;
+$$;
+
+-- Product search function
+CREATE FUNCTION public.search_products(facility_uuid uuid, search_text text)
+RETURNS TABLE(id uuid, name text, price numeric, stock_quantity integer, category_id uuid, rank real)
+LANGUAGE sql STABLE SET search_path = public AS $$
+  SELECT p.id, p.name, p.price, p.stock_quantity, p.category_id,
+         ts_rank(p.search_vector, plainto_tsquery('english', search_text)) as rank
+  FROM products p
+  WHERE p.facility_id = facility_uuid 
+    AND (search_text = '' OR p.search_vector @@ plainto_tsquery('english', search_text))
+  ORDER BY rank DESC, p.name;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.search_products TO authenticated;
+
 -- Triggers
 CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.tenants FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
@@ -162,5 +196,10 @@ CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.categories FOR EACH ROW EX
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.products FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.bookings FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
 CREATE TRIGGER on_order_item_change AFTER INSERT OR UPDATE ON public.order_items FOR EACH ROW EXECUTE FUNCTION public.update_product_stock();
+
+-- Audit triggers
+CREATE TRIGGER audit_orders AFTER INSERT OR UPDATE OR DELETE ON public.orders FOR EACH ROW EXECUTE FUNCTION public.audit_trigger();
+CREATE TRIGGER audit_bookings AFTER INSERT OR UPDATE OR DELETE ON public.bookings FOR EACH ROW EXECUTE FUNCTION public.audit_trigger();
+CREATE TRIGGER audit_products AFTER INSERT OR UPDATE OR DELETE ON public.products FOR EACH ROW EXECUTE FUNCTION public.audit_trigger();
 
 COMMIT;
