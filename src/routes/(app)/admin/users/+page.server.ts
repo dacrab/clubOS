@@ -5,7 +5,6 @@ export const load: PageServerLoad = async ({ parent }) => {
 	const { user } = await parent();
 	const admin = getSupabaseAdmin();
 
-	// Get users from view (joins memberships + users)
 	const { data: tenantUsers } = await admin
 		.from("v_tenant_users")
 		.select("user_id, role, full_name")
@@ -13,7 +12,6 @@ export const load: PageServerLoad = async ({ parent }) => {
 
 	if (!tenantUsers?.length) return { users: [] };
 
-	// Get auth users for emails (still need admin API for this)
 	const { data: authData } = await admin.auth.admin.listUsers();
 	const emailMap = new Map(authData.users.map(u => [u.id, u.email]));
 

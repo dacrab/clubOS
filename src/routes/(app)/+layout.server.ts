@@ -9,14 +9,9 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		throw redirect(307, "/");
 	}
 
-	// Single RPC call for user context (membership, profile, tenant, subscription, activeSession)
 	const { data: ctx } = await supabase.rpc("get_user_context", { p_user_id: user.id });
+	if (!ctx?.membership) throw redirect(307, "/onboarding");
 
-	if (!ctx?.membership) {
-		throw redirect(307, "/onboarding");
-	}
-
-	// Check subscription
 	const sub = ctx.subscription;
 	const now = new Date();
 	const isActive = sub && 
@@ -35,7 +30,6 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		facilityId: ctx.membership.facilityId,
 	};
 
-	// Fetch products and categories (still needed for forms)
 	const [{ data: products }, { data: categories }] = await Promise.all([
 		supabase.from("products").select("*").eq("facility_id", ctx.membership.facilityId).order("name"),
 		supabase.from("categories").select("id, name, parent_id, description").eq("facility_id", ctx.membership.facilityId),

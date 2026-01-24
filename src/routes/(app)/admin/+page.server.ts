@@ -5,7 +5,6 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 	const { supabase } = locals;
 	const fid = user.facilityId;
 
-	// Single RPC call for all dashboard data + parallel queries for form data
 	const [{ data: dashboard }, { data: products }, { data: categories }, { data: activeSession }] = await Promise.all([
 		supabase.rpc("get_dashboard_data", { p_facility_id: fid }),
 		supabase.from("products").select("*").eq("facility_id", fid).order("name"),

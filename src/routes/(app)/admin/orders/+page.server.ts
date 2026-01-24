@@ -4,7 +4,6 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 	const { supabase } = locals;
 	const { user } = await parent();
 
-	// Use view with pre-aggregated order items
 	const { data: orders } = await supabase
 		.from("v_orders_list")
 		.select("*")

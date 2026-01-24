@@ -4,7 +4,6 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 	const { activeSession } = await parent();
 	const { supabase } = locals;
 
-	// Only fetch recent orders - products, categories, activeSession come from layout
 	const { data: recentOrders } = await supabase
 		.from("orders")
 		.select(`

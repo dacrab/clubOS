@@ -30,7 +30,6 @@ export const actions: Actions = {
 			return fail(401, { error: "Unauthorized" });
 		}
 
-		// Get tenant ID from user's membership
 		const { data: membership } = await supabase
 			.from("memberships")
 			.select("tenant_id")

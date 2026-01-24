@@ -8,7 +8,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(307, "/");
 	}
 
-	// Get user's membership
 	const { data: membership } = await supabase
 		.from("memberships")
 		.select("tenant_id, role")
@@ -17,7 +16,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.limit(1)
 		.single();
 
-	// Get subscription if user has a tenant
 	let subscription = null;
 	if (membership?.tenant_id) {
 		const { data } = await supabase
