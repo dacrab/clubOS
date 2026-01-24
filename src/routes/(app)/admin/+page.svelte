@@ -13,8 +13,11 @@
 	let showNewSaleDialog = $state(false);
 	let tooltipData = $state<{ x: number; y: number; date: string; revenue: number } | null>(null);
 
-	const maxRevenue = $derived(Math.max(...data.analytics.revenueByDay.map(d => d.revenue), 1));
-	const totalCategorySales = $derived(data.analytics.categorySales.reduce((sum, c) => sum + c.quantity, 0));
+	type RevenueDay = { date: string; revenue: number };
+	type CategorySale = { name: string; quantity: number };
+
+	const maxRevenue = $derived(Math.max(...data.analytics.revenueByDay.map((d: RevenueDay) => d.revenue), 1));
+	const totalCategorySales = $derived(data.analytics.categorySales.reduce((sum: number, c: CategorySale) => sum + c.quantity, 0));
 </script>
 
 <div class="space-y-6 animate-fade-in">
@@ -88,7 +91,7 @@
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
-				{#if data.analytics.revenueByDay.some(d => d.revenue > 0)}
+				{#if data.analytics.revenueByDay.some((d: RevenueDay) => d.revenue > 0)}
 					{@const chartHeight = 240}
 					{@const chartPadding = { top: 8, right: 8, bottom: 32, left: 56 }}
 					{@const barCount = data.analytics.revenueByDay.length}

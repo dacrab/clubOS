@@ -27,8 +27,8 @@
 	{:else}
 		<div class="space-y-4">
 			{#each data.sessions as session (session.id)}
-				{@const closing = data.closings.find((c: { session_id: string }) => c.session_id === session.id)}
 				{@const orders = getSessionOrders(session.id)}
+				{@const sessionTotal = orders.reduce((s: number, o: OrderView) => s + o.total_amount, 0)}
 				{@const expanded = expandedSession === session.id}
 				<Card>
 					<CardHeader class="pb-3">
@@ -38,7 +38,7 @@
 									{fmtDate(session.opened_at)}
 									<Badge variant={session.closed_at ? "secondary" : "success"}>{t(session.closed_at ? "common.close" : "common.open")}</Badge>
 								</CardTitle>
-								<p class="text-sm text-muted-foreground">{closing?.orders_count ?? orders.length} {t("orders.title").toLowerCase()} · {fmtCurrency(closing?.orders_total ?? orders.reduce((s: number, o: OrderView) => s + o.total_amount, 0))}</p>
+								<p class="text-sm text-muted-foreground">{orders.length} {t("orders.title").toLowerCase()} · {fmtCurrency(sessionTotal)}</p>
 							</div>
 							<Button variant="ghost" size="sm" onclick={() => expandedSession = expanded ? null : session.id} disabled={orders.length === 0}>
 								{#if expanded}<ChevronUp class="h-4 w-4 mr-1" />{:else}<ChevronDown class="h-4 w-4 mr-1" />{/if}{t("orders.viewItems")}

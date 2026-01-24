@@ -102,6 +102,15 @@ FROM products p JOIN facilities f ON f.id = p.facility_id JOIN tenants t ON t.id
 WHERE p.track_inventory AND p.stock_quantity <= COALESCE((t.settings->>'low_stock_threshold')::integer, 5)
 GROUP BY p.facility_id;
 
+CREATE VIEW public.v_low_stock_products AS
+SELECT p.id, p.facility_id, p.name, p.price, p.stock_quantity, p.category_id, c.name AS category_name
+FROM products p
+LEFT JOIN categories c ON c.id = p.category_id
+JOIN facilities f ON f.id = p.facility_id
+JOIN tenants t ON t.id = f.tenant_id
+WHERE p.track_inventory AND p.stock_quantity <= COALESCE((t.settings->>'low_stock_threshold')::integer, 5)
+ORDER BY p.stock_quantity ASC, p.name;
+
 CREATE VIEW public.v_recent_orders AS
 SELECT o.id, o.facility_id, o.total_amount, o.subtotal, o.discount_amount, o.coupon_count, o.created_at, o.created_by,
   COALESCE(jsonb_agg(jsonb_build_object(
@@ -115,5 +124,108 @@ CREATE VIEW public.v_weekly_revenue AS
 SELECT facility_id, DATE(created_at) AS date, COALESCE(SUM(total_amount), 0) AS revenue
 FROM orders WHERE created_at >= CURRENT_DATE - INTERVAL '6 days'
 GROUP BY facility_id, DATE(created_at);
+
+CREATE VIEW public.v_weekly_revenue_full AS
+WITH date_series AS (
+  SELECT generate_series(CURRENT_DATE - INTERVAL '6 days', CURRENT_DATE, INTERVAL '1 day')::date AS date
+),
+revenue_data AS (
+  SELECT facility_id, DATE(created_at) AS date, COALESCE(SUM(total_amount), 0) AS revenue
+  FROM orders WHERE created_at >= CURRENT_DATE - INTERVAL '6 days'
+  GROUP BY facility_id, DATE(created_at)
+)
+SELECT f.id AS facility_id, d.date, TO_CHAR(d.date, 'Dy') AS day_name, COALESCE(r.revenue, 0) AS revenue
+FROM facilities f CROSS JOIN date_series d
+LEFT JOIN revenue_data r ON r.facility_id = f.id AND r.date = d.date
+ORDER BY f.id, d.date;
+
+CREATE VIEW public.v_category_sales AS
+SELECT p.facility_id, COALESCE(c.name, 'Uncategorized') AS category_name, COALESCE(SUM(oi.quantity), 0)::integer AS total_quantity
+FROM products p
+LEFT JOIN categories c ON c.id = p.category_id
+LEFT JOIN order_items oi ON oi.product_id = p.id AND NOT oi.is_deleted
+LEFT JOIN orders o ON o.id = oi.order_id AND o.created_at >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY p.facility_id, COALESCE(c.name, 'Uncategorized')
+HAVING COALESCE(SUM(oi.quantity), 0) > 0
+ORDER BY total_quantity DESC;
+
+CREATE VIEW public.v_session_orders AS
+SELECT o.id, o.facility_id, o.session_id, o.subtotal, o.discount_amount, o.total_amount, o.coupon_count, o.created_at, o.created_by,
+  COALESCE(jsonb_agg(jsonb_build_object(
+    'id', oi.id, 'quantity', oi.quantity, 'unit_price', oi.unit_price, 'line_total', oi.line_total,
+    'is_treat', oi.is_treat, 'is_deleted', oi.is_deleted, 'products', jsonb_build_object('id', p.id, 'name', p.name)
+  ) ORDER BY oi.created_at) FILTER (WHERE oi.id IS NOT NULL), '[]'::jsonb) AS order_items
+FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.id LEFT JOIN products p ON p.id = oi.product_id
+GROUP BY o.id;
+
+-- Dashboard RPC - single call for all dashboard data
+CREATE FUNCTION public.get_dashboard_data(p_facility_id uuid)
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  result jsonb;
+  v_daily_stats record;
+  v_low_stock_count integer;
+  v_active_users integer;
+BEGIN
+  SELECT orders_count, revenue, discounts, coupons_used INTO v_daily_stats
+  FROM v_daily_stats WHERE facility_id = p_facility_id;
+
+  SELECT count INTO v_low_stock_count FROM v_low_stock WHERE facility_id = p_facility_id;
+
+  SELECT COUNT(*)::integer INTO v_active_users FROM users;
+
+  result := jsonb_build_object(
+    'stats', jsonb_build_object(
+      'todayRevenue', COALESCE(v_daily_stats.revenue, 0),
+      'todayOrders', COALESCE(v_daily_stats.orders_count, 0),
+      'lowStockCount', COALESCE(v_low_stock_count, 0),
+      'activeUsers', v_active_users
+    ),
+    'revenueByDay', (
+      SELECT COALESCE(jsonb_agg(jsonb_build_object('date', day_name, 'revenue', revenue) ORDER BY date), '[]'::jsonb)
+      FROM v_weekly_revenue_full WHERE facility_id = p_facility_id
+    ),
+    'bestSellers', (
+      SELECT COALESCE(jsonb_agg(jsonb_build_object('id', product_id, 'name', product_name, 'quantity', total_sold, 'categoryId', category_id) ORDER BY total_sold DESC), '[]'::jsonb)
+      FROM (SELECT * FROM mv_best_sellers WHERE facility_id = p_facility_id ORDER BY total_sold DESC LIMIT 5) bs
+    ),
+    'categorySales', (
+      SELECT COALESCE(jsonb_agg(jsonb_build_object('name', category_name, 'quantity', total_quantity) ORDER BY total_quantity DESC), '[]'::jsonb)
+      FROM v_category_sales WHERE facility_id = p_facility_id
+    ),
+    'recentOrders', (
+      SELECT COALESCE(jsonb_agg(row_to_json(ro.*) ORDER BY ro.created_at DESC), '[]'::jsonb)
+      FROM (SELECT * FROM v_recent_orders WHERE facility_id = p_facility_id ORDER BY created_at DESC LIMIT 5) ro
+    )
+  );
+  RETURN result;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_dashboard_data TO authenticated;
+
+-- Register sessions RPC - sessions with orders in one call
+CREATE FUNCTION public.get_register_sessions(p_facility_id uuid, p_limit integer DEFAULT 50)
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  result jsonb;
+BEGIN
+  result := jsonb_build_object(
+    'sessions', (
+      SELECT COALESCE(jsonb_agg(row_to_json(s.*) ORDER BY s.opened_at DESC), '[]'::jsonb)
+      FROM (SELECT * FROM register_sessions WHERE facility_id = p_facility_id ORDER BY opened_at DESC LIMIT p_limit) s
+    ),
+    'orders', (
+      SELECT COALESCE(jsonb_agg(row_to_json(o.*) ORDER BY o.created_at DESC), '[]'::jsonb)
+      FROM v_session_orders o
+      WHERE o.facility_id = p_facility_id
+        AND o.session_id IN (SELECT id FROM register_sessions WHERE facility_id = p_facility_id ORDER BY opened_at DESC LIMIT p_limit)
+    )
+  );
+  RETURN result;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_register_sessions TO authenticated;
 
 COMMIT;
