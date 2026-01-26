@@ -39,7 +39,7 @@
 		"globals": "^17.1.0",
 		"jsdom": "^27.4.0",
 		"knip": "^5.82.1",
-		"svelte": "^5.48.1",
+		"svelte": "^5.48.2",
 		"svelte-check": "^4.3.5",
 		"tailwind-merge": "^3.4.0",
 		"tailwindcss": "^4.1.17",
