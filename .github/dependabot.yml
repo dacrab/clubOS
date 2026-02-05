@@ -6,7 +6,7 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "02:00"
-      timezone: "UTC"
+      timezone: "Europe/Athens"
     open-pull-requests-limit: 10
     groups:
       dependencies:
@@ -24,7 +24,7 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "02:00"
-      timezone: "UTC"
+      timezone: "Europe/Athens"
     open-pull-requests-limit: 10
     groups:
       dependencies:
@@ -35,4 +35,3 @@ updates:
           - "patch"
     labels:
       - "dependencies"
-
