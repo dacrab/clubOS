@@ -42,21 +42,39 @@ jobs:
             bun install --frozen-lockfile
           fi
 
+      - name: Check available scripts
+        id: scripts
+        run: |
+          # Check if scripts exist in package.json
+          echo "typecheck=$(jq -r '.scripts.typecheck // empty' package.json | [ -n "$(cat)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "lint=$(jq -r '.scripts.lint // empty' package.json | [ -n "$(cat)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "test=$(jq -r '.scripts.test // empty' package.json | [ -n "$(cat)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "knip=$(jq -r '.scripts.knip // empty' package.json | [ -n "$(cat)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "check=$(jq -r '.scripts.check // empty' package.json | [ -n "$(cat)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+
       - name: Type check
+        if: steps.scripts.outputs.typecheck == 'true'
         run: bun run typecheck
-        if: hashFiles('tsconfig.json') != ''
 
       - name: Lint
+        if: steps.scripts.outputs.lint == 'true'
         run: bun run lint
-        if: hashFiles('.eslintrc*', 'eslint.config.*') != ''
+
+      - name: Check
+        if: steps.scripts.outputs.check == 'true'
+        run: bun run check
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
 
       - name: Test
+        if: steps.scripts.outputs.test == 'true'
         run: bun run test
-        if: hashFiles('**/*.test.*', '**/*.spec.*') != ''
 
       - name: Check unused code
-        run: bun run knip
-        if: hashFiles('knip.*') != ''
+        if: steps.scripts.outputs.knip == 'true'
+        run: bun run knip --allow-remove-files
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
 
       - name: Build
         run: bun run build
