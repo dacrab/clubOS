@@ -22,6 +22,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: GitGuardian/ggshield/actions/secret@v1
+      - uses: GitGuardian/ggshield-action@v1
         env:
           GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
