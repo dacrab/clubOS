@@ -21,7 +21,7 @@
 		"db:reset": "supabase db reset && bun scripts/seed.ts"
 	},
 	"devDependencies": {
-		"@eslint/js": "^9.39.2",
+		"@eslint/js": "^10.0.1",
 		"@internationalized/date": "^3.11.0",
 		"@lucide/svelte": "^0.563.1",
 		"@playwright/test": "^1.58.1",
