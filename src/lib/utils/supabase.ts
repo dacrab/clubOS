@@ -36,19 +36,15 @@ if (typeof window !== "undefined") {
 		}
 	};
 
-	// Register once per page load
-	let initialized = false;
-	if (!initialized) {
-		initialized = true;
-		supabase.auth.onAuthStateChange((event, session) => {
-			// session can be null on SIGNED_OUT
-			const payload = session
-				? {
-						access_token: session.access_token,
-						refresh_token: session.refresh_token,
-					}
-				: null;
-			void postAuthCallback(event, payload);
-		});
-	}
+	// Module scope guarantees single execution per page load
+	supabase.auth.onAuthStateChange((event, session) => {
+		// session can be null on SIGNED_OUT
+		const payload = session
+			? {
+					access_token: session.access_token,
+					refresh_token: session.refresh_token,
+				}
+			: null;
+		void postAuthCallback(event, payload);
+	});
 }
