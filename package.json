@@ -34,7 +34,7 @@
 		"@vitest/eslint-plugin": "^1.6.9",
 		"bits-ui": "^2.15.5",
 		"clsx": "^2.1.1",
-		"eslint": "^9",
+		"eslint": "^10",
 		"eslint-plugin-svelte": "^3.15.0",
 		"globals": "^17.3.0",
 		"jsdom": "^28.1.0",
