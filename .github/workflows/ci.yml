@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -17,59 +17,15 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Cache dependencies
-        uses: actions/cache@v5
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: bun-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Check available scripts
-        id: scripts
-        run: |
-          # Check if scripts exist in package.json
-          echo "typecheck=$(jq -r '.scripts.typecheck // empty' package.json | [ -n "$(cat)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "lint=$(jq -r '.scripts.lint // empty' package.json | [ -n "$(cat)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "test=$(jq -r '.scripts.test // empty' package.json | [ -n "$(cat)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "knip=$(jq -r '.scripts.knip // empty' package.json | [ -n "$(cat)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "check=$(jq -r '.scripts.check // empty' package.json | [ -n "$(cat)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-
-      - name: Type check
-        if: steps.scripts.outputs.typecheck == 'true'
-        run: bun run typecheck
-
-      - name: Lint
-        if: steps.scripts.outputs.lint == 'true'
-        run: bun run lint
-
-      - name: Check
-        if: steps.scripts.outputs.check == 'true'
-        run: bun run check
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run check
         env:
           DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
-
-      - name: Test
-        if: steps.scripts.outputs.test == 'true'
-        run: bun run test
-
-      - name: Check unused code
-        if: steps.scripts.outputs.knip == 'true'
-        run: bun run knip --allow-remove-files
+      - run: bun run knip
         env:
           DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
-
-      - name: Build
-        run: bun run build
+      - run: bun run build
