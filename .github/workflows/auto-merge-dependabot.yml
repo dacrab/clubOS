@@ -1,4 +1,4 @@
-name: Auto-merge dependabot PRs
+name: Auto-merge Dependabot PRs
 
 on:
   pull_request:
@@ -11,11 +11,16 @@ permissions:
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
-    
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
     steps:
-      - name: Enable auto-merge for dependabot PRs
-        run: gh pr merge --auto --squash --delete-branch "${{ github.event.pull_request.number }}"
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Enable auto-merge for minor and patch updates
+        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+        run: gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
