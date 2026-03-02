@@ -39,6 +39,7 @@ if (typeof window !== "undefined") {
 	// Module scope guarantees single execution per page load
 	supabase.auth.onAuthStateChange((event, session) => {
 		// session can be null on SIGNED_OUT
+		// eslint-disable-next-line no-useless-assignment
 		const payload = session
 			? {
 					access_token: session.access_token,
