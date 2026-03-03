@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "../app.css";
-	import { Analytics } from "@vercel/analytics/sveltekit";
+	import Analytics from "@vercel/analytics/sveltekit";
 	import Sonner from "$lib/components/ui/sonner/sonner.svelte";
 	import { browser } from "$app/environment";
 	import favicon from "$lib/assets/favicon.svg";
