@@ -1,12 +1,14 @@
 <script lang="ts">
 	import "../app.css";
-	import Analytics from "@vercel/analytics/sveltekit";
+	import { injectAnalytics } from "@vercel/analytics/sveltekit";
 	import Sonner from "$lib/components/ui/sonner/sonner.svelte";
 	import { browser } from "$app/environment";
 	import favicon from "$lib/assets/favicon.svg";
 	import { theme } from "$lib/state/theme.svelte";
 
 	const { children } = $props();
+
+	injectAnalytics();
 
 	$effect(() => {
 		if (browser) {
@@ -27,5 +29,4 @@
 </svelte:head>
 
 <Sonner richColors expand closeButton />
-<Analytics />
 {@render children()}
