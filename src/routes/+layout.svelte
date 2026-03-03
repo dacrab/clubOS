@@ -2,13 +2,13 @@
 	import "../app.css";
 	import { injectAnalytics } from "@vercel/analytics/sveltekit";
 	import Sonner from "$lib/components/ui/sonner/sonner.svelte";
-	import { browser } from "$app/environment";
+	import { browser, dev } from "$app/environment";
 	import favicon from "$lib/assets/favicon.svg";
 	import { theme } from "$lib/state/theme.svelte";
 
 	const { children } = $props();
 
-	injectAnalytics();
+	injectAnalytics({ mode: dev ? "development" : "production" });
 
 	$effect(() => {
 		if (browser) {
