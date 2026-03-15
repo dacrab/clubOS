@@ -52,7 +52,7 @@
 	"dependencies": {
 		"@supabase/ssr": "^0.9.0",
 		"@supabase/supabase-js": "^2.99.1",
-		"@vercel/analytics": "^1.6.1",
+		"@vercel/analytics": "^2.0.1",
 		"svelte-sonner": "^1.1.0"
 	},
 	"overrides": {
