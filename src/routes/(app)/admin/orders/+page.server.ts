@@ -1,4 +1,5 @@
 import type { PageServerLoad } from "./$types";
+import { ORDERS_LIMIT } from "$lib/constants";
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
 	const { supabase } = locals;
@@ -9,7 +10,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		.select("*")
 		.eq("facility_id", user.facilityId)
 		.order("created_at", { ascending: false })
-		.limit(100);
+		.limit(ORDERS_LIMIT);
 
 	return {
 		orders: orders ?? [],

@@ -1,5 +1,6 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
+import { BOOKINGS_LIMIT } from "$lib/constants";
 import type { BookingType } from "$lib/types/database";
 import { BOOKING_TYPE } from "$lib/constants";
 
@@ -12,12 +13,18 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
 	const { supabase } = locals;
 	const { user } = await parent();
 	
+	// Load upcoming + last 7 days only — avoids unbounded result sets
+	const sevenDaysAgo = new Date();
+	sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
 	const { data: bookings } = await supabase
 		.from("bookings")
 		.select("*")
 		.eq("type", type)
 		.eq("facility_id", user.facilityId)
-		.order("starts_at", { ascending: true });
+		.gte("starts_at", sevenDaysAgo.toISOString())
+		.order("starts_at", { ascending: true })
+		.limit(BOOKINGS_LIMIT);
 
 	return { bookings: bookings ?? [], type };
 };

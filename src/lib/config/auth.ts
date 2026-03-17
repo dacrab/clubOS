@@ -57,14 +57,14 @@ export const PLANS = [
 	},
 ] as const;
 
-export function getHomeForRole(role: MemberRole | string | null): string {
-	switch (role) {
-		case USER_ROLE.OWNER:
-		case USER_ROLE.ADMIN:
-			return "/admin";
-		case USER_ROLE.MANAGER:
-			return "/secretary";
-		default:
-			return "/staff";
-	}
+const ROLE_HOME: Record<string, string> = {
+	[USER_ROLE.OWNER]: "/admin",
+	[USER_ROLE.ADMIN]: "/admin",
+	[USER_ROLE.MANAGER]: "/secretary",
+	[USER_ROLE.STAFF]: "/staff",
+};
+
+export function getHomeForRole(role: MemberRole | string | null | undefined): string {
+	if (!role) return "/";
+	return ROLE_HOME[role] ?? "/staff";
 }

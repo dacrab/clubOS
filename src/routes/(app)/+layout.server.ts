@@ -1,6 +1,7 @@
 import { redirect } from "@sveltejs/kit";
 import type { LayoutServerLoad } from "./$types";
 import type { SessionUser } from "$lib/types/database";
+import { PRODUCTS_LIMIT, CATEGORIES_LIMIT } from "$lib/constants";
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	const { user, supabase } = locals;
@@ -31,8 +32,8 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	};
 
 	const [{ data: products }, { data: categories }] = await Promise.all([
-		supabase.from("products").select("*").eq("facility_id", ctx.membership.facilityId).order("name"),
-		supabase.from("categories").select("id, name, parent_id, description").eq("facility_id", ctx.membership.facilityId),
+		supabase.from("products").select("*").eq("facility_id", ctx.membership.facilityId).order("name").limit(PRODUCTS_LIMIT),
+		supabase.from("categories").select("id, name, parent_id, description").eq("facility_id", ctx.membership.facilityId).order("name").limit(CATEGORIES_LIMIT),
 	]);
 
 	return {

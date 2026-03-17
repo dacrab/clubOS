@@ -1,8 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
-
-const TRIAL_DAYS = 14;
+import { TRIAL_DAYS, DEFAULT_TIMEZONE } from "$lib/constants";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) {
@@ -52,7 +51,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				address: facility.address || null,
 				phone: facility.phone || null,
 				email: facility.email || null,
-				timezone: facility.timezone || "Europe/Athens",
+				timezone: facility.timezone || DEFAULT_TIMEZONE,
 			})
 			.select()
 			.single();
@@ -64,7 +63,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			user_id: locals.user.id,
 			tenant_id: tenantData.id,
 			facility_id: null, // null = tenant-wide access
-			role: "owner",
+			role: "owner" as const,
 			is_primary: true,
 		});
 

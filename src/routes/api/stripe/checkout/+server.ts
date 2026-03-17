@@ -83,7 +83,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				success_url: `${origin}/api/stripe/success?session_id={CHECKOUT_SESSION_ID}`,
 				cancel_url: `${origin}/billing`,
 				"subscription_data[metadata][supabase_user_id]": userId,
-				"subscription_data[metadata][tenant_id]": tenantId || "",
+				"subscription_data[metadata][tenant_id]": tenantId,
 				allow_promotion_codes: "true",
 			}),
 		});
