@@ -29,6 +29,9 @@ export const GET: RequestHandler = async ({ request }) => {
 		throw error(500, `Keep-alive upsert failed: ${upsertError.message}`);
 	}
 
+	// Also refresh the best-sellers materialized view daily
+	await admin.rpc("refresh_mv_best_sellers");
+
 	return json(
 		{
 			success: true,

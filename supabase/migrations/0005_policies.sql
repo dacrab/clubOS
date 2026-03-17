@@ -88,7 +88,9 @@ CREATE POLICY audit_log_select ON public.audit_log FOR SELECT USING (
 );
 
 -- Analytics Views
--- mv_best_sellers is refreshed after each order insert via refresh_mv_best_sellers trigger
+-- mv_best_sellers: snapshot of top-selling products
+-- NOTE: Refresh manually or via scheduled job — do NOT use a synchronous trigger
+-- (synchronous refresh blocks the order INSERT transaction)
 CREATE MATERIALIZED VIEW public.mv_best_sellers AS
 SELECT p.facility_id, p.id AS product_id, p.name AS product_name, p.category_id,
        COALESCE(SUM(oi.quantity), 0) AS total_sold
@@ -262,18 +264,15 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.get_user_context TO authenticated;
 
--- Refresh mv_best_sellers after orders change (async via trigger)
-CREATE FUNCTION public.refresh_mv_best_sellers() RETURNS trigger
+-- mv_best_sellers is refreshed by the keep-alive cron job (daily) to avoid blocking order transactions
+CREATE FUNCTION public.refresh_mv_best_sellers() RETURNS void
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
   REFRESH MATERIALIZED VIEW CONCURRENTLY public.mv_best_sellers;
-  RETURN NULL;
 END;
 $$;
 
-CREATE TRIGGER refresh_best_sellers_on_order
-  AFTER INSERT OR UPDATE OR DELETE ON public.orders
-  FOR EACH STATEMENT EXECUTE FUNCTION public.refresh_mv_best_sellers();
+GRANT EXECUTE ON FUNCTION public.refresh_mv_best_sellers TO service_role;
 
 -- Booking stats RPC for secretary dashboard
 CREATE FUNCTION public.get_booking_stats(p_facility_id uuid)

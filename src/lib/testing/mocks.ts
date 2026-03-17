@@ -20,6 +20,7 @@ export interface SupabaseMockConfig { user?: MockUser | null; memberships?: Mock
 export const createSupabaseMock = (config: SupabaseMockConfig = {}): {
 	auth: { getUser: ReturnType<typeof vi.fn>; getSession: ReturnType<typeof vi.fn> };
 	from: ReturnType<typeof vi.fn>;
+	rpc: ReturnType<typeof vi.fn>;
 } => {
 	const { user, memberships = [], subscriptions = [], tenants = [] } = config;
 	const authUser: User | null = user ? { id: user.id, email: user.email, aud: "authenticated", role: "authenticated", email_confirmed_at: new Date().toISOString(), phone: "", confirmed_at: new Date().toISOString(), last_sign_in_at: new Date().toISOString(), app_metadata: {}, user_metadata: { full_name: "Test" }, identities: [], created_at: new Date().toISOString(), updated_at: new Date().toISOString() } : null;
@@ -52,9 +53,26 @@ export const createSupabaseMock = (config: SupabaseMockConfig = {}): {
 		return b;
 	};
 
+	// Build get_user_context RPC response from config
+	const primaryMembership = memberships[0] ?? null;
+	const subscription = primaryMembership ? subscriptions.find(s => s.tenantId === primaryMembership.tenantId) ?? null : null;
+	const tenant = primaryMembership ? tenants.find(t => t.id === primaryMembership.tenantId) ?? null : null;
+
+	const userContextData = primaryMembership ? {
+		membership: { role: primaryMembership.role, tenantId: primaryMembership.tenantId, facilityId: primaryMembership.facilityId },
+		subscription: subscription ? { status: subscription.status, trialEnd: subscription.trialEnd?.toISOString() ?? null, periodEnd: subscription.currentPeriodEnd?.toISOString() ?? null } : null,
+		tenant: tenant ? { id: tenant.id, name: tenant.name, settings: {} } : null,
+		profile: { fullName: authUser?.user_metadata?.full_name ?? "Test" },
+		activeSession: null,
+	} : null;
+
 	return {
 		auth: { getUser: vi.fn().mockResolvedValue({ data: { user: authUser }, error: null }), getSession: vi.fn().mockResolvedValue({ data: { session }, error: null }) },
 		from: vi.fn().mockImplementation((t: string) => createBuilder(t)),
+		rpc: vi.fn().mockImplementation((fn: string) => {
+			if (fn === "get_user_context") return Promise.resolve({ data: userContextData, error: null });
+			return Promise.resolve({ data: null, error: null });
+		}),
 	};
 };
 

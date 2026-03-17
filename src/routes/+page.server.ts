@@ -4,17 +4,10 @@ import { getHomeForRole } from "$lib/config/auth";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const { user, supabase } = locals;
-
 	if (!user) return {};
 
-	const { data: membership } = await supabase
-		.from("memberships")
-		.select("role")
-		.eq("user_id", user.id)
-		.order("is_primary", { ascending: false })
-		.limit(1)
-		.single();
-
-	if (!membership) throw redirect(307, "/onboarding");
-	throw redirect(307, getHomeForRole(membership.role));
+	// Hooks already redirects authenticated users away from / — this is a safety net
+	const { data: ctx } = await supabase.rpc("get_user_context", { p_user_id: user.id });
+	if (!ctx?.membership) throw redirect(307, "/onboarding");
+	throw redirect(307, getHomeForRole(ctx.membership.role as Parameters<typeof getHomeForRole>[0]));
 };

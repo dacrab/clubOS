@@ -28,8 +28,14 @@ export const actions: Actions = {
 		const { supabase, user } = locals;
 		if (!user) return fail(401, { error: "Unauthorized" });
 
-		const { data: ctx } = await supabase.rpc("get_user_context", { p_user_id: user.id });
-		const tenantId = ctx?.membership?.tenantId;
+		const { data: m } = await supabase
+			.from("memberships")
+			.select("tenant_id")
+			.eq("user_id", user.id)
+			.order("is_primary", { ascending: false })
+			.limit(1)
+			.single();
+		const tenantId = m?.tenant_id;
 		if (!tenantId) return fail(400, { error: "No tenant" });
 
 		const formData = await request.formData();

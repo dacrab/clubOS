@@ -21,34 +21,27 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	event.locals.supabase = supabase;
 	const { data: { user } } = await supabase.auth.getUser();
-	const { data: { session } } = await supabase.auth.getSession();
 	event.locals.user = user;
-
-	// Reject missing or expired sessions
-	if (session && (!session.expires_at || new Date(session.expires_at * 1000) < new Date())) {
-		await supabase.auth.signOut();
-		throw redirect(307, "/");
-	}
 
 	const path = event.url.pathname;
 	const isPublic = publicRoutes.includes(path) || path.startsWith("/api/");
 	const isAuthOnly = authOnlyRoutes.includes(path);
 
-	// Fetch membership + subscription once, lazily
-	let _membership: { role: MemberRole | null; tenantId: string | null; facilityId: string | null; active: boolean } | null = null;
+	// Fetch membership + subscription once via RPC, lazily (same as layout.server.ts)
+	let _ctx: { role: MemberRole | null; tenantId: string | null; facilityId: string | null; active: boolean } | null = null;
 	const getMembership = async (): Promise<{ role: MemberRole | null; tenantId: string | null; facilityId: string | null; active: boolean }> => {
-		if (_membership) return _membership;
-		if (!user) return (_membership = { role: null, tenantId: null, facilityId: null, active: false });
+		if (_ctx) return _ctx;
+		if (!user) return (_ctx = { role: null, tenantId: null, facilityId: null, active: false });
 
-		const { data: m } = await supabase.from("memberships").select("role, tenant_id, facility_id").eq("user_id", user.id).order("is_primary", { ascending: false }).limit(1).single();
-		if (!m) return (_membership = { role: null, tenantId: null, facilityId: null, active: false });
+		const { data: ctx } = await supabase.rpc("get_user_context", { p_user_id: user.id });
+		if (!ctx?.membership) return (_ctx = { role: null, tenantId: null, facilityId: null, active: false });
 
-		const { data: s } = await supabase.from("subscriptions").select("status, current_period_end, trial_end").eq("tenant_id", m.tenant_id).single();
-		const now = Date.now();
-		const active = s && ["trialing", "active"].includes(s.status as SubscriptionStatus) &&
-			((s.current_period_end && new Date(s.current_period_end).getTime() > now) || (s.trial_end && new Date(s.trial_end).getTime() > now));
+		const sub = ctx.subscription;
+		const now = new Date();
+		const active = sub && ["trialing", "active"].includes(sub.status as SubscriptionStatus) &&
+			((sub.periodEnd && new Date(sub.periodEnd) > now) || (sub.trialEnd && new Date(sub.trialEnd) > now));
 
-		return (_membership = { role: m.role as MemberRole, tenantId: m.tenant_id, facilityId: m.facility_id, active: !!active });
+		return (_ctx = { role: ctx.membership.role as MemberRole, tenantId: ctx.membership.tenantId, facilityId: ctx.membership.facilityId, active: !!active });
 	};
 
 	if (path === "/" && user) {
