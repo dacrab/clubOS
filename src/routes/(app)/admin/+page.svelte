@@ -2,10 +2,7 @@
 	import { t } from "$lib/i18n/index.svelte";
 	import { fmtCurrency, currentCurrencySymbol } from "$lib/utils/format";
 	import PageHeader from "$lib/components/layout/page-header.svelte";
-	import Card from "$lib/components/ui/card/card.svelte";
-	import CardContent from "$lib/components/ui/card/card-content.svelte";
-	import CardHeader from "$lib/components/ui/card/card-header.svelte";
-	import CardTitle from "$lib/components/ui/card/card-title.svelte";
+	import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
 	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import NewSaleDialog from "$lib/components/features/new-sale-dialog.svelte";

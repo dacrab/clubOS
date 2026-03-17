@@ -1,11 +1,7 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
 	import PageHeader from "$lib/components/layout/page-header.svelte";
-	import Card from "$lib/components/ui/card/card.svelte";
-	import CardContent from "$lib/components/ui/card/card-content.svelte";
-	import CardHeader from "$lib/components/ui/card/card-header.svelte";
-	import CardTitle from "$lib/components/ui/card/card-title.svelte";
-	import CardDescription from "$lib/components/ui/card/card-description.svelte";
+	import Card, { CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card/card.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { Cake, Dribbble, Calendar } from "@lucide/svelte";
 

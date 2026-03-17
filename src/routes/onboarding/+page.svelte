@@ -5,11 +5,7 @@
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import PublicHeader from "$lib/components/layout/public-header.svelte";
-	import Card from "$lib/components/ui/card/card.svelte";
-	import CardContent from "$lib/components/ui/card/card-content.svelte";
-	import CardDescription from "$lib/components/ui/card/card-description.svelte";
-	import CardHeader from "$lib/components/ui/card/card-header.svelte";
-	import CardTitle from "$lib/components/ui/card/card-title.svelte";
+	import Card, { CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
 	import Select from "$lib/components/ui/select/select.svelte";
 	import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
 	import SelectContent from "$lib/components/ui/select/select-content.svelte";

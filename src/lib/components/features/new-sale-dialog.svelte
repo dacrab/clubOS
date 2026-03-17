@@ -31,7 +31,6 @@
 	let couponCount = $state(0);
 	let searchQuery = $state("");
 	let processing = $state(false);
-	let submitDebounce: ReturnType<typeof setTimeout> | null = null; // not reactive - impl detail
 	let lastOrderId = $state<string | null>(null);
 	let lastOrderData = $state<ReceiptData | null>(null);
 	let showCart = $state(false);
@@ -110,10 +109,6 @@
 		if (!cart.length) { toast.error(t("orders.emptyCart")); return; }
 		if (!activeSession) { toast.error(t("register.noActiveSession")); return; }
 		if (processing) return;
-
-		// Debounce rapid clicks
-		if (submitDebounce) { clearTimeout(submitDebounce); submitDebounce = null; }
-
 		processing = true;
 		try {
 			const { data, error } = await supabase.rpc("create_order", {

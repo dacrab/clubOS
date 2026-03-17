@@ -15,12 +15,19 @@ import { supabase } from "$lib/utils/supabase";
 import { invalidateAll } from "$app/navigation";
 import { products, categories, registerSessions, users } from "./db";
 
+// Helpers to mock supabase builders without fighting Supabase's complex generic types
+type FromMock = ReturnType<typeof supabase.from>;
+type RpcResult = Awaited<ReturnType<typeof supabase.rpc>>;
+const fromMock = (shape: object): ReturnType<typeof vi.mocked<typeof supabase.from>> => vi.mocked(supabase.from).mockReturnValue(shape as unknown as FromMock);
+const rpcMock = (shape: object): ReturnType<typeof vi.mocked<typeof supabase.rpc>> => vi.mocked(supabase.rpc).mockResolvedValue(shape as unknown as RpcResult);
+const fetchMock = (shape: object): ReturnType<typeof vi.mocked<typeof global.fetch>> => vi.mocked(global.fetch).mockResolvedValue(shape as unknown as Response);
+
 describe("products", () => {
 	beforeEach(() => vi.clearAllMocks());
 
 	it("create inserts data and invalidates on success", async () => {
 		const mockInsert = vi.fn().mockResolvedValue({ error: null });
-		(supabase.from as any).mockReturnValue({ insert: mockInsert });
+		fromMock({ insert: mockInsert });
 
 		const data = { name: "Test", price: 10, stock_quantity: 5, facility_id: "f1", created_by: "u1" };
 		const result = await products.create(data);
@@ -34,7 +41,7 @@ describe("products", () => {
 	it("create does not invalidate on error", async () => {
 		const testError = new Error("Insert failed");
 		const mockInsert = vi.fn().mockResolvedValue({ error: testError });
-		(supabase.from as any).mockReturnValue({ insert: mockInsert });
+		fromMock({ insert: mockInsert });
 
 		const data = { name: "Test", price: 10, stock_quantity: 5, facility_id: "f1", created_by: "u1" };
 		const result = await products.create(data);
@@ -46,7 +53,7 @@ describe("products", () => {
 	it("update updates data with correct id and invalidates on success", async () => {
 		const mockEq = vi.fn().mockResolvedValue({ error: null });
 		const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq });
-		(supabase.from as any).mockReturnValue({ update: mockUpdate });
+		fromMock({ update: mockUpdate });
 
 		const updateData = { name: "Updated" };
 		const result = await products.update("p1", updateData);
@@ -61,7 +68,7 @@ describe("products", () => {
 	it("delete deletes with correct id and invalidates on success", async () => {
 		const mockEq = vi.fn().mockResolvedValue({ error: null });
 		const mockDelete = vi.fn().mockReturnValue({ eq: mockEq });
-		(supabase.from as any).mockReturnValue({ delete: mockDelete });
+		fromMock({ delete: mockDelete });
 
 		const result = await products.remove("p1");
 
@@ -78,7 +85,7 @@ describe("categories", () => {
 
 	it("create inserts data and invalidates on success", async () => {
 		const mockInsert = vi.fn().mockResolvedValue({ error: null });
-		(supabase.from as any).mockReturnValue({ insert: mockInsert });
+		fromMock({ insert: mockInsert });
 
 		const data = { name: "Test", facility_id: "f1" };
 		const result = await categories.create(data);
@@ -92,7 +99,7 @@ describe("categories", () => {
 	it("update updates with correct id and invalidates on success", async () => {
 		const mockEq = vi.fn().mockResolvedValue({ error: null });
 		const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq });
-		(supabase.from as any).mockReturnValue({ update: mockUpdate });
+		fromMock({ update: mockUpdate });
 
 		const updateData = { name: "Updated" };
 		const result = await categories.update("c1", updateData);
@@ -107,7 +114,7 @@ describe("categories", () => {
 	it("remove deletes with correct id and invalidates on success", async () => {
 		const mockEq = vi.fn().mockResolvedValue({ error: null });
 		const mockDelete = vi.fn().mockReturnValue({ eq: mockEq });
-		(supabase.from as any).mockReturnValue({ delete: mockDelete });
+		fromMock({ delete: mockDelete });
 
 		const result = await categories.remove("c1");
 
@@ -124,7 +131,7 @@ describe("registerSessions", () => {
 
 	it("open inserts session and invalidates on success", async () => {
 		const mockInsert = vi.fn().mockResolvedValue({ error: null });
-		(supabase.from as any).mockReturnValue({ insert: mockInsert });
+		fromMock({ insert: mockInsert });
 
 		const result = await registerSessions.open("f1", "u1");
 
@@ -135,7 +142,7 @@ describe("registerSessions", () => {
 	});
 
 	it("close calls RPC with correct name and all parameters", async () => {
-		(supabase.rpc as any).mockResolvedValue({ error: null });
+		rpcMock({ error: null });
 
 		const result = await registerSessions.close("s1", "u1", 100, "notes");
 
@@ -150,7 +157,7 @@ describe("registerSessions", () => {
 	});
 
 	it("close converts undefined notes to null", async () => {
-		(supabase.rpc as any).mockResolvedValue({ error: null });
+		rpcMock({ error: null });
 
 		const result = await registerSessions.close("s1", "u1", 100);
 
@@ -166,7 +173,7 @@ describe("registerSessions", () => {
 
 	it("close does not invalidate on RPC error", async () => {
 		const testError = new Error("RPC failed");
-		(supabase.rpc as any).mockResolvedValue({ error: testError });
+		rpcMock({ error: testError });
 
 		const result = await registerSessions.close("s1", "u1", 100, "notes");
 
@@ -179,7 +186,7 @@ describe("users", () => {
 	beforeEach(() => vi.clearAllMocks());
 
 	it("create calls POST with correct endpoint and body", async () => {
-		(global.fetch as any).mockResolvedValue({ ok: true, text: vi.fn().mockResolvedValue("") });
+		fetchMock({ ok: true, text: vi.fn().mockResolvedValue("") });
 
 		const data = { email: "test@example.com", full_name: "Test", password: "pass", role: "staff" };
 		const result = await users.create(data);
@@ -194,7 +201,7 @@ describe("users", () => {
 	});
 
 	it("update calls PUT with correct endpoint and body including id", async () => {
-		(global.fetch as any).mockResolvedValue({ ok: true, text: vi.fn().mockResolvedValue("") });
+		fetchMock({ ok: true, text: vi.fn().mockResolvedValue("") });
 
 		const updateData = { full_name: "Updated" };
 		const result = await users.update("u1", updateData);
@@ -209,7 +216,7 @@ describe("users", () => {
 	});
 
 	it("remove calls DELETE with correct endpoint and body", async () => {
-		(global.fetch as any).mockResolvedValue({ ok: true, text: vi.fn().mockResolvedValue("") });
+		fetchMock({ ok: true, text: vi.fn().mockResolvedValue("") });
 
 		const result = await users.remove("u1");
 
@@ -223,7 +230,7 @@ describe("users", () => {
 	});
 
 	it("create does not invalidate on API error", async () => {
-		(global.fetch as any).mockResolvedValue({ ok: false, text: vi.fn().mockResolvedValue("API error") });
+		fetchMock({ ok: false, text: vi.fn().mockResolvedValue("API error") });
 
 		const data = { email: "test@example.com", full_name: "Test", password: "pass", role: "staff" };
 		const result = await users.create(data);

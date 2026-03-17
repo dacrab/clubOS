@@ -24,43 +24,22 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 
 export const actions: Actions = {
 	save: async ({ request, locals }) => {
+		// hooks + layout guarantee user + tenantId exist on (app) routes
 		const { supabase, user } = locals;
+		if (!user) return fail(401, { error: "Unauthorized" });
 
-		if (!user) {
-			return fail(401, { error: "Unauthorized" });
-		}
-
-		const { data: membership } = await supabase
-			.from("memberships")
-			.select("tenant_id")
-			.eq("user_id", user.id)
-			.order("is_primary", { ascending: false })
-			.limit(1)
-			.single();
-
-		if (!membership?.tenant_id) {
-			return fail(400, { error: "No tenant" });
-		}
+		const { data: ctx } = await supabase.rpc("get_user_context", { p_user_id: user.id });
+		const tenantId = ctx?.membership?.tenantId;
+		if (!tenantId) return fail(400, { error: "No tenant" });
 
 		const formData = await request.formData();
 		const settingsJson = formData.get("settings");
-
-		if (typeof settingsJson !== "string") {
-			return fail(400, { error: "Invalid settings" });
-		}
+		if (typeof settingsJson !== "string") return fail(400, { error: "Invalid settings" });
 
 		try {
 			const settings = JSON.parse(settingsJson) as Partial<TenantSettings>;
-
-			const { error } = await supabase
-				.from("tenants")
-				.update({ settings })
-				.eq("id", membership.tenant_id);
-
-			if (error) {
-				return fail(500, { error: error.message });
-			}
-
+			const { error } = await supabase.from("tenants").update({ settings }).eq("id", tenantId);
+			if (error) return fail(500, { error: error.message });
 			return { success: true };
 		} catch {
 			return fail(400, { error: "Invalid JSON" });

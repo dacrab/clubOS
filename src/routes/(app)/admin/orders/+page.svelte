@@ -3,16 +3,10 @@
 	import { fmtDate, fmtCurrency } from "$lib/utils/format";
 	import PageHeader from "$lib/components/layout/page-header.svelte";
 	import EmptyState from "$lib/components/layout/empty-state.svelte";
-	import Card from "$lib/components/ui/card/card.svelte";
-	import CardContent from "$lib/components/ui/card/card-content.svelte";
+	import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
 	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
-	import Table from "$lib/components/ui/table/table.svelte";
-	import TableHeader from "$lib/components/ui/table/table-header.svelte";
-	import TableBody from "$lib/components/ui/table/table-body.svelte";
-	import TableRow from "$lib/components/ui/table/table-row.svelte";
-	import TableHead from "$lib/components/ui/table/table-head.svelte";
-	import TableCell from "$lib/components/ui/table/table-cell.svelte";
+	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
 	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
 	import { ShoppingCart, Eye } from "@lucide/svelte";
 	import { type OrderView, getActiveOrderItems } from "$lib/types/database";

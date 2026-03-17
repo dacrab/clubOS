@@ -23,9 +23,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const { data: { user } } = await supabase.auth.getUser();
 	const { data: { session } } = await supabase.auth.getSession();
 	event.locals.user = user;
-	event.locals.session = session;
 
-	// Fix: Reject sessions without expires_at OR expired sessions
+	// Reject missing or expired sessions
 	if (session && (!session.expires_at || new Date(session.expires_at * 1000) < new Date())) {
 		await supabase.auth.signOut();
 		throw redirect(307, "/");

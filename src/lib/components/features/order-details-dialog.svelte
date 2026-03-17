@@ -5,12 +5,7 @@
 	import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
 	import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
 	import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
-	import Table from "$lib/components/ui/table/table.svelte";
-	import TableHeader from "$lib/components/ui/table/table-header.svelte";
-	import TableBody from "$lib/components/ui/table/table-body.svelte";
-	import TableRow from "$lib/components/ui/table/table-row.svelte";
-	import TableHead from "$lib/components/ui/table/table-head.svelte";
-	import TableCell from "$lib/components/ui/table/table-cell.svelte";
+	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
 	import Separator from "$lib/components/ui/separator/separator.svelte";
 	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import { Gift } from "@lucide/svelte";

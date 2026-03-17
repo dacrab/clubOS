@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { createClient } from "@supabase/supabase-js";
 
 const url = process.env.PUBLIC_SUPABASE_URL;

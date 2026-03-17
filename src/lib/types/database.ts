@@ -12,15 +12,9 @@ export type MemberRole = "owner" | "admin" | "manager" | "staff";
 /** Badge variant type for role display */
 export type RoleBadgeVariant = "destructive" | "default" | "secondary" | "outline";
 
-/** Get badge variant for a member role */
-export const getRoleBadgeVariant = (role: MemberRole | undefined): RoleBadgeVariant => {
-	switch (role) {
-		case "owner": return "destructive";
-		case "admin": return "default";
-		case "manager": return "secondary";
-		default: return "outline";
-	}
-};
+/** Get badge variant for a member role — also exported from format.ts for convenience */
+export const getRoleBadgeVariant = (role: MemberRole | undefined): RoleBadgeVariant =>
+	role === "owner" ? "destructive" : role === "admin" ? "default" : role === "manager" ? "secondary" : "outline";
 export type BookingType = "birthday" | "football" | "event" | "other";
 export type BookingStatus = "pending" | "confirmed" | "canceled" | "completed" | "no_show";
 export type SubscriptionStatus = "trialing" | "active" | "canceled" | "past_due" | "unpaid" | "paused";
@@ -288,5 +282,11 @@ export interface CartItem {
 // SESSION/AUTH TYPES
 // =============================================================================
 
-// SessionUser is defined in $lib/state/session.svelte.ts
-export type { SessionUser } from "$lib/state/session.svelte";
+export type SessionUser = {
+	id: string;
+	email: string;
+	username: string;
+	role: MemberRole;
+	tenantId: string | null;
+	facilityId: string | null;
+};

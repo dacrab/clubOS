@@ -9,19 +9,13 @@
 	import Label from "$lib/components/ui/label/label.svelte";
 	import Textarea from "$lib/components/ui/textarea/textarea.svelte";
 	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Card from "$lib/components/ui/card/card.svelte";
-	import CardContent from "$lib/components/ui/card/card-content.svelte";
+	import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
 	import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
 	import Select from "$lib/components/ui/select/select.svelte";
 	import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
 	import SelectContent from "$lib/components/ui/select/select-content.svelte";
 	import SelectItem from "$lib/components/ui/select/select-item.svelte";
-	import Table from "$lib/components/ui/table/table.svelte";
-	import TableHeader from "$lib/components/ui/table/table-header.svelte";
-	import TableBody from "$lib/components/ui/table/table-body.svelte";
-	import TableRow from "$lib/components/ui/table/table-row.svelte";
-	import TableHead from "$lib/components/ui/table/table-head.svelte";
-	import TableCell from "$lib/components/ui/table/table-cell.svelte";
+	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
 	import { supabase } from "$lib/utils/supabase";
 	import DatePicker from "$lib/components/ui/date-picker/date-time-picker.svelte";
 	import { fmtDate } from "$lib/utils/format";
@@ -76,6 +70,7 @@
 				num_players: details.num_players ?? 10,
 			};
 		} else {
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity -- not reactive state, just a temp computation value
 			const tomorrow = new Date();
 			tomorrow.setDate(tomorrow.getDate() + 1);
 			const defaultHour = isBirthday ? settings.current.birthday_default_hour : settings.current.football_default_hour;

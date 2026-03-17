@@ -32,7 +32,6 @@ import { POST, PUT, DELETE } from "./+server";
 
 const json = (body: object, method = "POST"): Request => new Request("http://localhost", { method, body: JSON.stringify(body) });
 const adminLocals = { user: { id: "u1" } } as App.Locals;
-const staffLocals = { user: { id: "u2" } } as App.Locals;
 
 beforeEach(() => {
 	vi.clearAllMocks();

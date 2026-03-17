@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { toast } from "svelte-sonner";
 	import { t } from "$lib/i18n/index.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
 	import PlanSelector from "$lib/components/features/plan-selector.svelte";
 	import PublicHeader from "$lib/components/layout/public-header.svelte";
 	import { PLANS, type Plan } from "$lib/config/auth";

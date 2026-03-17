@@ -64,7 +64,7 @@ export default tseslint.config(
 	},
 	{
 		rules: {
-			"no-console": ["warn", { allow: ["error", "warn"] }],
+			"no-console": ["warn", { allow: ["error", "warn", "info", "log"] }],
 			"no-debugger": "error",
 			"no-empty": ["error", { allowEmptyCatch: true }],
 			"no-unused-vars": "off",

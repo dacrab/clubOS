@@ -6,8 +6,7 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
-	import Card from "$lib/components/ui/card/card.svelte";
-	import CardContent from "$lib/components/ui/card/card-content.svelte";
+	import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
 	import Separator from "$lib/components/ui/separator/separator.svelte";
 	import Dialog from "$lib/components/ui/dialog/dialog.svelte";
 	import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";

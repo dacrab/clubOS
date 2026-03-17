@@ -1,14 +1,14 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Login Flow", () => {
-	test(\"shows login page with correct elements\", async ({ page }) => {
-		await page.goto(\"/\");
+	test("shows login page with correct elements", async ({ page }) => {
+		await page.goto("/");
 
 		// Check page title and form elements
-		await expect(page.getByRole(\"heading\", { name: /sign in/i })).toBeVisible();
+		await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
 		await expect(page.getByLabel(/email/i)).toBeVisible();
 		await expect(page.getByLabel(/password/i)).toBeVisible();
-		await expect(page.getByRole(\"button\", { name: /sign in/i })).toBeVisible();
+		await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
 	});
 
 	test("shows error for invalid credentials", async ({ page }) => {

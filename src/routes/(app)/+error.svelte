@@ -2,11 +2,7 @@
 	import { page } from "$app/state";
 	import { t } from "$lib/i18n/index.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
-	import Card from "$lib/components/ui/card/card.svelte";
-	import CardContent from "$lib/components/ui/card/card-content.svelte";
-	import CardHeader from "$lib/components/ui/card/card-header.svelte";
-	import CardTitle from "$lib/components/ui/card/card-title.svelte";
-	import CardDescription from "$lib/components/ui/card/card-description.svelte";
+	import Card, { CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card/card.svelte";
 	import { AlertTriangle, Home, RotateCcw } from "@lucide/svelte";
 
 	const errorInfo = $derived.by(() => {

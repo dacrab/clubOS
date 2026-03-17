@@ -1,15 +1,15 @@
-import type { MemberRole } from "$lib/types/database";
+import type { SessionUser } from "$lib/types/database";
 
-export type SessionUser = {
-	id: string;
-	email: string;
-	username: string;
-	role: MemberRole;
-	tenantId: string | null;
-	facilityId: string | null;
-};
+export type { SessionUser };
 
-function createSession() {
+function createSession(): {
+	readonly user: SessionUser | null;
+	readonly loading: boolean;
+	readonly initialized: boolean;
+	readonly isAuthenticated: boolean;
+	setUser(u: SessionUser | null): void;
+	clear(): void;
+} {
 	let user = $state<SessionUser | null>(null);
 	let loading = $state(true);
 	let initialized = $state(false);
