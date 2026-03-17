@@ -22,7 +22,8 @@ export function formatDate(date: string | Date, s?: FormatSettings | null, inclu
 
 export function formatCurrency(value: number, s?: FormatSettings | null): string {
 	const currency = s?.currency_code ?? "EUR";
-	return new Intl.NumberFormat(currency === "USD" ? "en-US" : currency === "GBP" ? "en-GB" : "de-DE", { style: "currency", currency }).format(value);
+	// Use undefined locale so the runtime picks the best locale for the currency
+	return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(value);
 }
 
 const CURRENCY_SYMBOLS: Record<string, string> = {

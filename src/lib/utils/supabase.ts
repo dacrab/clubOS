@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { env as publicEnv } from "$env/dynamic/public";
+import { browser } from "$app/environment";
 
 const { PUBLIC_SUPABASE_URL: url, PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: anonKey } =
 	publicEnv as {
@@ -15,7 +16,7 @@ export const supabase = createClient(url, anonKey);
 
 // Keep server and client in sync: when auth state changes on the client,
 // update the HTTP-only cookies on the server so SSR sees the session on reload.
-if (typeof window !== "undefined") {
+if (browser) {
 	const postAuthCallback = async (
 		event: string,
 		session: { access_token: string; refresh_token: string } | null,

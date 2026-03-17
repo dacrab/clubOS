@@ -222,15 +222,23 @@ BEGIN
 END;
 $$;
 
--- Product search function
+-- Product search function — uses 'simple' dictionary for language-agnostic matching (works for Greek, English, etc.)
+-- Also adds trigram fallback for partial/typo matching
 CREATE FUNCTION public.search_products(facility_uuid uuid, search_text text)
 RETURNS TABLE(id uuid, name text, price numeric, stock_quantity integer, category_id uuid, rank real)
 LANGUAGE sql STABLE SET search_path = public AS $$
   SELECT p.id, p.name, p.price, p.stock_quantity, p.category_id,
-         ts_rank(p.search_vector, plainto_tsquery('english', search_text)) as rank
+         CASE
+           WHEN search_text = '' THEN 0
+           ELSE ts_rank(p.search_vector, plainto_tsquery('simple', search_text))
+         END as rank
   FROM products p
-  WHERE p.facility_id = facility_uuid 
-    AND (search_text = '' OR p.search_vector @@ plainto_tsquery('english', search_text))
+  WHERE p.facility_id = facility_uuid
+    AND (
+      search_text = ''
+      OR p.search_vector @@ plainto_tsquery('simple', search_text)
+      OR p.name ILIKE '%' || search_text || '%'
+    )
   ORDER BY rank DESC, p.name;
 $$;
 

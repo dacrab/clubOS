@@ -6,8 +6,8 @@
 
 	const { data, children } = $props();
 
-	// Sync server data into client stores on every navigation
-	$effect(() => {
+	// Sync server data into client stores before render on every navigation
+	$effect.pre(() => {
 		session.setUser(data.user);
 		if (data.settings) settings.setSettings(data.settings);
 	});

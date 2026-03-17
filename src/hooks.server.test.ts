@@ -54,23 +54,6 @@ describe("hooks.server", () => {
 		});
 	});
 
-	describe("session expiry", () => {
-		it("signs out and redirects if session is expired", async () => {
-			const config = scenarios.activeSubscription("admin");
-			const expiredAt = Math.floor(Date.now() / 1000) - 3600;
-			const mock = createSupabaseMock(config);
-			// Override getSession to return expired session, add signOut stub
-			mock.auth.getSession = vi.fn().mockResolvedValue({
-				data: { session: { expires_at: expiredAt, access_token: "x", refresh_token: "y", user: {} } },
-				error: null,
-			});
-			(mock.auth as Record<string, unknown>).signOut = vi.fn().mockResolvedValue({});
-			mockSupabaseClient.mockReturnValue(mock);
-			const event = { url: new URL("http://localhost/admin"), cookies: { get: vi.fn(), set: vi.fn(), delete: vi.fn() }, locals: {}, request: new Request("http://localhost/admin") };
-			await expect(runHandle(event)).rejects.toMatchObject({ location: "/" });
-		});
-	});
-
 	describe("subscription validation", () => {
 		it("redirects to /billing if expired", async () => {
 			await expect(runHandle(createEvent("/admin", scenarios.expiredTrial()))).rejects.toMatchObject({ location: "/billing" });

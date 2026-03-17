@@ -1,7 +1,8 @@
 <script lang="ts">
 	import BookingPage from "$lib/components/features/booking-page.svelte";
 	import { Cake, Dribbble, Calendar, MoreHorizontal } from "@lucide/svelte";
-	import { BOOKING_TYPE, type BookingTypeValue } from "$lib/constants";
+	import { BOOKING_TYPE } from "$lib/constants";
+	import type { BookingTypeValue } from "$lib/constants";
 
 	const { data } = $props();
 
@@ -10,13 +11,11 @@
 		[BOOKING_TYPE.FOOTBALL]: Dribbble,
 		event: Calendar,
 		other: MoreHorizontal,
-	} as const;
+	} satisfies Record<string, typeof Cake>;
 
-	const validTypes = Object.values(BOOKING_TYPE);
-	type ValidType = BookingTypeValue;
-	const isValidType = (t: string): t is ValidType => validTypes.includes(t as ValidType);
+	// data.type is BookingType (includes event/other), cast to BookingTypeValue for BookingPage
+	const type = $derived(data.type as BookingTypeValue);
+	const icon = $derived(icons[data.type] ?? Calendar);
 </script>
 
-{#if isValidType(data.type)}
-	<BookingPage type={data.type} bookings={data.bookings} user={data.user} icon={icons[data.type]} />
-{/if}
+<BookingPage {type} bookings={data.bookings} user={data.user} {icon} />
