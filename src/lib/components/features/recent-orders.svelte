@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
 	import { fmtDate, fmtCurrency } from "$lib/utils/format";
-	import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
-	import { Badge } from "$lib/components/ui/badge";
-	import { OrderDetailsDialog } from "$lib/components/features";
+	import Card from "$lib/components/ui/card/card.svelte";
+	import CardContent from "$lib/components/ui/card/card-content.svelte";
+	import CardHeader from "$lib/components/ui/card/card-header.svelte";
+	import CardTitle from "$lib/components/ui/card/card-title.svelte";
+	import Badge from "$lib/components/ui/badge/badge.svelte";
+	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
 	import { Eye } from "@lucide/svelte";
 	import type { OrderView } from "$lib/types/database";
 

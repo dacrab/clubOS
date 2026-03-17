@@ -2,11 +2,16 @@
 	import { supabase } from "$lib/utils/supabase";
 	import { toast } from "svelte-sonner";
 	import { t } from "$lib/i18n/index.svelte";
-	import { Button } from "$lib/components/ui/button";
+	import Button from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
-	import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "$lib/components/ui/card";
-	import { PublicHeader } from "$lib/components/layout";
+	import Card from "$lib/components/ui/card/card.svelte";
+	import CardContent from "$lib/components/ui/card/card-content.svelte";
+	import CardDescription from "$lib/components/ui/card/card-description.svelte";
+	import CardHeader from "$lib/components/ui/card/card-header.svelte";
+	import CardTitle from "$lib/components/ui/card/card-title.svelte";
+	import CardFooter from "$lib/components/ui/card/card-footer.svelte";
+	import PublicHeader from "$lib/components/layout/public-header.svelte";
 	import { ArrowRight, Loader2 } from "@lucide/svelte";
 
 	let email = $state("");

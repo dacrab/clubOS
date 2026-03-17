@@ -1,10 +1,18 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
 	import { fmtDate, fmtCurrency } from "$lib/utils/format";
-	import { Dialog, DialogContent, DialogHeader, DialogTitle } from "$lib/components/ui/dialog";
-	import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table";
+	import Dialog from "$lib/components/ui/dialog/dialog.svelte";
+	import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
+	import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
+	import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
+	import Table from "$lib/components/ui/table/table.svelte";
+	import TableHeader from "$lib/components/ui/table/table-header.svelte";
+	import TableBody from "$lib/components/ui/table/table-body.svelte";
+	import TableRow from "$lib/components/ui/table/table-row.svelte";
+	import TableHead from "$lib/components/ui/table/table-head.svelte";
+	import TableCell from "$lib/components/ui/table/table-cell.svelte";
 	import Separator from "$lib/components/ui/separator/separator.svelte";
-	import { Badge } from "$lib/components/ui/badge";
+	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import { Gift } from "@lucide/svelte";
 	import { type OrderView, getActiveOrderItems, getProductName } from "$lib/types/database";
 

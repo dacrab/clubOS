@@ -1,7 +1,12 @@
 <script lang="ts">
-	import { Popover, PopoverContent, PopoverTrigger } from "$lib/components/ui/popover";
+	import { Popover as PopoverPrimitive } from "bits-ui";
+	import PopoverContent from "$lib/components/ui/popover/popover-content.svelte";
 	import Calendar from "$lib/components/ui/calendar/calendar.svelte";
-	import { Button } from "$lib/components/ui/button";
+
+	import Button from "$lib/components/ui/button/button.svelte";
+
+	const Popover = PopoverPrimitive.Root;
+	const PopoverTrigger = PopoverPrimitive.Trigger;
 	import { cn } from "$lib/utils/cn";
 	import { CalendarIcon } from "@lucide/svelte";
 	import { t } from "$lib/i18n/index.svelte";

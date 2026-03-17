@@ -29,7 +29,25 @@ describe("formatCurrency", () => {
 });
 
 describe("getCurrencySymbol", () => {
-	it.each<[CurrencyCodeType, string]>([["EUR", "€"], ["USD", "$"], ["GBP", "£"]])("%s → %s", (code, symbol) => {
+	it.each([
+		["EUR", "€"],
+		["USD", "$"],
+		["GBP", "£"],
+		["CHF", "CHF"],
+		["PLN", "zł"],
+		["CZK", "Kč"],
+		["SEK", "kr"],
+		["NOK", "kr"],
+		["DKK", "kr"],
+	] as const)("%s → %s", (code, symbol) => {
 		expect(getCurrencySymbol(code)).toBe(symbol);
+	});
+
+	it("returns € for unknown code", () => {
+		expect(getCurrencySymbol("XYZ" as CurrencyCodeType)).toBe("€");
+	});
+
+	it("returns € for undefined", () => {
+		expect(getCurrencySymbol()).toBe("€");
 	});
 });

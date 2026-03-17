@@ -41,7 +41,7 @@ export default tseslint.config(
 			"svelte/no-at-debug-tags": "error",
 			"svelte/no-reactive-functions": "error",
 			"svelte/no-navigation-without-resolve": "off",
-			"svelte/prefer-svelte-reactivity": "off",
+			"svelte/prefer-svelte-reactivity": "warn",
 		},
 	},
 	{
@@ -64,7 +64,7 @@ export default tseslint.config(
 	},
 	{
 		rules: {
-			"no-console": "error",
+			"no-console": ["warn", { allow: ["error", "warn"] }],
 			"no-debugger": "error",
 			"no-empty": ["error", { allowEmptyCatch: true }],
 			"no-unused-vars": "off",

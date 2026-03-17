@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "$lib/components/ui/dialog";
+	import Button from "$lib/components/ui/button/button.svelte";
+	import Dialog from "$lib/components/ui/dialog/dialog.svelte";
+	import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
+	import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
+	import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
+	import DialogDescription from "$lib/components/ui/dialog/dialog-description.svelte";
+	import DialogFooter from "$lib/components/ui/dialog/dialog-footer.svelte";
 	import type { Snippet } from "svelte";
 
 	type Props = {

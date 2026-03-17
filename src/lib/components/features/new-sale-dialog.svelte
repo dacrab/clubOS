@@ -2,10 +2,11 @@
 	import { t } from "$lib/i18n/index.svelte";
 	import { toast } from "svelte-sonner";
 	import { invalidateAll } from "$app/navigation";
-	import { Button } from "$lib/components/ui/button";
+	import Button from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
-	import { Badge } from "$lib/components/ui/badge";
-	import { Dialog, DialogContent } from "$lib/components/ui/dialog";
+	import Badge from "$lib/components/ui/badge/badge.svelte";
+	import Dialog from "$lib/components/ui/dialog/dialog.svelte";
+	import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
 	import { supabase } from "$lib/utils/supabase";
 	import { fmtCurrency } from "$lib/utils/format";
 	import { printReceipt, type ReceiptData } from "$lib/utils/receipt";
@@ -30,7 +31,7 @@
 	let couponCount = $state(0);
 	let searchQuery = $state("");
 	let processing = $state(false);
-	let submitDebounce = $state<ReturnType<typeof setTimeout> | null>(null);
+	let submitDebounce: ReturnType<typeof setTimeout> | null = null; // not reactive - impl detail
 	let lastOrderId = $state<string | null>(null);
 	let lastOrderData = $state<ReceiptData | null>(null);
 	let showCart = $state(false);
@@ -54,15 +55,16 @@
 		searchResults = (data as Product[]) ?? [];
 	}
 
-	// Debounced search
-	let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+	// Debounced search — timeout is an impl detail, not reactive state
 	$effect(() => {
-		if (searchTimeout) clearTimeout(searchTimeout);
-		if (searchQuery.trim()) {
-			searchTimeout = setTimeout(() => searchProducts(searchQuery), 200);
+		const q = searchQuery; // track reactive dep
+		let timeout: ReturnType<typeof setTimeout> | null = null;
+		if (q.trim()) {
+			timeout = setTimeout(() => searchProducts(q), 200);
 		} else {
 			searchResults = [];
 		}
+		return () => { if (timeout) clearTimeout(timeout); };
 	});
 
 	const filteredProducts = $derived.by(() => {
@@ -107,44 +109,41 @@
 	async function submitOrder(): Promise<void> {
 		if (!cart.length) { toast.error(t("orders.emptyCart")); return; }
 		if (!activeSession) { toast.error(t("register.noActiveSession")); return; }
-		if (processing) return; // Prevent double-submit
+		if (processing) return;
 
 		// Debounce rapid clicks
-		if (submitDebounce) clearTimeout(submitDebounce);
-		
+		if (submitDebounce) { clearTimeout(submitDebounce); submitDebounce = null; }
+
 		processing = true;
-		submitDebounce = setTimeout(async () => {
-			try {
-				const { data, error } = await supabase.rpc("create_order", {
-					p_facility_id: user.facilityId,
-					p_session_id: activeSession.id,
-					p_user_id: user.id,
-					p_items: cart.map(i => ({
-						product_id: i.product.id,
-						quantity: i.quantity,
-						unit_price: i.product.price,
-						is_treat: i.isTreat,
-					})),
-					p_coupon_count: couponCount,
-					p_coupon_value: COUPON_VALUE,
-				});
+		try {
+			const { data, error } = await supabase.rpc("create_order", {
+				p_facility_id: user.facilityId,
+				p_session_id: activeSession.id,
+				p_user_id: user.id,
+				p_items: cart.map(i => ({
+					product_id: i.product.id,
+					quantity: i.quantity,
+					unit_price: i.product.price,
+					is_treat: i.isTreat,
+				})),
+				p_coupon_count: couponCount,
+				p_coupon_value: COUPON_VALUE,
+			});
 
-				if (error) throw error;
-				if (data?.error) { toast.error(data.error); return; }
+			if (error) throw error;
+			if (data?.error) { toast.error(data.error); processing = false; return; }
 
-				lastOrderId = data.id;
-				lastOrderData = { items: [...cart], total, discount, couponCount, orderId: data.id };
-				toast.success(t("common.success"));
-				clearCart();
-				showCart = false;
-				await invalidateAll();
-			} catch {
-				toast.error(t("common.error"));
-			} finally {
-				processing = false;
-				submitDebounce = null;
-			}
-		}, 300);
+			lastOrderId = data.id;
+			lastOrderData = { items: [...cart], total, discount, couponCount, orderId: data.id };
+			toast.success(t("common.success"));
+			clearCart();
+			showCart = false;
+			await invalidateAll();
+		} catch {
+			toast.error(t("common.error"));
+		} finally {
+			processing = false;
+		}
 	}
 </script>
 

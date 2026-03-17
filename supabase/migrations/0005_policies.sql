@@ -54,11 +54,19 @@ CREATE POLICY orders_select ON public.orders FOR SELECT USING (has_facility_acce
 CREATE POLICY orders_insert ON public.orders FOR INSERT WITH CHECK (has_facility_access(facility_id));
 CREATE POLICY orders_update ON public.orders FOR UPDATE USING (has_facility_access(facility_id) AND (created_by = (SELECT auth.uid()) OR is_facility_admin(facility_id)));
 
--- Order Items
-CREATE POLICY order_items_select ON public.order_items FOR SELECT USING (order_id IN (SELECT id FROM orders WHERE has_facility_access(facility_id)));
-CREATE POLICY order_items_insert ON public.order_items FOR INSERT WITH CHECK (order_id IN (SELECT id FROM orders WHERE has_facility_access(facility_id)));
-CREATE POLICY order_items_update ON public.order_items FOR UPDATE USING (order_id IN (SELECT id FROM orders WHERE has_facility_access(facility_id)));
-CREATE POLICY order_items_delete ON public.order_items FOR DELETE USING (order_id IN (SELECT id FROM orders WHERE has_facility_access(facility_id)));
+-- Order Items: join to orders table to avoid N+1 has_facility_access calls per row
+CREATE POLICY order_items_select ON public.order_items FOR SELECT USING (
+  EXISTS (SELECT 1 FROM orders o WHERE o.id = order_id AND has_facility_access(o.facility_id))
+);
+CREATE POLICY order_items_insert ON public.order_items FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM orders o WHERE o.id = order_id AND has_facility_access(o.facility_id))
+);
+CREATE POLICY order_items_update ON public.order_items FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM orders o WHERE o.id = order_id AND has_facility_access(o.facility_id))
+);
+CREATE POLICY order_items_delete ON public.order_items FOR DELETE USING (
+  EXISTS (SELECT 1 FROM orders o WHERE o.id = order_id AND has_facility_access(o.facility_id))
+);
 
 -- Bookings
 CREATE POLICY bookings_select ON public.bookings FOR SELECT USING (has_facility_access(facility_id));
@@ -80,6 +88,7 @@ CREATE POLICY audit_log_select ON public.audit_log FOR SELECT USING (
 );
 
 -- Analytics Views
+-- mv_best_sellers is refreshed after each order insert via refresh_mv_best_sellers trigger
 CREATE MATERIALIZED VIEW public.mv_best_sellers AS
 SELECT p.facility_id, p.id AS product_id, p.name AS product_name, p.category_id,
        COALESCE(SUM(oi.quantity), 0) AS total_sold
@@ -252,6 +261,19 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.get_user_context TO authenticated;
+
+-- Refresh mv_best_sellers after orders change (async via trigger)
+CREATE FUNCTION public.refresh_mv_best_sellers() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  REFRESH MATERIALIZED VIEW CONCURRENTLY public.mv_best_sellers;
+  RETURN NULL;
+END;
+$$;
+
+CREATE TRIGGER refresh_best_sellers_on_order
+  AFTER INSERT OR UPDATE OR DELETE ON public.orders
+  FOR EACH STATEMENT EXECUTE FUNCTION public.refresh_mv_best_sellers();
 
 -- Booking stats RPC for secretary dashboard
 CREATE FUNCTION public.get_booking_stats(p_facility_id uuid)

@@ -52,7 +52,7 @@ export function createCrud<T, F>(config: CrudConfig<T, F>): {
 				open = false;
 				await success();
 				return true;
-			} catch { fail(); return false; }
+			} catch (err) { console.error(err); fail(); return false; }
 			finally { saving = false; }
 		},
 
@@ -63,7 +63,7 @@ export function createCrud<T, F>(config: CrudConfig<T, F>): {
 				if (error) throw error;
 				await success();
 				return true;
-			} catch { fail(); return false; }
+			} catch (err) { console.error(err); fail(); return false; }
 		},
 	};
 }

@@ -1,12 +1,20 @@
 <script lang="ts">
 	import { toast } from "svelte-sonner";
 	import { t } from "$lib/i18n/index.svelte";
-	import { Button } from "$lib/components/ui/button";
+	import Button from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
-	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card";
-	import { Select, SelectTrigger, SelectContent, SelectItem } from "$lib/components/ui/select";
-	import { PlanSelector } from "$lib/components/features";
+	import PublicHeader from "$lib/components/layout/public-header.svelte";
+	import Card from "$lib/components/ui/card/card.svelte";
+	import CardContent from "$lib/components/ui/card/card-content.svelte";
+	import CardDescription from "$lib/components/ui/card/card-description.svelte";
+	import CardHeader from "$lib/components/ui/card/card-header.svelte";
+	import CardTitle from "$lib/components/ui/card/card-title.svelte";
+	import Select from "$lib/components/ui/select/select.svelte";
+	import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
+	import SelectContent from "$lib/components/ui/select/select-content.svelte";
+	import SelectItem from "$lib/components/ui/select/select-item.svelte";
+	import PlanSelector from "$lib/components/features/plan-selector.svelte";
 	import { PLANS, type Plan } from "$lib/config/auth";
 	import { Building2, MapPin, Phone, Mail, Check, Loader2 } from "@lucide/svelte";
 
@@ -119,7 +127,7 @@
 </script>
 
 <div class="flex min-h-screen flex-col bg-background">
-	<header class="flex items-center justify-center border-b px-4 py-4"><span class="text-lg font-bold">clubOS</span></header>
+	<PublicHeader />
 
 	<main class="flex flex-1 items-center justify-center p-4">
 		{#if completed}

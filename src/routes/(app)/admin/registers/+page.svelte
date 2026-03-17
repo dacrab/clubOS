@@ -1,12 +1,21 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
 	import { fmtDate, fmtCurrency } from "$lib/utils/format";
-	import { PageHeader, EmptyState } from "$lib/components/layout";
-	import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
-	import { Badge } from "$lib/components/ui/badge";
-	import { Button } from "$lib/components/ui/button";
-	import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table";
-	import { OrderDetailsDialog } from "$lib/components/features";
+	import PageHeader from "$lib/components/layout/page-header.svelte";
+	import EmptyState from "$lib/components/layout/empty-state.svelte";
+	import Card from "$lib/components/ui/card/card.svelte";
+	import CardContent from "$lib/components/ui/card/card-content.svelte";
+	import CardHeader from "$lib/components/ui/card/card-header.svelte";
+	import CardTitle from "$lib/components/ui/card/card-title.svelte";
+	import Badge from "$lib/components/ui/badge/badge.svelte";
+	import Button from "$lib/components/ui/button/button.svelte";
+	import Table from "$lib/components/ui/table/table.svelte";
+	import TableHeader from "$lib/components/ui/table/table-header.svelte";
+	import TableBody from "$lib/components/ui/table/table-body.svelte";
+	import TableRow from "$lib/components/ui/table/table-row.svelte";
+	import TableHead from "$lib/components/ui/table/table-head.svelte";
+	import TableCell from "$lib/components/ui/table/table-cell.svelte";
+	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
 	import { DollarSign, Eye, ChevronDown, ChevronUp } from "@lucide/svelte";
 	import { type OrderView, getActiveOrderItems } from "$lib/types/database";
 

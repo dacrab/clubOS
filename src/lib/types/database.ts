@@ -33,13 +33,10 @@ export interface Tenant {
 	id: string;
 	name: string;
 	slug: string;
-	settings: TenantSettings | null;
+	settings: Record<string, unknown> | null;
 	created_at: string;
 	updated_at: string;
 }
-
-import type { TenantSettings } from "$lib/config/settings";
-export type { TenantSettings };
 
 export interface Subscription {
 	id: string;

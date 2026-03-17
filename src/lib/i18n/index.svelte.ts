@@ -9,7 +9,6 @@ const translations: Record<Locale, TranslationsStructure> = { en, el };
 function getNestedValue(obj: unknown, path: string): string {
 	const keys = path.split(".");
 	let result: unknown = obj;
-
 	for (const key of keys) {
 		if (result && typeof result === "object" && key in result) {
 			result = (result as Record<string, unknown>)[key];
@@ -17,36 +16,33 @@ function getNestedValue(obj: unknown, path: string): string {
 			return path;
 		}
 	}
-
 	return typeof result === "string" ? result : path;
 }
 
-class I18n {
-	locale = $state<Locale>("en");
+function createI18n() {
+	let locale = $state<Locale>("en");
 
-	constructor() {
-		if (browser) {
-			const saved = localStorage.getItem("locale");
-			if (saved === "en" || saved === "el") {
-				this.locale = saved;
+	if (browser) {
+		const saved = localStorage.getItem("locale");
+		if (saved === "en" || saved === "el") locale = saved;
+	}
+
+	return {
+		get locale() { return locale; },
+		setLocale(l: Locale): void {
+			locale = l;
+			if (browser) {
+				localStorage.setItem("locale", l);
+				document.documentElement.setAttribute("lang", l);
 			}
-		}
-	}
-
-	setLocale(locale: Locale): void {
-		this.locale = locale;
-		if (browser) {
-			localStorage.setItem("locale", locale);
-			document.documentElement.setAttribute("lang", locale);
-		}
-	}
-
-	t(key: string): string {
-		return getNestedValue(translations[this.locale], key);
-	}
+		},
+		t(key: string): string {
+			return getNestedValue(translations[locale], key);
+		},
+	};
 }
 
-export const i18n = new I18n();
+export const i18n = createI18n();
 
 export function t(key: string): string {
 	return i18n.t(key);

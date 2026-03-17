@@ -6,13 +6,14 @@ import { test, expect } from "@playwright/test";
  * These tests require a running dev server with seeded database.
  * Run `bun run db:seed` before running these tests.
  *
- * Test credentials (from seed):
- * - Admin: admin@demo.club / demo123456
+ * Test credentials (from seed scripts/seed.ts):
+ * - Admin: admin@clubos.app / SEED_PASSWORD env variable
+ * - Note: Password is set via SEED_PASSWORD environment variable during seed
  */
 
 const TEST_ADMIN = {
-	email: "admin@demo.club",
-	password: "demo123456",
+	email: "admin@clubos.app",
+	password: process.env.SEED_PASSWORD || "demo123456",
 };
 
 test.describe("Admin Product CRUD", () => {

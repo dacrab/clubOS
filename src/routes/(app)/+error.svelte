@@ -1,13 +1,17 @@
 <script lang="ts">
-	import { page } from "$app/stores";
+	import { page } from "$app/state";
 	import { t } from "$lib/i18n/index.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
+	import Button from "$lib/components/ui/button/button.svelte";
+	import Card from "$lib/components/ui/card/card.svelte";
+	import CardContent from "$lib/components/ui/card/card-content.svelte";
+	import CardHeader from "$lib/components/ui/card/card-header.svelte";
+	import CardTitle from "$lib/components/ui/card/card-title.svelte";
+	import CardDescription from "$lib/components/ui/card/card-description.svelte";
 	import { AlertTriangle, Home, RotateCcw } from "@lucide/svelte";
 
 	const errorInfo = $derived.by(() => {
-		if ($page.status === 404) return { title: t("errors.notFound.title"), desc: t("errors.notFound.description") };
-		if ($page.status === 403 || $page.status === 401) return { title: t("errors.unauthorized.title"), desc: t("errors.unauthorized.description") };
+		if (page.status === 404) return { title: t("errors.notFound.title"), desc: t("errors.notFound.description") };
+		if (page.status === 403 || page.status === 401) return { title: t("errors.unauthorized.title"), desc: t("errors.unauthorized.description") };
 		return { title: t("errors.generic.title"), desc: t("errors.generic.description") };
 	});
 </script>
@@ -22,9 +26,9 @@
 			<CardDescription>{errorInfo.desc}</CardDescription>
 		</CardHeader>
 		<CardContent class="space-y-4">
-			{#if $page.error?.message}
+			{#if page.error?.message}
 				<p class="text-sm text-muted-foreground rounded-lg bg-muted p-3 font-mono">
-					{$page.error.message}
+					{page.error.message}
 				</p>
 			{/if}
 			<div class="flex flex-col sm:flex-row gap-2 justify-center">

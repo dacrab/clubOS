@@ -1,9 +1,7 @@
 {
 	"$schema": "https://unpkg.com/knip@latest/schema.json",
 	"entry": [
-		"src/routes/**/*.{svelte,ts}",
-		"src/lib/**/*.{ts,svelte}",
-		"src/**/*.{test,spec}.ts",
+		"src/**/*.{svelte,ts}",
 		"scripts/**/*.ts",
 		"e2e/**/*.ts"
 	],

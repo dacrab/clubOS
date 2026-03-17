@@ -1,13 +1,11 @@
 import { vi } from "vitest";
 import type { User, Session } from "@supabase/supabase-js";
+import type { MemberRole, SubscriptionStatus } from "$lib/types/database";
 
-type Role = "owner" | "admin" | "manager" | "staff";
-type SubStatus = "trialing" | "active" | "canceled" | "past_due" | "unpaid" | "paused";
-
-export interface MockUser { id: string; email: string; role?: Role }
+export interface MockUser { id: string; email: string; role?: MemberRole }
 export interface MockTenant { id: string; name: string; slug: string }
-export interface MockMembership { userId: string; tenantId: string; facilityId: string | null; role: Role; isPrimary: boolean }
-export interface MockSubscription { tenantId: string; status: SubStatus; trialEnd?: Date; currentPeriodEnd?: Date; stripeCustomerId?: string }
+export interface MockMembership { userId: string; tenantId: string; facilityId: string | null; role: MemberRole; isPrimary: boolean }
+export interface MockSubscription { tenantId: string; status: SubscriptionStatus; trialEnd?: Date; currentPeriodEnd?: Date; stripeCustomerId?: string }
 
 export const generateId = (): string => `test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const futureDate = (days: number): Date => { const d = new Date(); d.setDate(d.getDate() + days); return d; };
@@ -75,6 +73,6 @@ export const scenarios = {
 	unauthenticated: (): SupabaseMockConfig => ({}),
 	needsOnboarding: (): SupabaseMockConfig => ({ user: createMockUser() }),
 	expiredTrial: (): SupabaseMockConfig => { const user = createMockUser({ role: "owner" }), tenant = createMockTenant(); return { user, tenants: [tenant], memberships: [createMockMembership(user.id, tenant.id, { role: "owner", isPrimary: true })], subscriptions: [createMockSubscription(tenant.id, { trialEnd: futureDate(-1), currentPeriodEnd: futureDate(-1) })] }; },
-	activeSubscription: (role: Role = "owner"): SupabaseMockConfig => { const user = createMockUser({ role }), tenant = createMockTenant(); return { user, tenants: [tenant], memberships: [createMockMembership(user.id, tenant.id, { role, isPrimary: true })], subscriptions: [createMockSubscription(tenant.id, { status: "active", currentPeriodEnd: futureDate(30) })] }; },
-	activeTrial: (role: Role = "owner"): SupabaseMockConfig => { const user = createMockUser({ role }), tenant = createMockTenant(); return { user, tenants: [tenant], memberships: [createMockMembership(user.id, tenant.id, { role, isPrimary: true })], subscriptions: [createMockSubscription(tenant.id)] }; },
+	activeSubscription: (role: MemberRole = "owner"): SupabaseMockConfig => { const user = createMockUser({ role }), tenant = createMockTenant(); return { user, tenants: [tenant], memberships: [createMockMembership(user.id, tenant.id, { role, isPrimary: true })], subscriptions: [createMockSubscription(tenant.id, { status: "active", currentPeriodEnd: futureDate(30) })] }; },
+	activeTrial: (role: MemberRole = "owner"): SupabaseMockConfig => { const user = createMockUser({ role }), tenant = createMockTenant(); return { user, tenants: [tenant], memberships: [createMockMembership(user.id, tenant.id, { role, isPrimary: true })], subscriptions: [createMockSubscription(tenant.id)] }; },
 };

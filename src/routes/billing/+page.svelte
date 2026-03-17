@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { toast } from "svelte-sonner";
 	import { t } from "$lib/i18n/index.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { PlanSelector } from "$lib/components/features";
+	import Button from "$lib/components/ui/button/button.svelte";
+	import PlanSelector from "$lib/components/features/plan-selector.svelte";
+	import PublicHeader from "$lib/components/layout/public-header.svelte";
 	import { PLANS, type Plan } from "$lib/config/auth";
 	import { AlertCircle } from "@lucide/svelte";
 
@@ -34,10 +35,7 @@
 </script>
 
 <div class="flex min-h-screen flex-col bg-background">
-	<header class="flex items-center justify-between border-b px-4 py-4">
-		<span class="text-lg font-bold">clubOS</span>
-		<form action="/logout" method="POST"><Button variant="ghost" size="sm" type="submit">{t("auth.logout")}</Button></form>
-	</header>
+	<PublicHeader />
 
 	<main class="flex flex-1 flex-col items-center justify-center p-4">
 		<div class="w-full max-w-4xl">

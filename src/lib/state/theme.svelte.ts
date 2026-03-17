@@ -1,56 +1,51 @@
+import { browser } from "$app/environment";
+
 export type Theme = "light" | "dark" | "system";
 
-const isBrowser = typeof window !== "undefined" && typeof document !== "undefined";
+function createTheme() {
+	let current = $state<Theme>("system");
 
-class ThemeState {
-	current = $state<Theme>("system");
-	
-	constructor() {
-		if (isBrowser) {
-			const stored = localStorage.getItem("theme");
-			if (stored === "light" || stored === "dark" || stored === "system") {
-				this.current = stored;
-			}
-			this.applyTheme();
+	// Read from localStorage on init (browser only)
+	if (browser) {
+		const stored = localStorage.getItem("theme");
+		if (stored === "light" || stored === "dark" || stored === "system") {
+			current = stored;
 		}
 	}
 
-	get isDark(): boolean {
-		if (this.current === "system") {
-			return (
-				isBrowser &&
-				typeof matchMedia === "function" &&
-				matchMedia("(prefers-color-scheme: dark)").matches
-			);
-		}
-		return this.current === "dark";
-	}
-
-	setTheme(theme: Theme): void {
-		this.current = theme;
-		if (isBrowser) {
-			localStorage.setItem("theme", theme);
-			this.applyTheme();
-		}
-	}
-
-	toggle(): void {
-		const newTheme = this.isDark ? "light" : "dark";
-		this.setTheme(newTheme);
-	}
-
-	private applyTheme(): void {
-		if (!isBrowser) return;
-		
-		const root = document.documentElement;
-		const isDark = this.isDark;
-		
-		if (isDark) {
-			root.classList.add("dark");
+	function applyTheme(): void {
+		const isDarkNow = current === "system"
+			? typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches
+			: current === "dark";
+		if (isDarkNow) {
+			document.documentElement.classList.add("dark");
 		} else {
-			root.classList.remove("dark");
+			document.documentElement.classList.remove("dark");
 		}
 	}
+
+	// Apply on first render
+	if (browser) applyTheme();
+
+	return {
+		get current() { return current; },
+		get isDark() {
+			if (current === "system") {
+				return browser && typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches;
+			}
+			return current === "dark";
+		},
+		setTheme(t: Theme): void {
+			current = t;
+			if (browser) {
+				localStorage.setItem("theme", t);
+				applyTheme();
+			}
+		},
+		toggle(): void {
+			this.setTheme(this.isDark ? "light" : "dark");
+		},
+	};
 }
 
-export const theme = new ThemeState();
+export const theme = createTheme();

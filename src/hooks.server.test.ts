@@ -7,14 +7,34 @@ const mockSupabaseClient = vi.fn();
 vi.mock("@supabase/ssr", () => ({ createServerClient: (...args: unknown[]) => mockSupabaseClient(...args) }));
 
 describe("hooks.server", () => {
-	beforeEach(() => { vi.clearAllMocks(); });
+	let resolve: ReturnType<typeof vi.fn>;
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		resolve = vi.fn().mockResolvedValue(new Response());
+	});
 
 	const createEvent = (pathname: string, config = {}): { url: URL; cookies: { get: ReturnType<typeof vi.fn>; set: ReturnType<typeof vi.fn>; delete: ReturnType<typeof vi.fn> }; locals: object; request: Request } => {
 		mockSupabaseClient.mockReturnValue(createSupabaseMock(config));
 		return { url: new URL(`http://localhost${pathname}`), cookies: { get: vi.fn(), set: vi.fn(), delete: vi.fn() }, locals: {}, request: new Request(`http://localhost${pathname}`) };
 	};
-	const resolve = vi.fn().mockResolvedValue(new Response());
 	const runHandle = async (event: ReturnType<typeof createEvent>): Promise<Response> => (await import("./hooks.server")).handle({ event, resolve } as never);
+
+	describe("public routes", () => {
+		it.each(["/", "/signup", "/reset"])("allows access to %s without auth", async (route) => {
+			const response = await runHandle(createEvent(route, scenarios.unauthenticated()));
+			expect(resolve).toHaveBeenCalledOnce();
+			expect(response).toBeInstanceOf(Response);
+		});
+	});
+
+	describe("API routes", () => {
+		it.each(["/api/admin/users", "/api/auth/callback", "/api/test"])("allows access to %s without auth", async (route) => {
+			const response = await runHandle(createEvent(route, scenarios.unauthenticated()));
+			expect(resolve).toHaveBeenCalledOnce();
+			expect(response).toBeInstanceOf(Response);
+		});
+	});
 
 	describe("auth redirects", () => {
 		it.each(["/admin", "/staff", "/secretary"])("redirects unauthenticated from %s to /", async (route) => {
@@ -34,6 +54,23 @@ describe("hooks.server", () => {
 		});
 	});
 
+	describe("session expiry", () => {
+		it("signs out and redirects if session is expired", async () => {
+			const config = scenarios.activeSubscription("admin");
+			const expiredAt = Math.floor(Date.now() / 1000) - 3600;
+			const mock = createSupabaseMock(config);
+			// Override getSession to return expired session, add signOut stub
+			mock.auth.getSession = vi.fn().mockResolvedValue({
+				data: { session: { expires_at: expiredAt, access_token: "x", refresh_token: "y", user: {} } },
+				error: null,
+			});
+			(mock.auth as Record<string, unknown>).signOut = vi.fn().mockResolvedValue({});
+			mockSupabaseClient.mockReturnValue(mock);
+			const event = { url: new URL("http://localhost/admin"), cookies: { get: vi.fn(), set: vi.fn(), delete: vi.fn() }, locals: {}, request: new Request("http://localhost/admin") };
+			await expect(runHandle(event)).rejects.toMatchObject({ location: "/" });
+		});
+	});
+
 	describe("subscription validation", () => {
 		it("redirects to /billing if expired", async () => {
 			await expect(runHandle(createEvent("/admin", scenarios.expiredTrial()))).rejects.toMatchObject({ location: "/billing" });
@@ -48,8 +85,10 @@ describe("hooks.server", () => {
 
 	describe("RBAC - allowed", () => {
 		it.each([["/admin", "owner"], ["/admin", "admin"], ["/secretary", "manager"], ["/staff", "staff"]] as const)("%s allows %s", async (route, role) => {
-			await runHandle(createEvent(route, scenarios.activeSubscription(role)));
-			expect(resolve).toHaveBeenCalled();
+			const freshResolve = vi.fn().mockResolvedValue(new Response());
+			const event = createEvent(route, scenarios.activeSubscription(role));
+			await (await import("./hooks.server")).handle({ event, resolve: freshResolve } as never);
+			expect(freshResolve).toHaveBeenCalledOnce();
 		});
 	});
 

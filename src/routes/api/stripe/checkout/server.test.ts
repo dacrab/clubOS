@@ -59,4 +59,34 @@ describe("POST /api/stripe/checkout", () => {
 		const response = await POST(req({ priceId: "price_test", userId: user.id, email: user.email }, user) as never);
 		expect(response.status).toBe(500);
 	});
+
+	it("returns 400 when priceId is missing", async () => {
+		setupMocks();
+		const user = createMockUser();
+		const { POST } = await import("./+server");
+		const response = await POST(req({ userId: user.id, email: user.email }, user) as never);
+		expect(response.status).toBe(400);
+		const body = await response.json();
+		expect(body.error).toBe("Missing required fields");
+	});
+
+	it("returns 400 when userId is missing", async () => {
+		setupMocks();
+		const user = createMockUser();
+		const { POST } = await import("./+server");
+		const response = await POST(req({ priceId: "price_test", email: user.email }, user) as never);
+		expect(response.status).toBe(400);
+		const body = await response.json();
+		expect(body.error).toBe("Missing required fields");
+	});
+
+	it("returns 400 when email is missing", async () => {
+		setupMocks();
+		const user = createMockUser();
+		const { POST } = await import("./+server");
+		const response = await POST(req({ priceId: "price_test", userId: user.id }, user) as never);
+		expect(response.status).toBe(400);
+		const body = await response.json();
+		expect(body.error).toBe("Missing required fields");
+	});
 });
