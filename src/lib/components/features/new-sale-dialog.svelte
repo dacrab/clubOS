@@ -45,25 +45,26 @@
 	// Use DB full-text search when query exists, otherwise filter by category client-side
 	let searchResults = $state<Product[]>([]);
 
-	async function searchProducts(query: string) {
-		if (!query.trim() || !user.facilityId) {
-			searchResults = [];
-			return;
-		}
-		const { data } = await supabase.rpc("search_products", { facility_uuid: user.facilityId, search_text: query });
-		searchResults = (data as Product[]) ?? [];
-	}
-
-	// Debounced search — timeout is an impl detail, not reactive state
+	// Debounced search with stale-response guard — inlined to avoid stale closure over old fn ref
 	$effect(() => {
-		const q = searchQuery; // track reactive dep
+		const q = searchQuery;
 		let timeout: ReturnType<typeof setTimeout> | null = null;
-		if (q.trim()) {
-			timeout = setTimeout(() => searchProducts(q), 200);
+		let cancelled = false;
+
+		if (q.trim() && user.facilityId) {
+			timeout = setTimeout(async () => {
+				if (cancelled) return;
+				const { data } = await supabase.rpc("search_products", { facility_uuid: user.facilityId, search_text: q });
+				if (!cancelled) searchResults = (data as Product[]) ?? [];
+			}, 200);
 		} else {
 			searchResults = [];
 		}
-		return () => { if (timeout) clearTimeout(timeout); };
+
+		return () => {
+			cancelled = true;
+			if (timeout) clearTimeout(timeout);
+		};
 	});
 
 	const filteredProducts = $derived.by(() => {

@@ -75,10 +75,13 @@
 			tomorrow.setDate(tomorrow.getDate() + 1);
 			const defaultHour = isBirthday ? settings.current.birthday_default_hour : settings.current.football_default_hour;
 			tomorrow.setHours(defaultHour, 0, 0, 0);
+			// Build local datetime string to avoid UTC shift from toISOString()
+			const pad = (n: number) => String(n).padStart(2, "0");
+			const startsAt = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}T${pad(tomorrow.getHours())}:${pad(tomorrow.getMinutes())}`;
 			formData = {
 				customer_name: "",
 				customer_phone: "",
-				starts_at: tomorrow.toISOString().slice(0, 16),
+				starts_at: startsAt,
 				notes: "",
 				status: BOOKING_STATUS.CONFIRMED,
 				num_children: 1,
