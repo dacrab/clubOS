@@ -52,7 +52,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				plan_name: subscription.items?.data?.[0]?.price?.nickname ?? subscription.items?.data?.[0]?.plan?.nickname ?? "Subscription",
 				current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
 				current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-				cancel_at_period_end: subscription.cancel_at_period_end || false,
+				cancel_at_period_end: subscription.cancel_at_period_end,
 				trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
 				trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
 			}, {
