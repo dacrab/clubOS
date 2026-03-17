@@ -8,7 +8,7 @@
 	"project": ["src/**/*.{ts,svelte}", "scripts/**/*.ts", "e2e/**/*.ts"],
 	"ignoreDependencies": ["tailwindcss-animate", "tailwindcss"],
 	"ignoreBinaries": ["supabase"],
-	"ignore": [".svelte-kit/**", "**/$types.d.ts"],
+	"ignore": [],
 	"paths": {
 		"$lib/*": ["src/lib/*"],
 		"$app/*": [".svelte-kit/types/app/*"],
