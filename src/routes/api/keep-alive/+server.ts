@@ -20,25 +20,13 @@ export const GET: RequestHandler = async ({ request }) => {
 	const admin = getSupabaseAdmin();
 	const timestamp = new Date().toISOString();
 
-	// Use upsert to avoid accumulating rows - always updates the same "heartbeat" row
+	// Upsert to avoid accumulating rows — always updates the same "heartbeat" row
 	const { error: upsertError } = await admin
 		.from("keep_alive")
 		.upsert({ name: "heartbeat" }, { onConflict: "name" });
 
 	if (upsertError) {
-		// Return 500 so Vercel cron knows it failed and can alert/retry
 		throw error(500, `Keep-alive upsert failed: ${upsertError.message}`);
-	}
-
-	// Verify the row exists with a read operation
-	const { data, error: selectError } = await admin
-		.from("keep_alive")
-		.select("name")
-		.eq("name", "heartbeat")
-		.single();
-
-	if (selectError || !data) {
-		throw error(500, `Keep-alive verification failed: ${selectError?.message ?? "No data returned"}`);
 	}
 
 	return json(

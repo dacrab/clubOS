@@ -10,19 +10,12 @@
 	};
 
 	let { value = $bindable(""), onValueChange, disabled = false, children }: Props = $props();
-
-	function handleChange(newValue: string | undefined) {
-		if (newValue !== undefined) {
-			value = newValue;
-			onValueChange?.(newValue);
-		}
-	}
 </script>
 
-<SelectPrimitive.Root 
+<SelectPrimitive.Root
 	type="single"
 	{value}
-	onValueChange={handleChange}
+	onValueChange={(v) => { if (v !== undefined) { value = v; onValueChange?.(v); } }}
 	{disabled}
 >
 	{@render children?.()}

@@ -2,16 +2,14 @@
 	import { i18n, t } from "$lib/i18n/index.svelte";
 	import { session } from "$lib/state/session.svelte";
 	import { theme } from "$lib/state/theme.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import {
-		DropdownMenu,
-		DropdownMenuTrigger,
-		DropdownMenuContent,
-		DropdownMenuItem,
-		DropdownMenuSeparator,
-		DropdownMenuLabel,
-	} from "$lib/components/ui/dropdown-menu";
-	import { Badge } from "$lib/components/ui/badge";
+	import Button from "$lib/components/ui/button/button.svelte";
+	import DropdownMenu from "$lib/components/ui/dropdown-menu/dropdown-menu.svelte";
+	import DropdownMenuTrigger from "$lib/components/ui/dropdown-menu/dropdown-menu-trigger.svelte";
+	import DropdownMenuContent from "$lib/components/ui/dropdown-menu/dropdown-menu-content.svelte";
+	import DropdownMenuItem from "$lib/components/ui/dropdown-menu/dropdown-menu-item.svelte";
+	import DropdownMenuSeparator from "$lib/components/ui/dropdown-menu/dropdown-menu-separator.svelte";
+	import DropdownMenuLabel from "$lib/components/ui/dropdown-menu/dropdown-menu-label.svelte";
+	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import { Sun, Moon, Globe, User, LogOut } from "@lucide/svelte";
 	import { getRoleBadgeVariant, type MemberRole } from "$lib/types/database";
 

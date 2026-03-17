@@ -5,7 +5,7 @@ test.describe("Login Flow", () => {
 		await page.goto("/");
 
 		// Check page title and form elements
-		await expect(page.getByRole("heading", { name: /welcome back/i })).toBeVisible();
+		await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
 		await expect(page.getByLabel(/email/i)).toBeVisible();
 		await expect(page.getByLabel(/password/i)).toBeVisible();
 		await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
@@ -32,7 +32,7 @@ test.describe("Login Flow", () => {
 	test("has link to signup page", async ({ page }) => {
 		await page.goto("/");
 
-		const signupLink = page.getByRole("link", { name: /sign up/i });
+		const signupLink = page.getByRole("link", { name: /sign up now/i });
 		await expect(signupLink).toBeVisible();
 		await signupLink.click();
 

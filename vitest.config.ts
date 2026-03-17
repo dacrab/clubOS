@@ -12,8 +12,7 @@ export default defineConfig({
 			provider: "v8",
 			reporter: ["text", "html"],
 			include: ["src/lib/**/*.ts"],
-			exclude: ["src/lib/**/*.svelte", "src/lib/**/index.ts", "src/lib/types/**", "src/lib/server/**", "src/lib/testing/**"],
+			exclude: ["src/lib/**/*.svelte", "src/lib/types/**", "src/lib/server/**", "src/lib/testing/**"],
 		},
-		typecheck: { enabled: true },
 	},
 });

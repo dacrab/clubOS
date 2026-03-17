@@ -2,16 +2,20 @@
 	import { t } from "$lib/i18n/index.svelte";
 	import { toast } from "svelte-sonner";
 	import { invalidateAll } from "$app/navigation";
-	import { PageHeader, EmptyState } from "$lib/components/layout";
-	import { Button } from "$lib/components/ui/button";
+	import PageHeader from "$lib/components/layout/page-header.svelte";
+	import EmptyState from "$lib/components/layout/empty-state.svelte";
+	import Button from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import Textarea from "$lib/components/ui/textarea/textarea.svelte";
-	import { Badge } from "$lib/components/ui/badge";
-	import { Card, CardContent } from "$lib/components/ui/card";
+	import Badge from "$lib/components/ui/badge/badge.svelte";
+	import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
 	import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
-	import { Select, SelectTrigger, SelectContent, SelectItem } from "$lib/components/ui/select";
-	import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table";
+	import Select from "$lib/components/ui/select/select.svelte";
+	import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
+	import SelectContent from "$lib/components/ui/select/select-content.svelte";
+	import SelectItem from "$lib/components/ui/select/select-item.svelte";
+	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
 	import { supabase } from "$lib/utils/supabase";
 	import DatePicker from "$lib/components/ui/date-picker/date-time-picker.svelte";
 	import { fmtDate } from "$lib/utils/format";
@@ -66,14 +70,18 @@
 				num_players: details.num_players ?? 10,
 			};
 		} else {
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity -- not reactive state, just a temp computation value
 			const tomorrow = new Date();
 			tomorrow.setDate(tomorrow.getDate() + 1);
 			const defaultHour = isBirthday ? settings.current.birthday_default_hour : settings.current.football_default_hour;
 			tomorrow.setHours(defaultHour, 0, 0, 0);
+			// Build local datetime string to avoid UTC shift from toISOString()
+			const pad = (n: number) => String(n).padStart(2, "0");
+			const startsAt = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}T${pad(tomorrow.getHours())}:${pad(tomorrow.getMinutes())}`;
 			formData = {
 				customer_name: "",
 				customer_phone: "",
-				starts_at: tomorrow.toISOString().slice(0, 16),
+				starts_at: startsAt,
 				notes: "",
 				status: BOOKING_STATUS.CONFIRMED,
 				num_children: 1,

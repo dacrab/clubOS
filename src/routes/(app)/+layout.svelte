@@ -1,18 +1,15 @@
 <script lang="ts">
-	import { Sidebar, Header } from "$lib/components/layout";
+	import Sidebar from "$lib/components/layout/sidebar.svelte";
+	import Header from "$lib/components/layout/header.svelte";
 	import { session } from "$lib/state/session.svelte";
 	import { settings } from "$lib/state/settings.svelte";
 
 	const { data, children } = $props();
 
-	// Initialize session and settings from server data
+	// Sync server data into client stores on every navigation
 	$effect(() => {
-		if (data.user) {
-			session.setUser(data.user);
-		}
-		if (data.settings) {
-			settings.setSettings(data.settings);
-		}
+		session.setUser(data.user);
+		if (data.settings) settings.setSettings(data.settings);
 	});
 </script>
 

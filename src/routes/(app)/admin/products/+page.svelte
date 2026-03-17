@@ -1,15 +1,19 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
 	import { invalidateAll } from "$app/navigation";
-	import { PageHeader, EmptyState } from "$lib/components/layout";
-	import { Button } from "$lib/components/ui/button";
+	import PageHeader from "$lib/components/layout/page-header.svelte";
+	import EmptyState from "$lib/components/layout/empty-state.svelte";
+	import Button from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
-	import { Badge } from "$lib/components/ui/badge";
-	import { Card } from "$lib/components/ui/card";
+	import Badge from "$lib/components/ui/badge/badge.svelte";
+	import Card from "$lib/components/ui/card/card.svelte";
 	import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
-	import { Select, SelectTrigger, SelectContent, SelectItem } from "$lib/components/ui/select";
-	import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table";
+	import Select from "$lib/components/ui/select/select.svelte";
+	import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
+	import SelectContent from "$lib/components/ui/select/select-content.svelte";
+	import SelectItem from "$lib/components/ui/select/select-item.svelte";
+	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
 	import { createCrud } from "$lib/state/crud.svelte";
 	import { products, categories } from "$lib/services/db";
 	import { fmtCurrency } from "$lib/utils/format";
@@ -24,7 +28,6 @@
 	let editingCategory = $state<CategoryPartial | null>(null);
 	let categoryForm = $state({ name: "", description: "", parent_id: "" });
 	let categorySaving = $state(false);
-
 
 	const crud = createCrud<Product, ProductForm>({
 		toForm: (p) => p

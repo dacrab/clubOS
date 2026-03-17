@@ -22,8 +22,6 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "^10",
-		"@internationalized/date": "^3.12.0",
-		"@lucide/svelte": "^0.577.0",
 		"@playwright/test": "^1.58.2",
 		"@sveltejs/adapter-vercel": "^6.3.3",
 		"@sveltejs/kit": "^2.55.0",
@@ -32,8 +30,6 @@
 		"@types/node": "^25.5.0",
 		"@vitest/coverage-v8": "^4.1.0",
 		"@vitest/eslint-plugin": "^1.6.12",
-		"bits-ui": "^2.16.3",
-		"clsx": "^2.1.1",
 		"eslint": "^10",
 		"eslint-plugin-svelte": "^3.15.2",
 		"globals": "^17.4.0",
@@ -41,7 +37,6 @@
 		"knip": "^5.86.0",
 		"svelte": "^5.53.12",
 		"svelte-check": "^4.4.5",
-		"tailwind-merge": "^3.5.0",
 		"tailwindcss": "^4.2.1",
 		"tailwindcss-animate": "^1.0.7",
 		"typescript": "^5.9.3",
@@ -50,10 +45,14 @@
 		"vitest": "^4.1.0"
 	},
 	"dependencies": {
+		"@internationalized/date": "^3.12.0",
+		"@lucide/svelte": "^0.577.0",
 		"@supabase/ssr": "^0.9.0",
 		"@supabase/supabase-js": "^2.99.1",
 		"@vercel/analytics": "^2.0.1",
-		"svelte-sonner": "^1.1.0"
+		"bits-ui": "^2.16.3",
+		"svelte-sonner": "^1.1.0",
+		"tailwind-merge": "^3.5.0"
 	},
 	"overrides": {
 		"cookie": ">=0.7.0"

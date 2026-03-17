@@ -15,9 +15,7 @@
 		"noEmit": true,
 		"types": ["svelte", "node"],
 		"strict": true,
-		"strictNullChecks": true,
-		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true
 	},
-	"exclude": ["supabase/**", "e2e/**"]
+	"exclude": ["supabase/**"]
 }

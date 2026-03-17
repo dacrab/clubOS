@@ -2,13 +2,11 @@
 	import { supabase } from "$lib/utils/supabase";
 	import { toast } from "svelte-sonner";
 	import { t } from "$lib/i18n/index.svelte";
-	import { Button } from "$lib/components/ui/button";
+	import Button from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
-	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card";
-	import { PublicHeader } from "$lib/components/layout";
-	import { getHomeForRole } from "$lib/config/auth";
-
+	import Card, { CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
+	import PublicHeader from "$lib/components/layout/public-header.svelte";
 	let email = $state("");
 	let password = $state("");
 	let loading = $state(false);
@@ -27,15 +25,8 @@
 			}
 
 			toast.success(t("auth.welcomeBack"));
-			const { data: membership } = await supabase
-				.from("memberships")
-				.select("role")
-				.eq("user_id", authData.user.id)
-				.order("is_primary", { ascending: false })
-				.limit(1)
-				.single();
-
-			window.location.href = membership ? getHomeForRole(membership.role) : "/onboarding";
+			// Let server-side hooks handle role-based redirect
+			window.location.href = "/";
 		} catch {
 			toast.error(t("common.error"));
 			loading = false;

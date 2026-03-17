@@ -1,4 +1,4 @@
-import { vi, beforeEach, afterEach } from "vitest";
+import { vi, beforeEach } from "vitest";
 
 vi.mock("$app/environment", () => ({ browser: true, dev: true, building: false, version: "test" }));
 
@@ -14,8 +14,6 @@ vi.mock("$app/navigation", () => ({
 	replaceState: vi.fn(),
 }));
 
-vi.stubGlobal("$state", (<T>(value: T): T => value) as <T>(value: T) => T);
-
 vi.mock("$lib/state/settings.svelte", () => ({
 	settings: {
 		current: { currency_code: "EUR", date_format: "DD/MM/YYYY", time_format: "24h" },
@@ -25,46 +23,37 @@ vi.mock("$lib/state/settings.svelte", () => ({
 	},
 }));
 
-const createStorageMock = (): Storage => {
-	let store: Record<string, string> = {};
-	return {
-		getItem: (key: string): string | null => store[key] ?? null,
-		setItem: (key: string, value: string): void => { store[key] = String(value); },
-		removeItem: (key: string): void => { store = Object.fromEntries(Object.entries(store).filter(([k]) => k !== key)); },
-		clear: (): void => { store = {}; },
-		get length(): number { return Object.keys(store).length; },
-		key: (index: number): string | null => Object.keys(store)[index] ?? null,
-	};
-};
+// localStorage: use a simple Map — no class ceremony needed
+const localStore = new Map<string, string>();
+vi.stubGlobal("localStorage", {
+	getItem: (k: string) => localStore.get(k) ?? null,
+	setItem: (k: string, v: string) => localStore.set(k, String(v)),
+	removeItem: (k: string) => localStore.delete(k),
+	clear: () => localStore.clear(),
+	key: (i: number) => Array.from(localStore.keys())[i] ?? null,
+	get length() { return localStore.size; },
+});
 
-const localStorageMock = createStorageMock();
-vi.stubGlobal("localStorage", localStorageMock);
-
+// document.documentElement stubs needed by theme + i18n
 vi.stubGlobal("document", {
-	...document,
 	documentElement: {
 		setAttribute: vi.fn(),
 		getAttribute: vi.fn().mockReturnValue(null),
 		classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn(), contains: vi.fn().mockReturnValue(false) },
-		style: {},
 	},
-	cookie: "",
-	querySelector: vi.fn().mockReturnValue(null),
-	querySelectorAll: vi.fn().mockReturnValue([]),
-	getElementById: vi.fn().mockReturnValue(null),
-	createElement: vi.fn().mockReturnValue({ setAttribute: vi.fn(), appendChild: vi.fn(), style: {} }),
 });
 
+// matchMedia stub needed by theme (system preference detection)
 vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
 	matches: false,
 	media: query,
 	onchange: null,
-	addListener: vi.fn(),
-	removeListener: vi.fn(),
 	addEventListener: vi.fn(),
 	removeEventListener: vi.fn(),
 	dispatchEvent: vi.fn(),
 })));
 
-beforeEach(() => { localStorageMock.clear(); vi.clearAllMocks(); });
-afterEach(() => { vi.restoreAllMocks(); });
+beforeEach(() => {
+	localStore.clear();
+	vi.clearAllMocks();
+});

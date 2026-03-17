@@ -3,20 +3,26 @@ import { DEFAULT_SETTINGS, type TenantSettings } from "$lib/config/settings";
 
 export type { TenantSettings };
 
-class SettingsState {
-	current = $state<TenantSettings>({ ...DEFAULT_SETTINGS });
+function createSettings(): {
+	readonly current: TenantSettings;
+	readonly formatSettings: FormatSettings;
+	setSettings(newSettings: Partial<TenantSettings>): void;
+} {
+	let current = $state<TenantSettings>({ ...DEFAULT_SETTINGS });
 
-	setSettings(newSettings: Partial<TenantSettings>): void {
-		this.current = { ...DEFAULT_SETTINGS, ...newSettings };
-	}
-
-	get formatSettings(): FormatSettings {
-		return {
-			date_format: this.current.date_format,
-			time_format: this.current.time_format,
-			currency_code: this.current.currency_code,
-		};
-	}
+	return {
+		get current() { return current; },
+		get formatSettings(): FormatSettings {
+			return {
+				date_format: current.date_format,
+				time_format: current.time_format,
+				currency_code: current.currency_code,
+			};
+		},
+		setSettings(newSettings: Partial<TenantSettings>): void {
+			current = { ...DEFAULT_SETTINGS, ...newSettings };
+		},
+	};
 }
 
-export const settings = new SettingsState();
+export const settings = createSettings();

@@ -25,8 +25,11 @@ export function formatCurrency(value: number, s?: FormatSettings | null): string
 	return new Intl.NumberFormat(currency === "USD" ? "en-US" : currency === "GBP" ? "en-GB" : "de-DE", { style: "currency", currency }).format(value);
 }
 
-export function getCurrencySymbol(code?: CurrencyCodeType): string {
-	return code === "USD" ? "$" : code === "GBP" ? "£" : "€";
+const CURRENCY_SYMBOLS: Record<string, string> = {
+	USD: "$", GBP: "£", CHF: "CHF", PLN: "zł", CZK: "Kč", SEK: "kr", NOK: "kr", DKK: "kr",
+};
+export function getCurrencySymbol(code?: CurrencyCodeType | string): string {
+	return code ? (CURRENCY_SYMBOLS[code] ?? "€") : "€";
 }
 
 export const fmtDate = (date: string | Date, includeTime = true): string => formatDate(date, settings.formatSettings, includeTime);

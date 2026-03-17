@@ -58,4 +58,33 @@ describe("POST /api/onboarding/complete", () => {
 		const trialEnd = new Date(subInsert.mock.calls[0][0].trial_end);
 		expect(Math.round((trialEnd.getTime() - Date.now()) / 86400000)).toBe(14);
 	});
+
+	it("returns 401 when user is not authenticated", async () => {
+		const response = await POST({ request: createMockRequest({ method: "POST", body: { tenant: { name: "Club" }, facility: { name: "Main" } } }), locals: createMockLocals({}) } as never);
+		expect(response.status).toBe(401);
+		const body = await response.json();
+		expect(body.error).toBe("Unauthorized");
+	});
+
+	it("returns 400 when tenant.name is missing", async () => {
+		const response = await POST(req({ tenant: { slug: "club" }, facility: { name: "Main" } }) as never);
+		expect(response.status).toBe(400);
+		const body = await response.json();
+		expect(body.error).toBe("Missing required fields");
+	});
+
+	it("returns 400 when facility.name is missing", async () => {
+		const response = await POST(req({ tenant: { name: "Club" }, facility: { address: "123 Main St" } }) as never);
+		expect(response.status).toBe(400);
+		const body = await response.json();
+		expect(body.error).toBe("Missing required fields");
+	});
+
+	it("returns 500 when tenant creation fails", async () => {
+		mockTables({ tenants: { insert: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: { message: "Database error" } }) }) }) } });
+		const response = await POST(req({ tenant: { name: "Club" }, facility: { name: "Main" } }) as never);
+		expect(response.status).toBe(500);
+		const body = await response.json();
+		expect(body.error).toBeDefined();
+	});
 });

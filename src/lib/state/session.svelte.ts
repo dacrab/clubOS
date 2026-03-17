@@ -1,35 +1,34 @@
-/**
- * Session State Management
- */
+import type { SessionUser } from "$lib/types/database";
 
-import type { MemberRole } from "$lib/types/database";
+export type { SessionUser };
 
-export type SessionUser = {
-	id: string;
-	email: string;
-	username: string;
-	role: MemberRole;
-	tenantId: string | null;
-	facilityId: string | null;
-};
+function createSession(): {
+	readonly user: SessionUser | null;
+	readonly loading: boolean;
+	readonly initialized: boolean;
+	readonly isAuthenticated: boolean;
+	setUser(u: SessionUser | null): void;
+	clear(): void;
+} {
+	let user = $state<SessionUser | null>(null);
+	let loading = $state(true);
+	let initialized = $state(false);
 
-class SessionState {
-	user = $state<SessionUser | null>(null);
-	loading = $state(true);
-	initialized = $state(false);
-
-	get isAuthenticated(): boolean { return this.user !== null; }
-
-	setUser(user: SessionUser | null): void {
-		this.user = user;
-		this.loading = false;
-		this.initialized = true;
-	}
-
-	clear(): void {
-		this.user = null;
-		this.loading = false;
-	}
+	return {
+		get user() { return user; },
+		get loading() { return loading; },
+		get initialized() { return initialized; },
+		get isAuthenticated() { return user !== null; },
+		setUser(u: SessionUser | null): void {
+			user = u;
+			loading = false;
+			initialized = true;
+		},
+		clear(): void {
+			user = null;
+			loading = false;
+		},
+	};
 }
 
-export const session = new SessionState();
+export const session = createSession();

@@ -87,7 +87,7 @@ CREATE TABLE public.products (
   name text NOT NULL,
   description text,
   price numeric(10,2) NOT NULL DEFAULT 0 CHECK (price >= 0),
-  stock_quantity integer NOT NULL DEFAULT 0 CHECK (stock_quantity >= 0),
+  stock_quantity integer NOT NULL DEFAULT 0, -- no CHECK: negative_stock_allowed setting controls this at app level
   track_inventory boolean NOT NULL DEFAULT true,
   image_url text,
   search_vector tsvector,

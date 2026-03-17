@@ -31,22 +31,6 @@ export const USER_ROLE = {
 
 export type UserRoleValue = (typeof USER_ROLE)[keyof typeof USER_ROLE];
 
-// Plan tiers
-export const PLAN_TIER = {
-	FREE: "free",
-	PRO: "pro",
-	ENTERPRISE: "enterprise",
-} as const;
-
-export type PlanTierValue = (typeof PLAN_TIER)[keyof typeof PLAN_TIER];
-
-// Order/payment related
-export const PAYMENT_STATUS = {
-	PENDING: "pending",
-	COMPLETED: "completed",
-	REFUNDED: "refunded",
-} as const;
-
 // Stock status thresholds
 export const STOCK_STATUS = {
 	OUT: 0,

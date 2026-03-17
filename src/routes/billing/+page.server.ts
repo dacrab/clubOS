@@ -1,12 +1,11 @@
-import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const { user, supabase } = locals;
 
-	if (!user) {
-		throw redirect(307, "/");
-	}
+	// hooks.server.ts guarantees user is set for non-public routes,
+	// but billing is in authOnlyRoutes so user may be null here — guard needed
+	if (!user) return { user: null, tenantId: null, subscription: null };
 
 	const { data: membership } = await supabase
 		.from("memberships")

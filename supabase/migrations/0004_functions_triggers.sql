@@ -72,36 +72,60 @@ $$;
 
 -- RPC: create order atomically
 CREATE FUNCTION public.create_order(
-  p_facility_id uuid, p_session_id uuid, p_user_id uuid, p_items jsonb, 
+  p_facility_id uuid, p_session_id uuid, p_user_id uuid, p_items jsonb,
   p_coupon_count integer DEFAULT 0, p_coupon_value numeric DEFAULT 0.50
 ) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   v_order_id uuid;
-  v_subtotal numeric(10,2) := 0;
+  v_subtotal numeric(10,2);
   v_discount numeric(10,2);
   v_total numeric(10,2);
-  v_item record;
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM register_sessions WHERE id = p_session_id AND facility_id = p_facility_id AND closed_at IS NULL) THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM register_sessions
+    WHERE id = p_session_id AND facility_id = p_facility_id AND closed_at IS NULL
+  ) THEN
     RETURN jsonb_build_object('error', 'No active register session');
   END IF;
 
-  FOR v_item IN 
-    SELECT i.*, p.name, p.stock_quantity, p.track_inventory
+  -- Parse items once into a CTE, join products, validate stock and compute subtotal in one pass
+  WITH items AS (
+    SELECT
+      i.product_id, i.quantity, i.unit_price,
+      COALESCE(i.is_treat, false) AS is_treat,
+      p.name AS product_name,
+      p.track_inventory,
+      p.stock_quantity
+    FROM jsonb_to_recordset(p_items)
+      AS i(product_id uuid, quantity int, unit_price numeric, is_treat boolean)
+    JOIN products p ON p.id = i.product_id AND p.facility_id = p_facility_id
+  )
+  SELECT
+    SUM(CASE WHEN NOT is_treat THEN unit_price * quantity ELSE 0 END)
+  INTO v_subtotal
+  FROM items;
+
+  -- Stock & existence validation
+  IF EXISTS (
+    SELECT 1
+    FROM jsonb_to_recordset(p_items) AS i(product_id uuid, quantity int, unit_price numeric, is_treat boolean)
+    LEFT JOIN products p ON p.id = i.product_id AND p.facility_id = p_facility_id
+    WHERE p.id IS NULL
+  ) THEN
+    RETURN jsonb_build_object('error', 'Product not found');
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
     FROM jsonb_to_recordset(p_items) AS i(product_id uuid, quantity int, unit_price numeric, is_treat boolean)
     JOIN products p ON p.id = i.product_id AND p.facility_id = p_facility_id
-  LOOP
-    IF v_item.name IS NULL THEN RETURN jsonb_build_object('error', 'Product not found'); END IF;
-    IF v_item.track_inventory AND v_item.stock_quantity < v_item.quantity THEN
-      RETURN jsonb_build_object('error', 'Insufficient stock for: ' || v_item.name);
-    END IF;
-    IF NOT COALESCE(v_item.is_treat, false) THEN
-      v_subtotal := v_subtotal + v_item.unit_price * v_item.quantity;
-    END IF;
-  END LOOP;
+    WHERE p.track_inventory AND p.stock_quantity < i.quantity
+  ) THEN
+    RETURN jsonb_build_object('error', 'Insufficient stock');
+  END IF;
 
   v_discount := p_coupon_count * p_coupon_value;
-  v_total := GREATEST(0, v_subtotal - v_discount);
+  v_total    := GREATEST(0, v_subtotal - v_discount);
 
   UPDATE register_sessions SET opened_at = now() WHERE id = p_session_id AND opened_at IS NULL;
 
@@ -109,14 +133,26 @@ BEGIN
   VALUES (p_facility_id, p_session_id, v_subtotal, v_discount, v_total, p_coupon_count, p_user_id)
   RETURNING id INTO v_order_id;
 
+  -- Single insert from the already-parsed recordset
   INSERT INTO order_items (order_id, product_id, product_name, quantity, unit_price, line_total, is_treat)
-  SELECT v_order_id, i.product_id, p.name, i.quantity, i.unit_price,
+  SELECT
+    v_order_id,
+    i.product_id,
+    p.name,
+    i.quantity,
+    i.unit_price,
     CASE WHEN COALESCE(i.is_treat, false) THEN 0 ELSE i.unit_price * i.quantity END,
     COALESCE(i.is_treat, false)
-  FROM jsonb_to_recordset(p_items) AS i(product_id uuid, quantity int, unit_price numeric, is_treat boolean)
+  FROM jsonb_to_recordset(p_items)
+    AS i(product_id uuid, quantity int, unit_price numeric, is_treat boolean)
   JOIN products p ON p.id = i.product_id;
 
-  RETURN jsonb_build_object('id', v_order_id, 'subtotal', v_subtotal, 'discount_amount', v_discount, 'total_amount', v_total);
+  RETURN jsonb_build_object(
+    'id', v_order_id,
+    'subtotal', v_subtotal,
+    'discount_amount', v_discount,
+    'total_amount', v_total
+  );
 END;
 $$;
 
@@ -130,22 +166,36 @@ DECLARE
   v_summary jsonb;
 BEGIN
   SELECT * INTO v_session FROM register_sessions WHERE id = p_session_id AND closed_at IS NULL;
-  IF v_session IS NULL THEN RETURN jsonb_build_object('error', 'Session not found or already closed'); END IF;
+  IF v_session IS NULL THEN
+    RETURN jsonb_build_object('error', 'Session not found or already closed');
+  END IF;
 
-  SELECT COALESCE(SUM(total_amount), 0) + v_session.opening_cash INTO v_expected FROM orders WHERE session_id = p_session_id;
+  -- Single pass over orders: compute expected cash AND summary together
+  SELECT
+    COALESCE(SUM(total_amount), 0) + v_session.opening_cash,
+    jsonb_build_object(
+      'orders_count',    COUNT(*),
+      'total_sales',     COALESCE(SUM(total_amount), 0),
+      'total_discount',  COALESCE(SUM(discount_amount), 0),
+      'coupons_used',    COALESCE(SUM(coupon_count), 0),
+      'cash_variance',   p_closing_cash - (COALESCE(SUM(total_amount), 0) + v_session.opening_cash)
+    )
+  INTO v_expected, v_summary
+  FROM orders
+  WHERE session_id = p_session_id;
 
-  SELECT jsonb_build_object(
-    'orders_count', COUNT(*), 'total_sales', COALESCE(SUM(total_amount), 0),
-    'total_discount', COALESCE(SUM(discount_amount), 0), 'coupons_used', COALESCE(SUM(coupon_count), 0),
-    'cash_variance', p_closing_cash - v_expected
-  ) INTO v_summary FROM orders WHERE session_id = p_session_id;
-
-  UPDATE register_sessions 
-  SET closed_at = now(), closed_by = p_user_id, closing_cash = p_closing_cash, 
+  UPDATE register_sessions
+  SET closed_at = now(), closed_by = p_user_id, closing_cash = p_closing_cash,
       expected_cash = v_expected, notes = p_notes, summary = v_summary
   WHERE id = p_session_id;
 
-  RETURN jsonb_build_object('id', p_session_id, 'expected_cash', v_expected, 'closing_cash', p_closing_cash, 'variance', p_closing_cash - v_expected, 'summary', v_summary);
+  RETURN jsonb_build_object(
+    'id', p_session_id,
+    'expected_cash', v_expected,
+    'closing_cash', p_closing_cash,
+    'variance', p_closing_cash - v_expected,
+    'summary', v_summary
+  );
 END;
 $$;
 

@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { i18n } from "$lib/i18n/index.svelte";
 	import { theme } from "$lib/state/theme.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "$lib/components/ui/dropdown-menu";
+	import Button from "$lib/components/ui/button/button.svelte";
+	import DropdownMenu from "$lib/components/ui/dropdown-menu/dropdown-menu.svelte";
+	import DropdownMenuTrigger from "$lib/components/ui/dropdown-menu/dropdown-menu-trigger.svelte";
+	import DropdownMenuContent from "$lib/components/ui/dropdown-menu/dropdown-menu-content.svelte";
+	import DropdownMenuItem from "$lib/components/ui/dropdown-menu/dropdown-menu-item.svelte";
 	import { Sun, Moon, Globe } from "@lucide/svelte";
 
 	type Props = { showLogo?: boolean };

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card";
+	import Button from "$lib/components/ui/button/button.svelte";
+	import Card, { CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
 	import { PLANS, type Plan } from "$lib/config/auth";
 	import { Building2, Users, Zap, Check, Loader2 } from "@lucide/svelte";
 

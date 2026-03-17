@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { BookingPage } from "$lib/components/features";
+	import BookingPage from "$lib/components/features/booking-page.svelte";
 	import { Cake, Dribbble, Calendar, MoreHorizontal } from "@lucide/svelte";
 	import { BOOKING_TYPE, type BookingTypeValue } from "$lib/constants";
 

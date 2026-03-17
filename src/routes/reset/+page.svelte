@@ -3,10 +3,10 @@
 	import { supabase } from "$lib/utils/supabase";
 	import { toast } from "svelte-sonner";
 	import { t } from "$lib/i18n/index.svelte";
-	import { Button } from "$lib/components/ui/button";
+	import Button from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
-	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
+	import Card, { CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card/card.svelte";
 
 	let password = $state("");
 	let confirmPassword = $state("");

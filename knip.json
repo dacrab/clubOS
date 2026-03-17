@@ -1,16 +1,14 @@
 {
 	"$schema": "https://unpkg.com/knip@latest/schema.json",
 	"entry": [
-		"src/routes/**/*.{svelte,ts}",
-		"src/lib/**/*.{ts,svelte}",
-		"src/**/*.{test,spec}.ts",
+		"src/**/*.{svelte,ts}",
 		"scripts/**/*.ts",
 		"e2e/**/*.ts"
 	],
 	"project": ["src/**/*.{ts,svelte}", "scripts/**/*.ts", "e2e/**/*.ts"],
 	"ignoreDependencies": ["tailwindcss-animate", "tailwindcss"],
 	"ignoreBinaries": ["supabase"],
-	"ignore": [".svelte-kit/**", "**/$types.d.ts"],
+	"ignore": [],
 	"paths": {
 		"$lib/*": ["src/lib/*"],
 		"$app/*": [".svelte-kit/types/app/*"],

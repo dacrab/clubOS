@@ -3,7 +3,7 @@
 	import { cn } from "$lib/utils/cn";
 	import { t } from "$lib/i18n/index.svelte";
 	import { session } from "$lib/state/session.svelte";
-	import { Button } from "$lib/components/ui/button";
+	import Button from "$lib/components/ui/button/button.svelte";
 	import Separator from "$lib/components/ui/separator/separator.svelte";
 	import { LayoutDashboard, Package, ShoppingCart, DollarSign, Users, Settings, Dribbble, Cake, ChevronLeft, ChevronRight, LogOut } from "@lucide/svelte";
 	import type { MemberRole } from "$lib/types/database";

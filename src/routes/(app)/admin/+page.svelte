@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
 	import { fmtCurrency, currentCurrencySymbol } from "$lib/utils/format";
-	import { PageHeader } from "$lib/components/layout";
-	import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
-	import { Badge } from "$lib/components/ui/badge";
-	import { Button } from "$lib/components/ui/button";
-	import { NewSaleDialog, RecentOrders } from "$lib/components/features";
+	import PageHeader from "$lib/components/layout/page-header.svelte";
+	import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
+	import Badge from "$lib/components/ui/badge/badge.svelte";
+	import Button from "$lib/components/ui/button/button.svelte";
+	import NewSaleDialog from "$lib/components/features/new-sale-dialog.svelte";
+	import RecentOrders from "$lib/components/features/recent-orders.svelte";
 	import { DollarSign, ShoppingCart, Package, TrendingUp, Plus, BarChart3, Star, Layers } from "@lucide/svelte";
 
 	const { data } = $props();
