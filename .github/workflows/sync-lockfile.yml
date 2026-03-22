@@ -20,12 +20,8 @@ jobs:
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
-
-      - uses: actions/cache@v4
         with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-          restore-keys: ${{ runner.os }}-bun-
+          cache: true
 
       - run: bun install
 
