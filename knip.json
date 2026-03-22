@@ -5,13 +5,31 @@
 		"scripts/**/*.ts",
 		"e2e/**/*.ts"
 	],
-	"project": ["src/**/*.{ts,svelte}", "scripts/**/*.ts", "e2e/**/*.ts"],
-	"ignoreDependencies": ["tailwindcss-animate", "tailwindcss"],
-	"ignoreBinaries": ["supabase"],
+	"project": [
+		"src/**/*.{ts,svelte}",
+		"scripts/**/*.ts",
+		"e2e/**/*.ts"
+	],
+	"ignoreDependencies": [
+		"tailwindcss-animate",
+		"tailwindcss"
+	],
+	"ignoreBinaries": [
+		"supabase"
+	],
 	"ignore": [],
 	"paths": {
-		"$lib/*": ["src/lib/*"],
-		"$app/*": [".svelte-kit/types/app/*"],
-		"$env/*": [".svelte-kit/ambient.d.ts"]
-	}
+		"$lib/*": [
+			"src/lib/*"
+		],
+		"$app/*": [
+			".svelte-kit/types/app/*"
+		],
+		"$env/*": [
+			".svelte-kit/ambient.d.ts"
+		]
+	},
+	"ignoreUnresolved": [
+		"\\.\\/\\$types"
+	]
 }
