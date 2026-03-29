@@ -29,3 +29,6 @@ supabase/.branches/
 .idea/
 *.swp
 package-lock.json
+# IDE
+.vscode/
+
