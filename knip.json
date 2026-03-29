@@ -29,7 +29,5 @@
 			".svelte-kit/ambient.d.ts"
 		]
 	},
-	"ignoreUnresolved": [
-		"\\.\\/\\$types"
-	]
+	"ignoreUnresolved": []
 }
