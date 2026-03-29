@@ -1,8 +1,9 @@
 {
-	"crons": [
-		{
-			"path": "/api/keep-alive",
-			"schedule": "0 8 * * *"
-		}
-	]
+  "crons": [
+    {
+      "path": "/api/keep-alive",
+      "schedule": "0 8 * * *"
+    }
+  ],
+  "ignoreCommand": "[ \"$VERCEL_GIT_COMMIT_AUTHOR_LOGIN\" = \"dependabot[bot]\" ] && exit 0 || exit 1"
 }
