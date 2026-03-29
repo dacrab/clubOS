@@ -1,8 +1,13 @@
 name: Auto-merge Dependabot PRs
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+concurrency:
+  group: dependabot-auto-merge
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -11,22 +16,39 @@ permissions:
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
     steps:
-      - name: Fetch Dependabot metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@v2
+      - name: Merge Dependabot PR if CI passed
+        uses: actions/github-script@v7
         with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const headSha = context.payload.workflow_run.head_sha;
 
-      - name: Enable auto-merge for minor and patch updates
-        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
-        run: gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
 
-      - name: Enable auto-merge for major github-actions updates
-        if: steps.metadata.outputs.update-type == 'version-update:semver-major' && steps.metadata.outputs.package-ecosystem == 'github-actions'
-        run: gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            const pr = prs.find(p => p.head.sha === headSha);
+            if (!pr) return core.info(`No open PR found for SHA ${headSha}`);
+            if (pr.user.login !== 'dependabot[bot]')
+              return core.info(`PR #${pr.number} is not from Dependabot, skipping`);
+
+            const isMajor = pr.labels.some(l =>
+              l.name.includes('major') || l.name === 'version-update:semver-major'
+            );
+            if (isMajor)
+              return core.info(`PR #${pr.number} is a major update, skipping auto-merge`);
+
+            core.info(`Merging Dependabot PR #${pr.number}: ${pr.title}`);
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              merge_method: 'squash',
+            });
+            core.info(`✓ PR #${pr.number} merged successfully`);
