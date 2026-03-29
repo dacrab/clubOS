@@ -34,7 +34,7 @@
 		"eslint-plugin-svelte": "^3.16.0",
 		"globals": "^17.4.0",
 		"jsdom": "^29.0.1",
-		"knip": "^6.0.1",
+		"knip": "^6.1.0",
 		"svelte": "^5.54.1",
 		"svelte-check": "^4.4.5",
 		"tailwindcss": "^4.2.2",
