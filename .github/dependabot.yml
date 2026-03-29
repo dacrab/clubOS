@@ -5,18 +5,14 @@ updates:
     schedule:
       interval: "weekly"
       day: "sunday"
-      time: "02:00"
+      time: "02:30"
       timezone: "Europe/Athens"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
     versioning-strategy: increase
     groups:
-      patch-updates:
+      all-non-major:
         patterns: ["*"]
-        update-types: ["patch"]
-      minor-updates:
-        patterns: ["*"]
-        exclude-patterns: ["vite", "knip", "svelte*", "@sveltejs/*"]
-        update-types: ["minor"]
+        update-types: ["patch", "minor"]
     ignore:
       - dependency-name: "vite"
         update-types: ["version-update:semver-major"]
@@ -32,11 +28,12 @@ updates:
     schedule:
       interval: "weekly"
       day: "sunday"
-      time: "02:00"
+      time: "02:45"
       timezone: "Europe/Athens"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 2
     groups:
       github-actions:
         patterns: ["*"]
     labels:
       - "dependencies"
+
