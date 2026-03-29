@@ -14,7 +14,18 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
 
       - run: bun install
 
       - uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "chore: sync bun.lock"
+          file_pattern: bun.lock
+          commit_user_name: github-actions[bot]
+          commit_user_email: github-actions[bot]@users.noreply.github.com
