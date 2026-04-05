@@ -60,33 +60,16 @@ describe("POST /api/stripe/checkout", () => {
 		expect(response.status).toBe(500);
 	});
 
-	it("returns 400 when priceId is missing", async () => {
+	it.each([
+		["priceId", (u: ReturnType<typeof createMockUser>) => ({ userId: u.id, email: u.email })],
+		["userId", (u: ReturnType<typeof createMockUser>) => ({ priceId: "price_test", email: u.email })],
+		["email", (u: ReturnType<typeof createMockUser>) => ({ priceId: "price_test", userId: u.id })],
+	] as const)("returns 400 when %s is missing", async (_, bodyFn) => {
 		setupMocks();
 		const user = createMockUser();
 		const { POST } = await import("./+server");
-		const response = await POST(req({ userId: user.id, email: user.email }, user) as never);
+		const response = await POST(req(bodyFn(user), user) as never);
 		expect(response.status).toBe(400);
-		const body = await response.json();
-		expect(body.error).toBe("Missing required fields");
-	});
-
-	it("returns 400 when userId is missing", async () => {
-		setupMocks();
-		const user = createMockUser();
-		const { POST } = await import("./+server");
-		const response = await POST(req({ priceId: "price_test", email: user.email }, user) as never);
-		expect(response.status).toBe(400);
-		const body = await response.json();
-		expect(body.error).toBe("Missing required fields");
-	});
-
-	it("returns 400 when email is missing", async () => {
-		setupMocks();
-		const user = createMockUser();
-		const { POST } = await import("./+server");
-		const response = await POST(req({ priceId: "price_test", userId: user.id }, user) as never);
-		expect(response.status).toBe(400);
-		const body = await response.json();
-		expect(body.error).toBe("Missing required fields");
+		expect(await response.json()).toMatchObject({ error: "Missing required fields" });
 	});
 });

@@ -46,7 +46,6 @@
 	}
 
 	async function openCloseDialog(): Promise<void> {
-		// Expected cash is calculated by close_register_session RPC, just set initial value
 		expectedCash = (data.activeSession?.opening_cash ?? 0);
 		countedCash = expectedCash;
 		showCloseDialog = true;

@@ -129,4 +129,18 @@ describe('createCrud', () => {
 			expect(result).toBe(false);
 		});
 	});
+
+	describe('concurrent save prevention', () => {
+		it('sets saving=true during async operation', async () => {
+			let resolveFirst!: () => void;
+			onCreate.mockImplementationOnce(() => new Promise(r => { resolveFirst = () => r({ error: null }); }));
+			crud.openCreate();
+			const first = crud.save();
+			const savingDuringCall = crud.saving;
+			resolveFirst();
+			await first;
+			expect(savingDuringCall).toBe(true);
+			expect(crud.saving).toBe(false);
+		});
+	});
 });

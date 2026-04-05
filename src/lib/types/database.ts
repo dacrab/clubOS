@@ -1,27 +1,11 @@
-/**
- * ClubOS Database Types
- * Matches simplified schema (migration 0009)
- */
-
-// =============================================================================
-// ENUMS
-// =============================================================================
-
 export type MemberRole = "owner" | "admin" | "manager" | "staff";
-
-/** Badge variant type for role display */
 export type RoleBadgeVariant = "destructive" | "default" | "secondary" | "outline";
-
-/** Get badge variant for a member role — also exported from format.ts for convenience */
-export const getRoleBadgeVariant = (role: MemberRole | undefined): RoleBadgeVariant =>
-	role === "owner" ? "destructive" : role === "admin" ? "default" : role === "manager" ? "secondary" : "outline";
 export type BookingType = "birthday" | "football" | "event" | "other";
 export type BookingStatus = "pending" | "confirmed" | "canceled" | "completed" | "no_show";
 export type SubscriptionStatus = "trialing" | "active" | "canceled" | "past_due" | "unpaid" | "paused";
 
-// =============================================================================
-// CORE TABLES
-// =============================================================================
+export const getRoleBadgeVariant = (role: MemberRole | undefined): RoleBadgeVariant =>
+	role === "owner" ? "destructive" : role === "admin" ? "default" : role === "manager" ? "secondary" : "outline";
 
 export interface Tenant {
 	id: string;
@@ -78,10 +62,6 @@ export interface Membership {
 	facility?: Facility;
 }
 
-// =============================================================================
-// BUSINESS TABLES
-// =============================================================================
-
 export interface Category {
 	id: string;
 	facility_id: string;
@@ -107,10 +87,6 @@ export interface Product {
 	created_by: string | null;
 	category?: Category;
 }
-
-// =============================================================================
-// TRANSACTION TABLES
-// =============================================================================
 
 export interface RegisterSession {
 	id: string;
@@ -165,10 +141,6 @@ export interface OrderItem {
 	product?: Product;
 }
 
-// =============================================================================
-// BOOKING TABLE
-// =============================================================================
-
 export interface Booking {
 	id: string;
 	facility_id: string;
@@ -200,14 +172,9 @@ export interface BookingDetails {
 	[key: string]: unknown;
 }
 
-// =============================================================================
-// VIEW TYPES (for joined queries)
-// =============================================================================
-
 /** Product reference in order item (can be object or array depending on query) */
 export type ProductRef = { id: string; name: string } | { id: string; name: string }[] | null;
 
-/** OrderItem with joined product data - used in order list views */
 export interface OrderItemView {
 	id: string;
 	quantity: number;
@@ -218,11 +185,11 @@ export interface OrderItemView {
 	products: ProductRef;
 }
 
-/** Helper to get product name from ProductRef */
 export const getProductName = (p: ProductRef): string =>
 	Array.isArray(p) ? p[0]?.name ?? "Unknown" : p?.name ?? "Unknown";
 
-/** Order with items array - used in order list views */
+export const shortId = (id: string): string => id.slice(0, 8);
+
 export interface OrderView {
 	id: string;
 	session_id?: string | null;
@@ -234,18 +201,11 @@ export interface OrderView {
 	order_items: OrderItemView[];
 }
 
-/** Helper to filter out deleted items */
 export const getActiveOrderItems = (items: OrderItemView[]): OrderItemView[] =>
 	items?.filter((i) => !i.is_deleted) ?? [];
 
-// =============================================================================
-// FORM/VIEW TYPES (for route components)
-// =============================================================================
-
-/** Category partial for dropdowns/selects */
 export type CategoryPartial = Pick<Category, "id" | "name" | "parent_id" | "description">;
 
-/** Product form data for create/edit */
 export interface ProductForm {
 	name: string;
 	description: string;
@@ -255,7 +215,6 @@ export interface ProductForm {
 	image_url: string;
 }
 
-/** User view with email (from auth.users join) */
 export interface UserView {
 	id: string;
 	email: string;
@@ -263,7 +222,6 @@ export interface UserView {
 	role: MemberRole;
 }
 
-/** User form data for create/edit */
 export interface UserForm {
 	full_name: string;
 	email: string;
@@ -271,16 +229,11 @@ export interface UserForm {
 	role: MemberRole;
 }
 
-/** Cart item for POS/sales */
 export interface CartItem {
 	product: Product;
 	quantity: number;
 	isTreat: boolean;
 }
-
-// =============================================================================
-// SESSION/AUTH TYPES
-// =============================================================================
 
 export type SessionUser = {
 	id: string;

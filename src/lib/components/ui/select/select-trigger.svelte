@@ -25,7 +25,7 @@
 				className
 			)}
 		>
-			<span class="pointer-events-none flex-1 truncate text-left {!selected && !children ? 'text-muted-foreground' : ''}">
+			<span class={cn("pointer-events-none flex-1 truncate text-left", !selected && !children && "text-muted-foreground")}>
 				{#if children}
 					{@render children()}
 				{:else if selected}

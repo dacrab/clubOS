@@ -1,9 +1,6 @@
-/**
- * Receipt printing utility for POS
- */
 import { t } from "$lib/i18n/index.svelte";
 import { fmtCurrency } from "$lib/utils/format";
-import type { CartItem } from "$lib/types/database";
+import { shortId, type CartItem } from "$lib/types/database";
 
 export interface ReceiptData {
 	items: CartItem[];
@@ -13,9 +10,6 @@ export interface ReceiptData {
 	orderId: string | null;
 }
 
-/**
- * Opens a print dialog with a formatted receipt
- */
 export function printReceipt(data: ReceiptData): void {
 	if (!data.items.length) return;
 
@@ -55,7 +49,7 @@ ${discountHtml}
 <div class="item total"><span>${t("orders.total")}</span><span>${fmtCurrency(data.total)}</span></div>
 <hr>
 <p class="center">${t("orders.thankYou")}</p>
-<p class="center">#${data.orderId?.slice(0, 8) ?? "N/A"}</p>
+<p class="center">#${data.orderId ? shortId(data.orderId) : "N/A"}</p>
 </body></html>`;
 
 	w.document.write(html);

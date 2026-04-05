@@ -26,14 +26,8 @@
 >
 	{#snippet children({ selected })}
 		<span class="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
-			{#if selected}
-				<Check class="h-4 w-4" />
-			{/if}
+			{#if selected}<Check class="h-4 w-4" />{/if}
 		</span>
-		{#if childrenSnippet}
-			{@render childrenSnippet()}
-		{:else}
-			{label ?? value}
-		{/if}
+		{#if childrenSnippet}{@render childrenSnippet()}{:else}{label ?? value}{/if}
 	{/snippet}
 </SelectPrimitive.Item>

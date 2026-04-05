@@ -9,7 +9,7 @@
 	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
 	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
 	import { ShoppingCart, Eye } from "@lucide/svelte";
-	import { type OrderView, getActiveOrderItems } from "$lib/types/database";
+	import { shortId, type OrderView, getActiveOrderItems } from "$lib/types/database";
 
 	const { data } = $props();
 
@@ -31,7 +31,7 @@
 			<TableBody>
 				{#each data.orders as order (order.id)}
 					<TableRow class="cursor-pointer hover:bg-muted/50" onclick={() => { selectedOrder = order; showDialog = true; }}>
-						<TableCell class="font-mono text-sm">{order.id.slice(0, 8)}</TableCell>
+						<TableCell class="font-mono text-sm">{shortId(order.id)}</TableCell>
 						<TableCell>{fmtDate(order.created_at)}</TableCell>
 						<TableCell><Badge variant="outline">{getActiveOrderItems(order.order_items).length} {t("orders.itemsCount")}</Badge></TableCell>
 						<TableCell>{fmtCurrency(order.subtotal)}</TableCell>

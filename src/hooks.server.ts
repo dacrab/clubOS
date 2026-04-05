@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { redirect, type Handle } from "@sveltejs/kit";
 import { env as publicEnv } from "$env/dynamic/public";
-import type { MemberRole, SubscriptionStatus } from "$lib/types/database";
+import type { MemberRole } from "$lib/types/database";
 import { getHomeForRole } from "$lib/config/auth";
 
 const publicRoutes = ["/", "/reset", "/auth/callback", "/logout", "/signup"];
@@ -27,7 +27,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const isPublic = publicRoutes.includes(path) || path.startsWith("/api/");
 	const isAuthOnly = authOnlyRoutes.includes(path);
 
-	// Fetch membership + subscription once via RPC, lazily (same as layout.server.ts)
 	let _ctx: { role: MemberRole | null; tenantId: string | null; facilityId: string | null; active: boolean } | null = null;
 	const getMembership = async (): Promise<{ role: MemberRole | null; tenantId: string | null; facilityId: string | null; active: boolean }> => {
 		if (_ctx) return _ctx;
@@ -38,7 +37,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 		const sub = ctx.subscription;
 		const now = new Date();
-		const active = sub && ["trialing", "active"].includes(sub.status as SubscriptionStatus) &&
+		const active = sub && (sub.status === "trialing" || sub.status === "active") &&
 			((sub.periodEnd && new Date(sub.periodEnd) > now) || (sub.trialEnd && new Date(sub.trialEnd) > now));
 
 		return (_ctx = { role: ctx.membership.role as MemberRole, tenantId: ctx.membership.tenantId, facilityId: ctx.membership.facilityId, active: !!active });

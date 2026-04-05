@@ -31,7 +31,7 @@ vi.mock("$lib/server/supabase-admin", () => ({
 import { POST, PUT, DELETE } from "./+server";
 
 const json = (body: object, method = "POST"): Request => new Request("http://localhost", { method, body: JSON.stringify(body) });
-const adminLocals = { user: { id: "u1" } } as App.Locals;
+const adminLocals = { user: { id: "u1" } } as Partial<App.Locals> as App.Locals;
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -67,7 +67,7 @@ describe("POST /api/admin/users", () => {
 	});
 
 	it("returns 401 when user is not authenticated", async () => {
-		const unauthLocals = { user: null } as never as App.Locals;
+		const unauthLocals = { user: null } as Partial<App.Locals> as App.Locals;
 		const res = await POST({ request: json({ email: "x@x.com", password: "pass", role: "staff", full_name: "Test" }), locals: unauthLocals } as never);
 		expect(res.status).toBe(401);
 		expect(mockCreateUser).not.toHaveBeenCalled();
@@ -106,7 +106,7 @@ describe("PUT /api/admin/users", () => {
 	});
 
 	it("returns 401 when user is not authenticated", async () => {
-		const unauthLocals = { user: null } as never as App.Locals;
+		const unauthLocals = { user: null } as Partial<App.Locals> as App.Locals;
 		const res = await PUT({ request: json({ id: "u2", full_name: "Updated" }, "PUT"), locals: unauthLocals } as never);
 		expect(res.status).toBe(401);
 	});
@@ -132,7 +132,7 @@ describe("DELETE /api/admin/users", () => {
 	});
 
 	it("returns 401 when user is not authenticated", async () => {
-		const unauthLocals = { user: null } as never as App.Locals;
+		const unauthLocals = { user: null } as Partial<App.Locals> as App.Locals;
 		const res = await DELETE({ request: json({ id: "u2" }, "DELETE"), locals: unauthLocals } as never);
 		expect(res.status).toBe(401);
 	});

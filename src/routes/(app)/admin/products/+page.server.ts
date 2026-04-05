@@ -1,7 +1,6 @@
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
-	// products + categories already fetched by layout — no duplicate needed
 	const { user, products, categories } = await parent();
 	const { supabase } = locals;
 

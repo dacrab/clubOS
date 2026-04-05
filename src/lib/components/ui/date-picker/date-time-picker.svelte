@@ -103,14 +103,13 @@
 		open = false;
 	}
 
-	const displayValue = $derived(() => {
-		if (!calendarValue) return placeholder;
-		if (enableTime) {
-			const date = new Date(calendarValue.year, calendarValue.month - 1, calendarValue.day, parseInt(hours), parseInt(minutes));
-			return dtf.format(date);
-		}
-		return df.format(calendarValue.toDate(getLocalTimeZone()));
-	});
+	const displayValue = $derived(
+		!calendarValue
+			? placeholder
+			: enableTime
+				? dtf.format(new Date(calendarValue.year, calendarValue.month - 1, calendarValue.day, parseInt(hours), parseInt(minutes)))
+				: df.format(calendarValue.toDate(getLocalTimeZone()))
+	);
 </script>
 
 <Popover bind:open>
@@ -125,7 +124,7 @@
 			)}
 		>
 			<CalendarIcon class="mr-2 h-4 w-4" />
-			{displayValue()}
+			{displayValue}
 		</Button>
 	</PopoverTrigger>
 	<PopoverContent class="w-auto p-0" align="start">

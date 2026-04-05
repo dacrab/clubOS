@@ -18,9 +18,9 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		},
 		recentOrders: d.recentOrders ?? [],
 		analytics: {
-			revenueByDay: (d.revenueByDay ?? []).map((r: { date: string; revenue: number }) => ({ date: r.date, revenue: Number(r.revenue) })),
-			bestSellers: (d.bestSellers ?? []).map((p: { id: string; name: string; quantity: number; categoryId: string }) => ({ id: p.id, name: p.name, quantity: Number(p.quantity), categoryId: p.categoryId })),
-			categorySales: (d.categorySales ?? []).map((c: { name: string; quantity: number }) => ({ name: c.name, quantity: Number(c.quantity) })),
+			revenueByDay: (d.revenueByDay ?? []).map((r: { date: string; revenue: number }) => ({ ...r, revenue: Number(r.revenue) })),
+			bestSellers: (d.bestSellers ?? []).map((p: { id: string; name: string; quantity: number; categoryId: string }) => ({ ...p, quantity: Number(p.quantity) })),
+			categorySales: (d.categorySales ?? []).map((c: { name: string; quantity: number }) => ({ ...c, quantity: Number(c.quantity) })),
 		},
 		products,
 		categories,

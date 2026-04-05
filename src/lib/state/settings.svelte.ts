@@ -1,8 +1,6 @@
 import type { FormatSettings } from "$lib/utils/format";
 import { DEFAULT_SETTINGS, type TenantSettings } from "$lib/config/settings";
 
-export type { TenantSettings };
-
 function createSettings(): {
 	readonly current: TenantSettings;
 	readonly formatSettings: FormatSettings;

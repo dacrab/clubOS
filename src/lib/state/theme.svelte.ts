@@ -10,7 +10,6 @@ function createTheme(): {
 } {
 	let current = $state<Theme>("system");
 
-	// Read from localStorage on init (browser only)
 	if (browser) {
 		const stored = localStorage.getItem("theme");
 		if (stored === "light" || stored === "dark" || stored === "system") {
@@ -29,7 +28,6 @@ function createTheme(): {
 		}
 	}
 
-	// Apply on first render
 	if (browser) applyTheme();
 
 	return {

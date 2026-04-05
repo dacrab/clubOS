@@ -53,7 +53,6 @@ export const createSupabaseMock = (config: SupabaseMockConfig = {}): {
 		return b;
 	};
 
-	// Build get_user_context RPC response from config
 	const primaryMembership = memberships[0] ?? null;
 	const subscription = primaryMembership ? subscriptions.find(s => s.tenantId === primaryMembership.tenantId) ?? null : null;
 	const tenant = primaryMembership ? tenants.find(t => t.id === primaryMembership.tenantId) ?? null : null;

@@ -5,18 +5,30 @@ export type TimeFormatType = "24h" | "12h";
 export type CurrencyCodeType = "EUR" | "USD" | "GBP";
 export interface FormatSettings { date_format?: DateFormatType; time_format?: TimeFormatType; currency_code?: CurrencyCodeType }
 
+export function tomorrowAt(hour: number): Date {
+	const d = new Date(Date.now() + 86_400_000);
+	d.setHours(hour, 0, 0, 0);
+	return d;
+}
+
 export function formatDate(date: string | Date, s?: FormatSettings | null, includeTime = true): string {
 	const d = typeof date === "string" ? new Date(date) : date;
 	if (isNaN(d.getTime())) return "-";
 
 	const fmt = s?.date_format ?? "DD/MM/YYYY";
-	const [day, month, year] = [String(d.getDate()).padStart(2, "0"), String(d.getMonth() + 1).padStart(2, "0"), d.getFullYear()];
-	
-	const dateStr = fmt === "MM/DD/YYYY" ? `${month}/${day}/${year}` : fmt === "YYYY-MM-DD" ? `${year}-${month}-${day}` : fmt === "DD.MM.YYYY" ? `${day}.${month}.${year}` : fmt === "DD-MM-YYYY" ? `${day}-${month}-${year}` : `${day}/${month}/${year}`;
-	if (!includeTime) return dateStr;
+	const pad = (n: number): string => String(n).padStart(2, "0");
+	const [day, month, year] = [pad(d.getDate()), pad(d.getMonth() + 1), d.getFullYear()];
+	const dateStr =
+		fmt === "MM/DD/YYYY" ? `${month}/${day}/${year}` :
+		fmt === "YYYY-MM-DD" ? `${year}-${month}-${day}` :
+		fmt === "DD.MM.YYYY" ? `${day}.${month}.${year}` :
+		fmt === "DD-MM-YYYY" ? `${day}-${month}-${year}` :
+		`${day}/${month}/${year}`;
 
-	const [h24, min] = [d.getHours(), String(d.getMinutes()).padStart(2, "0")];
-	const timeStr = s?.time_format === "12h" ? `${h24 % 12 || 12}:${min} ${h24 < 12 ? "AM" : "PM"}` : `${String(h24).padStart(2, "0")}:${min}`;
+	if (!includeTime) return dateStr;
+	const h24 = d.getHours();
+	const min = pad(d.getMinutes());
+	const timeStr = s?.time_format === "12h" ? `${h24 % 12 || 12}:${min} ${h24 < 12 ? "AM" : "PM"}` : `${pad(h24)}:${min}`;
 	return `${dateStr} ${timeStr}`;
 }
 

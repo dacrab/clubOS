@@ -5,7 +5,7 @@
 	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
 	import { Eye } from "@lucide/svelte";
-	import type { OrderView } from "$lib/types/database";
+	import { shortId, type OrderView } from "$lib/types/database";
 
 	type Props = { orders: OrderView[]; title?: string };
 
@@ -26,7 +26,7 @@
 						<div class="flex items-center gap-3">
 							<div>
 								<div class="flex items-center gap-2">
-									<p class="font-medium">#{order.id.slice(0, 8)}</p>
+									<p class="font-medium">#{shortId(order.id)}</p>
 									{#if order.order_items?.length > 0}<Badge variant="outline" class="text-xs">{order.order_items.length} {t("orders.itemsCount")}</Badge>{/if}
 								</div>
 								<p class="text-sm text-muted-foreground">{fmtDate(order.created_at)}</p>

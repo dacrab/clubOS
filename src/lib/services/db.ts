@@ -3,14 +3,12 @@ import { supabase } from "$lib/utils/supabase";
 
 type Result = { error: unknown };
 
-// Generic helper: run a supabase op, invalidate on success
 async function dbOp(op: () => PromiseLike<{ error: unknown }>): Promise<Result> {
 	const { error } = await op();
 	if (!error) await invalidateAll();
 	return { error };
 }
 
-// Generic helper: call admin API, invalidate on success
 async function apiOp(method: string, body: unknown): Promise<Result> {
 	const res = await fetch("/api/admin/users", {
 		method,
@@ -21,7 +19,6 @@ async function apiOp(method: string, body: unknown): Promise<Result> {
 	return { error: res.ok ? null : await res.text() };
 }
 
-// Products - client-side operations (RLS enforced)
 export const products = {
 	create: (data: { name: string; price: number; stock_quantity: number; facility_id: string; created_by: string; description?: string; category_id?: string; image_url?: string }): Promise<Result> =>
 		dbOp(() => supabase.from("products").insert(data)),
@@ -31,7 +28,6 @@ export const products = {
 		dbOp(() => supabase.from("products").delete().eq("id", id)),
 };
 
-// Categories - client-side operations (RLS enforced)
 export const categories = {
 	create: (data: { name: string; facility_id: string; description?: string; parent_id?: string }): Promise<Result> =>
 		dbOp(() => supabase.from("categories").insert(data)),
@@ -41,7 +37,6 @@ export const categories = {
 		dbOp(() => supabase.from("categories").delete().eq("id", id)),
 };
 
-// Register Sessions - uses RPC for atomic operations
 export const registerSessions = {
 	open: (facilityId: string, userId: string): Promise<Result> =>
 		dbOp(() => supabase.from("register_sessions").insert({ facility_id: facilityId, opened_by: userId })),
@@ -54,7 +49,6 @@ export const registerSessions = {
 		})),
 };
 
-// Users - calls server API (requires admin privileges)
 export const users = {
 	create: (data: { email: string; full_name: string; password: string; role: string }): Promise<Result> =>
 		apiOp("POST", data),

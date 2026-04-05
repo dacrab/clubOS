@@ -9,7 +9,7 @@
 	import Separator from "$lib/components/ui/separator/separator.svelte";
 	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import { Gift } from "@lucide/svelte";
-	import { type OrderView, getActiveOrderItems, getProductName } from "$lib/types/database";
+	import { shortId, type OrderView, getActiveOrderItems, getProductName } from "$lib/types/database";
 
 	type Props = {
 		open: boolean;
@@ -22,7 +22,7 @@
 <Dialog bind:open>
 	<DialogContent class="max-w-2xl">
 		<DialogHeader>
-			<DialogTitle>{t("orders.orderDetails")} #{order?.id.slice(0, 8)}</DialogTitle>
+			<DialogTitle>{t("orders.orderDetails")} #{order ? shortId(order.id) : ""}</DialogTitle>
 		</DialogHeader>
 		{#if order}
 			<div class="space-y-4">

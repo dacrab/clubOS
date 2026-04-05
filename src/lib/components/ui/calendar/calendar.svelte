@@ -31,22 +31,13 @@
 	type="single"
 >
 	{#snippet children({ months, weekdays })}
+		{@const navBtn = cn(buttonVariants({ variant: "outline" }), "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100")}
 		<CalendarPrimitive.Header class="relative flex w-full items-center justify-between pt-1">
-			<CalendarPrimitive.PrevButton
-				class={cn(
-					buttonVariants({ variant: "outline" }),
-					"h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
-				)}
-			>
+			<CalendarPrimitive.PrevButton class={navBtn}>
 				<ChevronLeft class="h-4 w-4" />
 			</CalendarPrimitive.PrevButton>
 			<CalendarPrimitive.Heading class="text-sm font-medium" />
-			<CalendarPrimitive.NextButton
-				class={cn(
-					buttonVariants({ variant: "outline" }),
-					"h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
-				)}
-			>
+			<CalendarPrimitive.NextButton class={navBtn}>
 				<ChevronRight class="h-4 w-4" />
 			</CalendarPrimitive.NextButton>
 		</CalendarPrimitive.Header>

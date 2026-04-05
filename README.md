@@ -10,14 +10,6 @@ Modern POS and club management system built with SvelteKit 2, Supabase, and Tail
 - **Billing**: Stripe integration with subscription management
 - **i18n**: English and Greek translations
 
-## Tech Stack
-
-- SvelteKit 2 + Svelte 5 runes (`$state`, `$derived`)
-- Supabase (Auth, Database)
-- Tailwind CSS v4 + shadcn-svelte components
-- TypeScript (strict mode)
-- Vitest + Playwright
-
 ## Quick Start
 
 ```bash
@@ -37,16 +29,16 @@ supabase db reset
 bun run db:seed
 ```
 
-## Scripts
+## Available Scripts
 
 ```bash
 bun run dev          # Start dev server
 bun run build        # Production build
 bun run check        # Type check + lint + knip
-bun run test         # Unit tests (vitest)
-bun run test:e2e     # E2E tests (playwright)
+bun run test         # Unit tests
+bun run test:e2e     # E2E tests (requires dev server)
 bun run db:seed      # Seed demo data
-bun run db:reset     # Reset and seed database
+bun run db:reset     # Reset database with seed data
 ```
 
 ## Project Structure
@@ -81,18 +73,8 @@ SUPABASE_SECRET_KEY=eyJ...
 
 ## Database
 
-Core tables: `tenants`, `facilities`, `users`, `memberships`, `products`, `categories`, `orders`, `order_items`, `bookings`, `register_sessions`, `subscriptions`
-
-See `supabase/migrations/` for schema.
-
-## Testing
-
-```bash
-bun run test              # Unit tests
-bun run test:e2e          # E2E tests (requires dev server)
-SKIP_DB_TESTS=false bun run test  # Include database integration tests
-```
+Core tables: `tenants`, `facilities`, `users`, `memberships`, `products`, `categories`, `orders`, `bookings`, `register_sessions`, `subscriptions`. See `supabase/migrations/` for full schema.
 
 ## Deployment
 
-Configured for Vercel with `@sveltejs/adapter-vercel`. Set environment variables in Vercel dashboard.
+Vercel-ready (`@sveltejs/adapter-vercel`). Configure environment variables in Vercel dashboard.

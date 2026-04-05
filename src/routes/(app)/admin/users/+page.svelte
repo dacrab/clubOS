@@ -16,7 +16,6 @@
 	import { createCrud } from "$lib/state/crud.svelte";
 	import { users } from "$lib/services/db";
 	import { Plus, Pencil, Trash2, Users } from "@lucide/svelte";
-
 	import { type UserView, type UserForm, getRoleBadgeVariant, type MemberRole } from "$lib/types/database";
 	import { USER_ROLE } from "$lib/constants";
 

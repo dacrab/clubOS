@@ -1,7 +1,3 @@
-/**
- * Shared utilities for auth and routing
- */
-
 import type { MemberRole } from "$lib/types/database";
 import { USER_ROLE } from "$lib/constants";
 

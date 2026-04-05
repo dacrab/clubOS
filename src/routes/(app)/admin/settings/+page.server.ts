@@ -24,17 +24,10 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 
 export const actions: Actions = {
 	save: async ({ request, locals }) => {
-		// hooks + layout guarantee user + tenantId exist on (app) routes
 		const { supabase, user } = locals;
 		if (!user) return fail(401, { error: "Unauthorized" });
 
-		const { data: m } = await supabase
-			.from("memberships")
-			.select("tenant_id")
-			.eq("user_id", user.id)
-			.order("is_primary", { ascending: false })
-			.limit(1)
-			.single();
+		const { data: m } = await supabase.from("memberships").select("tenant_id").eq("user_id", user.id).eq("is_primary", true).single();
 		const tenantId = m?.tenant_id;
 		if (!tenantId) return fail(400, { error: "No tenant" });
 

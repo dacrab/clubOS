@@ -1,36 +1,17 @@
-/**
- * Admin Users API - Server-side implementation
- * Replaces edge functions with direct supabase-admin calls
- */
-
-import type { RequestHandler } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 
-// Check if user is admin/owner and get their role for privilege checks
-async function requireAdmin(locals: App.Locals): Promise<{ ok: boolean; error?: string; tenantId?: string; callerRole?: string }> {
+type AdminCheck = { ok: boolean; error?: string; tenantId?: string; callerRole?: string };
+
+async function requireAdmin(locals: App.Locals): Promise<AdminCheck> {
 	if (!locals.user) return { ok: false, error: "Unauthorized" };
-
-	const admin = getSupabaseAdmin();
-	const { data: membership } = await admin
-		.from("memberships")
-		.select("tenant_id, role")
-		.eq("user_id", locals.user.id)
-		.eq("is_primary", true)
-		.single();
-
-	if (!membership || !["owner", "admin"].includes(membership.role)) {
-		return { ok: false, error: "Forbidden" };
-	}
-
-	return { ok: true, tenantId: membership.tenant_id, callerRole: membership.role };
+	const { data: m } = await getSupabaseAdmin().from("memberships").select("tenant_id, role").eq("user_id", locals.user.id).eq("is_primary", true).single();
+	if (!m || !["owner", "admin"].includes(m.role)) return { ok: false, error: "Forbidden" };
+	return { ok: true, tenantId: m.tenant_id, callerRole: m.role };
 }
 
-// Prevent privilege escalation - admins can't create owners
-function getAllowedRoles(callerRole: string): string[] {
-	return callerRole === "owner" 
-		? ["owner", "admin", "manager", "staff"] 
-		: ["admin", "manager", "staff"]; // admins can't create owners
-}
+const getAllowedRoles = (callerRole: string): string[] =>
+	callerRole === "owner" ? ["owner", "admin", "manager", "staff"] : ["admin", "manager", "staff"];
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const check = await requireAdmin(locals);

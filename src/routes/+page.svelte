@@ -6,7 +6,7 @@
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import Card, { CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
-	import PublicHeader from "$lib/components/layout/public-header.svelte";
+	import Header from "$lib/components/layout/header.svelte";
 	let email = $state("");
 	let password = $state("");
 	let loading = $state(false);
@@ -46,7 +46,7 @@
 </script>
 
 <div class="flex min-h-screen flex-col bg-background">
-	<PublicHeader />
+	<Header public />
 	<main class="flex flex-1 items-center justify-center p-4">
 		<Card class="w-full max-w-sm">
 			<CardHeader class="text-center">

@@ -7,15 +7,10 @@ export type Locale = "en" | "el";
 const translations: Record<Locale, TranslationsStructure> = { en, el };
 
 function getNestedValue(obj: unknown, path: string): string {
-	const keys = path.split(".");
-	let result: unknown = obj;
-	for (const key of keys) {
-		if (result && typeof result === "object" && key in result) {
-			result = (result as Record<string, unknown>)[key];
-		} else {
-			return path;
-		}
-	}
+	const result = path.split(".").reduce<unknown>(
+		(acc, key) => (acc && typeof acc === "object" && key in acc ? (acc as Record<string, unknown>)[key] : undefined),
+		obj
+	);
 	return typeof result === "string" ? result : path;
 }
 

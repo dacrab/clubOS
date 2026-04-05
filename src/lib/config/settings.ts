@@ -1,8 +1,3 @@
-/**
- * Centralized settings configuration
- * Single source of truth for default settings and types
- */
-
 import type { DateFormatType, TimeFormatType, CurrencyCodeType } from "$lib/utils/format";
 
 export interface TenantSettings {
@@ -63,12 +58,10 @@ export const DEFAULT_SETTINGS: TenantSettings = {
 	football_max_players: 22,
 };
 
-/** Merge tenant settings with defaults */
 export function mergeSettings(tenantSettings: Partial<TenantSettings> | null): TenantSettings {
 	return { ...DEFAULT_SETTINGS, ...(tenantSettings ?? {}) };
 }
 
-/** Currency options - can be extended */
 export const CURRENCY_OPTIONS = [
 	{ value: "EUR", label: "Euro (EUR)", symbol: "€" },
 	{ value: "USD", label: "US Dollar (USD)", symbol: "$" },

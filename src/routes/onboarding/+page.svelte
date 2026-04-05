@@ -4,7 +4,7 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
-	import PublicHeader from "$lib/components/layout/public-header.svelte";
+	import Header from "$lib/components/layout/header.svelte";
 	import Card, { CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
 	import Select from "$lib/components/ui/select/select.svelte";
 	import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
@@ -123,7 +123,7 @@
 </script>
 
 <div class="flex min-h-screen flex-col bg-background">
-	<PublicHeader />
+	<Header public />
 
 	<main class="flex flex-1 items-center justify-center p-4">
 		{#if completed}

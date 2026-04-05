@@ -15,11 +15,8 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 
 	const sub = ctx.subscription;
 	const now = new Date();
-	const isActive = sub && 
-		["trialing", "active"].includes(sub.status) &&
-		((sub.periodEnd && new Date(sub.periodEnd) > now) ||
-		 (sub.trialEnd && new Date(sub.trialEnd) > now));
-
+	const isActive = sub && ["trialing", "active"].includes(sub.status) &&
+		((sub.periodEnd && new Date(sub.periodEnd) > now) || (sub.trialEnd && new Date(sub.trialEnd) > now));
 	if (!isActive) throw redirect(307, "/billing");
 
 	const sessionUser: SessionUser = {

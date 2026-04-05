@@ -84,7 +84,21 @@ describe("POST /api/onboarding/complete", () => {
 		mockTables({ tenants: { insert: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: { message: "Database error" } }) }) }) } });
 		const response = await POST(req({ tenant: { name: "Club" }, facility: { name: "Main" } }) as never);
 		expect(response.status).toBe(500);
-		const body = await response.json();
-		expect(body.error).toBeDefined();
+		expect((await response.json()).error).toBeDefined();
+	});
+
+	it("returns 500 when facility creation fails", async () => {
+		const { tenantId } = mockTables({ facilities: { insert: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: { message: "Facility error" } }) }) }) } });
+		void tenantId;
+		const response = await POST(req({ tenant: { name: "Club", slug: "club" }, facility: { name: "Main" } }) as never);
+		expect(response.status).toBe(500);
+		expect((await response.json()).error).toBeDefined();
+	});
+
+	it("returns 500 when membership creation fails", async () => {
+		mockTables({ memberships: { insert: () => Promise.resolve({ error: { message: "Membership error" } }) } });
+		const response = await POST(req({ tenant: { name: "Club", slug: "club" }, facility: { name: "Main" } }) as never);
+		expect(response.status).toBe(500);
+		expect((await response.json()).error).toBeDefined();
 	});
 });

@@ -31,7 +31,6 @@
 		{/snippet}
 	</PageHeader>
 
-	<!-- Stats Cards -->
 	<section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
 		<Card class="hover-lift">
 			<CardHeader class="flex flex-row items-center justify-between pb-2">
@@ -82,7 +81,6 @@
 		</Card>
 	</section>
 
-	<!-- Charts Row -->
 	<section class="grid gap-6 lg:grid-cols-2">
 		<Card>
 			<CardHeader class="flex flex-row items-center justify-between">
@@ -186,7 +184,6 @@
 		</Card>
 	</section>
 
-	<!-- Best Sellers & Quick Actions -->
 	<section class="grid gap-6 lg:grid-cols-2">
 		<Card>
 			<CardHeader class="flex flex-row items-center justify-between">
@@ -259,7 +256,6 @@
 		</Card>
 	</section>
 
-	<!-- Recent Orders -->
 	<section>
 		<RecentOrders orders={data.recentOrders} />
 	</section>

@@ -2,7 +2,7 @@
 	import { toast } from "svelte-sonner";
 	import { t } from "$lib/i18n/index.svelte";
 	import PlanSelector from "$lib/components/features/plan-selector.svelte";
-	import PublicHeader from "$lib/components/layout/public-header.svelte";
+	import Header from "$lib/components/layout/header.svelte";
 	import { PLANS, type Plan } from "$lib/config/auth";
 	import { AlertCircle } from "@lucide/svelte";
 
@@ -34,7 +34,7 @@
 </script>
 
 <div class="flex min-h-screen flex-col bg-background">
-	<PublicHeader />
+	<Header public />
 
 	<main class="flex flex-1 flex-col items-center justify-center p-4">
 		<div class="w-full max-w-4xl">

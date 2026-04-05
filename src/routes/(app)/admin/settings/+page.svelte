@@ -47,18 +47,7 @@
 
 	const getCurrencyLabel = (v: string | null) => CURRENCY_OPTIONS.find((c) => c.value === v)?.label ?? "";
 	const getDateLabel = (v: string | null) => DATE_FORMAT_OPTIONS.find((f) => f.value === v)?.label ?? "";
-	const getTimeLabel = (v: string | null) => {
-		const f = TIME_FORMAT_OPTIONS.find((f) => f.value === v);
-		return f ? t(f.labelKey) : "";
-	};
-	const getThemeLabel = () => {
-		const o = THEME_OPTIONS.find((o) => o.value === theme.current);
-		return o ? t(o.labelKey) : "";
-	};
-	const getLanguageLabel = () => {
-		const o = LANGUAGE_OPTIONS.find((o) => o.value === i18n.locale);
-		return o ? t(o.labelKey) : "";
-	};
+	const optionLabel = (opts: readonly { value: string; labelKey: string }[], v: string) => t(opts.find((o) => o.value === v)?.labelKey ?? "");
 
 	function handleReset() {
 		settings = structuredClone(data.settings);
@@ -100,7 +89,6 @@
 	</PageHeader>
 
 	<div class="grid gap-6 lg:grid-cols-2">
-		<!-- Inventory Settings -->
 		<Card>
 			<CardHeader>
 				<CardTitle>{t("settings.sections.inventory")}</CardTitle>
@@ -121,7 +109,6 @@
 			</CardContent>
 		</Card>
 
-		<!-- Sales Settings -->
 		<Card>
 			<CardHeader>
 				<CardTitle>{t("settings.sections.sales")}</CardTitle>
@@ -146,7 +133,6 @@
 			</CardContent>
 		</Card>
 
-		<!-- Booking Settings -->
 		<Card>
 			<CardHeader>
 				<CardTitle>{t("settings.sections.bookings")}</CardTitle>
@@ -179,7 +165,6 @@
 			</CardContent>
 		</Card>
 
-		<!-- Regional Settings -->
 		<Card>
 			<CardHeader>
 				<CardTitle>{t("settings.sections.regional")}</CardTitle>
@@ -188,7 +173,7 @@
 			<CardContent class="space-y-4">
 				<SettingRow label={t("settings.theme")} description={t("settings.themeDesc")}>
 					<Select value={theme.current} onValueChange={(v) => theme.setTheme(v as Theme)}>
-						<SelectTrigger class="w-40" selected={getThemeLabel()} />
+						<SelectTrigger class="w-40" selected={optionLabel(THEME_OPTIONS, theme.current)} />
 						<SelectContent>
 							{#each THEME_OPTIONS as o (o.value)}
 								<SelectItem value={o.value}>{t(o.labelKey)}</SelectItem>
@@ -199,7 +184,7 @@
 				<Separator />
 				<SettingRow label={t("settings.language")} description={t("settings.languageDesc")}>
 					<Select value={i18n.locale} onValueChange={(v) => i18n.setLocale(v as Locale)}>
-						<SelectTrigger class="w-40" selected={getLanguageLabel()} />
+						<SelectTrigger class="w-40" selected={optionLabel(LANGUAGE_OPTIONS, i18n.locale)} />
 						<SelectContent>
 							{#each LANGUAGE_OPTIONS as o (o.value)}
 								<SelectItem value={o.value}>{t(o.labelKey)}</SelectItem>
@@ -232,7 +217,7 @@
 				<Separator />
 				<SettingRow label={t("settings.timeFormat")} description={t("settings.timeFormatDesc")}>
 					<Select bind:value={settings.time_format}>
-						<SelectTrigger class="w-32" selected={getTimeLabel(settings.time_format)} />
+						<SelectTrigger class="w-32" selected={optionLabel(TIME_FORMAT_OPTIONS, settings.time_format)} />
 						<SelectContent>
 							{#each TIME_FORMAT_OPTIONS as f (f.value)}
 								<SelectItem value={f.value}>{t(f.labelKey)}</SelectItem>

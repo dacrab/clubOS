@@ -1,24 +1,10 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { createClient } from "@supabase/supabase-js";
-import { env as privateEnv } from "$env/dynamic/private";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { env } from "$env/dynamic/private";
 
-let cachedClient: SupabaseClient | undefined;
+let client: SupabaseClient | undefined;
 
 export function getSupabaseAdmin(): SupabaseClient {
-	const { SUPABASE_URL: url, SUPABASE_SECRET_KEY: serviceRoleKey } = privateEnv as {
-		SUPABASE_URL?: string;
-		SUPABASE_SECRET_KEY?: string;
-	};
-
-	if (!(url && serviceRoleKey)) {
-		throw new Error("Missing SUPABASE_URL or SUPABASE_SECRET_KEY");
-	}
-
-	if (!cachedClient) {
-		cachedClient = createClient(url, serviceRoleKey, {
-			auth: { persistSession: false, autoRefreshToken: false },
-		});
-	}
-
-	return cachedClient;
+	const { SUPABASE_URL: url, SUPABASE_SECRET_KEY: key } = env as { SUPABASE_URL?: string; SUPABASE_SECRET_KEY?: string };
+	if (!(url && key)) throw new Error("Missing SUPABASE_URL or SUPABASE_SECRET_KEY");
+	return (client ??= createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } }));
 }

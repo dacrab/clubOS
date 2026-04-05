@@ -9,7 +9,7 @@
 	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
 	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
 	import { DollarSign, Eye, ChevronDown, ChevronUp } from "@lucide/svelte";
-	import { type OrderView, getActiveOrderItems } from "$lib/types/database";
+	import { shortId, type OrderView, getActiveOrderItems } from "$lib/types/database";
 
 	const { data } = $props();
 
@@ -42,7 +42,8 @@
 								<p class="text-sm text-muted-foreground">{orders.length} {t("orders.title").toLowerCase()} · {fmtCurrency(sessionTotal)}</p>
 							</div>
 							<Button variant="ghost" size="sm" onclick={() => expandedSession = expanded ? null : session.id} disabled={orders.length === 0}>
-								{#if expanded}<ChevronUp class="h-4 w-4 mr-1" />{:else}<ChevronDown class="h-4 w-4 mr-1" />{/if}{t("orders.viewItems")}
+								{#if expanded}<ChevronUp class="h-4 w-4" />{:else}<ChevronDown class="h-4 w-4" />{/if}
+						<span>{t("orders.viewItems")}</span>
 							</Button>
 						</div>
 					</CardHeader>
@@ -53,7 +54,7 @@
 								<TableBody>
 									{#each orders as order (order.id)}
 										<TableRow class="cursor-pointer hover:bg-muted/50" onclick={() => { selectedOrder = order; showDialog = true; }}>
-											<TableCell class="font-mono text-sm">{order.id.slice(0, 8)}</TableCell>
+											<TableCell class="font-mono text-sm">{shortId(order.id)}</TableCell>
 											<TableCell class="text-sm">{fmtDate(order.created_at)}</TableCell>
 											<TableCell><Badge variant="outline">{getActiveOrderItems(order.order_items).length} {t("orders.itemsCount")}</Badge></TableCell>
 											<TableCell class="font-medium">{fmtCurrency(order.total_amount)}</TableCell>

@@ -1,7 +1,5 @@
 import type { SessionUser } from "$lib/types/database";
 
-export type { SessionUser };
-
 function createSession(): {
 	readonly user: SessionUser | null;
 	readonly loading: boolean;

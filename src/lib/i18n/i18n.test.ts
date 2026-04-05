@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { en } from "./en";
 import { el } from "./el";
+import { i18n, t } from "./index.svelte";
 
 const getKeys = (obj: unknown, prefix = ""): string[] => {
 	if (!obj || typeof obj !== "object") return [];
@@ -27,5 +28,27 @@ describe("i18n", () => {
 			return enP !== elP;
 		});
 		expect(issues).toEqual([]);
+	});
+});
+
+describe("t()", () => {
+	beforeEach(() => i18n.setLocale("en"));
+
+	it("resolves a nested key", () => {
+		expect(t("common.save")).toBe("Save");
+	});
+
+	it("returns the key when not found", () => {
+		expect(t("nonexistent.key")).toBe("nonexistent.key");
+	});
+
+	it("returns Greek translation after locale switch", () => {
+		i18n.setLocale("el");
+		expect(t("common.save")).toBe("Αποθήκευση");
+	});
+
+	it("handles placeholder keys without replacement", () => {
+		const result = t("common.deleteConfirm");
+		expect(result).toContain("{name}");
 	});
 });

@@ -83,6 +83,15 @@ describe("products", () => {
 describe("categories", () => {
 	beforeEach(() => vi.clearAllMocks());
 
+	it("create does not invalidate on error", async () => {
+		const testError = new Error("Insert failed");
+		const mockInsert = vi.fn().mockResolvedValue({ error: testError });
+		fromMock({ insert: mockInsert });
+		const result = await categories.create({ name: "Test", facility_id: "f1" });
+		expect(invalidateAll).not.toHaveBeenCalled();
+		expect(result.error).toBe(testError);
+	});
+
 	it("create inserts data and invalidates on success", async () => {
 		const mockInsert = vi.fn().mockResolvedValue({ error: null });
 		fromMock({ insert: mockInsert });
@@ -123,6 +132,16 @@ describe("categories", () => {
 		expect(mockEq).toHaveBeenCalledWith("id", "c1");
 		expect(invalidateAll).toHaveBeenCalled();
 		expect(result.error).toBeNull();
+	});
+
+	it("update does not invalidate on error", async () => {
+		const testError = new Error("Update failed");
+		const mockEq = vi.fn().mockResolvedValue({ error: testError });
+		const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq });
+		fromMock({ update: mockUpdate });
+		const result = await categories.update("c1", { name: "Updated" });
+		expect(invalidateAll).not.toHaveBeenCalled();
+		expect(result.error).toBe(testError);
 	});
 });
 
@@ -231,11 +250,23 @@ describe("users", () => {
 
 	it("create does not invalidate on API error", async () => {
 		fetchMock({ ok: false, text: vi.fn().mockResolvedValue("API error") });
-
 		const data = { email: "test@example.com", full_name: "Test", password: "pass", role: "staff" };
 		const result = await users.create(data);
-
 		expect(invalidateAll).not.toHaveBeenCalled();
 		expect(result.error).toBe("API error");
+	});
+
+	it("update does not invalidate on API error", async () => {
+		fetchMock({ ok: false, text: vi.fn().mockResolvedValue("Update failed") });
+		const result = await users.update("u1", { full_name: "Updated" });
+		expect(invalidateAll).not.toHaveBeenCalled();
+		expect(result.error).toBe("Update failed");
+	});
+
+	it("remove does not invalidate on API error", async () => {
+		fetchMock({ ok: false, text: vi.fn().mockResolvedValue("Delete failed") });
+		const result = await users.remove("u1");
+		expect(invalidateAll).not.toHaveBeenCalled();
+		expect(result.error).toBe("Delete failed");
 	});
 });

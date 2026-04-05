@@ -35,6 +35,8 @@
 	let lastOrderData = $state<ReceiptData | null>(null);
 	let showCart = $state(false);
 
+	function close() { open = false; onOpenChange?.(false); }
+
 	function handlePrintReceipt(): void {
 		if (lastOrderData) printReceipt(lastOrderData);
 	}
@@ -42,10 +44,8 @@
 	const COUPON_VALUE = $derived(globalSettings.current.coupons_value);
 	const rootCategories = $derived(categories.filter(c => !c.parent_id));
 
-	// Use DB full-text search when query exists, otherwise filter by category client-side
 	let searchResults = $state<Product[]>([]);
 
-	// Debounced search with stale-response guard — inlined to avoid stale closure over old fn ref
 	$effect(() => {
 		const q = searchQuery;
 		let timeout: ReturnType<typeof setTimeout> | null = null;
@@ -68,11 +68,8 @@
 	});
 
 	const filteredProducts = $derived.by(() => {
-		// If searching, use DB results
 		if (searchQuery.trim()) return searchResults;
-		// Otherwise filter by category only
 		if (!selectedCategory) return products;
-		// Simple category filter (parent only, descendants handled by DB if needed)
 		return products.filter(p => p.category_id === selectedCategory);
 	});
 
@@ -145,19 +142,17 @@
 
 <Dialog bind:open {onOpenChange}>
 	<DialogContent class="max-w-[100vw] w-full h-[100dvh] max-h-[100dvh] md:max-w-[95vw] md:h-[95vh] md:max-h-[95vh] flex flex-col p-0 gap-0 rounded-none md:rounded-lg [&>button]:hidden">
-		<!-- Header -->
 		<header class="flex items-center justify-between px-4 py-3 border-b bg-background shrink-0">
 			<div class="flex items-center gap-3">
 				<button
 					class="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-muted"
-					onclick={() => { open = false; onOpenChange?.(false); }}
+					onclick={close}
 				>
 					<X class="h-5 w-5" />
 				</button>
 				<h1 class="text-lg font-bold">{t("orders.newSale")}</h1>
 			</div>
 			<div class="flex items-center gap-2">
-				<!-- Mobile cart toggle -->
 				<button
 					class="md:hidden relative flex items-center justify-center w-12 h-12 rounded-xl bg-primary text-primary-foreground active:scale-95 transition-transform"
 					onclick={() => showCart = !showCart}
@@ -171,7 +166,7 @@
 				</button>
 				<button
 					class="hidden md:flex items-center justify-center w-10 h-10 rounded-full hover:bg-muted transition-colors"
-					onclick={() => { open = false; onOpenChange?.(false); }}
+					onclick={close}
 				>
 					<X class="h-5 w-5" />
 				</button>
@@ -179,9 +174,7 @@
 		</header>
 
 		<div class="flex-1 flex overflow-hidden relative">
-			<!-- Products Panel -->
 			<div class="flex-1 flex flex-col overflow-hidden {showCart ? 'hidden md:flex' : ''}">
-				<!-- Search -->
 				<div class="p-3 border-b shrink-0">
 					<div class="relative">
 						<Search class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -193,7 +186,6 @@
 					</div>
 				</div>
 
-				<!-- Categories Ribbon -->
 				{#if categories.length > 0}
 					<div class="shrink-0 border-b bg-muted/30">
 						<div class="flex gap-2 p-3 overflow-x-auto scrollbar-thin snap-x snap-mandatory">
@@ -216,7 +208,6 @@
 					</div>
 				{/if}
 
-				<!-- Products Grid -->
 				<div class="flex-1 overflow-y-auto p-3 bg-muted/20">
 					<div class="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 						{#each filteredProducts as product (product.id)}
@@ -244,7 +235,6 @@
 					</div>
 				</div>
 
-				<!-- Mobile Cart Summary Bar -->
 				{#if cart.length > 0}
 					<div class="md:hidden shrink-0 p-3 border-t bg-background">
 						<button
@@ -269,9 +259,7 @@
 				{/if}
 			</div>
 
-			<!-- Cart Panel -->
 			<div class="absolute inset-0 md:relative md:inset-auto md:w-96 flex flex-col bg-background {showCart ? '' : 'hidden md:flex'} z-10">
-				<!-- Cart Header -->
 				<div class="flex items-center justify-between p-4 border-b shrink-0">
 					<div class="flex items-center gap-3">
 						<button
@@ -296,7 +284,6 @@
 					{/if}
 				</div>
 
-				<!-- Cart Items -->
 				<div class="flex-1 overflow-y-auto p-3 space-y-2">
 					{#if cart.length === 0}
 						<div class="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
@@ -355,10 +342,8 @@
 					{/if}
 				</div>
 
-				<!-- Cart Footer -->
 				{#if cart.length > 0}
 					<div class="shrink-0 border-t bg-background">
-						<!-- Coupons -->
 						<div class="flex items-center justify-between p-4 border-b">
 							<span class="font-medium">{t("orders.coupons")}</span>
 							<div class="flex items-center gap-2">
@@ -379,7 +364,6 @@
 							</div>
 						</div>
 
-						<!-- Totals -->
 						<div class="p-4 space-y-2 text-sm">
 							<div class="flex justify-between">
 								<span class="text-muted-foreground">{t("orders.subtotal")}</span>
@@ -403,7 +387,6 @@
 							</div>
 						</div>
 
-						<!-- Submit Button -->
 						<div class="p-4 pt-0">
 							<Button
 								class="w-full h-14 text-lg font-bold rounded-2xl"
@@ -425,7 +408,6 @@
 					</div>
 				{/if}
 
-				<!-- Success Message -->
 				{#if lastOrderId}
 					<div class="p-4 bg-green-50 dark:bg-green-950/50 border-t border-green-200 dark:border-green-800">
 						<div class="flex items-center justify-between">
