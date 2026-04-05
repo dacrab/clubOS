@@ -11,16 +11,16 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 
 	return {
 		stats: {
-			todayRevenue: Number(d.stats?.todayRevenue ?? 0),
-			todayOrders: Number(d.stats?.todayOrders ?? 0),
-			lowStockCount: Number(d.stats?.lowStockCount ?? 0),
-			activeUsers: Number(d.stats?.activeUsers ?? 0),
+			todayRevenue: d.stats?.todayRevenue ?? 0,
+			todayOrders: d.stats?.todayOrders ?? 0,
+			lowStockCount: d.stats?.lowStockCount ?? 0,
+			activeUsers: d.stats?.activeUsers ?? 0,
 		},
 		recentOrders: d.recentOrders ?? [],
 		analytics: {
-			revenueByDay: (d.revenueByDay ?? []).map((r: { date: string; revenue: number }) => ({ ...r, revenue: Number(r.revenue) })),
-			bestSellers: (d.bestSellers ?? []).map((p: { id: string; name: string; quantity: number; categoryId: string }) => ({ ...p, quantity: Number(p.quantity) })),
-			categorySales: (d.categorySales ?? []).map((c: { name: string; quantity: number }) => ({ ...c, quantity: Number(c.quantity) })),
+			revenueByDay: d.revenueByDay ?? [],
+			bestSellers: d.bestSellers ?? [],
+			categorySales: d.categorySales ?? [],
 		},
 		products,
 		categories,
