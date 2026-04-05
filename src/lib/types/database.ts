@@ -93,24 +93,15 @@ export interface RegisterSession {
 	facility_id: string;
 	opened_by: string;
 	closed_by: string | null;
-	opened_at: string | null; // When first order was placed (auto-set)
+	opened_at: string;
 	closed_at: string | null;
 	opening_cash: number;
 	closing_cash: number | null;
 	expected_cash: number | null;
 	notes: string | null;
-	summary: RegisterSummary | null;
-	created_at: string; // When session was created/opened by staff
+	created_at: string;
 	opened_by_user?: User;
 	closed_by_user?: User;
-}
-
-export interface RegisterSummary {
-	orders_count: number;
-	total_sales: number;
-	total_discount: number;
-	coupons_used: number;
-	cash_variance: number;
 }
 
 export interface Order {
@@ -152,11 +143,7 @@ export interface Booking {
 	starts_at: string;
 	ends_at: string;
 	details: BookingDetails;
-	total_price: number | null;
-	deposit_amount: number | null;
-	deposit_paid: boolean;
 	notes: string | null;
-	internal_notes: string | null;
 	created_at: string;
 	updated_at: string;
 	created_by: string;

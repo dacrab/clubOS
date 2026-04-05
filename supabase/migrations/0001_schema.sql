@@ -148,7 +148,6 @@ CREATE TABLE public.register_sessions (
   closing_cash numeric(10,2) CHECK (closing_cash IS NULL OR closing_cash >= 0),
   expected_cash numeric(10,2),
   notes        text,
-  summary      jsonb,
   created_at   timestamptz NOT NULL DEFAULT now(),
   CHECK (closed_at IS NULL OR closed_at > opened_at)
 );
@@ -216,11 +215,7 @@ CREATE TABLE public.bookings (
   starts_at       timestamptz NOT NULL,
   ends_at         timestamptz NOT NULL,
   details         jsonb NOT NULL DEFAULT '{}',
-  total_price     numeric(10,2) CHECK (total_price IS NULL OR total_price >= 0),
-  deposit_amount  numeric(10,2) DEFAULT 0 CHECK (deposit_amount IS NULL OR deposit_amount >= 0),
-  deposit_paid    boolean NOT NULL DEFAULT false,
   notes           text,
-  internal_notes  text,
   created_at      timestamptz NOT NULL DEFAULT now(),
   updated_at      timestamptz NOT NULL DEFAULT now(),
   created_by      uuid NOT NULL REFERENCES public.users(id) ON DELETE RESTRICT,

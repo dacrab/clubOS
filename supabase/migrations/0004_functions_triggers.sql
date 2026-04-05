@@ -317,7 +317,6 @@ CREATE FUNCTION public.close_register_session(
 DECLARE
   v_session  record;
   v_expected numeric(10,2);
-  v_summary  jsonb;
 BEGIN
   -- Lock row — prevents concurrent double-close
   SELECT * INTO v_session FROM register_sessions
@@ -328,35 +327,24 @@ BEGIN
     RETURN jsonb_build_object('error', 'Session not found or already closed');
   END IF;
 
-  -- Single pass: compute expected cash and session summary together
-  SELECT
-    COALESCE(SUM(total_amount), 0) + v_session.opening_cash,
-    jsonb_build_object(
-      'orders_count',   COUNT(*),
-      'total_sales',    COALESCE(SUM(total_amount), 0)::float8,
-      'total_discount', COALESCE(SUM(discount_amount), 0)::float8,
-      'coupons_used',   COALESCE(SUM(coupon_count), 0),
-      'cash_variance',  (p_closing_cash - (COALESCE(SUM(total_amount), 0) + v_session.opening_cash))::float8
-    )
-  INTO v_expected, v_summary
+  SELECT COALESCE(SUM(total_amount), 0) + v_session.opening_cash
+  INTO v_expected
   FROM orders WHERE session_id = p_session_id;
 
   UPDATE register_sessions
   SET
-    closed_at    = now(),
-    closed_by    = p_user_id,
-    closing_cash = p_closing_cash,
+    closed_at     = now(),
+    closed_by     = p_user_id,
+    closing_cash  = p_closing_cash,
     expected_cash = v_expected,
-    notes        = p_notes,
-    summary      = v_summary
+    notes         = p_notes
   WHERE id = p_session_id;
 
   RETURN jsonb_build_object(
     'id',            p_session_id,
     'expected_cash', v_expected::float8,
     'closing_cash',  p_closing_cash::float8,
-    'variance',      (p_closing_cash - v_expected)::float8,
-    'summary',       v_summary
+    'variance',      (p_closing_cash - v_expected)::float8
   );
 END;
 $$;

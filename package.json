@@ -52,7 +52,8 @@
 		"@vercel/analytics": "^2.0.1",
 		"bits-ui": "^2.17.0",
 		"svelte-sonner": "^1.1.0",
-		"tailwind-merge": "^3.5.0"
+		"tailwind-merge": "^3.5.0",
+		"tsx": "^4.21.0"
 	},
 	"overrides": {
 		"cookie": ">=0.7.0"
