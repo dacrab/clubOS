@@ -164,6 +164,18 @@
 	}
 }
 
+@layer components {
+	/* Public page root wrapper (login, signup, reset, billing, onboarding) */
+	.page-public {
+		@apply flex min-h-screen flex-col bg-background;
+	}
+
+	/* Popover/dropdown/select shared animation classes */
+	.popover-anim {
+		@apply data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95;
+	}
+}
+
 @layer utilities {
 	.scrollbar-thin {
 		scrollbar-width: thin;

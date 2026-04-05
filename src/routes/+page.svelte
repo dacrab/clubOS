@@ -45,7 +45,7 @@
 	}
 </script>
 
-<div class="flex min-h-screen flex-col bg-background">
+<div class="page-public">
 	<Header public />
 	<main class="flex flex-1 items-center justify-center p-4">
 		<Card class="w-full max-w-sm">
