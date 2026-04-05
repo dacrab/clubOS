@@ -1,6 +1,6 @@
 # ClubOS
 
-Modern POS and club management system built with SvelteKit 5, Supabase, and Tailwind CSS v4.
+Modern POS and club management system built with SvelteKit 2, Supabase, and Tailwind CSS v4.
 
 ## Features
 
