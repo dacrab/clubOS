@@ -8,15 +8,14 @@
  *   - 10 products across those categories
  *
  * Usage:
- *   bun run db:seed        (loads .env.local automatically via Bun)
+ *   bun run db:seed          — via npm script (recommended)
+ *   bun scripts/seed.ts      — direct invocation
+ *   bun tsx scripts/seed.ts  — also works; Bun intercepts tsx and loads .env.local
  *
  * Required env (auto-loaded from .env.local by Bun runtime):
  *   PUBLIC_SUPABASE_URL   — local Supabase API URL
  *   SUPABASE_SECRET_KEY   — service_role JWT (for admin auth operations)
  *   SEED_PASSWORD         — password for all demo users
- *
- * NOTE: use `bun scripts/seed.ts`, NOT `bunx tsx scripts/seed.ts`
- *       tsx does not load .env.local — Bun does natively.
  */
 
 import { createClient } from "@supabase/supabase-js";
