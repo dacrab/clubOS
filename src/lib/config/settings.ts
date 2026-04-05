@@ -7,17 +7,11 @@ export interface TenantSettings {
 	time_format: TimeFormatType;
 	// Inventory
 	low_stock_threshold: number;
-	allow_unlimited_stock: boolean;
-	negative_stock_allowed: boolean;
 	// Sales
 	coupons_value: number;
-	allow_treats: boolean;
-	require_open_register_for_sale: boolean;
-	tax_rate_percent: number;
 	// Bookings
 	football_fields_count: number;
 	appointment_buffer_min: number;
-	booking_default_duration_min: number;
 	prevent_overlaps: boolean;
 	birthday_duration_min: number;
 	football_duration_min: number;
@@ -36,17 +30,11 @@ export const DEFAULT_SETTINGS: TenantSettings = {
 	time_format: "24h",
 	// Inventory
 	low_stock_threshold: 3,
-	allow_unlimited_stock: true,
-	negative_stock_allowed: false,
 	// Sales
 	coupons_value: 2,
-	allow_treats: true,
-	require_open_register_for_sale: true,
-	tax_rate_percent: 0,
 	// Bookings
 	football_fields_count: 2,
 	appointment_buffer_min: 15,
-	booking_default_duration_min: 120,
 	prevent_overlaps: true,
 	birthday_duration_min: 180,
 	football_duration_min: 120,

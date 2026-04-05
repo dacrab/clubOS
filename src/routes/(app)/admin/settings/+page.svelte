@@ -98,40 +98,9 @@
 				<SettingRow id="lowStock" label={t("settings.lowStockThreshold")} description={t("settings.lowStockThresholdDesc")}>
 					<Input id="lowStock" type="number" min="0" bind:value={settings.low_stock_threshold} class="w-20" />
 				</SettingRow>
-				<Separator />
-				<SettingRow label={t("settings.allowUnlimitedStock")} description={t("settings.allowUnlimitedStockDesc")}>
-					<Switch bind:checked={settings.allow_unlimited_stock} />
-				</SettingRow>
-				<Separator />
-				<SettingRow label={t("settings.negativeStockAllowed")} description={t("settings.negativeStockAllowedDesc")}>
-					<Switch bind:checked={settings.negative_stock_allowed} />
-				</SettingRow>
 			</CardContent>
 		</Card>
 
-		<Card>
-			<CardHeader>
-				<CardTitle>{t("settings.sections.sales")}</CardTitle>
-				<CardDescription>{t("settings.sections.salesDesc")}</CardDescription>
-			</CardHeader>
-			<CardContent class="space-y-4">
-				<SettingRow id="coupon" label={t("settings.couponsValue")} description={t("settings.couponsValueDesc")}>
-					<Input id="coupon" type="number" step="0.01" min="0" bind:value={settings.coupons_value} class="w-20" />
-				</SettingRow>
-				<Separator />
-				<SettingRow label={t("settings.allowTreats")} description={t("settings.allowTreatsDesc")}>
-					<Switch bind:checked={settings.allow_treats} />
-				</SettingRow>
-				<Separator />
-				<SettingRow label={t("settings.requireOpenRegister")} description={t("settings.requireOpenRegisterDesc")}>
-					<Switch bind:checked={settings.require_open_register_for_sale} />
-				</SettingRow>
-				<Separator />
-				<SettingRow id="tax" label={t("settings.taxRate")} description={t("settings.taxRateDesc")}>
-					<Input id="tax" type="number" step="0.01" min="0" max="100" bind:value={settings.tax_rate_percent} class="w-20" />
-				</SettingRow>
-			</CardContent>
-		</Card>
 
 		<Card>
 			<CardHeader>
@@ -145,10 +114,6 @@
 				<Separator />
 				<SettingRow id="buffer" label={t("settings.appointmentBuffer")} description={t("settings.appointmentBufferDesc")}>
 					<Input id="buffer" type="number" min="0" max="120" bind:value={settings.appointment_buffer_min} class="w-20" />
-				</SettingRow>
-				<Separator />
-				<SettingRow id="dur" label={t("settings.bookingDuration")} description={t("settings.bookingDurationDesc")}>
-					<Input id="dur" type="number" min="10" max="600" bind:value={settings.booking_default_duration_min} class="w-20" />
 				</SettingRow>
 				<Separator />
 				<SettingRow id="bdur" label={t("settings.birthdayDuration")} description={t("settings.birthdayDurationDesc")}>

@@ -9,9 +9,7 @@ vi.mock('$lib/config/settings', () => ({
 		currency_code: 'EUR',
 		date_format: 'DD/MM/YYYY',
 		time_format: '24h',
-		tax_rate_percent: 0,
 		low_stock_threshold: 5,
-		coupons_value: 0.5,
 	}
 }));
 
@@ -31,9 +29,9 @@ describe('settings', () => {
 
 	describe('setSettings', () => {
 		it('updates settings with partial values', () => {
-			settings.setSettings({ currency_code: 'USD', tax_rate_percent: 10 });
+			settings.setSettings({ currency_code: 'USD', low_stock_threshold: 10 });
 			expect(settings.current.currency_code).toBe('USD');
-			expect(settings.current.tax_rate_percent).toBe(10);
+			expect(settings.current.low_stock_threshold).toBe(10);
 		});
 
 		it('merges with defaults', () => {
