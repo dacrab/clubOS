@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
-	import { invalidateAll } from "$app/navigation";
 	import PageHeader from "$lib/components/layout/page-header.svelte";
 	import EmptyState from "$lib/components/layout/empty-state.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
@@ -24,10 +23,6 @@
 	const { data } = $props();
 
 	let searchQuery = $state("");
-	let showCategoryDialog = $state(false);
-	let editingCategory = $state<CategoryPartial | null>(null);
-	let categoryForm = $state({ name: "", description: "", parent_id: "" });
-	let categorySaving = $state(false);
 
 	const crud = createCrud<Product, ProductForm>({
 		toForm: (p) => p
@@ -41,7 +36,7 @@
 	});
 
 	const filtered = $derived(searchQuery ? data.products.filter((p: Product) => p.name.toLowerCase().includes(searchQuery.toLowerCase())) : data.products);
-	const lowStockProducts = $derived(data.lowStockProducts ?? []);
+	const lowStockProducts = $derived(data.lowStockProducts);
 	const getCategoryName = (id: string | null): string => id ? (data.categories as CategoryPartial[]).find((c) => c.id === id)?.name ?? "-" : "-";
 	const getStockBadge = (stock: number) => {
 		const threshold = settings.current.low_stock_threshold;
@@ -50,32 +45,23 @@
 			: { variant: "success" as const, label: t("products.inStock") };
 	};
 
-	function openCategoryDialog(cat?: CategoryPartial) {
-		editingCategory = cat ?? null;
-		categoryForm = cat ? { name: cat.name, description: cat.description ?? "", parent_id: cat.parent_id ?? "" } : { name: "", description: "", parent_id: "" };
-		showCategoryDialog = true;
-	}
-
-	async function saveCategory() {
-		if (!categoryForm.name) return;
-		categorySaving = true;
-		const payload = { name: categoryForm.name, description: categoryForm.description || undefined, parent_id: categoryForm.parent_id || undefined, facility_id: data.user.facilityId ?? "" };
-		const { error } = editingCategory ? await categories.update(editingCategory.id, payload) : await categories.create(payload);
-		categorySaving = false;
-		if (!error) { showCategoryDialog = false; await invalidateAll(); }
-	}
-
-	async function deleteCategory(cat: CategoryPartial) {
-		if (!confirm(t("common.deleteConfirm").replace("{name}", cat.name))) return;
-		await categories.remove(cat.id);
-		await invalidateAll();
-	}
+	type CategoryForm = { name: string; description: string; parent_id: string };
+	const categoryCrud = createCrud<CategoryPartial, CategoryForm>({
+		toForm: (cat) => cat
+			? { name: cat.name, description: cat.description ?? "", parent_id: cat.parent_id ?? "" }
+			: { name: "", description: "", parent_id: "" },
+		onCreate: (f) => categories.create({ name: f.name, description: f.description || undefined, parent_id: f.parent_id || undefined, facility_id: data.user.facilityId ?? "" }),
+		onUpdate: (id, f) => categories.update(id, { name: f.name, description: f.description || undefined, parent_id: f.parent_id || undefined }),
+		onDelete: (id) => categories.remove(id),
+		getId: (cat) => cat.id,
+		getName: (cat) => cat.name,
+	});
 </script>
 
 <div class="space-y-6">
 	<PageHeader title={t("products.title")} description={t("products.subtitle")}>
 		{#snippet actions()}
-			<Button variant="outline" onclick={() => openCategoryDialog()}><FolderTree class="mr-2 h-4 w-4" />{t("products.manageCategories")}</Button>
+			<Button variant="outline" onclick={() => categoryCrud.openCreate()}><FolderTree class="mr-2 h-4 w-4" />{t("products.manageCategories")}</Button>
 			<Button onclick={() => crud.openCreate()}><Plus class="mr-2 h-4 w-4" />{t("products.addProduct")}</Button>
 		{/snippet}
 	</PageHeader>
@@ -134,7 +120,7 @@
 	{/if}
 </div>
 
-<FormDialog bind:open={crud.open} title={crud.isEdit ? t("products.editProduct") : t("products.addProduct")} description={t("products.subtitle")} saving={crud.saving} onsubmit={() => crud.save()} onclose={() => crud.close()}>
+<FormDialog bind:open={crud.open} title={crud.isEdit ? t("products.editProduct") : t("products.addProduct")} saving={crud.saving} onsubmit={() => crud.save()} onclose={() => crud.close()}>
 	<div class="space-y-2"><Label for="name">{t("products.productName")}</Label><Input id="name" bind:value={crud.form.name} required /></div>
 	<div class="space-y-2"><Label for="desc">{t("common.description")}</Label><Input id="desc" bind:value={crud.form.description} /></div>
 	<div class="grid grid-cols-2 gap-4">
@@ -154,29 +140,29 @@
 	<div class="space-y-2"><Label for="img">{t("products.imageUrl")}</Label><Input id="img" bind:value={crud.form.image_url} /></div>
 </FormDialog>
 
-<FormDialog bind:open={showCategoryDialog} title={editingCategory ? t("categories.editCategory") : t("categories.addCategory")} saving={categorySaving} onsubmit={saveCategory} onclose={() => showCategoryDialog = false}>
-	{#if data.categories.length > 0 && !editingCategory}
+<FormDialog bind:open={categoryCrud.open} title={categoryCrud.isEdit ? t("categories.editCategory") : t("categories.addCategory")} saving={categoryCrud.saving} onsubmit={() => categoryCrud.save()} onclose={() => categoryCrud.close()}>
+	{#if data.categories.length > 0 && !categoryCrud.isEdit}
 		<div class="space-y-2 max-h-48 overflow-y-auto border rounded-lg p-2">
 			{#each data.categories as cat (cat.id)}
 				<div class="flex items-center justify-between rounded-lg border p-2 hover:bg-accent">
 					<span class="font-medium">{cat.name}</span>
 					<div class="flex items-center gap-1">
-						<Button variant="ghost" size="icon-sm" onclick={() => openCategoryDialog(cat)} aria-label={t("common.edit")}><Pencil class="h-4 w-4" /></Button>
-						<Button variant="ghost" size="icon-sm" onclick={() => deleteCategory(cat)} aria-label={t("common.delete")}><Trash2 class="h-4 w-4" /></Button>
+						<Button variant="ghost" size="icon-sm" onclick={() => categoryCrud.openEdit(cat)} aria-label={t("common.edit")}><Pencil class="h-4 w-4" /></Button>
+						<Button variant="ghost" size="icon-sm" onclick={() => categoryCrud.remove(cat)} aria-label={t("common.delete")}><Trash2 class="h-4 w-4" /></Button>
 					</div>
 				</div>
 			{/each}
 		</div>
 	{/if}
-	<div class="space-y-2"><Label for="catName">{t("categories.categoryName")}</Label><Input id="catName" bind:value={categoryForm.name} required /></div>
-	<div class="space-y-2"><Label for="catDesc">{t("common.description")}</Label><Input id="catDesc" bind:value={categoryForm.description} /></div>
+	<div class="space-y-2"><Label for="catName">{t("categories.categoryName")}</Label><Input id="catName" bind:value={categoryCrud.form.name} required /></div>
+	<div class="space-y-2"><Label for="catDesc">{t("common.description")}</Label><Input id="catDesc" bind:value={categoryCrud.form.description} /></div>
 	<div class="space-y-2">
 		<Label>{t("categories.parentCategory")}</Label>
-		<Select bind:value={categoryForm.parent_id}>
-			<SelectTrigger selected={(data.categories as CategoryPartial[]).find((c) => c.id === categoryForm.parent_id)?.name ?? t("categories.noParent")} placeholder={t("categories.noParent")} />
+		<Select bind:value={categoryCrud.form.parent_id}>
+			<SelectTrigger selected={data.categories.find((c) => c.id === categoryCrud.form.parent_id)?.name ?? t("categories.noParent")} placeholder={t("categories.noParent")} />
 			<SelectContent>
 				<SelectItem value="">{t("categories.noParent")}</SelectItem>
-				{#each (data.categories as CategoryPartial[]).filter((c) => c.id !== editingCategory?.id) as cat (cat.id)}<SelectItem value={cat.id}>{cat.name}</SelectItem>{/each}
+				{#each data.categories.filter((c) => c.id !== categoryCrud.editing?.id) as cat (cat.id)}<SelectItem value={cat.id}>{cat.name}</SelectItem>{/each}
 			</SelectContent>
 		</Select>
 	</div>

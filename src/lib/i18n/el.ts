@@ -254,6 +254,8 @@ export const el: TranslationsStructure = {
 		countedCash: "Μετρημένα Μετρητά",
 		expectedCash: "Αναμενόμενα Μετρητά",
 		difference: "Διαφορά",
+		sessionOpen: "Ανοιχτό",
+		sessionClosed: "Κλειστό",
 		empty: {
 			title: "Δεν βρέθηκαν συνεδρίες",
 			description: "Οι συνεδρίες ταμείου θα εμφανιστούν εδώ",
@@ -348,6 +350,17 @@ export const el: TranslationsStructure = {
 		lowStockThresholdDesc: "Ειδοποίηση όταν το απόθεμα πέσει κάτω από αυτόν τον αριθμό",
 		currencyCode: "Νόμισμα",
 		currencyCodeDesc: "Νόμισμα για τιμές και σύνολα",
+		currencies: {
+			EUR: "Ευρώ (EUR)",
+			USD: "Δολάριο ΗΠΑ (USD)",
+			GBP: "Λίρα Αγγλίας (GBP)",
+			CHF: "Ελβετικό Φράγκο (CHF)",
+			PLN: "Πολωνικό Ζλότι (PLN)",
+			CZK: "Τσεχική Κορώνα (CZK)",
+			SEK: "Σουηδική Κορώνα (SEK)",
+			NOK: "Νορβηγική Κορώνα (NOK)",
+			DKK: "Δανική Κορώνα (DKK)",
+		},
 		footballFieldsCount: "Αριθμός γηπέδων",
 		footballFieldsCountDesc: "Αριθμός διαθέσιμων γηπέδων ποδοσφαίρου",
 		appointmentBuffer: "Διάλειμμα κρατήσεων (λεπτά)",
@@ -373,6 +386,12 @@ export const el: TranslationsStructure = {
 		},
 		dateFormat: "Μορφή ημερομηνίας",
 		dateFormatDesc: "Πώς εμφανίζονται οι ημερομηνίες",
+		dateFormats: {
+			DDMMYYYY: "ΗΗ/ΜΜ/ΕΕΕΕ (31/12/2024)",
+			MMDDYYYY: "ΜΜ/ΗΗ/ΕΕΕΕ (12/31/2024)",
+			YYYYMMDD: "ΕΕΕΕ-ΜΜ-ΗΗ (2024-12-31)",
+			DDMMYYYY_DOT: "ΗΗ.ΜΜ.ΕΕΕΕ (31.12.2024)",
+		},
 		timeFormat: "Μορφή ώρας",
 		timeFormatDesc: "12ώρη ή 24ώρη μορφή",
 		timeFormats: {
@@ -401,6 +420,7 @@ export const el: TranslationsStructure = {
 	// Date/Time
 	date: {
 		today: "Σήμερα",
+		date: "Ημερομηνία",
 		selectRange: "Επιλογή εύρους",
 	},
 

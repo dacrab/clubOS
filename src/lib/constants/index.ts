@@ -24,8 +24,6 @@ export const USER_ROLE = {
 
 export type UserRoleValue = (typeof USER_ROLE)[keyof typeof USER_ROLE];
 
-export const STOCK_STATUS = { OUT: 0, LOW: 10 } as const;
-
 export const PRODUCTS_LIMIT = 500;
 export const CATEGORIES_LIMIT = 100;
 export const BOOKINGS_LIMIT = 200;

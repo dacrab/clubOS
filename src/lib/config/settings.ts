@@ -51,22 +51,22 @@ export function mergeSettings(tenantSettings: Partial<TenantSettings> | null): T
 }
 
 export const CURRENCY_OPTIONS = [
-	{ value: "EUR", label: "Euro (EUR)", symbol: "€" },
-	{ value: "USD", label: "US Dollar (USD)", symbol: "$" },
-	{ value: "GBP", label: "British Pound (GBP)", symbol: "£" },
-	{ value: "CHF", label: "Swiss Franc (CHF)", symbol: "CHF" },
-	{ value: "PLN", label: "Polish Zloty (PLN)", symbol: "zł" },
-	{ value: "CZK", label: "Czech Koruna (CZK)", symbol: "Kč" },
-	{ value: "SEK", label: "Swedish Krona (SEK)", symbol: "kr" },
-	{ value: "NOK", label: "Norwegian Krone (NOK)", symbol: "kr" },
-	{ value: "DKK", label: "Danish Krone (DKK)", symbol: "kr" },
+	{ value: "EUR", labelKey: "settings.currencies.EUR", symbol: "€" },
+	{ value: "USD", labelKey: "settings.currencies.USD", symbol: "$" },
+	{ value: "GBP", labelKey: "settings.currencies.GBP", symbol: "£" },
+	{ value: "CHF", labelKey: "settings.currencies.CHF", symbol: "CHF" },
+	{ value: "PLN", labelKey: "settings.currencies.PLN", symbol: "zł" },
+	{ value: "CZK", labelKey: "settings.currencies.CZK", symbol: "Kč" },
+	{ value: "SEK", labelKey: "settings.currencies.SEK", symbol: "kr" },
+	{ value: "NOK", labelKey: "settings.currencies.NOK", symbol: "kr" },
+	{ value: "DKK", labelKey: "settings.currencies.DKK", symbol: "kr" },
 ] as const;
 
 export const DATE_FORMAT_OPTIONS = [
-	{ value: "DD/MM/YYYY", label: "DD/MM/YYYY (31/12/2024)" },
-	{ value: "MM/DD/YYYY", label: "MM/DD/YYYY (12/31/2024)" },
-	{ value: "YYYY-MM-DD", label: "YYYY-MM-DD (2024-12-31)" },
-	{ value: "DD.MM.YYYY", label: "DD.MM.YYYY (31.12.2024)" },
+	{ value: "DD/MM/YYYY", labelKey: "settings.dateFormats.DDMMYYYY" },
+	{ value: "MM/DD/YYYY", labelKey: "settings.dateFormats.MMDDYYYY" },
+	{ value: "YYYY-MM-DD", labelKey: "settings.dateFormats.YYYYMMDD" },
+	{ value: "DD.MM.YYYY", labelKey: "settings.dateFormats.DDMMYYYY_DOT" },
 ] as const;
 
 export const TIME_FORMAT_OPTIONS = [

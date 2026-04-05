@@ -3,7 +3,6 @@
 	import { fmtCurrency, currentCurrencySymbol } from "$lib/utils/format";
 	import PageHeader from "$lib/components/layout/page-header.svelte";
 	import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import NewSaleDialog from "$lib/components/features/new-sale-dialog.svelte";
 	import RecentOrders from "$lib/components/features/recent-orders.svelte";
@@ -157,9 +156,11 @@
 			</CardHeader>
 			<CardContent>
 				{#if data.analytics.categorySales.length === 0}
-					<div class="flex h-64 flex-col items-center justify-center text-muted-foreground">
-						<Layers class="h-12 w-12 opacity-30 mb-2" />
-						<p class="text-sm">{t("common.noResults")}</p>
+					<div class="flex h-64 items-center justify-center text-muted-foreground">
+						<div class="flex flex-col items-center gap-2">
+							<Layers class="h-12 w-12 opacity-30" />
+							<p class="text-sm">{t("common.noResults")}</p>
+						</div>
 					</div>
 				{:else}
 					<div class="space-y-4">
@@ -194,21 +195,20 @@
 			</CardHeader>
 			<CardContent>
 				{#if data.analytics.bestSellers.length === 0}
-					<div class="flex flex-col items-center justify-center py-8 text-muted-foreground">
-						<Star class="h-12 w-12 opacity-30 mb-2" />
-						<p class="text-sm">{t("common.noResults")}</p>
+					<div class="flex h-64 items-center justify-center text-muted-foreground">
+						<div class="flex flex-col items-center gap-2">
+							<Star class="h-12 w-12 opacity-30" />
+							<p class="text-sm">{t("common.noResults")}</p>
+						</div>
 					</div>
 				{:else}
 					<div class="space-y-3">
 						{#each data.analytics.bestSellers as product, i (product.id)}
 							<div class="flex items-center justify-between rounded-lg p-2 transition-colors hover:bg-muted/50">
 								<div class="flex items-center gap-3">
-									<Badge
-										variant={i === 0 ? "default" : "outline"}
-										class="w-7 h-7 rounded-full p-0 flex items-center justify-center text-xs font-semibold shrink-0"
-									>
+									<span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold {i === 0 ? 'bg-primary text-primary-foreground border-primary' : 'text-muted-foreground'}">
 										{i + 1}
-									</Badge>
+									</span>
 									<span class="font-medium">{product.name}</span>
 								</div>
 								<span class="text-sm text-muted-foreground whitespace-nowrap">

@@ -25,7 +25,7 @@
 	{:else}
 		<Card><Table>
 			<TableHeader><TableRow>
-				<TableHead>{t("orders.orderNumber")}</TableHead><TableHead>{t("date.today")}</TableHead><TableHead>{t("orders.items")}</TableHead>
+				<TableHead>{t("orders.orderNumber")}</TableHead><TableHead>{t("date.date")}</TableHead><TableHead>{t("orders.items")}</TableHead>
 				<TableHead>{t("orders.subtotal")}</TableHead><TableHead>{t("orders.discount")}</TableHead><TableHead>{t("orders.total")}</TableHead><TableHead class="w-20">{t("common.actions")}</TableHead>
 			</TableRow></TableHeader>
 			<TableBody>

@@ -252,6 +252,8 @@ export const en = {
 		countedCash: "Counted Cash",
 		expectedCash: "Expected Cash",
 		difference: "Difference",
+		sessionOpen: "Open",
+		sessionClosed: "Closed",
 		empty: {
 			title: "No sessions found",
 			description: "Register sessions will appear here",
@@ -346,6 +348,17 @@ export const en = {
 		lowStockThresholdDesc: "Alert when stock falls below this number",
 		currencyCode: "Currency",
 		currencyCodeDesc: "Currency for prices and totals",
+		currencies: {
+			EUR: "Euro (EUR)",
+			USD: "US Dollar (USD)",
+			GBP: "British Pound (GBP)",
+			CHF: "Swiss Franc (CHF)",
+			PLN: "Polish Zloty (PLN)",
+			CZK: "Czech Koruna (CZK)",
+			SEK: "Swedish Krona (SEK)",
+			NOK: "Norwegian Krone (NOK)",
+			DKK: "Danish Krone (DKK)",
+		},
 		footballFieldsCount: "Number of football fields",
 		footballFieldsCountDesc: "Number of available football fields",
 		appointmentBuffer: "Booking buffer (minutes)",
@@ -371,6 +384,12 @@ export const en = {
 		},
 		dateFormat: "Date format",
 		dateFormatDesc: "How dates are displayed",
+		dateFormats: {
+			DDMMYYYY: "DD/MM/YYYY (31/12/2024)",
+			MMDDYYYY: "MM/DD/YYYY (12/31/2024)",
+			YYYYMMDD: "YYYY-MM-DD (2024-12-31)",
+			DDMMYYYY_DOT: "DD.MM.YYYY (31.12.2024)",
+		},
 		timeFormat: "Time format",
 		timeFormatDesc: "12-hour or 24-hour clock",
 		timeFormats: {
@@ -399,6 +418,7 @@ export const en = {
 	// Date/Time
 	date: {
 		today: "Today",
+		date: "Date",
 		selectRange: "Select date range",
 	},
 

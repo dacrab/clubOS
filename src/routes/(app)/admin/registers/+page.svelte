@@ -37,20 +37,20 @@
 							<div class="space-y-1">
 								<CardTitle class="text-base flex items-center gap-2">
 									{fmtDate(session.opened_at)}
-									<Badge variant={session.closed_at ? "secondary" : "success"}>{t(session.closed_at ? "common.close" : "common.open")}</Badge>
+									<Badge variant={session.closed_at ? "secondary" : "success"}>{t(session.closed_at ? "register.sessionClosed" : "register.sessionOpen")}</Badge>
 								</CardTitle>
-								<p class="text-sm text-muted-foreground">{orders.length} {t("orders.title").toLowerCase()} · {fmtCurrency(sessionTotal)}</p>
+								<p class="text-sm text-muted-foreground">{orders.length} {t("nav.orders").toLowerCase()} · {fmtCurrency(sessionTotal)}</p>
 							</div>
 							<Button variant="ghost" size="sm" onclick={() => expandedSession = expanded ? null : session.id} disabled={orders.length === 0}>
 								{#if expanded}<ChevronUp class="h-4 w-4" />{:else}<ChevronDown class="h-4 w-4" />{/if}
-						<span>{t("orders.viewItems")}</span>
+								<span>{t("orders.viewItems")}</span>
 							</Button>
 						</div>
 					</CardHeader>
 					{#if expanded && orders.length > 0}
 						<CardContent class="pt-0">
 							<div class="rounded-lg border"><Table>
-								<TableHeader><TableRow><TableHead>{t("orders.orderNumber")}</TableHead><TableHead>{t("date.today")}</TableHead><TableHead>{t("orders.items")}</TableHead><TableHead>{t("orders.total")}</TableHead><TableHead class="w-16"></TableHead></TableRow></TableHeader>
+								<TableHeader><TableRow><TableHead>{t("orders.orderNumber")}</TableHead><TableHead>{t("date.date")}</TableHead><TableHead>{t("orders.items")}</TableHead><TableHead>{t("orders.total")}</TableHead><TableHead class="w-16"></TableHead></TableRow></TableHeader>
 								<TableBody>
 									{#each orders as order (order.id)}
 										<TableRow class="cursor-pointer hover:bg-muted/50" onclick={() => { selectedOrder = order; showDialog = true; }}>

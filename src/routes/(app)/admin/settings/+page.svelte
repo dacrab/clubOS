@@ -45,9 +45,7 @@
 
 	const hasChanges = $derived(JSON.stringify(settings) !== lastServerSettings);
 
-	const getCurrencyLabel = (v: string | null) => CURRENCY_OPTIONS.find((c) => c.value === v)?.label ?? "";
-	const getDateLabel = (v: string | null) => DATE_FORMAT_OPTIONS.find((f) => f.value === v)?.label ?? "";
-	const optionLabel = (opts: readonly { value: string; labelKey: string }[], v: string) => t(opts.find((o) => o.value === v)?.labelKey ?? "");
+	const optionLabel = (opts: readonly { value: string; labelKey: string }[], v: string | null) => t(opts.find((o) => o.value === v)?.labelKey ?? "");
 
 	function handleReset() {
 		settings = structuredClone(data.settings);
@@ -100,7 +98,6 @@
 				</SettingRow>
 			</CardContent>
 		</Card>
-
 
 		<Card>
 			<CardHeader>
@@ -160,10 +157,10 @@
 				<Separator />
 				<SettingRow label={t("settings.currencyCode")} description={t("settings.currencyCodeDesc")}>
 					<Select bind:value={settings.currency_code}>
-						<SelectTrigger class="w-40" selected={getCurrencyLabel(settings.currency_code)} />
+						<SelectTrigger class="w-40" selected={optionLabel(CURRENCY_OPTIONS, settings.currency_code)} />
 						<SelectContent>
 							{#each CURRENCY_OPTIONS as c (c.value)}
-								<SelectItem value={c.value}>{c.label}</SelectItem>
+								<SelectItem value={c.value}>{t(c.labelKey)}</SelectItem>
 							{/each}
 						</SelectContent>
 					</Select>
@@ -171,10 +168,10 @@
 				<Separator />
 				<SettingRow label={t("settings.dateFormat")} description={t("settings.dateFormatDesc")}>
 					<Select bind:value={settings.date_format}>
-						<SelectTrigger class="w-48" selected={getDateLabel(settings.date_format)} />
+						<SelectTrigger class="w-48" selected={optionLabel(DATE_FORMAT_OPTIONS, settings.date_format)} />
 						<SelectContent>
 							{#each DATE_FORMAT_OPTIONS as f (f.value)}
-								<SelectItem value={f.value}>{f.label}</SelectItem>
+								<SelectItem value={f.value}>{t(f.labelKey)}</SelectItem>
 							{/each}
 						</SelectContent>
 					</Select>
