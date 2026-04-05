@@ -266,8 +266,12 @@ GROUP BY p.facility_id, p.id, p.name, p.category_id;
 CREATE UNIQUE INDEX idx_mv_best_sellers_product  ON public.mv_best_sellers(product_id);
 CREATE        INDEX idx_mv_best_sellers_facility ON public.mv_best_sellers(facility_id);
 
+-- Revoke direct API access to the materialized view — it is only accessed
+-- via get_dashboard_data() RPC (SECURITY DEFINER), never directly.
+REVOKE SELECT ON public.mv_best_sellers FROM anon, authenticated;
+
 -- Daily stats per facility (today only)
-CREATE VIEW public.v_daily_stats AS
+CREATE VIEW public.v_daily_stats WITH (security_invoker = true) AS
 SELECT
   facility_id,
   COUNT(*)                          AS orders_count,
@@ -279,7 +283,7 @@ WHERE created_at >= CURRENT_DATE
 GROUP BY facility_id;
 
 -- Low stock count per facility (threshold from tenant settings, default 3)
-CREATE VIEW public.v_low_stock AS
+CREATE VIEW public.v_low_stock WITH (security_invoker = true) AS
 SELECT p.facility_id, COUNT(*) AS count
 FROM products p
 JOIN facilities f ON f.id = p.facility_id
@@ -289,7 +293,7 @@ WHERE p.track_inventory
 GROUP BY p.facility_id;
 
 -- Low stock product list (threshold from tenant settings, default 3)
-CREATE VIEW public.v_low_stock_products AS
+CREATE VIEW public.v_low_stock_products WITH (security_invoker = true) AS
 SELECT
   p.id, p.facility_id, p.name, p.price, p.stock_quantity, p.category_id,
   c.name AS category_name
@@ -303,7 +307,7 @@ ORDER BY p.stock_quantity ASC, p.name;
 
 -- Recent orders with aggregated items (used by dashboard and recent-orders component)
 -- 'products' key matches v_orders_list and the OrderItemView TypeScript type.
-CREATE VIEW public.v_recent_orders AS
+CREATE VIEW public.v_recent_orders WITH (security_invoker = true) AS
 SELECT
   o.id, o.facility_id, o.total_amount, o.subtotal, o.discount_amount,
   o.coupon_count, o.created_at, o.created_by,
@@ -324,7 +328,7 @@ GROUP BY o.id;
 -- Weekly revenue — one row per facility per day for the last 7 days.
 -- The CROSS JOIN is bounded to facility rows only — filtered by facility_id
 -- in the calling RPC rather than producing all-facility × all-day rows.
-CREATE VIEW public.v_weekly_revenue_full AS
+CREATE VIEW public.v_weekly_revenue_full WITH (security_invoker = true) AS
 WITH date_series AS (
   SELECT generate_series(
     CURRENT_DATE - INTERVAL '6 days', CURRENT_DATE, INTERVAL '1 day'
@@ -347,7 +351,7 @@ LEFT JOIN revenue_data r ON r.facility_id = f.id AND r.date = d.date
 ORDER BY f.id, d.date;
 
 -- Category sales last 30 days (excludes zero-quantity categories)
-CREATE VIEW public.v_category_sales AS
+CREATE VIEW public.v_category_sales WITH (security_invoker = true) AS
 SELECT
   p.facility_id,
   COALESCE(c.name, 'Uncategorized') AS category_name,
@@ -362,7 +366,7 @@ ORDER BY total_quantity DESC;
 
 -- Session orders view — used by registers page
 -- 'products' key matches v_orders_list and OrderItemView TypeScript type.
-CREATE VIEW public.v_session_orders AS
+CREATE VIEW public.v_session_orders WITH (security_invoker = true) AS
 SELECT
   o.id, o.facility_id, o.session_id, o.subtotal, o.discount_amount,
   o.total_amount, o.coupon_count, o.created_at, o.created_by,
@@ -381,7 +385,7 @@ LEFT JOIN products p     ON p.id = oi.product_id
 GROUP BY o.id;
 
 -- Orders list view — used by admin orders page
-CREATE VIEW public.v_orders_list AS
+CREATE VIEW public.v_orders_list WITH (security_invoker = true) AS
 SELECT
   o.id, o.facility_id, o.session_id, o.subtotal, o.discount_amount,
   o.total_amount, o.coupon_count, o.created_at, o.created_by,
@@ -400,7 +404,7 @@ LEFT JOIN products p     ON p.id = oi.product_id
 GROUP BY o.id;
 
 -- Tenant users view — used by admin users page
-CREATE VIEW public.v_tenant_users AS
+CREATE VIEW public.v_tenant_users WITH (security_invoker = true) AS
 SELECT
   m.tenant_id, m.user_id, m.role, m.facility_id, m.is_primary,
   u.full_name, u.avatar_url, u.created_at
