@@ -76,10 +76,20 @@ async function seed(): Promise<void> {
 		if (u.role === "owner") ownerId = id;
 
 		await supabase.from("users").upsert({ id, full_name: u.name }, { onConflict: "id" }).throwOnError();
-		await supabase.from("memberships").upsert(
-			{ user_id: id, tenant_id: tenant.id, facility_id: u.role === "staff" ? facility.id : null, role: u.role, is_primary: u.role === "owner" },
-			{ onConflict: "user_id,tenant_id,facility_id" }
-		).throwOnError();
+		const facilityId = u.role === "staff" ? facility.id : null;
+		// Check if membership already exists, insert only if missing
+		// (partial unique indexes on memberships aren't usable by PostgREST for ON CONFLICT)
+		const { data: existing_m } = await supabase.from("memberships")
+			.select("id")
+			.eq("user_id", id)
+			.eq("tenant_id", tenant.id)
+			.is("facility_id", facilityId)
+			.maybeSingle();
+		if (!existing_m) {
+			await supabase.from("memberships")
+				.insert({ user_id: id, tenant_id: tenant.id, facility_id: facilityId, role: u.role, is_primary: u.role === "owner" })
+				.throwOnError();
+		}
 	}
 	if (!ownerId) throw new Error("Owner user creation failed — cannot seed products");
 	console.log("✓ Users (4)");
