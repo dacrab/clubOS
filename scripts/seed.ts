@@ -42,8 +42,6 @@ const USERS = [
 	{ email: "staff@clubos.app",   name: "Demo Staff",   role: "staff"   },
 ] as const;
 
-type Role = (typeof USERS)[number]["role"];
-
 const CATEGORIES = ["Καφέδες", "Σνακ", "Αναψυκτικά"] as const;
 type Category = (typeof CATEGORIES)[number];
 
@@ -62,11 +60,11 @@ const PRODUCTS: { name: string; price: number; cat: Category; stock?: number }[]
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-function step(msg: string) {
+function step(msg: string): void {
 	console.log(`  ✓ ${msg}`);
 }
 
-function warn(msg: string) {
+function warn(msg: string): void {
 	console.warn(`  ⚠ ${msg}`);
 }
 
