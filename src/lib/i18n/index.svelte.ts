@@ -6,19 +6,15 @@ export type Locale = "en" | "el";
 
 const translations: Record<Locale, TranslationsStructure> = { en, el };
 
-function getNestedValue(obj: unknown, path: string): string {
+const getNestedValue = (obj: unknown, path: string): string => {
 	const result = path.split(".").reduce<unknown>(
 		(acc, key) => (acc && typeof acc === "object" && key in acc ? (acc as Record<string, unknown>)[key] : undefined),
 		obj
 	);
 	return typeof result === "string" ? result : path;
-}
+};
 
-function createI18n(): {
-	readonly locale: Locale;
-	setLocale(l: Locale): void;
-	t(key: string): string;
-} {
+function createI18n() {
 	let locale = $state<Locale>("en");
 
 	if (browser) {
@@ -28,14 +24,14 @@ function createI18n(): {
 
 	return {
 		get locale() { return locale; },
-		setLocale(l: Locale): void {
+		setLocale(l: Locale) {
 			locale = l;
 			if (browser) {
 				localStorage.setItem("locale", l);
 				document.documentElement.setAttribute("lang", l);
 			}
 		},
-		t(key: string): string {
+		t(key: string) {
 			return getNestedValue(translations[locale], key);
 		},
 	};
@@ -43,6 +39,4 @@ function createI18n(): {
 
 export const i18n = createI18n();
 
-export function t(key: string): string {
-	return i18n.t(key);
-}
+export const t = (key: string) => i18n.t(key);

@@ -27,20 +27,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const isPublic = publicRoutes.includes(path) || path.startsWith("/api/");
 	const isAuthOnly = authOnlyRoutes.includes(path);
 
-	let _ctx: { role: MemberRole | null; tenantId: string | null; facilityId: string | null; active: boolean } | null = null;
-	const getMembership = async (): Promise<{ role: MemberRole | null; tenantId: string | null; facilityId: string | null; active: boolean }> => {
-		if (_ctx) return _ctx;
-		if (!user) return (_ctx = { role: null, tenantId: null, facilityId: null, active: false });
+	let cachedCtx: { role: MemberRole | null; tenantId: string | null; facilityId: string | null; active: boolean } | null = null;
+	const getMembership = async () => {
+		if (cachedCtx) return cachedCtx;
+		if (!user) return (cachedCtx = { role: null, tenantId: null, facilityId: null, active: false });
 
 		const { data: ctx } = await supabase.rpc("get_user_context", { p_user_id: user.id });
-		if (!ctx?.membership) return (_ctx = { role: null, tenantId: null, facilityId: null, active: false });
+		if (!ctx?.membership) return (cachedCtx = { role: null, tenantId: null, facilityId: null, active: false });
 
-		const sub = ctx.subscription;
+		const { subscription: sub } = ctx;
 		const now = new Date();
 		const active = sub && (sub.status === "trialing" || sub.status === "active") &&
 			((sub.periodEnd && new Date(sub.periodEnd) > now) || (sub.trialEnd && new Date(sub.trialEnd) > now));
 
-		return (_ctx = { role: ctx.membership.role as MemberRole, tenantId: ctx.membership.tenantId, facilityId: ctx.membership.facilityId, active: !!active });
+		return (cachedCtx = { role: ctx.membership.role as MemberRole, tenantId: ctx.membership.tenantId, facilityId: ctx.membership.facilityId, active: !!active });
 	};
 
 	if (path === "/" && user) {

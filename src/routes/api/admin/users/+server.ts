@@ -10,12 +10,18 @@ async function requireAdmin(locals: App.Locals): Promise<AdminCheck> {
 	return { ok: true, tenantId: m.tenant_id, callerRole: m.role };
 }
 
-const getAllowedRoles = (callerRole: string): string[] =>
+const getAllowedRoles = (callerRole: string) =>
 	callerRole === "owner" ? ["owner", "admin", "manager", "staff"] : ["admin", "manager", "staff"];
+
+const checkAuth = (check: AdminCheck) => !check.ok ? new Response(check.error, { status: check.error === "Unauthorized" ? 401 : 403 }) : null;
+
+const checkPrivileges = (callerRole: string | undefined, role: string | undefined) =>
+	role && !getAllowedRoles(callerRole ?? "staff").includes(role) ? new Response("Cannot assign higher privileges", { status: 403 }) : null;
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const check = await requireAdmin(locals);
-	if (!check.ok) return new Response(check.error, { status: check.error === "Unauthorized" ? 401 : 403 });
+	const authErr = checkAuth(check);
+	if (authErr) return authErr;
 
 	const body = await request.json();
 	const { email, full_name, password, role } = body;
@@ -24,14 +30,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return new Response("Missing required fields", { status: 400 });
 	}
 
-	// Prevent privilege escalation
-	if (!getAllowedRoles(check.callerRole ?? "staff").includes(role)) {
-		return new Response("Cannot create user with higher privileges", { status: 403 });
-	}
+	const privErr = checkPrivileges(check.callerRole, role);
+	if (privErr) return privErr;
 
 	const admin = getSupabaseAdmin();
-
-	// Create auth user
 	const { data: authData, error: authError } = await admin.auth.admin.createUser({
 		email,
 		password,
@@ -42,7 +44,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (authError) return new Response(authError.message, { status: 400 });
 	if (!authData.user) return new Response("Failed to create user", { status: 500 });
 
-	// Create membership in same tenant
 	const { error: membershipError } = await admin.from("memberships").insert({
 		user_id: authData.user.id,
 		tenant_id: check.tenantId,
@@ -51,7 +52,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	});
 
 	if (membershipError) {
-		// Rollback: delete auth user
 		await admin.auth.admin.deleteUser(authData.user.id);
 		return new Response(membershipError.message, { status: 400 });
 	}
@@ -61,22 +61,20 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 export const PUT: RequestHandler = async ({ request, locals }) => {
 	const check = await requireAdmin(locals);
-	if (!check.ok) return new Response(check.error, { status: check.error === "Unauthorized" ? 401 : 403 });
+	const authErr = checkAuth(check);
+	if (authErr) return authErr;
 
 	const body = await request.json();
 	const { id, full_name, role, password } = body;
 
 	if (!id) return new Response("Missing id", { status: 400 });
 
-	// Prevent privilege escalation on role update
-	if (role && !getAllowedRoles(check.callerRole ?? "staff").includes(role)) {
-		return new Response("Cannot assign higher privileges", { status: 403 });
-	}
+	const privErr = checkPrivileges(check.callerRole, role);
+	if (privErr) return privErr;
 
 	const admin = getSupabaseAdmin();
-
-	// Update auth user metadata
 	const authUpdates: { password?: string; user_metadata?: Record<string, unknown> } = {};
+	
 	if (password) authUpdates.password = password;
 	if (full_name || role) {
 		authUpdates.user_metadata = {};
@@ -89,15 +87,8 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 		if (error) return new Response(error.message, { status: 400 });
 	}
 
-	// Update users table
-	if (full_name) {
-		await admin.from("users").update({ full_name }).eq("id", id);
-	}
-
-	// Update membership role
-	if (role) {
-		await admin.from("memberships").update({ role }).eq("user_id", id).eq("tenant_id", check.tenantId);
-	}
+	if (full_name) await admin.from("users").update({ full_name }).eq("id", id);
+	if (role) await admin.from("memberships").update({ role }).eq("user_id", id).eq("tenant_id", check.tenantId);
 
 	return new Response(null, { status: 204 });
 };
@@ -106,18 +97,14 @@ export const PATCH: RequestHandler = PUT;
 
 export const DELETE: RequestHandler = async ({ request, locals }) => {
 	const check = await requireAdmin(locals);
-	if (!check.ok) return new Response(check.error, { status: check.error === "Unauthorized" ? 401 : 403 });
+	const authErr = checkAuth(check);
+	if (authErr) return authErr;
 
 	const body = await request.json();
 	const id = body?.id;
 
 	if (!id) return new Response("Missing id", { status: 400 });
 
-	const admin = getSupabaseAdmin();
-
-	// Delete auth user (cascades to users table and memberships via FK)
-	const { error } = await admin.auth.admin.deleteUser(id);
-	if (error) return new Response(error.message, { status: 400 });
-
-	return new Response(null, { status: 204 });
+	const { error } = await getSupabaseAdmin().auth.admin.deleteUser(id);
+	return error ? new Response(error.message, { status: 400 }) : new Response(null, { status: 204 });
 };

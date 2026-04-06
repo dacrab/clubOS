@@ -10,23 +10,19 @@ export interface ReceiptData {
 	orderId: string | null;
 }
 
-export function printReceipt(data: ReceiptData): void {
+export function printReceipt(data: ReceiptData) {
 	if (!data.items.length) return;
 
 	const w = window.open("", "_blank", "width=300,height=600");
 	if (!w) return;
 
 	const itemsHtml = data.items
-		.map(
-			(i) =>
-				`<div class="item"><span>${i.quantity}x ${i.product.name}${i.isTreat ? ` (${t("orders.treat")})` : ""}</span><span>${i.isTreat ? "-" : fmtCurrency(i.product.price * i.quantity)}</span></div>`
-		)
+		.map((i) => `<div class="item"><span>${i.quantity}x ${i.product.name}${i.isTreat ? ` (${t("orders.treat")})` : ""}</span><span>${i.isTreat ? "-" : fmtCurrency(i.product.price * i.quantity)}</span></div>`)
 		.join("");
 
-	const discountHtml =
-		data.discount > 0
-			? `<div class="item"><span>${t("orders.discount")} (${data.couponCount} ${t("orders.coupons").toLowerCase()})</span><span>-${fmtCurrency(data.discount)}</span></div>`
-			: "";
+	const discountHtml = data.discount > 0
+		? `<div class="item"><span>${t("orders.discount")} (${data.couponCount} ${t("orders.coupons").toLowerCase()})</span><span>-${fmtCurrency(data.discount)}</span></div>`
+		: "";
 
 	const html = `<!DOCTYPE html>
 <html><head><title>${t("orders.receipt")}</title>

@@ -2,12 +2,7 @@ import { browser } from "$app/environment";
 
 export type Theme = "light" | "dark" | "system";
 
-function createTheme(): {
-	readonly current: Theme;
-	readonly isDark: boolean;
-	setTheme(t: Theme): void;
-	toggle(): void;
-} {
+function createTheme() {
 	let current = $state<Theme>("system");
 
 	if (browser) {
@@ -17,35 +12,28 @@ function createTheme(): {
 		}
 	}
 
-	function applyTheme(): void {
-		const isDarkNow = current === "system"
+	const applyTheme = () => {
+		const isDark = current === "system"
 			? typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches
 			: current === "dark";
-		if (isDarkNow) {
-			document.documentElement.classList.add("dark");
-		} else {
-			document.documentElement.classList.remove("dark");
-		}
-	}
+		document.documentElement.classList[isDark ? "add" : "remove"]("dark");
+	};
 
 	if (browser) applyTheme();
 
 	return {
 		get current() { return current; },
 		get isDark() {
-			if (current === "system") {
-				return browser && typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches;
-			}
-			return current === "dark";
+			return current === "dark" || (current === "system" && browser && typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches);
 		},
-		setTheme(t: Theme): void {
+		setTheme(t: Theme) {
 			current = t;
 			if (browser) {
 				localStorage.setItem("theme", t);
 				applyTheme();
 			}
 		},
-		toggle(): void {
+		toggle() {
 			this.setTheme(this.isDark ? "light" : "dark");
 		},
 	};

@@ -11,25 +11,11 @@ type CrudConfig<T, F> = {
 	getName?: (item: T) => string;
 };
 
-export function createCrud<T, F>(config: CrudConfig<T, F>): {
-	open: boolean;
-	editing: T | null;
-	form: F;
-	saving: boolean;
-	isEdit: boolean;
-	openCreate: () => void;
-	openEdit: (item: T) => void;
-	close: () => void;
-	save: () => Promise<boolean>;
-	remove: (item: T) => Promise<boolean>;
-} {
+export function createCrud<T, F>(config: CrudConfig<T, F>) {
 	let open = $state(false);
 	let editing = $state<T | null>(null);
 	let form = $state<F>(config.toForm(null));
 	let saving = $state(false);
-
-	const success = async (): Promise<void> => { toast.success(t("common.success")); await invalidateAll(); };
-	const fail = (): void => { toast.error(t("common.error")); };
 
 	return {
 		get open() { return open; },
@@ -40,9 +26,9 @@ export function createCrud<T, F>(config: CrudConfig<T, F>): {
 		get saving() { return saving; },
 		get isEdit() { return editing !== null; },
 
-		openCreate(): void { editing = null; form = config.toForm(null); open = true; },
-		openEdit(item: T): void { editing = item; form = config.toForm(item); open = true; },
-		close(): void { open = false; },
+		openCreate() { editing = null; form = config.toForm(null); open = true; },
+		openEdit(item: T) { editing = item; form = config.toForm(item); open = true; },
+		close() { open = false; },
 
 		async save() {
 			saving = true;
@@ -50,10 +36,16 @@ export function createCrud<T, F>(config: CrudConfig<T, F>): {
 				const { error } = editing ? await (config.onUpdate?.(config.getId(editing), form) ?? { error: null }) : await (config.onCreate?.(form) ?? { error: null });
 				if (error) throw error;
 				open = false;
-				await success();
+				toast.success(t("common.success"));
+				await invalidateAll();
 				return true;
-			} catch (err) { console.error(err); fail(); return false; }
-			finally { saving = false; }
+			} catch (err) { 
+				console.error(err); 
+				toast.error(t("common.error")); 
+				return false; 
+			} finally { 
+				saving = false; 
+			}
 		},
 
 		async remove(item: T) {
@@ -61,9 +53,14 @@ export function createCrud<T, F>(config: CrudConfig<T, F>): {
 			try {
 				const { error } = await (config.onDelete?.(config.getId(item)) ?? { error: null });
 				if (error) throw error;
-				await success();
+				toast.success(t("common.success"));
+				await invalidateAll();
 				return true;
-			} catch (err) { console.error(err); fail(); return false; }
+			} catch (err) { 
+				console.error(err); 
+				toast.error(t("common.error")); 
+				return false; 
+			}
 		},
 	};
 }

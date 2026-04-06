@@ -1,13 +1,6 @@
 import type { SessionUser } from "$lib/types/database";
 
-function createSession(): {
-	readonly user: SessionUser | null;
-	readonly loading: boolean;
-	readonly initialized: boolean;
-	readonly isAuthenticated: boolean;
-	setUser(u: SessionUser | null): void;
-	clear(): void;
-} {
+function createSession() {
 	let user = $state<SessionUser | null>(null);
 	let loading = $state(true);
 	let initialized = $state(false);
@@ -17,12 +10,12 @@ function createSession(): {
 		get loading() { return loading; },
 		get initialized() { return initialized; },
 		get isAuthenticated() { return user !== null; },
-		setUser(u: SessionUser | null): void {
+		setUser(u: SessionUser | null) {
 			user = u;
 			loading = false;
 			initialized = true;
 		},
-		clear(): void {
+		clear() {
 			user = null;
 			loading = false;
 		},

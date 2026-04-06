@@ -3,6 +3,8 @@ import type { RequestHandler } from "./$types";
 import { env } from "$env/dynamic/private";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 
+const ts = (s: number) => new Date(s * 1000).toISOString();
+
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const sessionId = url.searchParams.get("session_id");
 	if (!sessionId) throw redirect(307, "/billing");
@@ -18,11 +20,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		const session = await sessionRes.json();
 		if (!sessionRes.ok) throw new Error(session.error?.message || "Failed to retrieve session");
 
-		const subscription = session.subscription;
+		const { subscription } = session;
 		const tenantId = subscription?.metadata?.tenant_id;
 		if (!tenantId || !locals.user) throw redirect(307, "/billing?error=missing_tenant");
 
-		const ts = (s: number): string => new Date(s * 1000).toISOString();
 		const { error } = await getSupabaseAdmin().from("subscriptions").upsert({
 			tenant_id: tenantId,
 			stripe_customer_id: session.customer,

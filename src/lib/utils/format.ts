@@ -5,6 +5,14 @@ export type TimeFormatType = "24h" | "12h";
 export type CurrencyCodeType = "EUR" | "USD" | "GBP";
 export interface FormatSettings { date_format?: DateFormatType; time_format?: TimeFormatType; currency_code?: CurrencyCodeType }
 
+const DATE_FORMATS: Record<DateFormatType, (day: string, month: string, year: string) => string> = {
+	"MM/DD/YYYY": (d, m, y) => `${m}/${d}/${y}`,
+	"YYYY-MM-DD": (d, m, y) => `${y}-${m}-${d}`,
+	"DD.MM.YYYY": (d, m, y) => `${d}.${m}.${y}`,
+	"DD-MM-YYYY": (d, m, y) => `${d}-${m}-${y}`,
+	"DD/MM/YYYY": (d, m, y) => `${d}/${m}/${y}`,
+};
+
 export function tomorrowAt(hour: number): Date {
 	const d = new Date(Date.now() + 86_400_000);
 	d.setHours(hour, 0, 0, 0);
@@ -16,14 +24,9 @@ export function formatDate(date: string | Date, s?: FormatSettings | null, inclu
 	if (isNaN(d.getTime())) return "-";
 
 	const fmt = s?.date_format ?? "DD/MM/YYYY";
-	const pad = (n: number): string => String(n).padStart(2, "0");
-	const [day, month, year] = [pad(d.getDate()), pad(d.getMonth() + 1), d.getFullYear()];
-	const dateStr =
-		fmt === "MM/DD/YYYY" ? `${month}/${day}/${year}` :
-		fmt === "YYYY-MM-DD" ? `${year}-${month}-${day}` :
-		fmt === "DD.MM.YYYY" ? `${day}.${month}.${year}` :
-		fmt === "DD-MM-YYYY" ? `${day}-${month}-${year}` :
-		`${day}/${month}/${year}`;
+	const pad = (n: number) => String(n).padStart(2, "0");
+	const [day, month, year] = [pad(d.getDate()), pad(d.getMonth() + 1), String(d.getFullYear())];
+	const dateStr = DATE_FORMATS[fmt as DateFormatType](day, month, year);
 
 	if (!includeTime) return dateStr;
 	const h24 = d.getHours();
@@ -34,7 +37,6 @@ export function formatDate(date: string | Date, s?: FormatSettings | null, inclu
 
 export function formatCurrency(value: number, s?: FormatSettings | null): string {
 	const currency = s?.currency_code ?? "EUR";
-	// Use undefined locale so the runtime picks the best locale for the currency
 	return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(value);
 }
 
@@ -45,6 +47,6 @@ export function getCurrencySymbol(code?: CurrencyCodeType | string): string {
 	return code ? (CURRENCY_SYMBOLS[code] ?? "€") : "€";
 }
 
-export const fmtDate = (date: string | Date, includeTime = true): string => formatDate(date, settings.formatSettings, includeTime);
-export const fmtCurrency = (value: number): string => formatCurrency(value, settings.formatSettings);
-export const currentCurrencySymbol = (): string => getCurrencySymbol(settings.current.currency_code);
+export const fmtDate = (date: string | Date, includeTime = true) => formatDate(date, settings.formatSettings, includeTime);
+export const fmtCurrency = (value: number) => formatCurrency(value, settings.formatSettings);
+export const currentCurrencySymbol = () => getCurrencySymbol(settings.current.currency_code);

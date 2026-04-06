@@ -7,28 +7,23 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const { data: membership } = await supabase
 		.from("memberships")
-		.select("tenant_id, role")
+		.select("tenant_id")
 		.eq("user_id", user.id)
 		.order("is_primary", { ascending: false })
 		.limit(1)
 		.single();
 
+	const tenantId = membership?.tenant_id;
 	let subscription = null;
-	if (membership?.tenant_id) {
+
+	if (tenantId) {
 		const { data } = await supabase
 			.from("subscriptions")
 			.select("status, plan_name, current_period_end, trial_end, stripe_customer_id")
-			.eq("tenant_id", membership.tenant_id)
+			.eq("tenant_id", tenantId)
 			.single();
 		subscription = data;
 	}
 
-	return {
-		user: {
-			id: user.id,
-			email: user.email,
-		},
-		tenantId: membership?.tenant_id ?? null,
-		subscription,
-	};
+	return { user: { id: user.id, email: user.email }, tenantId, subscription };
 };
