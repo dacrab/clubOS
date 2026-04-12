@@ -5,7 +5,7 @@
 	import { session } from "$lib/state/session.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Separator from "$lib/components/ui/separator/separator.svelte";
-	import { LayoutDashboard, Package, ShoppingCart, DollarSign, Users, Settings, Dribbble, Cake, ChevronLeft, ChevronRight, LogOut } from "@lucide/svelte";
+	import { LayoutDashboard, Package, ShoppingCart, DollarSign, Users, Settings, CircleDot, Cake, ChevronLeft, ChevronRight, LogOut } from "@lucide/svelte";
 	import type { MemberRole } from "$lib/types/database";
 
 	type NavItem = { label: string; href: string; icon: typeof LayoutDashboard };
@@ -18,7 +18,7 @@
 		{ label: "nav.orders", href: "/admin/orders", icon: ShoppingCart },
 		{ label: "nav.registers", href: "/admin/registers", icon: DollarSign },
 		{ label: "nav.birthdays", href: "/bookings/birthday", icon: Cake },
-		{ label: "nav.football", href: "/bookings/football", icon: Dribbble },
+		{ label: "nav.football", href: "/bookings/football", icon: CircleDot },
 		{ label: "nav.users", href: "/admin/users", icon: Users },
 		{ label: "nav.settings", href: "/admin/settings", icon: Settings },
 	];
@@ -29,7 +29,7 @@
 		manager: [
 			{ label: "nav.dashboard", href: "/secretary", icon: LayoutDashboard },
 			{ label: "nav.birthdays", href: "/bookings/birthday", icon: Cake },
-			{ label: "nav.football", href: "/bookings/football", icon: Dribbble },
+			{ label: "nav.football", href: "/bookings/football", icon: CircleDot },
 		],
 		staff: [
 			{ label: "nav.dashboard", href: "/staff", icon: LayoutDashboard },

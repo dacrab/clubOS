@@ -1,6 +1,6 @@
 <script lang="ts">
 	import BookingPage from "$lib/components/features/booking-page.svelte";
-	import { Cake, Dribbble, Calendar, MoreHorizontal } from "@lucide/svelte";
+	import { Cake, CircleDot, Calendar, MoreHorizontal } from "@lucide/svelte";
 	import { BOOKING_TYPE } from "$lib/constants";
 	import type { BookingTypeValue } from "$lib/constants";
 
@@ -8,7 +8,7 @@
 
 	const icons = {
 		[BOOKING_TYPE.BIRTHDAY]: Cake,
-		[BOOKING_TYPE.FOOTBALL]: Dribbble,
+		[BOOKING_TYPE.FOOTBALL]: CircleDot,
 		event: Calendar,
 		other: MoreHorizontal,
 	} satisfies Record<string, typeof Cake>;

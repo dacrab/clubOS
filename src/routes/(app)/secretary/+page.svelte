@@ -3,7 +3,7 @@
 	import PageHeader from "$lib/components/layout/page-header.svelte";
 	import Card, { CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card/card.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
-	import { Cake, Dribbble, Calendar } from "@lucide/svelte";
+	import { Cake, CircleDot, Calendar } from "@lucide/svelte";
 
 	const { data } = $props();
 </script>
@@ -17,7 +17,7 @@
 			<CardContent><p class="text-2xl font-bold">{data.upcomingBirthdays}</p></CardContent>
 		</Card>
 		<Card>
-			<CardHeader class="flex flex-row items-center justify-between pb-2"><CardTitle class="text-sm font-medium">{t("bookings.upcomingFootball")}</CardTitle><Dribbble class="h-4 w-4 text-muted-foreground" /></CardHeader>
+			<CardHeader class="flex flex-row items-center justify-between pb-2"><CardTitle class="text-sm font-medium">{t("bookings.upcomingFootball")}</CardTitle><CircleDot class="h-4 w-4 text-muted-foreground" /></CardHeader>
 			<CardContent><p class="text-2xl font-bold">{data.upcomingFootball}</p></CardContent>
 		</Card>
 		<Card>
@@ -32,7 +32,7 @@
 			<CardContent><Button href="/bookings/birthday" class="w-full">{t("common.viewAll")}</Button></CardContent>
 		</Card>
 		<Card>
-			<CardHeader><CardTitle class="flex items-center gap-2"><Dribbble class="h-5 w-5" />{t("nav.football")}</CardTitle><CardDescription>{t("bookings.footballDesc")}</CardDescription></CardHeader>
+			<CardHeader><CardTitle class="flex items-center gap-2"><CircleDot class="h-5 w-5" />{t("nav.football")}</CardTitle><CardDescription>{t("bookings.footballDesc")}</CardDescription></CardHeader>
 			<CardContent><Button href="/bookings/football" class="w-full">{t("common.viewAll")}</Button></CardContent>
 		</Card>
 	</div>
