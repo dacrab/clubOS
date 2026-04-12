@@ -68,7 +68,7 @@ describe("tomorrowAt", () => {
 		const d = tomorrowAt(10);
 		const diff = d.getTime() - Date.now();
 		expect(diff).toBeGreaterThan(0);
-		expect(diff).toBeLessThanOrEqual(86_400_000 + 60_000); // within 1min of 24h
+		expect(diff).toBeLessThanOrEqual(48 * 60 * 60 * 1000); // tomorrow = within 48h
 	});
 
 	it("sets the hour correctly", () => {

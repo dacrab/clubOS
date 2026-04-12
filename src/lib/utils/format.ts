@@ -14,7 +14,8 @@ const DATE_FORMATS: Record<DateFormatType, (day: string, month: string, year: st
 };
 
 export function tomorrowAt(hour: number): Date {
-	const d = new Date(Date.now() + 86_400_000);
+	const d = new Date();
+	d.setDate(d.getDate() + 1);
 	d.setHours(hour, 0, 0, 0);
 	return d;
 }
