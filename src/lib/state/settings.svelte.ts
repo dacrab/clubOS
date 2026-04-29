@@ -1,7 +1,10 @@
 import type { TenantSettings } from "$lib/config/settings";
 import { DEFAULT_SETTINGS } from "$lib/config/settings";
 
-function createSettings() {
+function createSettings(): {
+	readonly current: TenantSettings;
+	setSettings: (newSettings: Partial<TenantSettings>) => void;
+} {
 	let current = $state<TenantSettings>(DEFAULT_SETTINGS);
 
 	return {

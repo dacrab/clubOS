@@ -14,7 +14,11 @@ const getNestedValue = (obj: unknown, path: string): string => {
 	return typeof result === "string" ? result : path;
 };
 
-function createI18n() {
+function createI18n(): {
+	readonly locale: Locale;
+	setLocale: (l: Locale) => void;
+	t: (key: string) => string;
+} {
 	let locale = $state<Locale>("en");
 
 	if (browser) {

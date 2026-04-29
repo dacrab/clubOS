@@ -11,7 +11,7 @@ export interface ReceiptData {
 	orderId: string | null;
 }
 
-export function printReceipt(data: ReceiptData) {
+export function printReceipt(data: ReceiptData): void {
 	if (!data.items.length) return;
 
 	const w = window.open("", "_blank", "width=300,height=600");

@@ -47,6 +47,10 @@
 	};
 
 	async function saveProduct() {
+		if (!data.user.facilityId || !data.user.id) {
+			toast.error(t("common.error"));
+			return;
+		}
 		savingProduct = true;
 		try {
 			const payload = {
@@ -56,7 +60,7 @@
 				stock_quantity: productForm.stock_quantity,
 				category_id: productForm.category_id || null,
 				image_url: productForm.image_url || null,
-				...(!editingProduct && { facility_id: data.user.facilityId ?? "", created_by: data.user.id })
+				...(!editingProduct && { facility_id: data.user.facilityId, created_by: data.user.id })
 			};
 			
 			const { error } = editingProduct
@@ -89,13 +93,17 @@
 	}
 
 	async function saveCategory() {
+		if (!data.user.facilityId) {
+			toast.error(t("common.error"));
+			return;
+		}
 		savingCategory = true;
 		try {
 			const payload = {
 				name: categoryForm.name,
 				description: categoryForm.description || null,
 				parent_id: categoryForm.parent_id || null,
-				...(!editingCategory && { facility_id: data.user.facilityId ?? "" })
+				...(!editingCategory && { facility_id: data.user.facilityId })
 			};
 			
 			const { error } = editingCategory

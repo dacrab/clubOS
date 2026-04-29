@@ -2,7 +2,12 @@ import { browser } from "$app/environment";
 
 export type Theme = "light" | "dark" | "system";
 
-function createTheme() {
+function createTheme(): {
+	readonly current: Theme;
+	readonly isDark: boolean;
+	setTheme: (t: Theme) => void;
+	toggle: () => void;
+} {
 	let current = $state<Theme>("system");
 
 	if (browser) {

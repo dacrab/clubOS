@@ -12,9 +12,13 @@
 	let selectedPlan = $state<Plan | null>(null);
 
 	async function handleSelect(planId: Plan) {
+		if (!data.user?.id || !data.user?.email) {
+			toast.error(t("common.error"));
+			return;
+		}
 		selectedPlan = planId;
 		const plan = PLANS.find((p) => p.id === planId);
-		if (!plan || !data.user) return;
+		if (!plan) return;
 
 		loading = true;
 		try {

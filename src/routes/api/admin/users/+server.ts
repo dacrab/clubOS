@@ -5,8 +5,8 @@ type AdminCheck = { ok: boolean; error?: string; tenantId?: string; callerRole?:
 
 async function requireAdmin(locals: App.Locals): Promise<AdminCheck> {
 	if (!locals.user) return { ok: false, error: "Unauthorized" };
-	const { data: m } = await getSupabaseAdmin().from("memberships").select("tenant_id, role").eq("user_id", locals.user.id).eq("is_primary", true).single();
-	if (!m || !["owner", "admin"].includes(m.role)) return { ok: false, error: "Forbidden" };
+	const { data: m, error } = await getSupabaseAdmin().from("memberships").select("tenant_id, role").eq("user_id", locals.user.id).eq("is_primary", true).single();
+	if (error || !m || !["owner", "admin"].includes(m.role)) return { ok: false, error: "Forbidden" };
 	return { ok: true, tenantId: m.tenant_id, callerRole: m.role };
 }
 

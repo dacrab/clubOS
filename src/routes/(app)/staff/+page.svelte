@@ -56,7 +56,7 @@
 	}
 
 	async function closeRegister(): Promise<void> {
-		if (!closingName || !data.activeSession) { toast.error(t("common.error")); return; }
+		if (closingName.trim() === "" || !data.activeSession) { toast.error(t("common.error")); return; }
 		processing = true;
 		const { error } = await data.supabase.rpc("close_register_session", {
 			p_session_id: data.activeSession.id,

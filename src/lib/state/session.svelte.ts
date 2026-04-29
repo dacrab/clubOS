@@ -1,6 +1,12 @@
 import type { SessionUser } from "$lib/types/database";
 
-function createSession() {
+function createSession(): {
+	readonly user: SessionUser | null;
+	readonly loading: boolean;
+	readonly isAuthenticated: boolean;
+	setUser: (u: SessionUser | null) => void;
+	clear: () => void;
+} {
 	let user = $state<SessionUser | null>(null);
 	let loading = $state(true);
 

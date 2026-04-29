@@ -37,10 +37,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 		const { subscription: sub } = ctx;
 		const now = new Date();
-		const active = sub && (sub.status === "trialing" || sub.status === "active") &&
-			((sub.periodEnd && new Date(sub.periodEnd) > now) || (sub.trialEnd && new Date(sub.trialEnd) > now));
+		let active = false;
+		if (sub && (sub.status === "trialing" || sub.status === "active")) {
+			if (sub.periodEnd && new Date(sub.periodEnd) > now) {
+				active = true;
+			} else if (sub.trialEnd && new Date(sub.trialEnd) > now) {
+				active = true;
+			}
+		}
 
-		return (cachedCtx = { role: ctx.membership.role as MemberRole, tenantId: ctx.membership.tenantId, facilityId: ctx.membership.facilityId, active: !!active });
+		return (cachedCtx = { role: ctx.membership.role as MemberRole, tenantId: ctx.membership.tenantId, facilityId: ctx.membership.facilityId, active });
 	};
 
 	if (path === "/" && user) {
