@@ -1,5 +1,5 @@
 import type { PageServerLoad } from "./$types";
-import { USERS_PER_PAGE } from "$lib/constants";
+import { USERS_PER_PAGE } from "$lib/types/database";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 
 export const load: PageServerLoad = async ({ parent }) => {

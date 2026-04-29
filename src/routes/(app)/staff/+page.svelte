@@ -17,7 +17,6 @@
 	import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
 	import NewSaleDialog from "$lib/components/features/new-sale-dialog.svelte";
 	import RecentOrders from "$lib/components/features/recent-orders.svelte";
-	import { registerSessions } from "$lib/services/db";
 	import { fmtDate, fmtCurrency } from "$lib/utils/format";
 	import { DollarSign, Plus } from "@lucide/svelte";
 
@@ -52,7 +51,7 @@
 	}
 
 	async function closeRegister(): Promise<void> {
-		if (!closingName || !data.activeSession) { toast.error(t("common.error")); return; }
+		if (!closingName || !data.activeSession) { showError(t); return; }
 		processing = true;
 		const { error } = await registerSessions.close(
 			data.activeSession.id,
@@ -61,13 +60,12 @@
 			closingNotes
 		);
 		processing = false;
-		if (error) { toast.error(typeof error === "string" ? error : t("common.error")); return; }
-		toast.success(t("common.success"));
+		if (error) { showError(t, error); return; }
 		showCloseDialog = false;
 		closingName = "";
 		closingNotes = "";
 		countedCash = 0;
-		await invalidateAll();
+		await showSuccess(t);
 	}
 </script>
 
@@ -128,4 +126,6 @@
 	{/if}
 	<Separator />
 	<div class="space-y-2"><Label for="closingNotes">{t("register.closingNotes")}</Label><Input id="closingNotes" bind:value={closingNotes} /></div>
+</FormDialog>
+abel><Input id="closingNotes" bind:value={closingNotes} /></div>
 </FormDialog>

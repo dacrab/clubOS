@@ -9,7 +9,8 @@
 	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
 	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
 	import { ShoppingCart, Eye } from "@lucide/svelte";
-	import { shortId, type OrderView, getActiveOrderItems } from "$lib/types/database";
+	import type { OrderView } from "$lib/types/database";
+	import { getActiveOrderItems } from "$lib/utils/helpers";
 
 	const { data } = $props();
 

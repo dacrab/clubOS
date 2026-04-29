@@ -7,22 +7,14 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && knip && eslint .",
-		"check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "eslint .",
-		"lint:fix": "eslint . --fix",
-		"test": "SKIP_DB_TESTS=true vitest run",
-		"test:db": "vitest run",
+		"test": "vitest run",
 		"test:watch": "vitest",
-		"test:e2e": "playwright test",
-		"test:e2e:ui": "playwright test --ui",
-		"db:seed": "bun scripts/seed.ts",
-		"db:reset": "supabase db reset && bun scripts/seed.ts"
+		"db:seed": "bun scripts/seed.ts"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10",
-		"@playwright/test": "^1.59.1",
 		"@sveltejs/adapter-vercel": "^6.3.3",
 		"@sveltejs/kit": "^2.58.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
@@ -51,9 +43,7 @@
 		"@supabase/supabase-js": "^2.104.1",
 		"@vercel/analytics": "^2.0.1",
 		"bits-ui": "^2.18.0",
-		"svelte-sonner": "^1.1.1",
-		"tailwind-merge": "^3.5.0",
-		"tsx": "^4.21.0"
+		"svelte-sonner": "^1.1.1"
 	},
 	"overrides": {
 		"cookie": ">=0.7.0"

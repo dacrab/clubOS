@@ -22,10 +22,10 @@
 	import { settings } from "$lib/state/settings.svelte";
 	import { Plus, Pencil, Trash2, Package } from "@lucide/svelte";
 	import type { Booking, BookingStatus, BookingType, BookingDetails } from "$lib/types/database";
-	import { BOOKING_STATUS, BOOKING_TYPE, type BookingTypeValue } from "$lib/constants";
+	import { BOOKING_STATUS, BOOKING_TYPE } from "$lib/types/database";
 
 	type Props = {
-		type: BookingTypeValue;
+		type: BookingType;
 		bookings: Booking[];
 		user: { id: string; tenantId: string | null; facilityId: string | null };
 		icon?: typeof Package;
@@ -44,7 +44,7 @@
 		customer_phone: "",
 		starts_at: "",
 		notes: "",
-		status: BOOKING_STATUS.CONFIRMED as BookingStatus,
+		status: "confirmed" as BookingStatus,
 		num_children: 1,
 		num_adults: 0,
 		field_number: "1",
@@ -52,7 +52,7 @@
 	});
 
 	const getStatusBadge = (s: BookingStatus) =>
-		s === BOOKING_STATUS.CONFIRMED ? ("success" as const) : s === BOOKING_STATUS.CANCELED ? ("destructive" as const) : ("secondary" as const);
+		s === "confirmed" ? ("success" as const) : s === "canceled" ? ("destructive" as const) : ("secondary" as const);
 
 	function openDialog(item?: Booking) {
 		editingItem = item ?? null;

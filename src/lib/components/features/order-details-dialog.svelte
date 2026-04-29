@@ -9,7 +9,8 @@
 	import Separator from "$lib/components/ui/separator/separator.svelte";
 	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import { Gift } from "@lucide/svelte";
-	import { shortId, type OrderView, getActiveOrderItems, getProductName } from "$lib/types/database";
+	import type { OrderView } from "$lib/types/database";
+	import { getActiveOrderItems, getProductName, shortId } from "$lib/utils/helpers";
 
 	type Props = {
 		open: boolean;

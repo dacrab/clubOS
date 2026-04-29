@@ -1,7 +1,7 @@
 import { redirect } from "@sveltejs/kit";
 import type { LayoutServerLoad } from "./$types";
 import type { SessionUser } from "$lib/types/database";
-import { PRODUCTS_LIMIT, CATEGORIES_LIMIT } from "$lib/constants";
+import { PRODUCTS_LIMIT, CATEGORIES_LIMIT } from "$lib/types/database";
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	const { user, supabase } = locals;

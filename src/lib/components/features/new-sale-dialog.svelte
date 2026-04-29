@@ -142,33 +142,33 @@
 
 <Dialog bind:open {onOpenChange}>
 	<DialogContent class="max-w-[100vw] w-full h-[100dvh] max-h-[100dvh] md:max-w-[95vw] md:h-[95vh] md:max-h-[95vh] flex flex-col p-0 gap-0 rounded-none md:rounded-lg [&>button]:hidden">
-		<header class="flex items-center justify-between px-4 py-3 border-b bg-background shrink-0">
-			<div class="flex items-center gap-3">
+		<header class="flex-between px-4 py-3 border-b bg-background shrink-0">
+			<div class="flex-center gap-3">
 				<button
-					class="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-muted"
+					class="md:hidden flex-center justify-center w-10 h-10 rounded-full bg-muted"
 					onclick={close}
 				>
-					<X class="h-5 w-5" />
+					<X class="icon-md" />
 				</button>
 				<h1 class="text-lg font-bold">{t("orders.newSale")}</h1>
 			</div>
-			<div class="flex items-center gap-2">
+			<div class="flex-center gap-2">
 				<button
-					class="md:hidden relative flex items-center justify-center w-12 h-12 rounded-xl bg-primary text-primary-foreground active:scale-95 transition-transform"
+					class="md:hidden relative flex-center justify-center w-12 h-12 rounded-xl bg-primary text-primary-foreground active:scale-95 transition-transform"
 					onclick={() => showCart = !showCart}
 				>
-					<ShoppingCart class="h-5 w-5" />
+					<ShoppingCart class="icon-md" />
 					{#if cartItemCount > 0}
-						<span class="absolute -top-1 -right-1 min-w-5 h-5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-bold px-1">
+						<span class="absolute -top-1 -right-1 min-w-5 h-5 flex-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-bold px-1">
 							{cartItemCount}
 						</span>
 					{/if}
 				</button>
 				<button
-					class="hidden md:flex items-center justify-center w-10 h-10 rounded-full hover:bg-muted transition-colors"
+					class="hidden md:flex-center justify-center w-10 h-10 rounded-full hover:bg-muted transition-colors"
 					onclick={close}
 				>
-					<X class="h-5 w-5" />
+					<X class="icon-md" />
 				</button>
 			</div>
 		</header>
@@ -177,7 +177,7 @@
 			<div class="flex-1 flex flex-col overflow-hidden {showCart ? 'hidden md:flex' : ''}">
 				<div class="p-3 border-b shrink-0">
 					<div class="relative">
-						<Search class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+						<Search class="absolute left-4 top-1/2 -translate-y-1/2 icon-md text-muted-foreground" />
 						<Input
 							placeholder={t("common.search")}
 							class="pl-12 h-12 text-base rounded-xl bg-muted/50 border-0 focus-visible:ring-2"
@@ -190,10 +190,10 @@
 					<div class="shrink-0 border-b bg-muted/30">
 						<div class="flex gap-2 p-3 overflow-x-auto scrollbar-thin snap-x snap-mandatory">
 							<button
-								class="snap-start shrink-0 flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-sm transition-all active:scale-95 {selectedCategory === null ? 'bg-primary text-primary-foreground shadow-lg' : 'bg-background border-2 border-transparent hover:border-primary/20'}"
+								class="snap-start shrink-0 flex-center gap-2 px-5 py-3 rounded-xl font-medium text-sm transition-all active:scale-95 {selectedCategory === null ? 'bg-primary text-primary-foreground shadow-lg' : 'bg-background border-2 border-transparent hover:border-primary/20'}"
 								onclick={() => selectedCategory = null}
 							>
-								<Tag class="h-4 w-4" />
+								<Tag class="icon-sm" />
 								{t("common.viewAll")}
 							</button>
 							{#each rootCategories as cat (cat.id)}
@@ -222,8 +222,8 @@
 										<Badge variant="outline" class="text-[10px] px-1.5">{product.stock_quantity}</Badge>
 									{/if}
 								</div>
-								<div class="mt-2 flex items-center justify-center w-full h-10 rounded-xl bg-primary/10 text-primary font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-									<Plus class="h-4 w-4 mr-1" /> {t("common.add")}
+								<div class="mt-2 flex-center justify-center w-full h-10 rounded-xl bg-primary/10 text-primary font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+									<Plus class="icon-sm mr-1" /> {t("common.add")}
 								</div>
 							</button>
 						{:else}
@@ -238,21 +238,21 @@
 				{#if cart.length > 0}
 					<div class="md:hidden shrink-0 p-3 border-t bg-background">
 						<button
-							class="w-full flex items-center justify-between p-4 rounded-2xl bg-primary text-primary-foreground active:scale-[0.98] transition-transform"
+							class="w-full flex-between p-4 rounded-2xl bg-primary text-primary-foreground active:scale-[0.98] transition-transform"
 							onclick={() => showCart = true}
 						>
-							<div class="flex items-center gap-3">
-								<div class="flex items-center justify-center w-10 h-10 rounded-xl bg-primary-foreground/20">
-									<ShoppingCart class="h-5 w-5" />
+							<div class="flex-center gap-3">
+								<div class="flex-center justify-center w-10 h-10 rounded-xl bg-primary-foreground/20">
+									<ShoppingCart class="icon-md" />
 								</div>
 								<div class="text-left">
 									<p class="font-bold text-lg">{fmtCurrency(total)}</p>
 									<p class="text-xs opacity-80">{cartItemCount} {t("common.items")}</p>
 								</div>
 							</div>
-							<div class="flex items-center gap-2">
+							<div class="flex-center gap-2">
 								<span class="font-medium">{t("orders.viewCart")}</span>
-								<ChevronRight class="h-5 w-5" />
+								<ChevronRight class="icon-md" />
 							</div>
 						</button>
 					</div>
@@ -260,16 +260,16 @@
 			</div>
 
 			<div class="absolute inset-0 md:relative md:inset-auto md:w-96 flex flex-col bg-background {showCart ? '' : 'hidden md:flex'} z-10">
-				<div class="flex items-center justify-between p-4 border-b shrink-0">
-					<div class="flex items-center gap-3">
+				<div class="flex-between p-4 border-b shrink-0">
+					<div class="flex-center gap-3">
 						<button
-							class="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-muted active:scale-95 transition-transform"
+							class="md:hidden flex-center justify-center w-10 h-10 rounded-full bg-muted active:scale-95 transition-transform"
 							onclick={() => showCart = false}
 						>
-							<X class="h-5 w-5" />
+							<X class="icon-md" />
 						</button>
-						<h2 class="font-bold text-lg flex items-center gap-2">
-							<ShoppingCart class="h-5 w-5" />
+						<h2 class="font-bold text-lg flex-center gap-2">
+							<ShoppingCart class="icon-md" />
 							{t("orders.cart")}
 							{#if cartItemCount > 0}
 								<Badge variant="secondary" class="text-xs">{cartItemCount}</Badge>
@@ -278,7 +278,7 @@
 					</div>
 					{#if cart.length > 0}
 						<Button variant="ghost" size="sm" onclick={clearCart} class="text-destructive hover:text-destructive">
-							<Trash2 class="h-4 w-4 mr-1" />
+							<Trash2 class="icon-sm mr-1" />
 							{t("common.clear")}
 						</Button>
 					{/if}
@@ -287,7 +287,7 @@
 				<div class="flex-1 overflow-y-auto p-3 space-y-2">
 					{#if cart.length === 0}
 						<div class="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
-							<div class="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+							<div class="w-20 h-20 rounded-full bg-muted flex-center justify-center mb-4">
 								<ShoppingCart class="h-10 w-10 opacity-50" />
 							</div>
 							<p class="font-medium">{t("orders.emptyCart")}</p>
@@ -302,34 +302,34 @@
 										<p class="text-sm text-muted-foreground">{fmtCurrency(item.product.price)} each</p>
 									</div>
 									<button
-										class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+										class="shrink-0 w-8 h-8 flex-center justify-center rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
 										onclick={() => { cart = cart.filter((_, i) => i !== idx); }}
 									>
-										<X class="h-4 w-4" />
+										<X class="icon-sm" />
 									</button>
 								</div>
-								<div class="flex items-center justify-between">
-									<div class="flex items-center gap-1">
+								<div class="flex-between">
+									<div class="flex-center gap-1">
 										<button
-											class="w-10 h-10 flex items-center justify-center rounded-xl border-2 hover:bg-muted active:scale-95 transition-all"
+											class="w-10 h-10 flex-center justify-center rounded-xl border-2 hover:bg-muted active:scale-95 transition-all"
 											onclick={() => updateQuantity(idx, -1)}
 										>
-											<Minus class="h-4 w-4" />
+											<Minus class="icon-sm" />
 										</button>
 										<span class="w-12 text-center font-bold text-lg">{item.quantity}</span>
 										<button
-											class="w-10 h-10 flex items-center justify-center rounded-xl border-2 hover:bg-muted active:scale-95 transition-all"
+											class="w-10 h-10 flex-center justify-center rounded-xl border-2 hover:bg-muted active:scale-95 transition-all"
 											onclick={() => updateQuantity(idx, 1)}
 										>
-											<Plus class="h-4 w-4" />
+											<Plus class="icon-sm" />
 										</button>
 									</div>
-									<div class="flex items-center gap-2">
+									<div class="flex-center gap-2">
 										<button
-											class="h-10 px-3 flex items-center gap-1.5 rounded-xl text-sm font-medium transition-all active:scale-95 {item.isTreat ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'border-2 hover:bg-muted'}"
+											class="h-10 px-3 flex-center gap-1.5 rounded-xl text-sm font-medium transition-all active:scale-95 {item.isTreat ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'border-2 hover:bg-muted'}"
 											onclick={() => toggleTreat(idx)}
 										>
-											<Gift class="h-4 w-4" />
+											<Gift class="icon-sm" />
 											{#if item.isTreat}Treat{/if}
 										</button>
 										<p class="font-bold text-right min-w-[4rem] {item.isTreat ? 'line-through text-muted-foreground' : ''}">
@@ -344,22 +344,22 @@
 
 				{#if cart.length > 0}
 					<div class="shrink-0 border-t bg-background">
-						<div class="flex items-center justify-between p-4 border-b">
+						<div class="flex-between p-4 border-b">
 							<span class="font-medium">{t("orders.coupons")}</span>
-							<div class="flex items-center gap-2">
+							<div class="flex-center gap-2">
 								<button
-									class="w-10 h-10 flex items-center justify-center rounded-xl border-2 hover:bg-muted active:scale-95 transition-all disabled:opacity-50"
+									class="w-10 h-10 flex-center justify-center rounded-xl border-2 hover:bg-muted active:scale-95 transition-all disabled:opacity-50"
 									onclick={() => couponCount = Math.max(0, couponCount - 1)}
 									disabled={couponCount === 0}
 								>
-									<Minus class="h-4 w-4" />
+									<Minus class="icon-sm" />
 								</button>
 								<span class="w-10 text-center font-bold text-lg">{couponCount}</span>
 								<button
-									class="w-10 h-10 flex items-center justify-center rounded-xl border-2 hover:bg-muted active:scale-95 transition-all"
+									class="w-10 h-10 flex-center justify-center rounded-xl border-2 hover:bg-muted active:scale-95 transition-all"
 									onclick={() => couponCount++}
 								>
-									<Plus class="h-4 w-4" />
+									<Plus class="icon-sm" />
 								</button>
 							</div>
 						</div>
@@ -410,10 +410,10 @@
 
 				{#if lastOrderId}
 					<div class="p-4 bg-green-50 dark:bg-green-950/50 border-t border-green-200 dark:border-green-800">
-						<div class="flex items-center justify-between">
-							<div class="flex items-center gap-2 text-green-600 dark:text-green-400">
-								<div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-									<Check class="h-5 w-5" />
+						<div class="flex-between">
+							<div class="flex-center gap-2 text-green-600 dark:text-green-400">
+								<div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex-center justify-center">
+									<Check class="icon-md" />
 								</div>
 								<div>
 									<p class="font-bold">{t("common.success")}</p>
@@ -421,7 +421,7 @@
 								</div>
 							</div>
 							<Button variant="outline" size="sm" onclick={handlePrintReceipt}>
-								<Printer class="h-4 w-4 mr-1" />{t("orders.printReceipt")}
+								<Printer class="icon-sm mr-1" />{t("orders.printReceipt")}
 							</Button>
 						</div>
 					</div>

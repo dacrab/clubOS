@@ -1,46 +1,43 @@
 <script lang="ts">
-	import { supabase } from "$lib/utils/supabase";
 	import { toast } from "svelte-sonner";
 	import { t } from "$lib/i18n/index.svelte";
+	import { supabase } from "$lib/utils/supabase";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import Card, { CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
 	import Header from "$lib/components/layout/header.svelte";
+
 	let email = $state("");
 	let password = $state("");
 	let loading = $state(false);
 
-	async function handleLogin(e: Event): Promise<void> {
+	async function handleLogin(e: Event) {
 		e.preventDefault();
 		if (!email || !password) { toast.error(t("auth.invalidCredentials")); return; }
 
 		loading = true;
 		try {
-			const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
-			if (error || !authData.user) {
-				toast.error(t("auth.invalidCredentials"));
-				loading = false;
-				return;
-			}
-
+			const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+			if (error || !data.user) throw new Error(t("auth.invalidCredentials"));
 			toast.success(t("auth.welcomeBack"));
-			// Let server-side hooks handle role-based redirect
 			window.location.href = "/";
-		} catch {
-			toast.error(t("common.error"));
+		} catch (err) {
+			const message = err instanceof Error ? err.message : t("common.error");
+			toast.error(message);
 			loading = false;
 		}
 	}
 
-	async function handleForgotPassword(): Promise<void> {
+	async function handleForgotPassword() {
 		if (!email) { toast.error(t("auth.enterEmailFirst")); return; }
 		try {
 			const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset` });
 			if (error) throw error;
 			toast.success(t("auth.resetEmailSent"));
-		} catch {
-			toast.error(t("common.error"));
+		} catch (err) {
+			const message = err instanceof Error ? err.message : t("common.error");
+			toast.error(message);
 		}
 	}
 </script>

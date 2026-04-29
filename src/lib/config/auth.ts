@@ -1,5 +1,4 @@
 import type { MemberRole } from "$lib/types/database";
-import { USER_ROLE } from "$lib/constants";
 
 export type Plan = "basic" | "pro" | "enterprise";
 
@@ -54,10 +53,10 @@ export const PLANS = [
 ] as const;
 
 const ROLE_HOME: Record<string, string> = {
-	[USER_ROLE.OWNER]: "/admin",
-	[USER_ROLE.ADMIN]: "/admin",
-	[USER_ROLE.MANAGER]: "/secretary",
-	[USER_ROLE.STAFF]: "/staff",
+	owner: "/admin",
+	admin: "/admin",
+	manager: "/secretary",
+	staff: "/staff",
 };
 
 export function getHomeForRole(role: MemberRole | string | null | undefined): string {

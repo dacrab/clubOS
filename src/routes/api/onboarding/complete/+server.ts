@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
-import { TRIAL_DAYS, DEFAULT_TIMEZONE } from "$lib/constants";
+import { TRIAL_DAYS, DEFAULT_TIMEZONE } from "$lib/types/database";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) return json({ error: "Unauthorized" }, { status: 401 });

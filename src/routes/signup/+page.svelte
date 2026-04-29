@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { supabase } from "$lib/utils/supabase";
 	import { toast } from "svelte-sonner";
 	import { t } from "$lib/i18n/index.svelte";
+	import { supabase } from "$lib/utils/supabase";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
@@ -15,14 +15,15 @@
 	let fullName = $state("");
 	let loading = $state(false);
 
-	async function handleSignup(e: Event): Promise<void> {
+	async function handleSignup(e: Event) {
 		e.preventDefault();
 		if (!email || !password || !confirmPassword || !fullName) { toast.error(t("signup.fillAllFields")); return; }
-		if (password !== confirmPassword) { toast.error(t("auth.passwordMismatch")); return; }
-		if (password.length < 8) { toast.error(t("signup.passwordTooShort")); return; }
 
 		loading = true;
 		try {
+			if (password !== confirmPassword) throw new Error(t("auth.passwordMismatch"));
+			if (password.length < 8) throw new Error(t("signup.passwordTooShort"));
+			
 			const { data, error } = await supabase.auth.signUp({
 				email,
 				password,
@@ -30,11 +31,12 @@
 			});
 			if (error) throw error;
 			if (!data.user) throw new Error("Signup failed");
-
+			
 			toast.success(t("signup.accountCreated"));
 			window.location.href = "/onboarding";
 		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t("common.error"));
+			const message = err instanceof Error ? err.message : t("common.error");
+			toast.error(message);
 			loading = false;
 		}
 	}

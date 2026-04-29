@@ -1,6 +1,7 @@
 import { t } from "$lib/i18n/index.svelte";
 import { fmtCurrency } from "$lib/utils/format";
-import { shortId, type CartItem } from "$lib/types/database";
+import type { CartItem } from "$lib/types/database";
+import { shortId } from "$lib/utils/helpers";
 
 export interface ReceiptData {
 	items: CartItem[];

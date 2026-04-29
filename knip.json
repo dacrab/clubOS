@@ -2,20 +2,15 @@
 	"$schema": "https://unpkg.com/knip@latest/schema.json",
 	"entry": [
 		"src/**/*.{svelte,ts}",
-		"scripts/**/*.ts",
-		"e2e/**/*.ts"
+		"scripts/**/*.ts"
 	],
 	"project": [
 		"src/**/*.{ts,svelte}",
-		"scripts/**/*.ts",
-		"e2e/**/*.ts"
+		"scripts/**/*.ts"
 	],
 	"ignoreDependencies": [
 		"tailwindcss-animate",
 		"tailwindcss"
-	],
-	"ignoreBinaries": [
-		"supabase"
 	],
 	"ignore": [],
 	"paths": {

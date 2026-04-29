@@ -7,6 +7,16 @@ export type SubscriptionStatus = "trialing" | "active" | "canceled" | "past_due"
 export const getRoleBadgeVariant = (role: MemberRole | undefined): RoleBadgeVariant =>
 	role === "owner" ? "destructive" : role === "admin" ? "default" : role === "manager" ? "secondary" : "outline";
 
+// Limits
+export const PRODUCTS_LIMIT = 500;
+export const CATEGORIES_LIMIT = 100;
+export const BOOKINGS_LIMIT = 200;
+export const ORDERS_LIMIT = 100;
+export const DASHBOARD_LIMIT = 5;
+export const USERS_PER_PAGE = 200;
+export const TRIAL_DAYS = 14;
+export const DEFAULT_TIMEZONE = "UTC";
+
 export interface Tenant {
 	id: string;
 	name: string;
@@ -172,11 +182,6 @@ export interface OrderItemView {
 	products: ProductRef;
 }
 
-export const getProductName = (p: ProductRef): string =>
-	Array.isArray(p) ? p[0]?.name ?? "Unknown" : p?.name ?? "Unknown";
-
-export const shortId = (id: string): string => id.slice(0, 8);
-
 export interface OrderView {
 	id: string;
 	session_id?: string | null;
@@ -187,9 +192,6 @@ export interface OrderView {
 	coupon_count: number;
 	order_items: OrderItemView[];
 }
-
-export const getActiveOrderItems = (items: OrderItemView[]): OrderItemView[] =>
-	items?.filter((i) => !i.is_deleted) ?? [];
 
 export type CategoryPartial = Pick<Category, "id" | "name" | "parent_id" | "description">;
 

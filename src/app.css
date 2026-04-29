@@ -174,6 +174,31 @@
 	.popover-anim {
 		@apply data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95;
 	}
+
+	/* Layout utilities - 76 occurrences */
+	.flex-center {
+		@apply flex items-center;
+	}
+
+	/* Layout utilities - 42 occurrences */
+	.flex-between {
+		@apply flex items-center justify-between;
+	}
+
+	/* Icon sizing - 66 occurrences */
+	.icon-sm {
+		@apply h-4 w-4;
+	}
+
+	/* Icon sizing - 25 occurrences */
+	.icon-md {
+		@apply h-5 w-5;
+	}
+
+	/* Transition utilities - 11 occurrences */
+	.transition-colors-smooth {
+		@apply transition-colors;
+	}
 }
 
 @layer utilities {
@@ -222,16 +247,6 @@
 		animation: fadeIn var(--duration-normal) var(--ease-out);
 	}
 
-	/* Slide up animation */
-	.animate-slide-up {
-		animation: slideUp var(--duration-normal) var(--ease-out);
-	}
-
-	/* Scale in animation */
-	.animate-scale-in {
-		animation: scaleIn var(--duration-normal) var(--ease-spring);
-	}
-
 	/* Stagger children animation */
 	.stagger-children > * {
 		animation: fadeSlideIn var(--duration-normal) var(--ease-out) backwards;
@@ -248,28 +263,6 @@
 @keyframes fadeIn {
 	from { opacity: 0; }
 	to { opacity: 1; }
-}
-
-@keyframes slideUp {
-	from {
-		opacity: 0;
-		transform: translateY(8px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-@keyframes scaleIn {
-	from {
-		opacity: 0;
-		transform: scale(0.96);
-	}
-	to {
-		opacity: 1;
-		transform: scale(1);
-	}
 }
 
 @keyframes fadeSlideIn {

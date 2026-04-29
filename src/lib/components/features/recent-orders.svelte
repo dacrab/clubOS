@@ -5,7 +5,7 @@
 	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
 	import { Eye } from "@lucide/svelte";
-	import { shortId, type OrderView } from "$lib/types/database";
+	import { type OrderView } from "$lib/types/database";
 
 	type Props = { orders: OrderView[]; title?: string };
 

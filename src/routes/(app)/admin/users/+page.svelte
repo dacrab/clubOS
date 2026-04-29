@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
+	import { toast } from "svelte-sonner";
+	import { invalidateAll } from "$app/navigation";
 	import PageHeader from "$lib/components/layout/page-header.svelte";
 	import EmptyState from "$lib/components/layout/empty-state.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
@@ -13,38 +15,62 @@
 	import SelectContent from "$lib/components/ui/select/select-content.svelte";
 	import SelectItem from "$lib/components/ui/select/select-item.svelte";
 	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
-	import { createCrud } from "$lib/state/crud.svelte";
-	import { users } from "$lib/services/db";
 	import { Plus, Pencil, Trash2, Users } from "@lucide/svelte";
-	import { type UserView, type UserForm, getRoleBadgeVariant, type MemberRole } from "$lib/types/database";
-	import { USER_ROLE } from "$lib/constants";
+	import type { UserView, UserForm, MemberRole } from "$lib/types/database";
+	import { getRoleBadgeVariant } from "$lib/utils/helpers";
 
 	const { data } = $props();
 
-	const ROLES = Object.values(USER_ROLE) as MemberRole[];
+	const ROLES: MemberRole[] = ["owner", "admin", "manager", "staff"];
 	const getRoleLabel = (role: MemberRole) => t(`users.roles.${role}`);
 
-	const crud = createCrud<UserView, UserForm>({
-		toForm: (u) => u
-			? { full_name: u.full_name ?? "", email: u.email, password: "", role: u.role }
-			: { full_name: "", email: "", password: "", role: USER_ROLE.STAFF },
-		onCreate: (f) => users.create({ email: f.email, full_name: f.full_name, password: f.password, role: f.role }),
-		onUpdate: (id, f) => users.update(id, { full_name: f.full_name, role: f.role, ...(f.password ? { password: f.password } : {}) }),
-		onDelete: (id) => users.remove(id),
-		getId: (u) => u.id,
-		getName: (u) => u.full_name ?? u.email,
-	});
+	let open = $state(false);
+	let editing = $state<UserView | null>(null);
+	let form = $state<UserForm>({ full_name: "", email: "", password: "", role: "staff" });
+	let saving = $state(false);
+
+	async function save() {
+		saving = true;
+		try {
+			const { error } = editing
+				? await users.update(editing.id, { full_name: form.full_name, role: form.role, ...(form.password ? { password: form.password } : {}) })
+				: await users.create({ email: form.email, full_name: form.full_name, password: form.password, role: form.role });
+			if (error) throw error;
+			open = false;
+			toast.success(t("common.success"));
+			await invalidateAll();
+		} catch (err) {
+			console.error(err);
+			toast.error(t("common.error"));
+		} finally {
+			saving = false;
+		}
+	}
+
+	async function remove(user: UserView) {
+		if (!confirm(t("common.deleteConfirm").replace("{name}", user.full_name ?? user.email))) return;
+		try {
+			const { error } = await users.remove(user.id);
+			if (error) throw error;
+			toast.success(t("common.success"));
+			await invalidateAll();
+		} catch (err) {
+			console.error(err);
+			toast.error(t("common.error"));
+		}
+	}
+
 </script>
 
 <div class="space-y-6">
 	<PageHeader title={t("users.title")} description={t("users.subtitle")}>
-		{#snippet actions()}<Button onclick={() => crud.openCreate()}><Plus class="mr-2 h-4 w-4" />{t("users.addUser")}</Button>{/snippet}
+		{#snippet actions()}<Button onclick={() => { editing = null; form = { full_name: "", email: "", password: "", role: "staff" }; open = true; }}><Plus class="mr-2 h-4 w-4" />{t("users.addUser")}</Button>{/snippet}
 	</PageHeader>
 
 	{#if data.users.length === 0}
 		<Card><CardContent class="pt-6">
 			<EmptyState title={t("users.empty.title")} description={t("users.empty.description")} icon={Users}>
-				{#snippet actions()}<Button onclick={() => crud.openCreate()}><Plus class="mr-2 h-4 w-4" />{t("users.addUser")}</Button>{/snippet}
+				{#snippet actions()}<Button onclick={() => { editing = null; form = { full_name: "", email: "", password: "", role: "staff" }; open = true; }}><Plus class="mr-2 h-4 w-4" />{t("users.addUser")}</Button>{/snippet}
 			</EmptyState>
 		</CardContent></Card>
 	{:else}
@@ -64,8 +90,8 @@
 							<TableCell><Badge variant={getRoleBadgeVariant(user.role)}>{getRoleLabel(user.role)}</Badge></TableCell>
 							<TableCell>
 								<div class="flex items-center gap-1">
-									<Button variant="ghost" size="icon-sm" onclick={() => crud.openEdit(user)} aria-label={t("common.edit")}><Pencil class="h-4 w-4" /></Button>
-									{#if user.role !== USER_ROLE.OWNER}<Button variant="ghost" size="icon-sm" onclick={() => crud.remove(user)} aria-label={t("common.delete")}><Trash2 class="h-4 w-4" /></Button>{/if}
+									<Button variant="ghost" size="icon-sm" onclick={() => { editing = user; form = { full_name: user.full_name ?? "", email: user.email, password: "", role: user.role }; open = true; }} aria-label={t("common.edit")}><Pencil class="h-4 w-4" /></Button>
+									{#if user.role !== "owner"}<Button variant="ghost" size="icon-sm" onclick={() => remove(user)} aria-label={t("common.delete")}><Trash2 class="h-4 w-4" /></Button>{/if}
 								</div>
 							</TableCell>
 						</TableRow>
@@ -76,19 +102,19 @@
 	{/if}
 </div>
 
-<FormDialog bind:open={crud.open} title={crud.isEdit ? t("users.editUser") : t("users.addUser")} saving={crud.saving} onsubmit={() => crud.save()} onclose={() => crud.close()}>
-	<div class="space-y-2"><Label for="full_name">{t("users.fullName")}</Label><Input id="full_name" bind:value={crud.form.full_name} required /></div>
-	{#if !crud.isEdit}
-		<div class="space-y-2"><Label for="email">{t("users.email")}</Label><Input id="email" type="email" bind:value={crud.form.email} required /></div>
+<FormDialog bind:open title={editing ? t("users.editUser") : t("users.addUser")} {saving} onsubmit={save} onclose={() => open = false}>
+	<div class="space-y-2"><Label for="full_name">{t("users.fullName")}</Label><Input id="full_name" bind:value={form.full_name} required /></div>
+	{#if !editing}
+		<div class="space-y-2"><Label for="email">{t("users.email")}</Label><Input id="email" type="email" bind:value={form.email} required /></div>
 	{/if}
 	<div class="space-y-2">
-		<Label for="password">{crud.isEdit ? t("users.changePassword") : t("auth.password")}</Label>
-		<Input id="password" type="password" bind:value={crud.form.password} placeholder={crud.isEdit ? t("users.leaveBlank") : ""} required={!crud.isEdit} />
+		<Label for="password">{editing ? t("users.changePassword") : t("auth.password")}</Label>
+		<Input id="password" type="password" bind:value={form.password} placeholder={editing ? t("users.leaveBlank") : ""} required={!editing} />
 	</div>
 	<div class="space-y-2">
 		<Label>{t("users.role")}</Label>
-		<Select bind:value={crud.form.role}>
-			<SelectTrigger selected={getRoleLabel(crud.form.role)} />
+		<Select bind:value={form.role}>
+			<SelectTrigger selected={getRoleLabel(form.role)} />
 			<SelectContent>{#each ROLES as role (role)}<SelectItem value={role}>{getRoleLabel(role)}</SelectItem>{/each}</SelectContent>
 		</Select>
 	</div>

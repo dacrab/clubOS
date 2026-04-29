@@ -24,7 +24,7 @@
 	<PageHeader title={t("dashboard.title")} description={t("dashboard.overview")}>
 		{#snippet actions()}
 			<Button onclick={() => (showNewSaleDialog = true)} class="press-effect">
-				<Plus class="mr-2 h-4 w-4" />
+				<Plus class="mr-2 icon-sm" />
 				{t("orders.newSale")}
 			</Button>
 		{/snippet}
@@ -32,10 +32,10 @@
 
 	<section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
 		<Card class="hover-lift">
-			<CardHeader class="flex flex-row items-center justify-between pb-2">
+			<CardHeader class="flex flex-row flex-between pb-2">
 				<CardTitle class="text-sm font-medium">{t("dashboard.todayRevenue")}</CardTitle>
 				<div class="rounded-lg bg-primary/10 p-2">
-					<DollarSign class="h-4 w-4 text-primary" />
+					<DollarSign class="icon-sm text-primary" />
 				</div>
 			</CardHeader>
 			<CardContent>
@@ -44,10 +44,10 @@
 		</Card>
 
 		<Card class="hover-lift">
-			<CardHeader class="flex flex-row items-center justify-between pb-2">
+			<CardHeader class="flex flex-row flex-between pb-2">
 				<CardTitle class="text-sm font-medium">{t("dashboard.totalOrders")}</CardTitle>
 				<div class="rounded-lg bg-blue-500/10 p-2">
-					<ShoppingCart class="h-4 w-4 text-blue-500" />
+					<ShoppingCart class="icon-sm text-blue-500" />
 				</div>
 			</CardHeader>
 			<CardContent>
@@ -56,10 +56,10 @@
 		</Card>
 
 		<Card class="hover-lift">
-			<CardHeader class="flex flex-row items-center justify-between pb-2">
+			<CardHeader class="flex flex-row flex-between pb-2">
 				<CardTitle class="text-sm font-medium">{t("dashboard.lowStock")}</CardTitle>
 				<div class="rounded-lg bg-amber-500/10 p-2">
-					<Package class="h-4 w-4 text-amber-500" />
+					<Package class="icon-sm text-amber-500" />
 				</div>
 			</CardHeader>
 			<CardContent>
@@ -68,10 +68,10 @@
 		</Card>
 
 		<Card class="hover-lift">
-			<CardHeader class="flex flex-row items-center justify-between pb-2">
+			<CardHeader class="flex flex-row flex-between pb-2">
 				<CardTitle class="text-sm font-medium">{t("dashboard.activeUsers")}</CardTitle>
 				<div class="rounded-lg bg-emerald-500/10 p-2">
-					<TrendingUp class="h-4 w-4 text-emerald-500" />
+					<TrendingUp class="icon-sm text-emerald-500" />
 				</div>
 			</CardHeader>
 			<CardContent>
@@ -82,9 +82,9 @@
 
 	<section class="grid gap-6 lg:grid-cols-2">
 		<Card>
-			<CardHeader class="flex flex-row items-center justify-between">
-				<CardTitle class="flex items-center gap-2">
-					<BarChart3 class="h-5 w-5 text-muted-foreground" />
+			<CardHeader class="flex flex-row flex-between">
+				<CardTitle class="flex-center gap-2">
+					<BarChart3 class="icon-md text-muted-foreground" />
 					{t("dashboard.weeklyRevenue")}
 				</CardTitle>
 			</CardHeader>
@@ -148,9 +148,9 @@
 		</Card>
 
 		<Card>
-			<CardHeader class="flex flex-row items-center justify-between">
-				<CardTitle class="flex items-center gap-2">
-					<Layers class="h-5 w-5 text-muted-foreground" />
+			<CardHeader class="flex flex-row flex-between">
+				<CardTitle class="flex-center gap-2">
+					<Layers class="icon-md text-muted-foreground" />
 					{t("dashboard.salesByCategory")}
 				</CardTitle>
 			</CardHeader>
@@ -167,7 +167,7 @@
 						{#each data.analytics.categorySales as category (category.name)}
 							{@const percentage = totalCategorySales > 0 ? Math.round((category.quantity / totalCategorySales) * 100) : 0}
 							<div class="space-y-2">
-								<div class="flex items-center justify-between text-sm">
+								<div class="flex-between text-sm">
 									<span class="font-medium">{category.name}</span>
 									<span class="text-muted-foreground">{category.quantity} ({percentage}%)</span>
 								</div>
@@ -187,9 +187,9 @@
 
 	<section class="grid gap-6 lg:grid-cols-2">
 		<Card>
-			<CardHeader class="flex flex-row items-center justify-between">
-				<CardTitle class="flex items-center gap-2">
-					<Star class="h-5 w-5 text-muted-foreground" />
+			<CardHeader class="flex flex-row flex-between">
+				<CardTitle class="flex-center gap-2">
+					<Star class="icon-md text-muted-foreground" />
 					{t("dashboard.bestSellers")}
 				</CardTitle>
 			</CardHeader>
@@ -204,9 +204,9 @@
 				{:else}
 					<div class="space-y-3">
 						{#each data.analytics.bestSellers as product, i (product.id)}
-							<div class="flex items-center justify-between rounded-lg p-2 transition-colors hover:bg-muted/50">
-								<div class="flex items-center gap-3">
-									<span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold {i === 0 ? 'bg-primary text-primary-foreground border-primary' : 'text-muted-foreground'}">
+							<div class="flex-between rounded-lg p-2 transition-colors hover:bg-muted/50">
+								<div class="flex-center gap-3">
+									<span class="flex h-7 w-7 shrink-0 flex-center justify-center rounded-full border text-xs font-semibold {i === 0 ? 'bg-primary text-primary-foreground border-primary' : 'text-muted-foreground'}">
 										{i + 1}
 									</span>
 									<span class="font-medium">{product.name}</span>

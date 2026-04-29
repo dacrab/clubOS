@@ -1,9 +1,9 @@
 import type { PageServerLoad } from "./$types";
-import { ORDERS_LIMIT } from "$lib/constants";
+import { ORDERS_LIMIT } from "$lib/types/database";
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
-	const { supabase } = locals;
 	const { user } = await parent();
+	const { supabase } = locals;
 
 	const { data: orders } = await supabase
 		.from("v_orders_list")
@@ -12,7 +12,5 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		.order("created_at", { ascending: false })
 		.limit(ORDERS_LIMIT);
 
-	return {
-		orders: orders ?? [],
-	};
+	return { orders: orders ?? [] };
 };

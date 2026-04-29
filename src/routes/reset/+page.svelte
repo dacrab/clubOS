@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { supabase } from "$lib/utils/supabase";
 	import { toast } from "svelte-sonner";
 	import { t } from "$lib/i18n/index.svelte";
+	import { supabase } from "$lib/utils/supabase";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
@@ -14,26 +14,21 @@
 
 	async function handleReset(e: Event) {
 		e.preventDefault();
-
-		if (!password || !confirmPassword) {
-			toast.error(t("auth.fillAllFields"));
-			return;
-		}
-
-		if (password !== confirmPassword) {
-			toast.error(t("auth.passwordMismatch"));
-			return;
-		}
+		if (!password || !confirmPassword) { toast.error(t("auth.fillAllFields")); return; }
 
 		loading = true;
 		try {
+			if (password !== confirmPassword) throw new Error(t("auth.passwordMismatch"));
+			if (password.length < 8) throw new Error(t("signup.passwordTooShort"));
+			
 			const { error } = await supabase.auth.updateUser({ password });
 			if (error) throw error;
-
+			
 			toast.success(t("auth.passwordUpdated"));
 			await goto("/");
-		} catch {
-			toast.error(t("common.error"));
+		} catch (err) {
+			const message = err instanceof Error ? err.message : t("common.error");
+			toast.error(message);
 		} finally {
 			loading = false;
 		}

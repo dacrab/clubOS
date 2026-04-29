@@ -11,7 +11,8 @@
 	import ThemeToggle from "$lib/components/layout/theme-toggle.svelte";
 	import LanguageSwitcher from "$lib/components/layout/language-switcher.svelte";
 	import { User, LogOut } from "@lucide/svelte";
-	import { getRoleBadgeVariant, type MemberRole } from "$lib/types/database";
+	import type { MemberRole } from "$lib/types/database";
+	import { getRoleBadgeVariant } from "$lib/utils/helpers";
 
 	type Props = { public?: boolean; showLogo?: boolean };
 	let { public: isPublic = false, showLogo = true }: Props = $props();
@@ -21,31 +22,31 @@
 </script>
 
 {#if isPublic}
-	<header class="flex items-center justify-between border-b px-4 py-3">
+	<header class="flex-between border-b px-4 py-3">
 		<a href="/" class="text-lg font-bold" class:invisible={!showLogo}>clubOS</a>
-		<div class="flex items-center gap-2">
+		<div class="flex-center gap-2">
 			<LanguageSwitcher />
 			<ThemeToggle />
 		</div>
 	</header>
 {:else}
-	<header class="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-		<div class="flex items-center gap-4">
+	<header class="sticky top-0 z-30 flex h-14 flex-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+		<div class="flex-center gap-4">
 			{#if session.user}
 				<Badge variant={roleBadgeVariant}>{roleLabel}</Badge>
 			{/if}
 		</div>
-		<div class="flex items-center gap-2">
+		<div class="flex-center gap-2">
 			<LanguageSwitcher showLabel />
 			<ThemeToggle />
 			{#if session.user}
 				<DropdownMenu>
-					<DropdownMenuTrigger><User class="h-4 w-4" /></DropdownMenuTrigger>
+					<DropdownMenuTrigger><User class="icon-sm" /></DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
 						<DropdownMenuLabel>{session.user.username || session.user.email}</DropdownMenuLabel>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem>
-							<a href="/logout" class="flex items-center gap-2"><LogOut class="h-4 w-4" />{t("nav.logout")}</a>
+							<a href="/logout" class="flex-center gap-2"><LogOut class="icon-sm" />{t("nav.logout")}</a>
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>

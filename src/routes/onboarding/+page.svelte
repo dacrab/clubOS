@@ -129,21 +129,21 @@
 		{#if completed}
 			<Card class="w-full max-w-md text-center">
 				<CardContent class="pt-8">
-					<div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10"><Check class="h-8 w-8 text-success" /></div>
+					<div class="mx-auto mb-4 flex h-16 w-16 flex-center justify-center rounded-full bg-success/10"><Check class="h-8 w-8 text-success" /></div>
 					<h2 class="text-2xl font-bold">{t("onboarding.welcomeTitle")}</h2>
 					<p class="mt-2 text-muted-foreground">{t("onboarding.welcomeDesc")}</p>
-					<div class="mt-6 flex items-center justify-center gap-2 text-muted-foreground"><Loader2 class="h-4 w-4 animate-spin" /><span>{t("onboarding.redirecting")}</span></div>
+					<div class="mt-6 flex-center justify-center gap-2 text-muted-foreground"><Loader2 class="icon-sm animate-spin" /><span>{t("onboarding.redirecting")}</span></div>
 				</CardContent>
 			</Card>
 		{:else}
 			<div class="w-full max-w-2xl">
 				<!-- Step indicator -->
-				<div class="mb-8 flex items-center justify-between">
+				<div class="mb-8 flex-center justify-between">
 					{#each steps as step, i (step.number)}
-						<div class="flex flex-1 items-center">
-							<div class="flex items-center gap-3">
-								<div class="flex h-10 w-10 items-center justify-center rounded-full transition-all {currentStep >= step.number ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}">
-									{#if currentStep > step.number}<Check class="h-5 w-5" />{:else}{step.number}{/if}
+						<div class="flex flex-1 flex-center">
+							<div class="flex-center gap-3">
+								<div class="flex h-10 w-10 flex-center justify-center rounded-full transition-all {currentStep >= step.number ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}">
+									{#if currentStep > step.number}<Check class="icon-md" />{:else}{step.number}{/if}
 								</div>
 								<div class="hidden sm:block"><p class="text-sm font-medium">{step.title}</p><p class="text-xs text-muted-foreground">{step.description}</p></div>
 							</div>
@@ -159,7 +159,7 @@
 							<div class="space-y-4">
 								<div class="space-y-2">
 									<Label for="tenantName">{t("onboarding.businessName")} *</Label>
-									<div class="relative"><Building2 class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input id="tenantName" class="pl-10" placeholder={t("onboarding.businessNamePlaceholder")} bind:value={tenantName} required /></div>
+									<div class="relative"><Building2 class="absolute left-3 top-1/2 icon-sm -translate-y-1/2 text-muted-foreground" /><Input id="tenantName" class="pl-10" placeholder={t("onboarding.businessNamePlaceholder")} bind:value={tenantName} required /></div>
 								</div>
 								<div class="space-y-2">
 									<Label>{t("onboarding.staffCount")}</Label>
@@ -173,15 +173,15 @@
 							<div class="space-y-4">
 								<div class="space-y-2">
 									<Label for="facilityName">{t("onboarding.facilityName")} *</Label>
-									<div class="relative"><Building2 class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input id="facilityName" class="pl-10" placeholder={t("onboarding.facilityNamePlaceholder")} bind:value={facilityName} required /></div>
+									<div class="relative"><Building2 class="absolute left-3 top-1/2 icon-sm -translate-y-1/2 text-muted-foreground" /><Input id="facilityName" class="pl-10" placeholder={t("onboarding.facilityNamePlaceholder")} bind:value={facilityName} required /></div>
 								</div>
 								<div class="space-y-2">
 									<Label for="facilityAddress">{t("onboarding.address")}</Label>
-									<div class="relative"><MapPin class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input id="facilityAddress" class="pl-10" placeholder={t("onboarding.addressPlaceholder")} bind:value={facilityAddress} /></div>
+									<div class="relative"><MapPin class="absolute left-3 top-1/2 icon-sm -translate-y-1/2 text-muted-foreground" /><Input id="facilityAddress" class="pl-10" placeholder={t("onboarding.addressPlaceholder")} bind:value={facilityAddress} /></div>
 								</div>
 								<div class="grid gap-4 sm:grid-cols-2">
-									<div class="space-y-2"><Label for="facilityPhone">{t("onboarding.phone")}</Label><div class="relative"><Phone class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input id="facilityPhone" class="pl-10" type="tel" placeholder="+30 210 1234567" bind:value={facilityPhone} /></div></div>
-									<div class="space-y-2"><Label for="facilityEmail">{t("onboarding.email")}</Label><div class="relative"><Mail class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input id="facilityEmail" class="pl-10" type="email" placeholder="contact@facility.com" bind:value={facilityEmail} /></div></div>
+									<div class="space-y-2"><Label for="facilityPhone">{t("onboarding.phone")}</Label><div class="relative"><Phone class="absolute left-3 top-1/2 icon-sm -translate-y-1/2 text-muted-foreground" /><Input id="facilityPhone" class="pl-10" type="tel" placeholder="+30 210 1234567" bind:value={facilityPhone} /></div></div>
+									<div class="space-y-2"><Label for="facilityEmail">{t("onboarding.email")}</Label><div class="relative"><Mail class="absolute left-3 top-1/2 icon-sm -translate-y-1/2 text-muted-foreground" /><Input id="facilityEmail" class="pl-10" type="email" placeholder="contact@facility.com" bind:value={facilityEmail} /></div></div>
 								</div>
 							</div>
 						{:else}
@@ -205,7 +205,7 @@
 						{#if currentStep < 3}
 							<Button onclick={nextStep}>{t("onboarding.next")}</Button>
 						{:else}
-							<Button variant="ghost" onclick={skipPaymentForNow} disabled={loading}>{#if loading}<Loader2 class="mr-2 h-4 w-4 animate-spin" />{/if}{t("onboarding.skipForNow")}</Button>
+							<Button variant="ghost" onclick={skipPaymentForNow} disabled={loading}>{#if loading}<Loader2 class="mr-2 icon-sm animate-spin" />{/if}{t("onboarding.skipForNow")}</Button>
 						{/if}
 					</div>
 				</Card>

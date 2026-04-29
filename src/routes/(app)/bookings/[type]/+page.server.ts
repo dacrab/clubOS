@@ -1,6 +1,6 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { BOOKINGS_LIMIT, BOOKING_TYPE } from "$lib/constants";
+import { BOOKINGS_LIMIT, BOOKING_TYPE } from "$lib/types/database";
 import type { BookingType } from "$lib/types/database";
 
 const VALID_TYPES: BookingType[] = [BOOKING_TYPE.BIRTHDAY, BOOKING_TYPE.FOOTBALL, "event", "other"];

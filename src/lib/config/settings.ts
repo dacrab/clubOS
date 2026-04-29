@@ -1,4 +1,6 @@
-import type { DateFormatType, TimeFormatType, CurrencyCodeType } from "$lib/utils/format";
+export type DateFormatType = "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD" | "DD.MM.YYYY" | "DD-MM-YYYY";
+export type TimeFormatType = "24h" | "12h";
+export type CurrencyCodeType = "EUR" | "USD" | "GBP" | "CHF" | "PLN" | "CZK" | "SEK" | "NOK" | "DKK";
 
 export interface TenantSettings {
 	// Regional

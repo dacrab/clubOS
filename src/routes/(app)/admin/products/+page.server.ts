@@ -1,7 +1,7 @@
-import type { PageServerLoad } from "./$types";
+import type { PageServerLoad} from "./$types";
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
-	const { user, products, categories } = await parent();
+	const { user } = await parent();
 	const { supabase } = locals;
 
 	const { data: lowStockProducts } = await supabase
@@ -9,5 +9,5 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		.select("*")
 		.eq("facility_id", user.facilityId);
 
-	return { products, categories, lowStockProducts: lowStockProducts ?? [] };
+	return { lowStockProducts: lowStockProducts ?? [] };
 };
