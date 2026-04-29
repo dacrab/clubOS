@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
 	import { fmtDate, fmtCurrency } from "$lib/utils/format";
+	import { shortId, getActiveOrderItems } from "$lib/utils/helpers";
 	import PageHeader from "$lib/components/layout/page-header.svelte";
 	import EmptyState from "$lib/components/layout/empty-state.svelte";
 	import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
@@ -10,7 +11,6 @@
 	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
 	import { ShoppingCart, Eye } from "@lucide/svelte";
 	import type { OrderView } from "$lib/types/database";
-	import { getActiveOrderItems } from "$lib/utils/helpers";
 
 	const { data } = $props();
 

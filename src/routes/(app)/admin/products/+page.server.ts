@@ -9,5 +9,5 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		.select("*")
 		.eq("facility_id", user.facilityId);
 
-	return { lowStockProducts: lowStockProducts ?? [] };
+	return { lowStockProducts: lowStockProducts ?? [], supabase };
 };

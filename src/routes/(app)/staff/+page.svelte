@@ -36,7 +36,12 @@
 	async function openRegister(): Promise<void> {
 		if (!data.user.facilityId) return;
 		processing = true;
-		const { error } = await registerSessions.open(data.user.facilityId, data.user.id);
+		const { error } = await data.supabase.from("register_sessions").insert({
+			facility_id: data.user.facilityId,
+			opened_by: data.user.id,
+			opened_at: new Date().toISOString(),
+			opening_cash: 0
+		});
 		processing = false;
 		if (error) { toast.error(t("common.error")); return; }
 		toast.success(t("common.success"));
@@ -51,21 +56,22 @@
 	}
 
 	async function closeRegister(): Promise<void> {
-		if (!closingName || !data.activeSession) { showError(t); return; }
+		if (!closingName || !data.activeSession) { toast.error(t("common.error")); return; }
 		processing = true;
-		const { error } = await registerSessions.close(
-			data.activeSession.id,
-			data.user.id,
-			countedCash,
-			closingNotes
-		);
+		const { error } = await data.supabase.rpc("close_register_session", {
+			p_session_id: data.activeSession.id,
+			p_closed_by: data.user.id,
+			p_closing_cash: countedCash,
+			p_closing_notes: closingNotes || null
+		});
 		processing = false;
-		if (error) { showError(t, error); return; }
+		if (error) { toast.error(t("common.error")); console.error(error); return; }
 		showCloseDialog = false;
 		closingName = "";
 		closingNotes = "";
 		countedCash = 0;
-		await showSuccess(t);
+		toast.success(t("common.success"));
+		await invalidateAll();
 	}
 </script>
 
@@ -126,6 +132,4 @@
 	{/if}
 	<Separator />
 	<div class="space-y-2"><Label for="closingNotes">{t("register.closingNotes")}</Label><Input id="closingNotes" bind:value={closingNotes} /></div>
-</FormDialog>
-abel><Input id="closingNotes" bind:value={closingNotes} /></div>
 </FormDialog>

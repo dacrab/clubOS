@@ -11,5 +11,5 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		.order("created_at", { ascending: false })
 		.limit(5);
 
-	return { recentOrders: recentOrders ?? [] };
+	return { recentOrders: recentOrders ?? [], supabase };
 };

@@ -32,10 +32,18 @@
 	async function save() {
 		saving = true;
 		try {
-			const { error } = editing
-				? await users.update(editing.id, { full_name: form.full_name, role: form.role, ...(form.password ? { password: form.password } : {}) })
-				: await users.create({ email: form.email, full_name: form.full_name, password: form.password, role: form.role });
-			if (error) throw error;
+			const payload = {
+				full_name: form.full_name,
+				role: form.role,
+				...(form.password && { password: form.password }),
+				...(!editing && { email: form.email })
+			};
+			
+			const response = editing
+				? await fetch(`/api/admin/users/${editing.id}`, { method: "PATCH", body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } })
+				: await fetch("/api/admin/users", { method: "POST", body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } });
+				
+			if (!response.ok) throw new Error(await response.text());
 			open = false;
 			toast.success(t("common.success"));
 			await invalidateAll();
@@ -50,8 +58,8 @@
 	async function remove(user: UserView) {
 		if (!confirm(t("common.deleteConfirm").replace("{name}", user.full_name ?? user.email))) return;
 		try {
-			const { error } = await users.remove(user.id);
-			if (error) throw error;
+			const response = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
+			if (!response.ok) throw new Error(await response.text());
 			toast.success(t("common.success"));
 			await invalidateAll();
 		} catch (err) {

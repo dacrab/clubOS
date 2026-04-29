@@ -49,9 +49,20 @@
 	async function saveProduct() {
 		savingProduct = true;
 		try {
+			const payload = {
+				name: productForm.name,
+				description: productForm.description || null,
+				price: productForm.price,
+				stock_quantity: productForm.stock_quantity,
+				category_id: productForm.category_id || null,
+				image_url: productForm.image_url || null,
+				...(!editingProduct && { facility_id: data.user.facilityId ?? "", created_by: data.user.id })
+			};
+			
 			const { error } = editingProduct
-				? await products.update(editingProduct.id, { name: productForm.name, description: productForm.description || undefined, price: productForm.price, stock_quantity: productForm.stock_quantity, category_id: productForm.category_id || undefined, image_url: productForm.image_url || undefined })
-				: await products.create({ name: productForm.name, description: productForm.description || undefined, price: productForm.price, stock_quantity: productForm.stock_quantity, category_id: productForm.category_id || undefined, image_url: productForm.image_url || undefined, facility_id: data.user.facilityId ?? "", created_by: data.user.id });
+				? await data.supabase.from("products").update(payload).eq("id", editingProduct.id)
+				: await data.supabase.from("products").insert(payload);
+				
 			if (error) throw error;
 			productOpen = false;
 			toast.success(t("common.success"));
@@ -65,22 +76,32 @@
 	}
 
 	async function deleteProduct(product: Product) {
-		if (!confirmDelete(product.name, t)) return;
+		if (!confirm(`${t("common.delete")} ${product.name}?`)) return;
 		try {
-			const { error } = await products.remove(product.id);
+			const { error } = await data.supabase.from("products").delete().eq("id", product.id);
 			if (error) throw error;
-			await showSuccess(t);
+			toast.success(t("common.success"));
+			await invalidateAll();
 		} catch (err) {
-			showError(t, err);
+			console.error(err);
+			toast.error(t("common.error"));
 		}
 	}
 
 	async function saveCategory() {
 		savingCategory = true;
 		try {
-			const { error} = editingCategory
-				? await categories.update(editingCategory.id, { name: categoryForm.name, description: categoryForm.description || undefined, parent_id: categoryForm.parent_id || undefined })
-				: await categories.create({ name: categoryForm.name, description: categoryForm.description || undefined, parent_id: categoryForm.parent_id || undefined, facility_id: data.user.facilityId ?? "" });
+			const payload = {
+				name: categoryForm.name,
+				description: categoryForm.description || null,
+				parent_id: categoryForm.parent_id || null,
+				...(!editingCategory && { facility_id: data.user.facilityId ?? "" })
+			};
+			
+			const { error } = editingCategory
+				? await data.supabase.from("categories").update(payload).eq("id", editingCategory.id)
+				: await data.supabase.from("categories").insert(payload);
+				
 			if (error) throw error;
 			categoryOpen = false;
 			toast.success(t("common.success"));
@@ -94,13 +115,15 @@
 	}
 
 	async function deleteCategory(cat: CategoryPartial) {
-		if (!confirmDelete(cat.name, t)) return;
+		if (!confirm(`${t("common.delete")} ${cat.name}?`)) return;
 		try {
-			const { error } = await categories.remove(cat.id);
+			const { error } = await data.supabase.from("categories").delete().eq("id", cat.id);
 			if (error) throw error;
-			await showSuccess(t);
+			toast.success(t("common.success"));
+			await invalidateAll();
 		} catch (err) {
-			showError(t, err);
+			console.error(err);
+			toast.error(t("common.error"));
 		}
 	}
 

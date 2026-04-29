@@ -22,7 +22,6 @@
 	import { settings } from "$lib/state/settings.svelte";
 	import { Plus, Pencil, Trash2, Package } from "@lucide/svelte";
 	import type { Booking, BookingStatus, BookingType, BookingDetails } from "$lib/types/database";
-	import { BOOKING_STATUS, BOOKING_TYPE } from "$lib/types/database";
 
 	type Props = {
 		type: BookingType;
@@ -33,7 +32,7 @@
 
 	let { type, bookings, user, icon = Package }: Props = $props();
 
-	const isBirthday = $derived(type === BOOKING_TYPE.BIRTHDAY);
+	const isBirthday = $derived(type === "birthday");
 	const prefix = $derived(isBirthday ? "bookings.birthday" : "bookings.football");
 
 	let showDialog = $state(false);
@@ -79,7 +78,7 @@
 				customer_phone: "",
 				starts_at: startsAt,
 				notes: "",
-				status: BOOKING_STATUS.CONFIRMED,
+				status: "confirmed",
 				num_children: 1,
 				num_adults: 0,
 				field_number: "1",
@@ -97,7 +96,7 @@
 			.select("id")
 			.eq("facility_id", user.facilityId)
 			.eq("type", type)
-			.neq("status", BOOKING_STATUS.CANCELED)
+			.neq("status", "canceled")
 			.gte("starts_at", new Date(time.getTime() - buffer * 60000).toISOString())
 			.lte("starts_at", new Date(time.getTime() + buffer * 60000).toISOString());
 
@@ -287,7 +286,7 @@
 			<Select bind:value={formData.status}>
 				<SelectTrigger selected={t(`bookings.status.${formData.status}`)} />
 				<SelectContent>
-					{#each Object.values(BOOKING_STATUS) as status (status)}
+					{#each ["pending", "confirmed", "canceled", "completed"] as status (status)}
 						<SelectItem value={status}>{t(`bookings.status.${status}`)}</SelectItem>
 					{/each}
 				</SelectContent>

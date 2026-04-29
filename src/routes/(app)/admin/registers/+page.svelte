@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
 	import { fmtDate, fmtCurrency } from "$lib/utils/format";
+	import { shortId, getActiveOrderItems } from "$lib/utils/helpers";
 	import PageHeader from "$lib/components/layout/page-header.svelte";
 	import EmptyState from "$lib/components/layout/empty-state.svelte";
 	import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
@@ -9,7 +10,7 @@
 	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
 	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
 	import { DollarSign, Eye, ChevronDown, ChevronUp } from "@lucide/svelte";
-	import { type OrderView, getActiveOrderItems } from "$lib/types/database";
+	import { type OrderView } from "$lib/types/database";
 
 	const { data } = $props();
 

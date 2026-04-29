@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
 	import { fmtDate, fmtCurrency } from "$lib/utils/format";
+	import { shortId } from "$lib/utils/helpers";
 	import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
 	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
