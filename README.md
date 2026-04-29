@@ -1,80 +1,51 @@
 # ClubOS
 
-Modern POS and club management system built with SvelteKit 2, Supabase, and Tailwind CSS v4.
+Modern point-of-sale and club management system for sports facilities, entertainment venues, and multi-location businesses.
 
 ## Features
 
-- **Multi-tenant**: Organizations with facilities, role-based access (owner/admin/manager/staff)
-- **POS**: Products, categories, register sessions, orders with treats/coupons
-- **Bookings**: Birthday parties and football field reservations
-- **Billing**: Stripe integration with subscription management
-- **i18n**: English and Greek translations
+- **Point of Sale** - Fast checkout with products, categories, treats, and coupons
+- **Bookings** - Manage birthday parties and field reservations
+- **Multi-tenant** - Support multiple locations with role-based access
+- **Subscriptions** - Stripe-powered billing with trial periods
+- **Multilingual** - English and Greek support
 
 ## Quick Start
 
 ```bash
-# Install
+# Install dependencies
 bun install
 
-# Environment
+# Set up environment
 cp .env.example .env.local
-# Edit .env.local with your Supabase credentials
+# Add your Supabase credentials to .env.local
 
-# Development
+# Start development server
 bun run dev
-
-# With local Supabase
-supabase start
-supabase db reset
-bun run db:seed
 ```
 
-## Available Scripts
+Visit `http://localhost:5173` to see the app.
+
+## Development
 
 ```bash
 bun run dev          # Start dev server
-bun run build        # Production build
-bun run check        # Type check + lint + knip
-bun run test         # Unit tests
-bun run test:e2e     # E2E tests (requires dev server)
-bun run db:seed      # Seed demo data
-bun run db:reset     # Reset database with seed data
+bun run build        # Build for production
+bun run check        # Type check and lint
+bun run test         # Run tests
 ```
 
-## Project Structure
+## Tech Stack
 
-```
-src/
-├── routes/           # SvelteKit pages and API routes
-│   ├── (app)/        # Authenticated app routes
-│   │   ├── admin/    # Admin pages (products, users, settings)
-│   │   ├── staff/    # Staff POS interface
-│   │   └── bookings/ # Booking management
-│   └── api/          # API endpoints
-├── lib/
-│   ├── components/   # UI components (shadcn-svelte)
-│   ├── services/     # Database service layer
-│   ├── state/        # Svelte 5 state modules
-│   ├── i18n/         # Translations (en, el)
-│   └── types/        # TypeScript types
-└── hooks.server.ts   # Auth middleware
-```
-
-## Environment Variables
-
-```bash
-# Required
-PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=eyJ...
-
-# Server-side (for admin operations)
-SUPABASE_SECRET_KEY=eyJ...
-```
-
-## Database
-
-Core tables: `tenants`, `facilities`, `users`, `memberships`, `products`, `categories`, `orders`, `bookings`, `register_sessions`, `subscriptions`. See `supabase/migrations/` for full schema.
+- **SvelteKit 2** - Full-stack framework
+- **Supabase** - Database and authentication
+- **Tailwind CSS v4** - Styling
+- **Stripe** - Payment processing
 
 ## Deployment
 
-Vercel-ready (`@sveltejs/adapter-vercel`). Configure environment variables in Vercel dashboard.
+Deploy to Vercel with one click. Add your environment variables in the Vercel dashboard.
+
+## License
+
+MIT
