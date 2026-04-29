@@ -17,7 +17,7 @@ function createTheme(): {
 		}
 	}
 
-	const applyTheme = () => {
+	const applyTheme = (): void => {
 		const isDark = current === "system"
 			? typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches
 			: current === "dark";
@@ -38,7 +38,7 @@ function createTheme(): {
 				applyTheme();
 			}
 		},
-		toggle() {
+		toggle(): void {
 			this.setTheme(this.isDark ? "light" : "dark");
 		},
 	};

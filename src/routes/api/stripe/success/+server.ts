@@ -3,7 +3,7 @@ import type { RequestHandler } from "./$types";
 import { env } from "$env/dynamic/private";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 
-const ts = (s: number) => new Date(s * 1000).toISOString();
+const ts = (s: number): string => new Date(s * 1000).toISOString();
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const sessionId = url.searchParams.get("session_id");

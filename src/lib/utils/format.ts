@@ -20,7 +20,7 @@ export function fmtDate(date: string | Date, includeTime = true): string {
 	if (isNaN(d.getTime())) return "-";
 
 	const fmt = settings.current.date_format;
-	const pad = (n: number) => String(n).padStart(2, "0");
+	const pad = (n: number): string => String(n).padStart(2, "0");
 	const [day, month, year] = [pad(d.getDate()), pad(d.getMonth() + 1), String(d.getFullYear())];
 	const dateStr = DATE_FORMATS[fmt](day, month, year);
 

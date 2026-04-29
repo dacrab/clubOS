@@ -43,4 +43,4 @@ function createI18n(): {
 
 export const i18n = createI18n();
 
-export const t = (key: string) => i18n.t(key);
+export const t = (key: string): string => i18n.t(key);

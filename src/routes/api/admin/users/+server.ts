@@ -10,12 +10,12 @@ async function requireAdmin(locals: App.Locals): Promise<AdminCheck> {
 	return { ok: true, tenantId: m.tenant_id, callerRole: m.role };
 }
 
-const getAllowedRoles = (callerRole: string) =>
+const getAllowedRoles = (callerRole: string): string[] =>
 	callerRole === "owner" ? ["owner", "admin", "manager", "staff"] : ["admin", "manager", "staff"];
 
-const checkAuth = (check: AdminCheck) => !check.ok ? new Response(check.error, { status: check.error === "Unauthorized" ? 401 : 403 }) : null;
+const checkAuth = (check: AdminCheck): Response | null => !check.ok ? new Response(check.error, { status: check.error === "Unauthorized" ? 401 : 403 }) : null;
 
-const checkPrivileges = (callerRole: string | undefined, role: string | undefined) =>
+const checkPrivileges = (callerRole: string | undefined, role: string | undefined): Response | null =>
 	role && !getAllowedRoles(callerRole ?? "staff").includes(role) ? new Response("Cannot assign higher privileges", { status: 403 }) : null;
 
 export const POST: RequestHandler = async ({ request, locals }) => {

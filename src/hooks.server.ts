@@ -28,7 +28,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const isAuthOnly = authOnlyRoutes.includes(path);
 
 	let cachedCtx: { role: MemberRole | null; tenantId: string | null; facilityId: string | null; active: boolean } | null = null;
-	const getMembership = async () => {
+	const getMembership = async (): Promise<{ role: MemberRole | null; tenantId: string | null; facilityId: string | null; active: boolean }> => {
 		if (cachedCtx) return cachedCtx;
 		if (!user) return (cachedCtx = { role: null, tenantId: null, facilityId: null, active: false });
 
