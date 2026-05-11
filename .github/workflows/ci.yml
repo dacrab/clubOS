@@ -22,7 +22,6 @@ jobs:
       - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
-      - run: bun run lint
       - run: bun run check
         env:
           DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy

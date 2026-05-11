@@ -1,13 +1,6 @@
 name: Auto-merge Dependabot PRs
 
-on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
-
-concurrency:
-  group: dependabot-auto-merge
-  cancel-in-progress: false
+on: pull_request
 
 permissions:
   contents: write
@@ -16,39 +9,13 @@ permissions:
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    if: |
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'pull_request'
+    if: github.actor == 'dependabot[bot]'
     steps:
-      - name: Merge Dependabot PR if CI passed
-        uses: actions/github-script@v9
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const headSha = context.payload.workflow_run.head_sha;
+      - uses: dependabot/fetch-metadata@v2
+        id: meta
 
-            const { data: prs } = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-            });
-
-            const pr = prs.find(p => p.head.sha === headSha);
-            if (!pr) return core.info(`No open PR found for SHA ${headSha}`);
-            if (pr.user.login !== 'dependabot[bot]')
-              return core.info(`PR #${pr.number} is not from Dependabot, skipping`);
-
-            const isMajor = pr.labels.some(l =>
-              l.name.includes('major') || l.name === 'version-update:semver-major'
-            );
-            if (isMajor)
-              return core.info(`PR #${pr.number} is a major update, skipping auto-merge`);
-
-            core.info(`Merging Dependabot PR #${pr.number}: ${pr.title}`);
-            await github.rest.pulls.merge({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr.number,
-              merge_method: 'squash',
-            });
-            core.info(`✓ PR #${pr.number} merged successfully`);
+      - if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
