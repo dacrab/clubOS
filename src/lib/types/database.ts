@@ -4,9 +4,6 @@ export type BookingType = "birthday" | "football" | "event" | "other";
 export type BookingStatus = "pending" | "confirmed" | "canceled" | "completed" | "no_show";
 export type SubscriptionStatus = "trialing" | "active" | "canceled" | "past_due" | "unpaid" | "paused";
 
-export const getRoleBadgeVariant = (role: MemberRole | undefined): RoleBadgeVariant =>
-	role === "owner" ? "destructive" : role === "admin" ? "default" : role === "manager" ? "secondary" : "outline";
-
 // Limits
 export const PRODUCTS_LIMIT = 500;
 export const CATEGORIES_LIMIT = 100;
