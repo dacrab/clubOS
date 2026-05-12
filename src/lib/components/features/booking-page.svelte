@@ -21,6 +21,7 @@
 	import { fmtDate, tomorrowAt } from "$lib/utils/format";
 	import { settings } from "$lib/state/settings.svelte";
 	import { Plus, Pencil, Trash2, Package } from "@lucide/svelte";
+	import ConfirmDelete from "$lib/components/ui/confirm-delete/confirm-delete.svelte";
 	import type { Booking, BookingStatus, BookingType, BookingDetails } from "$lib/types/database";
 
 	type Props = {
@@ -28,9 +29,12 @@
 		bookings: Booking[];
 		user: { id: string; tenantId: string | null; facilityId: string | null };
 		icon?: typeof Package;
+		page?: number;
+		totalPages?: number;
+		search?: string;
 	};
 
-	let { type, bookings, user, icon = Package }: Props = $props();
+	let { type, bookings, user, icon = Package, page = 1, totalPages = 1, search = "" }: Props = $props();
 
 	const isBirthday = $derived(type === "birthday");
 	const prefix = $derived(isBirthday ? "bookings.birthday" : "bookings.football");
@@ -151,12 +155,21 @@
 		}
 	}
 
+	let deleteTarget = $state<Booking | null>(null);
+	let deleteOpen = $state(false);
+
 	async function handleDelete(item: Booking) {
-		if (!confirm(t("common.deleteConfirm").replace("{name}", item.customer_name))) return;
+		deleteTarget = item;
+		deleteOpen = true;
+	}
+
+	async function confirmDelete() {
+		if (!deleteTarget) return;
 		try {
-			const { error } = await supabase.from("bookings").delete().eq("id", item.id);
+			const { error } = await supabase.from("bookings").delete().eq("id", deleteTarget.id);
 			if (error) throw error;
 			toast.success(t("common.success"));
+			deleteOpen = false;
 			await invalidateAll();
 		} catch {
 			toast.error(t("common.error"));
@@ -172,6 +185,10 @@
 			</Button>
 		{/snippet}
 	</PageHeader>
+
+	<form method="GET" class="max-w-sm">
+		<Input name="search" placeholder={t("common.search")} value={search} />
+	</form>
 
 	{#if bookings.length === 0}
 		<Card>
@@ -241,6 +258,13 @@
 				</TableBody>
 			</Table>
 		</Card>
+		{#if totalPages > 1}
+			<div class="flex items-center justify-center gap-2">
+				<Button variant="outline" size="sm" disabled={page <= 1} onclick={() => window.location.href = `?page=${page - 1}`}>Previous</Button>
+				<span class="text-sm text-muted-foreground">{page} / {totalPages}</span>
+				<Button variant="outline" size="sm" disabled={page >= totalPages} onclick={() => window.location.href = `?page=${page + 1}`}>Next</Button>
+			</div>
+		{/if}
 	{/if}
 </div>
 
@@ -298,3 +322,5 @@
 		<Textarea id="notes" bind:value={formData.notes} />
 	</div>
 </FormDialog>
+
+<ConfirmDelete bind:open={deleteOpen} name={deleteTarget?.customer_name ?? ""} onconfirm={confirmDelete} oncancel={() => deleteOpen = false} />

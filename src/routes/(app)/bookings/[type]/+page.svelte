@@ -17,4 +17,4 @@
 	const icon = $derived(icons[data.type] ?? Calendar);
 </script>
 
-<BookingPage {type} bookings={data.bookings} user={data.user} {icon} />
+<BookingPage {type} bookings={data.bookings} user={data.user} {icon} page={data.page} totalPages={data.totalPages} search={data.search} />

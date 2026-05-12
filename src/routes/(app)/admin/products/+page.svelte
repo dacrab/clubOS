@@ -18,6 +18,8 @@
 	import { fmtCurrency } from "$lib/utils/format";
 	import { settings } from "$lib/state/settings.svelte";
 	import { Plus, Pencil, Trash2, Package, FolderTree, AlertTriangle } from "@lucide/svelte";
+	import ConfirmDelete from "$lib/components/ui/confirm-delete/confirm-delete.svelte";
+	import ImageUpload from "$lib/components/image-upload.svelte";
 	import type { Product, CategoryPartial, ProductForm } from "$lib/types/database";
 
 	const { data } = $props();
@@ -36,7 +38,7 @@
 	let categoryForm = $state({ name: "", description: "", parent_id: "" });
 	let savingCategory = $state(false);
 
-	const filtered = $derived(searchQuery ? data.products.filter((p: Product) => p.name.toLowerCase().includes(searchQuery.toLowerCase())) : data.products);
+	const filtered = $derived(searchQuery ? data.paginatedProducts.filter((p: Product) => p.name.toLowerCase().includes(searchQuery.toLowerCase())) : data.paginatedProducts);
 	const lowStockProducts = $derived(data.lowStockProducts);
 	const getCategoryName = (id: string | null): string => id ? (data.categories as CategoryPartial[]).find((c) => c.id === id)?.name ?? "-" : "-";
 	const getStockBadge = (stock: number) => {
@@ -79,12 +81,21 @@
 		}
 	}
 
+	let deleteTarget = $state<Product | null>(null);
+	let deleteOpen = $state(false);
+
 	async function deleteProduct(product: Product) {
-		if (!confirm(`${t("common.delete")} ${product.name}?`)) return;
+		deleteTarget = product;
+		deleteOpen = true;
+	}
+
+	async function confirmDeleteProduct() {
+		if (!deleteTarget) return;
 		try {
-			const { error } = await data.supabase.from("products").delete().eq("id", product.id);
+			const { error } = await data.supabase.from("products").delete().eq("id", deleteTarget.id);
 			if (error) throw error;
 			toast.success(t("common.success"));
+			deleteOpen = false;
 			await invalidateAll();
 		} catch (err) {
 			console.error(err);
@@ -122,11 +133,20 @@
 		}
 	}
 
+	let deleteCatTarget = $state<CategoryPartial | null>(null);
+	let deleteCatOpen = $state(false);
+
 	async function deleteCategory(cat: CategoryPartial) {
-		if (!confirm(`${t("common.delete")} ${cat.name}?`)) return;
+		deleteCatTarget = cat;
+		deleteCatOpen = true;
+	}
+
+	async function confirmDeleteCategory() {
+		if (!deleteCatTarget) return;
 		try {
-			const { error } = await data.supabase.from("categories").delete().eq("id", cat.id);
+			const { error } = await data.supabase.from("categories").delete().eq("id", deleteCatTarget.id);
 			if (error) throw error;
+			deleteCatOpen = false;
 			toast.success(t("common.success"));
 			await invalidateAll();
 		} catch (err) {
@@ -196,6 +216,13 @@
 				</TableBody>
 			</Table>
 		</Card>
+		{#if data.totalPages > 1}
+			<div class="flex items-center justify-center gap-2">
+				<Button variant="outline" size="sm" disabled={data.page <= 1} onclick={() => window.location.href = `?page=${data.page - 1}`}>Previous</Button>
+				<span class="text-sm text-muted-foreground">{data.page} / {data.totalPages}</span>
+				<Button variant="outline" size="sm" disabled={data.page >= data.totalPages} onclick={() => window.location.href = `?page=${data.page + 1}`}>Next</Button>
+			</div>
+		{/if}
 	{/if}
 </div>
 
@@ -216,7 +243,7 @@
 			</SelectContent>
 		</Select>
 	</div>
-	<div class="space-y-2"><Label for="img">{t("products.imageUrl")}</Label><Input id="img" bind:value={productForm.image_url} /></div>
+	<div class="space-y-2"><Label for="img">{t("products.imageUrl")}</Label><ImageUpload bucket="products" currentUrl={productForm.image_url} onUpload={(url) => productForm.image_url = url} /></div>
 </FormDialog>
 
 <FormDialog bind:open={categoryOpen} title={editingCategory ? t("categories.editCategory") : t("categories.addCategory")} saving={savingCategory} onsubmit={saveCategory} onclose={() => categoryOpen = false}>
@@ -246,3 +273,6 @@
 		</Select>
 	</div>
 </FormDialog>
+
+<ConfirmDelete bind:open={deleteOpen} name={deleteTarget?.name ?? ""} onconfirm={confirmDeleteProduct} oncancel={() => deleteOpen = false} />
+<ConfirmDelete bind:open={deleteCatOpen} name={deleteCatTarget?.name ?? ""} onconfirm={confirmDeleteCategory} oncancel={() => deleteCatOpen = false} />

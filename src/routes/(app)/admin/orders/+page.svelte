@@ -10,6 +10,7 @@
 	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
 	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
 	import { ShoppingCart, Eye } from "@lucide/svelte";
+	import Input from "$lib/components/ui/input/input.svelte";
 	import type { OrderView } from "$lib/types/database";
 
 	const { data } = $props();
@@ -20,6 +21,10 @@
 
 <div class="space-y-6">
 	<PageHeader title={t("orders.title")} description={t("orders.subtitle")} />
+
+	<form method="GET" class="max-w-sm">
+		<Input name="search" placeholder={t("orders.searchById")} value={data.search} />
+	</form>
 
 	{#if data.orders.length === 0}
 		<Card><CardContent class="pt-6"><EmptyState title={t("orders.empty.title")} description={t("orders.empty.description")} icon={ShoppingCart} /></CardContent></Card>
@@ -43,6 +48,13 @@
 				{/each}
 			</TableBody>
 		</Table></Card>
+		{#if data.totalPages > 1}
+			<div class="flex items-center justify-center gap-2">
+				<Button variant="outline" size="sm" disabled={data.page <= 1} onclick={() => window.location.href = `?page=${data.page - 1}`}>Previous</Button>
+				<span class="text-sm text-muted-foreground">{data.page} / {data.totalPages}</span>
+				<Button variant="outline" size="sm" disabled={data.page >= data.totalPages} onclick={() => window.location.href = `?page=${data.page + 1}`}>Next</Button>
+			</div>
+		{/if}
 	{/if}
 </div>
 

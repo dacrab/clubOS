@@ -16,6 +16,7 @@
 	import SelectItem from "$lib/components/ui/select/select-item.svelte";
 	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
 	import { Plus, Pencil, Trash2, Users } from "@lucide/svelte";
+	import ConfirmDelete from "$lib/components/ui/confirm-delete/confirm-delete.svelte";
 	import type { UserView, UserForm, MemberRole } from "$lib/types/database";
 	import { getRoleBadgeVariant } from "$lib/utils/helpers";
 
@@ -55,12 +56,21 @@
 		}
 	}
 
+	let deleteTarget = $state<UserView | null>(null);
+	let deleteOpen = $state(false);
+
 	async function remove(user: UserView) {
-		if (!confirm(t("common.deleteConfirm").replace("{name}", user.full_name ?? user.email))) return;
+		deleteTarget = user;
+		deleteOpen = true;
+	}
+
+	async function confirmRemove() {
+		if (!deleteTarget) return;
 		try {
-			const response = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
+			const response = await fetch(`/api/admin/users/${deleteTarget.id}`, { method: "DELETE" });
 			if (!response.ok) throw new Error(await response.text());
 			toast.success(t("common.success"));
+			deleteOpen = false;
 			await invalidateAll();
 		} catch (err) {
 			console.error(err);
@@ -127,3 +137,5 @@
 		</Select>
 	</div>
 </FormDialog>
+
+<ConfirmDelete bind:open={deleteOpen} name={deleteTarget?.full_name ?? deleteTarget?.email ?? ""} onconfirm={confirmRemove} oncancel={() => deleteOpen = false} />
