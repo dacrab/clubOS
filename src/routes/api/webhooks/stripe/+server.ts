@@ -3,13 +3,25 @@ import type { RequestHandler } from "./$types";
 import { env } from "$env/dynamic/private";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 
+interface StripeSubscription {
+	id: string;
+	status: string;
+	metadata?: { tenant_id?: string };
+	items?: { data?: { price?: { id?: string; nickname?: string } }[] };
+	current_period_start: number;
+	current_period_end: number;
+	cancel_at_period_end?: boolean;
+	trial_start?: number | null;
+	trial_end?: number | null;
+}
+
 const ts = (s: number): string => new Date(s * 1000).toISOString();
 
-async function stripeGet(path: string, key: string): Promise<Record<string, unknown>> {
+async function stripeGet(path: string, key: string): Promise<StripeSubscription> {
 	const res = await fetch(`https://api.stripe.com/v1${path}`, {
 		headers: { Authorization: `Bearer ${key}` },
 	});
-	return res.json();
+	return res.json() as Promise<StripeSubscription>;
 }
 
 function computeHmac(secret: string, payload: string): Promise<string> {
@@ -71,7 +83,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 		case "customer.subscription.updated":
 		case "customer.subscription.deleted": {
-			const sub = event.data.object;
+			const sub = event.data.object as StripeSubscription;
 			const tenantId = sub.metadata?.tenant_id;
 			if (!tenantId) break;
 			await admin.from("subscriptions").update({
