@@ -1,6 +1,7 @@
 <script lang="ts">
 	import "../app.css";
 	import { injectAnalytics } from "@vercel/analytics/sveltekit";
+	import { injectSpeedInsights } from "@vercel/speed-insights/sveltekit";
 	import Sonner from "$lib/components/ui/sonner/sonner.svelte";
 	import { dev } from "$app/environment";
 	import favicon from "$lib/assets/favicon.svg";
@@ -8,6 +9,7 @@
 	const { children } = $props();
 
 	injectAnalytics({ mode: dev ? "development" : "production" });
+	injectSpeedInsights();
 </script>
 
 <svelte:head>
