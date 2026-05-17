@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
 
 concurrency:
   group: >-
@@ -16,14 +15,18 @@ permissions:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bun run check
-        env:
-          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
-      - run: bun run test
-      - run: bun run build
+    uses: dacrab/.github-workflows/.github/workflows/bun-ci.yml@v1
+    with:
+      check-cmd: 'bun run check'
+      test-cmd: 'bun run test'
+      build-cmd: 'bun run build'
+
+  auto-merge:
+    needs: ci
+    permissions:
+      pull-requests: write
+      contents: write
+    uses: dacrab/.github-workflows/.github/workflows/dependabot-auto-merge.yml@v1
+    with:
+      target: minor
+      exclude: 'svelte,vite,knip'
