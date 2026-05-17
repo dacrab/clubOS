@@ -9,18 +9,20 @@ const { POST } = await import("./+server");
 describe("POST /api/onboarding/complete", () => {
 	beforeEach(() => { vi.clearAllMocks(); });
 
-	const req = (body: object, user = createMockUser()): { request: Request; locals: ReturnType<typeof createMockLocals> } => ({ request: createMockRequest({ method: "POST", body }), locals: createMockLocals({ user }) });
+	const req = (body: object, user = createMockUser()): { request: Request; locals: ReturnType<typeof createMockLocals> } =>
+		({ request: createMockRequest({ method: "POST", body }), locals: createMockLocals({ user }) });
 
-	const mockTables = (overrides: Record<string, object> = {}): { tenantId: string; facilityId: string } => {
-		const tenantId = generateId(), facilityId = generateId();
+	const mockTables = (overrides: Record<string, object> = {}): { tenantId: string } => {
+		const tenantId = generateId();
+		const facilityId = generateId();
 		const defaults: Record<string, object> = {
 			tenants: { insert: () => ({ select: () => ({ single: () => Promise.resolve({ data: { id: tenantId }, error: null }) }) }) },
-			facilities: { insert: () => ({ select: () => ({ single: () => Promise.resolve({ data: { id: facilityId }, error: null }) }) }) },
+			facilities: { insert: () => Promise.resolve({ data: { id: facilityId }, error: null }) },
 			memberships: { insert: () => Promise.resolve({ error: null }) },
 			subscriptions: { insert: () => Promise.resolve({ error: null }) },
 		};
 		mockAdmin.from.mockImplementation((t: string) => ({ ...defaults[t], ...overrides[t] }));
-		return { tenantId, facilityId };
+		return { tenantId };
 	};
 
 	it("returns existing tenant if user has membership", async () => {
@@ -33,12 +35,10 @@ describe("POST /api/onboarding/complete", () => {
 	});
 
 	it("creates tenant, facility, membership, subscription", async () => {
-		const { tenantId, facilityId } = mockTables();
+		const { tenantId } = mockTables();
 		const response = await POST(req({ tenant: { name: "Club", slug: "club" }, facility: { name: "Main" } }) as never);
 		expect(response.status).toBe(200);
-		const body = await response.json();
-		expect(body.tenant.id).toBe(tenantId);
-		expect(body.facility.id).toBe(facilityId);
+		expect((await response.json()).tenantId).toBe(tenantId);
 	});
 
 	it("skips subscription when createTrial=false", async () => {
@@ -56,28 +56,28 @@ describe("POST /api/onboarding/complete", () => {
 		expect(memberInsert).toHaveBeenCalledWith(expect.objectContaining({ role: "owner", is_primary: true }));
 		expect(subInsert).toHaveBeenCalledWith(expect.objectContaining({ status: "trialing" }));
 		const trialEnd = new Date(subInsert.mock.calls[0][0].trial_end);
-		expect(Math.round((trialEnd.getTime() - Date.now()) / 86400000)).toBe(14);
+		expect(Math.round((trialEnd.getTime() - Date.now()) / 86_400_000)).toBe(14);
 	});
 
 	it("returns 401 when user is not authenticated", async () => {
-		const response = await POST({ request: createMockRequest({ method: "POST", body: { tenant: { name: "Club" }, facility: { name: "Main" } } }), locals: createMockLocals({}) } as never);
+		const response = await POST({
+			request: createMockRequest({ method: "POST", body: { tenant: { name: "Club" }, facility: { name: "Main" } } }),
+			locals: createMockLocals({}),
+		} as never);
 		expect(response.status).toBe(401);
-		const body = await response.json();
-		expect(body.error).toBe("Unauthorized");
+		expect((await response.json()).error).toBe("Unauthorized");
 	});
 
 	it("returns 400 when tenant.name is missing", async () => {
 		const response = await POST(req({ tenant: { slug: "club" }, facility: { name: "Main" } }) as never);
 		expect(response.status).toBe(400);
-		const body = await response.json();
-		expect(body.error).toBe("Missing required fields");
+		expect((await response.json()).error).toBe("Missing required fields");
 	});
 
 	it("returns 400 when facility.name is missing", async () => {
 		const response = await POST(req({ tenant: { name: "Club" }, facility: { address: "123 Main St" } }) as never);
 		expect(response.status).toBe(400);
-		const body = await response.json();
-		expect(body.error).toBe("Missing required fields");
+		expect((await response.json()).error).toBe("Missing required fields");
 	});
 
 	it("returns 500 when tenant creation fails", async () => {
@@ -88,7 +88,7 @@ describe("POST /api/onboarding/complete", () => {
 	});
 
 	it("returns 500 when facility creation fails", async () => {
-		mockTables({ facilities: { insert: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: { message: "Facility error" } }) }) }) } });
+		mockTables({ facilities: { insert: () => Promise.resolve({ data: null, error: { message: "Facility error" } }) } });
 		const response = await POST(req({ tenant: { name: "Club", slug: "club" }, facility: { name: "Main" } }) as never);
 		expect(response.status).toBe(500);
 		expect((await response.json()).error).toBeDefined();

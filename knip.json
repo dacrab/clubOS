@@ -10,8 +10,7 @@
 	],
 	"ignoreDependencies": [
 		"tailwindcss-animate",
-		"tailwindcss",
-		"sveltekit-superforms"
+		"tailwindcss"
 	],
 	"ignore": [],
 	"paths": {

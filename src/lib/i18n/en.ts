@@ -27,6 +27,9 @@ export const en = {
 		field: "Field {number}",
 		kidsAndAdults: "{kids} kids, {adults} adults",
 		yourName: "Your Name",
+		previous: "Previous",
+		next: "Next",
+		retry: "Retry",
 	},
 
 	// Navigation
@@ -121,8 +124,6 @@ export const en = {
 		skipForNow: "Skip for now (free trial)",
 		businessName: "Business Name",
 		businessNamePlaceholder: "My Sports Club",
-		staffCount: "Number of Employees",
-		employees: "employees",
 		facilityName: "Facility Name",
 		facilityNamePlaceholder: "Main Branch",
 		address: "Address",
@@ -130,8 +131,6 @@ export const en = {
 		phone: "Phone",
 		email: "Email",
 		timezone: "Timezone",
-		previous: "Previous",
-		next: "Next",
 		enterBusinessName: "Please enter your business name",
 		enterFacilityName: "Please enter your facility name",
 		complete: "Complete",

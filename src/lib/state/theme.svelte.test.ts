@@ -1,27 +1,22 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-const mockMatchMedia = vi.fn(() => ({ matches: false }));
-const mockClassList = { add: vi.fn(), remove: vi.fn() };
-const mockLocalStorage = {
-	store: {} as Record<string, string>,
-	getItem: vi.fn((key: string) => mockLocalStorage.store[key] ?? null),
-	setItem: vi.fn((key: string, value: string) => { mockLocalStorage.store[key] = value; }),
-	clear: () => { mockLocalStorage.store = {}; },
-};
+const matchMedia = vi.fn(() => ({ matches: false }));
+const classList = { add: vi.fn(), remove: vi.fn() };
+const store: Record<string, string> = {};
 
-vi.stubGlobal("matchMedia", mockMatchMedia);
-vi.stubGlobal("localStorage", mockLocalStorage);
-vi.stubGlobal("document", { documentElement: { classList: mockClassList } });
+vi.stubGlobal("matchMedia", matchMedia);
+vi.stubGlobal("localStorage", {
+	getItem: vi.fn((k: string) => store[k] ?? null),
+	setItem: vi.fn((k: string, v: string) => { store[k] = v; }),
+});
+vi.stubGlobal("document", { documentElement: { classList } });
 
 describe("theme", () => {
 	beforeEach(() => {
 		vi.resetModules();
-		mockLocalStorage.clear();
-		mockLocalStorage.getItem.mockClear();
-		mockLocalStorage.setItem.mockClear();
-		mockClassList.add.mockClear();
-		mockClassList.remove.mockClear();
-		mockMatchMedia.mockReturnValue({ matches: false });
+		Object.keys(store).forEach((k) => Reflect.deleteProperty(store, k));
+		vi.clearAllMocks();
+		matchMedia.mockReturnValue({ matches: false });
 	});
 
 	it("defaults to system theme", async () => {
@@ -30,7 +25,7 @@ describe("theme", () => {
 	});
 
 	it("loads theme from localStorage", async () => {
-		mockLocalStorage.store["theme"] = "dark";
+		store["theme"] = "dark";
 		const { theme } = await import("./theme.svelte");
 		expect(theme.current).toBe("dark");
 	});
@@ -39,7 +34,7 @@ describe("theme", () => {
 		const { theme } = await import("./theme.svelte");
 		theme.setTheme("light");
 		expect(theme.current).toBe("light");
-		expect(mockLocalStorage.setItem).toHaveBeenCalledWith("theme", "light");
+		expect(localStorage.setItem).toHaveBeenCalledWith("theme", "light");
 	});
 
 	it("isDark reflects current theme", async () => {

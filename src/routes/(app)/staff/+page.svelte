@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
-	import { toast } from "svelte-sonner";
-	import { invalidateAll } from "$app/navigation";
 	import PageHeader from "$lib/components/layout/page-header.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
@@ -18,6 +16,8 @@
 	import NewSaleDialog from "$lib/components/features/new-sale-dialog.svelte";
 	import RecentOrders from "$lib/components/features/recent-orders.svelte";
 	import { fmtDate, fmtCurrency } from "$lib/utils/format";
+	import { runCrud } from "$lib/utils/crud";
+	import { supabase } from "$lib/utils/supabase";
 	import { DollarSign, Plus } from "@lucide/svelte";
 
 	const { data } = $props();
@@ -36,42 +36,37 @@
 	async function openRegister(): Promise<void> {
 		if (!data.user.facilityId) return;
 		processing = true;
-		const { error } = await data.supabase.from("register_sessions").insert({
+		const ok = await runCrud(() => supabase.from("register_sessions").insert({
 			facility_id: data.user.facilityId,
 			opened_by: data.user.id,
 			opened_at: new Date().toISOString(),
-			opening_cash: 0
-		});
+			opening_cash: 0,
+		}));
 		processing = false;
-		if (error) { toast.error(t("common.error")); return; }
-		toast.success(t("common.success"));
-		showOpenDialog = false;
-		await invalidateAll();
+		if (ok) showOpenDialog = false;
 	}
 
-	async function openCloseDialog(): Promise<void> {
-		expectedCash = (data.activeSession?.opening_cash ?? 0);
+	function openCloseDialog(): void {
+		expectedCash = data.activeSession?.opening_cash ?? 0;
 		countedCash = expectedCash;
 		showCloseDialog = true;
 	}
 
 	async function closeRegister(): Promise<void> {
-		if (closingName.trim() === "" || !data.activeSession) { toast.error(t("common.error")); return; }
+		if (!closingName.trim() || !data.activeSession) return;
 		processing = true;
-		const { error } = await data.supabase.rpc("close_register_session", {
+		const ok = await runCrud(() => supabase.rpc("close_register_session", {
 			p_session_id: data.activeSession.id,
 			p_closed_by: data.user.id,
 			p_closing_cash: countedCash,
-			p_closing_notes: closingNotes || null
-		});
+			p_closing_notes: closingNotes || null,
+		}));
 		processing = false;
-		if (error) { toast.error(t("common.error")); console.error(error); return; }
-		showCloseDialog = false;
-		closingName = "";
-		closingNotes = "";
-		countedCash = 0;
-		toast.success(t("common.success"));
-		await invalidateAll();
+		if (ok) {
+			showCloseDialog = false;
+			closingName = closingNotes = "";
+			countedCash = 0;
+		}
 	}
 </script>
 

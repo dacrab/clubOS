@@ -17,13 +17,10 @@ vi.mock("$app/navigation", () => ({
 vi.mock("$lib/state/settings.svelte", () => ({
 	settings: {
 		current: { currency_code: "EUR", date_format: "DD/MM/YYYY", time_format: "24h" },
-		formatSettings: { currency_code: "EUR", date_format: "DD/MM/YYYY", time_format: "24h" },
-		load: vi.fn(),
-		save: vi.fn(),
+		setSettings: vi.fn(),
 	},
 }));
 
-// localStorage: use a simple Map — no class ceremony needed
 const localStore = new Map<string, string>();
 vi.stubGlobal("localStorage", {
 	getItem: (k: string) => localStore.get(k) ?? null,
@@ -34,7 +31,6 @@ vi.stubGlobal("localStorage", {
 	get length() { return localStore.size; },
 });
 
-// document.documentElement stubs needed by theme + i18n
 vi.stubGlobal("document", {
 	documentElement: {
 		setAttribute: vi.fn(),
@@ -43,7 +39,6 @@ vi.stubGlobal("document", {
 	},
 });
 
-// matchMedia stub needed by theme (system preference detection)
 vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
 	matches: false,
 	media: query,

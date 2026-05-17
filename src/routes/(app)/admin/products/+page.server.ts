@@ -27,6 +27,5 @@ export const load: PageServerLoad = async ({ locals, parent, url }) => {
 		paginatedProducts: paginatedProducts ?? [],
 		page,
 		totalPages: Math.ceil((count ?? 0) / PER_PAGE),
-		supabase,
 	};
 };

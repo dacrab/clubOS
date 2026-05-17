@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
 	import { toast } from "svelte-sonner";
-	import { invalidateAll } from "$app/navigation";
 	import PageHeader from "$lib/components/layout/page-header.svelte";
 	import EmptyState from "$lib/components/layout/empty-state.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
@@ -22,6 +21,8 @@
 	import { settings } from "$lib/state/settings.svelte";
 	import { Plus, Pencil, Trash2, Package } from "@lucide/svelte";
 	import ConfirmDelete from "$lib/components/ui/confirm-delete/confirm-delete.svelte";
+	import Pagination from "$lib/components/ui/pagination/pagination.svelte";
+	import { runCrud } from "$lib/utils/crud";
 	import type { Booking, BookingStatus, BookingType, BookingDetails } from "$lib/types/database";
 
 	type Props = {
@@ -39,19 +40,34 @@
 	const isBirthday = $derived(type === "birthday");
 	const prefix = $derived(isBirthday ? "bookings.birthday" : "bookings.football");
 
+	// Sensible booking defaults (not exposed in settings UI)
+	const DEFAULT_HOUR = { birthday: 15, football: 18 } as const;
+	const FOOTBALL_PLAYERS = { default: 10, min: 2, max: 22 } as const;
+
 	let showDialog = $state(false);
 	let editingItem = $state<Booking | null>(null);
 	let saving = $state(false);
-	let formData = $state({
+	type FormData = {
+		customer_name: string;
+		customer_phone: string;
+		starts_at: string;
+		notes: string;
+		status: BookingStatus;
+		num_children: number;
+		num_adults: number;
+		field_number: string;
+		num_players: number;
+	};
+	let formData = $state<FormData>({
 		customer_name: "",
 		customer_phone: "",
 		starts_at: "",
 		notes: "",
-		status: "confirmed" as BookingStatus,
+		status: "confirmed",
 		num_children: 1,
 		num_adults: 0,
 		field_number: "1",
-		num_players: settings.current.football_default_players,
+		num_players: FOOTBALL_PLAYERS.default,
 	});
 
 	const getStatusBadge = (s: BookingStatus) =>
@@ -73,7 +89,7 @@
 				num_players: details.num_players ?? 10,
 			};
 		} else {
-			const defaultHour = isBirthday ? settings.current.birthday_default_hour : settings.current.football_default_hour;
+			const defaultHour = isBirthday ? DEFAULT_HOUR.birthday : DEFAULT_HOUR.football;
 			const pad = (n: number) => String(n).padStart(2, "0");
 			const d = tomorrowAt(defaultHour);
 			const startsAt = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(defaultHour)}:00`;
@@ -86,7 +102,7 @@
 				num_children: 1,
 				num_adults: 0,
 				field_number: "1",
-				num_players: settings.current.football_default_players,
+				num_players: FOOTBALL_PLAYERS.default,
 			};
 		}
 		showDialog = true;
@@ -111,13 +127,14 @@
 
 	async function handleSave(): Promise<void> {
 		if (!formData.customer_name || !formData.customer_phone || !formData.starts_at) {
-			toast.error(t("common.error")); return;
+			toast.error(t("common.error"));
+			return;
 		}
 		saving = true;
 		try {
 			if (settings.current.prevent_overlaps && (await checkConflict())) {
-				saving = false;
-				toast.error(t(`${prefix}.conflict`)); return;
+				toast.error(t(`${prefix}.conflict`));
+				return;
 			}
 
 			const startsAt = new Date(formData.starts_at);
@@ -130,7 +147,7 @@
 
 			const payload = {
 				facility_id: user.facilityId,
-				type: type as BookingType,
+				type,
 				customer_name: formData.customer_name,
 				customer_phone: formData.customer_phone,
 				starts_at: startsAt.toISOString(),
@@ -140,16 +157,10 @@
 				details,
 			};
 
-			const { error } = editingItem
-				? await supabase.from("bookings").update(payload).eq("id", editingItem.id)
-				: await supabase.from("bookings").insert({ ...payload, created_by: user.id });
-
-			if (error) throw error;
-			toast.success(t("common.success"));
-			showDialog = false;
-			await invalidateAll();
-		} catch {
-			toast.error(t("common.error"));
+			const ok = await runCrud(() => editingItem
+				? supabase.from("bookings").update(payload).eq("id", editingItem.id)
+				: supabase.from("bookings").insert({ ...payload, created_by: user.id }));
+			if (ok) showDialog = false;
 		} finally {
 			saving = false;
 		}
@@ -158,22 +169,11 @@
 	let deleteTarget = $state<Booking | null>(null);
 	let deleteOpen = $state(false);
 
-	async function handleDelete(item: Booking) {
-		deleteTarget = item;
-		deleteOpen = true;
-	}
-
-	async function confirmDelete() {
+	async function confirmDelete(): Promise<void> {
 		if (!deleteTarget) return;
-		try {
-			const { error } = await supabase.from("bookings").delete().eq("id", deleteTarget.id);
-			if (error) throw error;
-			toast.success(t("common.success"));
-			deleteOpen = false;
-			await invalidateAll();
-		} catch {
-			toast.error(t("common.error"));
-		}
+		const target = deleteTarget;
+		const ok = await runCrud(() => supabase.from("bookings").delete().eq("id", target.id));
+		if (ok) deleteOpen = false;
 	}
 </script>
 
@@ -248,7 +248,7 @@
 									<Button variant="ghost" size="icon-sm" onclick={() => openDialog(item)}>
 										<Pencil class="h-4 w-4" />
 									</Button>
-									<Button variant="ghost" size="icon-sm" onclick={() => handleDelete(item)}>
+									<Button variant="ghost" size="icon-sm" onclick={() => { deleteTarget = item; deleteOpen = true; }}>
 										<Trash2 class="h-4 w-4" />
 									</Button>
 								</div>
@@ -258,13 +258,7 @@
 				</TableBody>
 			</Table>
 		</Card>
-		{#if totalPages > 1}
-			<div class="flex items-center justify-center gap-2">
-				<Button variant="outline" size="sm" disabled={page <= 1} onclick={() => window.location.href = `?page=${page - 1}`}>Previous</Button>
-				<span class="text-sm text-muted-foreground">{page} / {totalPages}</span>
-				<Button variant="outline" size="sm" disabled={page >= totalPages} onclick={() => window.location.href = `?page=${page + 1}`}>Next</Button>
-			</div>
-		{/if}
+		<Pagination {page} {totalPages} />
 	{/if}
 </div>
 
@@ -300,7 +294,7 @@
 			</div>
 			<div class="space-y-2">
 				<Label for="players">{t("bookings.football.numPlayers")}</Label>
-				<Input id="players" type="number" min={settings.current.football_min_players} max={settings.current.football_max_players} bind:value={formData.num_players} required />
+				<Input id="players" type="number" min={FOOTBALL_PLAYERS.min} max={FOOTBALL_PLAYERS.max} bind:value={formData.num_players} required />
 			</div>
 		</div>
 	{/if}

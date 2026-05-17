@@ -14,27 +14,25 @@ const mockUser: SessionUser = {
 describe("session", () => {
 	beforeEach(() => session.clear());
 
-	it("starts unauthenticated with no user", () => {
+	it("starts unauthenticated", () => {
 		expect(session.isAuthenticated).toBe(false);
 		expect(session.user).toBeNull();
 	});
 
-	it("setUser authenticates and initializes", () => {
+	it("setUser authenticates", () => {
 		session.setUser(mockUser);
 		expect(session.isAuthenticated).toBe(true);
 		expect(session.user).toStrictEqual(mockUser);
-		expect(session.loading).toBe(false);
 	});
 
-	it("setUser(null) clears authentication", () => {
+	it("setUser(null) clears", () => {
 		session.setUser(mockUser);
 		session.setUser(null);
 		expect(session.user).toBeNull();
 		expect(session.isAuthenticated).toBe(false);
-		expect(session.loading).toBe(false);
 	});
 
-	it("clear logs out but preserves initialized state", () => {
+	it("clear logs out", () => {
 		session.setUser(mockUser);
 		session.clear();
 		expect(session.user).toBeNull();

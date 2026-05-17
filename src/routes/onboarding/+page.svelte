@@ -29,9 +29,8 @@
 	let facilityPhone = $state("");
 	let facilityEmail = $state("");
 	let timezone = $state("Europe/Athens");
-	let staffCount = $state("1-5");
 
-	const timezones = [
+	const TIMEZONES = [
 		{ value: "Europe/Athens", label: "Athens (GMT+2/+3)" },
 		{ value: "Europe/London", label: "London (GMT+0/+1)" },
 		{ value: "Europe/Paris", label: "Paris (GMT+1/+2)" },
@@ -40,14 +39,7 @@
 		{ value: "America/Los_Angeles", label: "Los Angeles (GMT-8/-7)" },
 	];
 
-	const staffOptions = [
-		{ value: "1-5", label: "1-5" },
-		{ value: "6-15", label: "6-15" },
-		{ value: "16-30", label: "16-30" },
-		{ value: "30+", label: "30+" },
-	];
-
-	const steps = [
+	const STEPS = [
 		{ number: 1, title: t("onboarding.step1Title"), description: t("onboarding.step1Desc") },
 		{ number: 2, title: t("onboarding.step2Title"), description: t("onboarding.step2Desc") },
 		{ number: 3, title: t("onboarding.step3Title"), description: t("onboarding.step3Desc") },
@@ -59,37 +51,40 @@
 		if (currentStep < 3) currentStep = (currentStep + 1) as Step;
 	}
 
-	function prevStep() {
+	function prevStep(): void {
 		if (currentStep > 1) currentStep = (currentStep - 1) as Step;
 	}
 
-	function getOnboardingPayload() {
+	function payload() {
 		return {
 			tenant: { name: tenantName, slug: tenantName.toLowerCase().replace(/[^a-z0-9]+/g, "-") },
 			facility: { name: facilityName, address: facilityAddress || null, phone: facilityPhone || null, email: facilityEmail || null, timezone },
-			staffCount,
 		};
 	}
 
-	async function handlePlanSelect(planId: Plan) {
+	async function completeOnboarding(): Promise<{ tenantId: string }> {
+		const res = await fetch("/api/onboarding/complete", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(payload()),
+		});
+		const result = await res.json();
+		if (!res.ok) throw new Error(result.error);
+		return result;
+	}
+
+	async function handlePlanSelect(planId: Plan): Promise<void> {
 		selectedPlan = planId;
 		const plan = PLANS.find((p) => p.id === planId);
 		if (!plan || !data.user) return;
 
 		loading = true;
 		try {
-			const onboardingRes = await fetch("/api/onboarding/complete", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(getOnboardingPayload()),
-			});
-			const onboardingResult = await onboardingRes.json();
-			if (!onboardingRes.ok) throw new Error(onboardingResult.error);
-
+			const { tenantId } = await completeOnboarding();
 			const res = await fetch("/api/stripe/checkout", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ priceId: plan.priceId, userId: data.user.id, email: data.user.email, tenantId: onboardingResult.tenant?.id || onboardingResult.tenantId }),
+				body: JSON.stringify({ priceId: plan.priceId, userId: data.user.id, email: data.user.email, tenantId }),
 			});
 			const { url, error: stripeError } = await res.json();
 			if (stripeError) throw new Error(stripeError);
@@ -100,17 +95,10 @@
 		}
 	}
 
-	async function skipPaymentForNow() {
+	async function skipPaymentForNow(): Promise<void> {
 		loading = true;
 		try {
-			const res = await fetch("/api/onboarding/complete", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(getOnboardingPayload()),
-			});
-			const result = await res.json();
-			if (!res.ok) throw new Error(result.error);
-
+			await completeOnboarding();
 			completed = true;
 			toast.success(t("onboarding.completed"));
 			setTimeout(() => { window.location.href = "/admin"; }, 2000);
@@ -137,9 +125,8 @@
 			</Card>
 		{:else}
 			<div class="w-full max-w-2xl">
-				<!-- Step indicator -->
 				<div class="mb-8 flex-center justify-between">
-					{#each steps as step, i (step.number)}
+					{#each STEPS as step, i (step.number)}
 						<div class="flex flex-1 flex-center">
 							<div class="flex-center gap-3">
 								<div class="flex h-10 w-10 flex-center justify-center rounded-full transition-all {currentStep >= step.number ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}">
@@ -147,27 +134,18 @@
 								</div>
 								<div class="hidden sm:block"><p class="text-sm font-medium">{step.title}</p><p class="text-xs text-muted-foreground">{step.description}</p></div>
 							</div>
-							{#if i < steps.length - 1}<div class="mx-4 h-0.5 flex-1 {currentStep > step.number ? 'bg-primary' : 'bg-muted'}"></div>{/if}
+							{#if i < STEPS.length - 1}<div class="mx-4 h-0.5 flex-1 {currentStep > step.number ? 'bg-primary' : 'bg-muted'}"></div>{/if}
 						</div>
 					{/each}
 				</div>
 
 				<Card>
-					<CardHeader><CardTitle>{steps[currentStep - 1].title}</CardTitle><CardDescription>{steps[currentStep - 1].description}</CardDescription></CardHeader>
+					<CardHeader><CardTitle>{STEPS[currentStep - 1].title}</CardTitle><CardDescription>{STEPS[currentStep - 1].description}</CardDescription></CardHeader>
 					<CardContent>
 						{#if currentStep === 1}
-							<div class="space-y-4">
-								<div class="space-y-2">
-									<Label for="tenantName">{t("onboarding.businessName")} *</Label>
-									<div class="relative"><Building2 class="absolute left-3 top-1/2 icon-sm -translate-y-1/2 text-muted-foreground" /><Input id="tenantName" class="pl-10" placeholder={t("onboarding.businessNamePlaceholder")} bind:value={tenantName} required /></div>
-								</div>
-								<div class="space-y-2">
-									<Label>{t("onboarding.staffCount")}</Label>
-									<Select value={staffCount} onValueChange={(v) => staffCount = v || "1-5"}>
-										<SelectTrigger selected={staffOptions.find(o => o.value === staffCount)?.label + " " + t("onboarding.employees")} />
-										<SelectContent>{#each staffOptions as opt (opt.value)}<SelectItem value={opt.value}>{opt.label} {t("onboarding.employees")}</SelectItem>{/each}</SelectContent>
-									</Select>
-								</div>
+							<div class="space-y-2">
+								<Label for="tenantName">{t("onboarding.businessName")} *</Label>
+								<div class="relative"><Building2 class="absolute left-3 top-1/2 icon-sm -translate-y-1/2 text-muted-foreground" /><Input id="tenantName" class="pl-10" placeholder={t("onboarding.businessNamePlaceholder")} bind:value={tenantName} required /></div>
 							</div>
 						{:else if currentStep === 2}
 							<div class="space-y-4">
@@ -189,8 +167,8 @@
 								<div class="space-y-2">
 									<Label>{t("onboarding.timezone")}</Label>
 									<Select value={timezone} onValueChange={(v) => timezone = v || "Europe/Athens"}>
-										<SelectTrigger selected={timezones.find(tz => tz.value === timezone)?.label} />
-										<SelectContent>{#each timezones as tz (tz.value)}<SelectItem value={tz.value}>{tz.label}</SelectItem>{/each}</SelectContent>
+										<SelectTrigger selected={TIMEZONES.find((tz) => tz.value === timezone)?.label} />
+										<SelectContent>{#each TIMEZONES as tz (tz.value)}<SelectItem value={tz.value}>{tz.label}</SelectItem>{/each}</SelectContent>
 									</Select>
 								</div>
 								<div class="pt-4 border-t">
@@ -201,9 +179,9 @@
 						{/if}
 					</CardContent>
 					<div class="flex justify-between border-t p-6">
-						<Button variant="outline" onclick={prevStep} disabled={currentStep === 1 || loading}>{t("onboarding.previous")}</Button>
+						<Button variant="outline" onclick={prevStep} disabled={currentStep === 1 || loading}>{t("common.previous")}</Button>
 						{#if currentStep < 3}
-							<Button onclick={nextStep}>{t("onboarding.next")}</Button>
+							<Button onclick={nextStep}>{t("common.next")}</Button>
 						{:else}
 							<Button variant="ghost" onclick={skipPaymentForNow} disabled={loading}>{#if loading}<Loader2 class="mr-2 icon-sm animate-spin" />{/if}{t("onboarding.skipForNow")}</Button>
 						{/if}

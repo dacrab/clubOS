@@ -29,6 +29,9 @@ export const el: TranslationsStructure = {
 		field: "Γήπεδο {number}",
 		kidsAndAdults: "{kids} παιδιά, {adults} ενήλικες",
 		yourName: "Το Όνομά σας",
+		previous: "Προηγούμενο",
+		next: "Επόμενο",
+		retry: "Επανάληψη",
 	},
 
 	// Navigation
@@ -123,8 +126,6 @@ export const el: TranslationsStructure = {
 		skipForNow: "Παράλειψη (δωρεάν δοκιμή)",
 		businessName: "Όνομα Επιχείρησης",
 		businessNamePlaceholder: "Ο Αθλητικός μου Σύλλογος",
-		staffCount: "Αριθμός Υπαλλήλων",
-		employees: "υπάλληλοι",
 		facilityName: "Όνομα Εγκατάστασης",
 		facilityNamePlaceholder: "Κεντρικό Υποκατάστημα",
 		address: "Διεύθυνση",
@@ -132,8 +133,6 @@ export const el: TranslationsStructure = {
 		phone: "Τηλέφωνο",
 		email: "Email",
 		timezone: "Ζώνη Ώρας",
-		previous: "Προηγούμενο",
-		next: "Επόμενο",
 		complete: "Ολοκλήρωση",
 		enterBusinessName: "Παρακαλώ εισάγετε το όνομα της επιχείρησης",
 		enterFacilityName: "Παρακαλώ εισάγετε το όνομα της εγκατάστασης",

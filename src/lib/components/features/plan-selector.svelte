@@ -2,8 +2,10 @@
 	import { t } from "$lib/i18n/index.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Card, { CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
-	import { PLANS, type Plan } from "$lib/config/auth";
+	import { PLANS, type Plan, type PlanIcon } from "$lib/config/auth";
 	import { Building2, Users, Zap, Check, Loader2 } from "@lucide/svelte";
+
+	const ICONS = { Building2, Users, Zap } as const satisfies Record<PlanIcon, unknown>;
 
 	type Props = {
 		loading?: boolean;
@@ -13,15 +15,12 @@
 	};
 
 	let { loading = false, selectedPlan = null, onSelect, variant = "grid" }: Props = $props();
-
-	const icons = { Building2, Users, Zap };
-	const getIcon = (name: string) => icons[name as keyof typeof icons];
 </script>
 
 {#if variant === "grid"}
 	<div class="grid gap-6 md:grid-cols-3">
 		{#each PLANS as plan (plan.id)}
-			{@const Icon = getIcon(plan.icon)}
+			{@const Icon = ICONS[plan.icon]}
 			<Card class="relative flex flex-col transition-smooth hover:border-primary {plan.popular ? 'border-primary ring-2 ring-primary/20' : ''}">
 				{#if plan.popular}
 					<div class="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -36,7 +35,7 @@
 				<CardContent class="flex flex-1 flex-col">
 					<div class="mb-4"><span class="text-3xl font-bold">{plan.price}</span><span class="text-muted-foreground">/{t("signup.perMonth")}</span></div>
 					<ul class="mb-6 flex-1 space-y-2">
-						{#each plan.featureKeys as key, i (i)}
+						{#each plan.featureKeys as key (key)}
 							<li class="flex items-start gap-2 text-sm"><Check class="mt-0.5 h-4 w-4 flex-shrink-0 text-success" /><span>{t(key)}</span></li>
 						{/each}
 					</ul>
@@ -51,7 +50,7 @@
 {:else}
 	<div class="grid gap-4">
 		{#each PLANS as plan (plan.id)}
-			{@const Icon = getIcon(plan.icon)}
+			{@const Icon = ICONS[plan.icon]}
 			<button
 				type="button"
 				onclick={() => onSelect(plan.id)}
@@ -69,7 +68,7 @@
 					</div>
 					<p class="mt-1 text-sm text-muted-foreground">{t(plan.descriptionKey)}</p>
 					<ul class="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-						{#each plan.featureKeys.slice(0, 3) as key, i (i)}
+						{#each plan.featureKeys.slice(0, 3) as key (key)}
 							<li class="flex items-center gap-1 text-xs text-muted-foreground"><Check class="h-3 w-3 text-success" />{t(key)}</li>
 						{/each}
 					</ul>

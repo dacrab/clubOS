@@ -1,110 +1,93 @@
 import type { RequestHandler } from "./$types";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
+import type { MemberRole } from "$lib/types/database";
 
-type AdminCheck = { ok: boolean; error?: string; tenantId?: string; callerRole?: string };
+interface AdminCtx { tenantId: string; callerRole: MemberRole }
 
-async function requireAdmin(locals: App.Locals): Promise<AdminCheck> {
-	if (!locals.user) return { ok: false, error: "Unauthorized" };
-	const { data: m, error } = await getSupabaseAdmin().from("memberships").select("tenant_id, role").eq("user_id", locals.user.id).eq("is_primary", true).single();
-	if (error || !m || !["owner", "admin"].includes(m.role)) return { ok: false, error: "Forbidden" };
-	return { ok: true, tenantId: m.tenant_id, callerRole: m.role };
+const text = (msg: string, status: number): Response => new Response(msg, { status });
+
+/**
+ * Resolve caller's primary membership and ensure they're an admin or owner.
+ * Returns a Response (to short-circuit) on failure, the context on success.
+ */
+async function requireAdmin(locals: App.Locals): Promise<AdminCtx | Response> {
+	if (!locals.user) return text("Unauthorized", 401);
+	const { data: m } = await getSupabaseAdmin()
+		.from("memberships")
+		.select("tenant_id, role")
+		.eq("user_id", locals.user.id)
+		.eq("is_primary", true)
+		.single();
+	if (!m || (m.role !== "owner" && m.role !== "admin")) return text("Forbidden", 403);
+	return { tenantId: m.tenant_id, callerRole: m.role as MemberRole };
 }
 
-const getAllowedRoles = (callerRole: string): string[] =>
-	callerRole === "owner" ? ["owner", "admin", "manager", "staff"] : ["admin", "manager", "staff"];
-
-const checkAuth = (check: AdminCheck): Response | null => !check.ok ? new Response(check.error, { status: check.error === "Unauthorized" ? 401 : 403 }) : null;
-
-const checkPrivileges = (callerRole: string | undefined, role: string | undefined): Response | null =>
-	role && !getAllowedRoles(callerRole ?? "staff").includes(role) ? new Response("Cannot assign higher privileges", { status: 403 }) : null;
+/** Owners can assign any role; admins cannot assign owner. */
+const canAssign = (caller: MemberRole, target: MemberRole | undefined): boolean =>
+	!target || caller === "owner" || target !== "owner";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-	const check = await requireAdmin(locals);
-	const authErr = checkAuth(check);
-	if (authErr) return authErr;
+	const ctx = await requireAdmin(locals);
+	if (ctx instanceof Response) return ctx;
 
-	const body = await request.json();
-	const { email, full_name, password, role } = body;
-
-	if (!email || !password || !role || !full_name) {
-		return new Response("Missing required fields", { status: 400 });
-	}
-
-	const privErr = checkPrivileges(check.callerRole, role);
-	if (privErr) return privErr;
+	const { email, full_name, password, role } = await request.json();
+	if (!email || !password || !role || !full_name) return text("Missing required fields", 400);
+	if (!canAssign(ctx.callerRole, role)) return text("Cannot assign higher privileges", 403);
 
 	const admin = getSupabaseAdmin();
-	const { data: authData, error: authError } = await admin.auth.admin.createUser({
-		email,
-		password,
-		email_confirm: true,
-		user_metadata: { full_name, role },
+	const { data, error } = await admin.auth.admin.createUser({
+		email, password, email_confirm: true, user_metadata: { full_name, role },
 	});
+	if (error) return text(error.message, 400);
+	if (!data.user) return text("Failed to create user", 500);
 
-	if (authError) return new Response(authError.message, { status: 400 });
-	if (!authData.user) return new Response("Failed to create user", { status: 500 });
-
-	const { error: membershipError } = await admin.from("memberships").insert({
-		user_id: authData.user.id,
-		tenant_id: check.tenantId,
-		role,
-		is_primary: true,
+	const { error: mErr } = await admin.from("memberships").insert({
+		user_id: data.user.id, tenant_id: ctx.tenantId, role, is_primary: true,
 	});
-
-	if (membershipError) {
-		await admin.auth.admin.deleteUser(authData.user.id);
-		return new Response(membershipError.message, { status: 400 });
+	if (mErr) {
+		await admin.auth.admin.deleteUser(data.user.id);
+		return text(mErr.message, 400);
 	}
-
-	return Response.json({ id: authData.user.id });
+	return Response.json({ id: data.user.id });
 };
 
-export const PUT: RequestHandler = async ({ request, locals }) => {
-	const check = await requireAdmin(locals);
-	const authErr = checkAuth(check);
-	if (authErr) return authErr;
+export const PATCH: RequestHandler = async ({ request, locals }) => {
+	const ctx = await requireAdmin(locals);
+	if (ctx instanceof Response) return ctx;
 
-	const body = await request.json();
-	const { id, full_name, role, password } = body;
-
-	if (!id) return new Response("Missing id", { status: 400 });
-
-	const privErr = checkPrivileges(check.callerRole, role);
-	if (privErr) return privErr;
+	const { id, full_name, role, password } = await request.json();
+	if (!id) return text("Missing id", 400);
+	if (!canAssign(ctx.callerRole, role)) return text("Cannot assign higher privileges", 403);
 
 	const admin = getSupabaseAdmin();
-	const authUpdates: { password?: string; user_metadata?: Record<string, unknown> } = {};
-	
-	if (password) authUpdates.password = password;
-	if (full_name || role) {
-		authUpdates.user_metadata = {};
-		if (full_name) authUpdates.user_metadata.full_name = full_name;
-		if (role) authUpdates.user_metadata.role = role;
-	}
+	const meta: Record<string, unknown> = {};
+	if (full_name) meta.full_name = full_name;
+	if (role) meta.role = role;
 
-	if (Object.keys(authUpdates).length) {
-		const { error } = await admin.auth.admin.updateUserById(id, authUpdates);
-		if (error) return new Response(error.message, { status: 400 });
+	const updates: { password?: string; user_metadata?: Record<string, unknown> } = {};
+	if (password) updates.password = password;
+	if (Object.keys(meta).length) updates.user_metadata = meta;
+
+	if (Object.keys(updates).length) {
+		const { error } = await admin.auth.admin.updateUserById(id, updates);
+		if (error) return text(error.message, 400);
 	}
 
 	if (full_name) await admin.from("users").update({ full_name }).eq("id", id);
-	if (role) await admin.from("memberships").update({ role }).eq("user_id", id).eq("tenant_id", check.tenantId);
+	if (role) await admin.from("memberships").update({ role }).eq("user_id", id).eq("tenant_id", ctx.tenantId);
 
 	return new Response(null, { status: 204 });
 };
 
-export const PATCH: RequestHandler = PUT;
+export const PUT: RequestHandler = PATCH;
 
 export const DELETE: RequestHandler = async ({ request, locals }) => {
-	const check = await requireAdmin(locals);
-	const authErr = checkAuth(check);
-	if (authErr) return authErr;
+	const ctx = await requireAdmin(locals);
+	if (ctx instanceof Response) return ctx;
 
-	const body = await request.json();
-	const id = body?.id;
-
-	if (!id) return new Response("Missing id", { status: 400 });
+	const { id } = await request.json();
+	if (!id) return text("Missing id", 400);
 
 	const { error } = await getSupabaseAdmin().auth.admin.deleteUser(id);
-	return error ? new Response(error.message, { status: 400 }) : new Response(null, { status: 204 });
+	return error ? text(error.message, 400) : new Response(null, { status: 204 });
 };

@@ -31,25 +31,23 @@
 
 	const { data } = $props();
 
-	let settings = $state(untrack(() => structuredClone(data.settings)));
-	let saving = $state(false);
-	let lastServerSettings = $state(untrack(() => JSON.stringify(data.settings)));
-
+	// Local editable copy of server settings; re-clones whenever server data changes.
+	let settings = $state(untrack(() => ({ ...data.settings })));
+	let saved = $state("");
 	$effect(() => {
-		const serverJson = JSON.stringify(data.settings);
-		if (serverJson !== untrack(() => lastServerSettings)) {
-			settings = structuredClone(data.settings);
-			lastServerSettings = serverJson;
+		const next = JSON.stringify(data.settings);
+		if (next !== saved) {
+			settings = { ...data.settings };
+			saved = next;
 		}
 	});
+	let saving = $state(false);
+	const hasChanges = $derived(JSON.stringify(settings) !== saved);
 
-	const hasChanges = $derived(JSON.stringify(settings) !== lastServerSettings);
+	const optionLabel = (opts: readonly { value: string; labelKey: string }[], v: string | null): string =>
+		t(opts.find((o) => o.value === v)?.labelKey ?? "");
 
-	const optionLabel = (opts: readonly { value: string; labelKey: string }[], v: string | null) => t(opts.find((o) => o.value === v)?.labelKey ?? "");
-
-	function handleReset() {
-		settings = structuredClone(data.settings);
-	}
+	const handleReset = (): void => { settings = { ...data.settings }; };
 </script>
 
 <form

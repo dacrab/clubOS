@@ -4,8 +4,18 @@ import { env as publicEnv } from "$env/dynamic/public";
 import type { MemberRole } from "$lib/types/database";
 import { getHomeForRole } from "$lib/config/auth";
 
-const publicRoutes = ["/", "/reset", "/auth/callback", "/logout", "/signup"];
-const authOnlyRoutes = ["/onboarding", "/billing"];
+const PUBLIC_ROUTES = ["/", "/reset", "/auth/callback", "/logout", "/signup"];
+const AUTH_ONLY_ROUTES = ["/onboarding", "/billing"];
+
+type Ctx = { role: MemberRole | null; tenantId: string | null; facilityId: string | null; active: boolean };
+const EMPTY_CTX: Ctx = { role: null, tenantId: null, facilityId: null, active: false };
+
+const isActive = (sub: { status?: string; periodEnd?: string | null; trialEnd?: string | null } | null): boolean => {
+	if (!sub || (sub.status !== "trialing" && sub.status !== "active")) return false;
+	const now = Date.now();
+	return (!!sub.periodEnd && new Date(sub.periodEnd).getTime() > now)
+		|| (!!sub.trialEnd && new Date(sub.trialEnd).getTime() > now);
+};
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const { PUBLIC_SUPABASE_URL: url, PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: anon } = publicEnv;
@@ -24,40 +34,32 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.user = user;
 
 	const path = event.url.pathname;
-	const isPublic = publicRoutes.includes(path) || path.startsWith("/api/");
-	const isAuthOnly = authOnlyRoutes.includes(path);
+	const isPublic = PUBLIC_ROUTES.includes(path) || path.startsWith("/api/");
+	const isAuthOnly = AUTH_ONLY_ROUTES.includes(path);
 
-	let cachedCtx: { role: MemberRole | null; tenantId: string | null; facilityId: string | null; active: boolean } | null = null;
-	const getMembership = async (): Promise<{ role: MemberRole | null; tenantId: string | null; facilityId: string | null; active: boolean }> => {
-		if (cachedCtx) return cachedCtx;
-		if (!user) return (cachedCtx = { role: null, tenantId: null, facilityId: null, active: false });
-
+	let cached: Ctx | undefined;
+	const getCtx = async (): Promise<Ctx> => {
+		if (cached) return cached;
+		if (!user) return (cached = EMPTY_CTX);
 		const { data: ctx } = await supabase.rpc("get_user_context", { p_user_id: user.id });
-		if (!ctx?.membership) return (cachedCtx = { role: null, tenantId: null, facilityId: null, active: false });
-
-		const { subscription: sub } = ctx;
-		const now = new Date();
-		let active = false;
-		if (sub && (sub.status === "trialing" || sub.status === "active")) {
-			if (sub.periodEnd && new Date(sub.periodEnd) > now) {
-				active = true;
-			} else if (sub.trialEnd && new Date(sub.trialEnd) > now) {
-				active = true;
-			}
-		}
-
-		return (cachedCtx = { role: ctx.membership.role as MemberRole, tenantId: ctx.membership.tenantId, facilityId: ctx.membership.facilityId, active });
+		if (!ctx?.membership) return (cached = EMPTY_CTX);
+		return (cached = {
+			role: ctx.membership.role as MemberRole,
+			tenantId: ctx.membership.tenantId,
+			facilityId: ctx.membership.facilityId,
+			active: isActive(ctx.subscription),
+		});
 	};
 
 	if (path === "/" && user) {
-		const { role } = await getMembership();
+		const { role } = await getCtx();
 		if (role) throw redirect(307, getHomeForRole(role));
 	}
 
 	if (isPublic) return resolve(event);
 	if (!user) throw redirect(307, "/");
 
-	const { role, tenantId, active } = await getMembership();
+	const { role, tenantId, active } = await getCtx();
 
 	if (!tenantId && !isAuthOnly) throw redirect(307, "/onboarding");
 	if (tenantId && !active && !isAuthOnly) throw redirect(307, "/billing");

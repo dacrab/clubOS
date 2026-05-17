@@ -1,10 +1,22 @@
 import type { MemberRole } from "$lib/types/database";
 
 export type Plan = "basic" | "pro" | "enterprise";
+export type PlanIcon = "Building2" | "Users" | "Zap";
 
-export const PLANS = [
+export interface PlanDef {
+	id: Plan;
+	name: string;
+	price: string;
+	priceId: string;
+	descriptionKey: string;
+	featureKeys: readonly string[];
+	icon: PlanIcon;
+	popular: boolean;
+}
+
+export const PLANS: readonly PlanDef[] = [
 	{
-		id: "basic" as Plan,
+		id: "basic",
 		name: "Basic",
 		price: "€29",
 		priceId: "price_1Sc4wV9fJvoeQ48O2RI2I9bl",
@@ -19,7 +31,7 @@ export const PLANS = [
 		popular: false,
 	},
 	{
-		id: "pro" as Plan,
+		id: "pro",
 		name: "Pro",
 		price: "€59",
 		priceId: "price_1Sc4wV9fJvoeQ48Ot0p9YmNm",
@@ -35,7 +47,7 @@ export const PLANS = [
 		popular: true,
 	},
 	{
-		id: "enterprise" as Plan,
+		id: "enterprise",
 		name: "Enterprise",
 		price: "€149",
 		priceId: "price_1Sc4wV9fJvoeQ48OdmvyM2jy",
@@ -50,16 +62,14 @@ export const PLANS = [
 		icon: "Zap",
 		popular: false,
 	},
-] as const;
+];
 
-const ROLE_HOME: Record<string, string> = {
+const ROLE_HOME: Record<MemberRole, string> = {
 	owner: "/admin",
 	admin: "/admin",
 	manager: "/secretary",
 	staff: "/staff",
 };
 
-export function getHomeForRole(role: MemberRole | string | null | undefined): string {
-	if (!role) return "/";
-	return ROLE_HOME[role] ?? "/staff";
-}
+export const getHomeForRole = (role: MemberRole | string | null | undefined): string =>
+	role && role in ROLE_HOME ? ROLE_HOME[role as MemberRole] : role ? "/staff" : "/";

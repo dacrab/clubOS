@@ -17,40 +17,23 @@ export interface TenantSettings {
 	prevent_overlaps: boolean;
 	birthday_duration_min: number;
 	football_duration_min: number;
-	// Booking defaults
-	birthday_default_hour: number;
-	football_default_hour: number;
-	football_default_players: number;
-	football_min_players: number;
-	football_max_players: number;
 }
 
 export const DEFAULT_SETTINGS: TenantSettings = {
-	// Regional
 	currency_code: "EUR",
 	date_format: "DD/MM/YYYY",
 	time_format: "24h",
-	// Inventory
 	low_stock_threshold: 3,
-	// Sales
 	coupons_value: 2,
-	// Bookings
 	football_fields_count: 2,
 	appointment_buffer_min: 15,
 	prevent_overlaps: true,
 	birthday_duration_min: 180,
 	football_duration_min: 120,
-	// Booking defaults
-	birthday_default_hour: 15,
-	football_default_hour: 18,
-	football_default_players: 10,
-	football_min_players: 2,
-	football_max_players: 22,
 };
 
-export function mergeSettings(tenantSettings: Partial<TenantSettings> | null): TenantSettings {
-	return { ...DEFAULT_SETTINGS, ...(tenantSettings ?? {}) };
-}
+export const mergeSettings = (s: Partial<TenantSettings> | null): TenantSettings =>
+	({ ...DEFAULT_SETTINGS, ...(s ?? {}) });
 
 export const CURRENCY_OPTIONS = [
 	{ value: "EUR", labelKey: "settings.currencies.EUR", symbol: "€" },

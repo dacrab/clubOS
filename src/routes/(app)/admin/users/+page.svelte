@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
-	import { toast } from "svelte-sonner";
-	import { invalidateAll } from "$app/navigation";
 	import PageHeader from "$lib/components/layout/page-header.svelte";
 	import EmptyState from "$lib/components/layout/empty-state.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
@@ -19,76 +17,72 @@
 	import ConfirmDelete from "$lib/components/ui/confirm-delete/confirm-delete.svelte";
 	import type { UserView, UserForm, MemberRole } from "$lib/types/database";
 	import { getRoleBadgeVariant } from "$lib/utils/helpers";
+	import { runCrud } from "$lib/utils/crud";
 
 	const { data } = $props();
 
 	const ROLES: MemberRole[] = ["owner", "admin", "manager", "staff"];
-	const getRoleLabel = (role: MemberRole) => t(`users.roles.${role}`);
+	const getRoleLabel = (role: MemberRole): string => t(`users.roles.${role}`);
+	const blankForm = (): UserForm => ({ full_name: "", email: "", password: "", role: "staff" });
 
 	let open = $state(false);
 	let editing = $state<UserView | null>(null);
-	let form = $state<UserForm>({ full_name: "", email: "", password: "", role: "staff" });
+	let form = $state<UserForm>(blankForm());
 	let saving = $state(false);
-
-	async function save() {
-		saving = true;
-		try {
-			const payload = {
-				full_name: form.full_name,
-				role: form.role,
-				...(form.password && { password: form.password }),
-				...(!editing && { email: form.email })
-			};
-			
-			const response = editing
-				? await fetch(`/api/admin/users/${editing.id}`, { method: "PATCH", body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } })
-				: await fetch("/api/admin/users", { method: "POST", body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } });
-				
-			if (!response.ok) throw new Error(await response.text());
-			open = false;
-			toast.success(t("common.success"));
-			await invalidateAll();
-		} catch (err) {
-			console.error(err);
-			toast.error(t("common.error"));
-		} finally {
-			saving = false;
-		}
-	}
 
 	let deleteTarget = $state<UserView | null>(null);
 	let deleteOpen = $state(false);
 
-	async function remove(user: UserView) {
-		deleteTarget = user;
-		deleteOpen = true;
+	function openCreate(): void {
+		editing = null;
+		form = blankForm();
+		open = true;
 	}
 
-	async function confirmRemove() {
+	function openEdit(user: UserView): void {
+		editing = user;
+		form = { full_name: user.full_name ?? "", email: user.email, password: "", role: user.role };
+		open = true;
+	}
+
+	async function save(): Promise<void> {
+		saving = true;
+		const payload = {
+			full_name: form.full_name,
+			role: form.role,
+			...(form.password && { password: form.password }),
+			...(!editing && { email: form.email }),
+		};
+		const ok = await runCrud(async () => {
+			const url = editing ? `/api/admin/users/${editing.id}` : "/api/admin/users";
+			const method = editing ? "PATCH" : "POST";
+			const res = await fetch(url, { method, body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } });
+			if (!res.ok) throw new Error(await res.text());
+		});
+		if (ok) open = false;
+		saving = false;
+	}
+
+	async function confirmRemove(): Promise<void> {
 		if (!deleteTarget) return;
-		try {
-			const response = await fetch(`/api/admin/users/${deleteTarget.id}`, { method: "DELETE" });
-			if (!response.ok) throw new Error(await response.text());
-			toast.success(t("common.success"));
-			deleteOpen = false;
-			await invalidateAll();
-		} catch (err) {
-			console.error(err);
-			toast.error(t("common.error"));
-		}
+		const target = deleteTarget;
+		const ok = await runCrud(async () => {
+			const res = await fetch(`/api/admin/users/${target.id}`, { method: "DELETE" });
+			if (!res.ok) throw new Error(await res.text());
+		});
+		if (ok) deleteOpen = false;
 	}
-
 </script>
 
 <div class="space-y-6">
 	<PageHeader title={t("users.title")} description={t("users.subtitle")}>
-		{#snippet actions()}<Button onclick={() => { editing = null; form = { full_name: "", email: "", password: "", role: "staff" }; open = true; }}><Plus class="mr-2 h-4 w-4" />{t("users.addUser")}</Button>{/snippet}
+		{#snippet actions()}<Button onclick={openCreate}><Plus class="mr-2 h-4 w-4" />{t("users.addUser")}</Button>{/snippet}
 	</PageHeader>
 
 	{#if data.users.length === 0}
 		<Card><CardContent class="pt-6">
 			<EmptyState title={t("users.empty.title")} description={t("users.empty.description")} icon={Users}>
-				{#snippet actions()}<Button onclick={() => { editing = null; form = { full_name: "", email: "", password: "", role: "staff" }; open = true; }}><Plus class="mr-2 h-4 w-4" />{t("users.addUser")}</Button>{/snippet}
+				{#snippet actions()}<Button onclick={openCreate}><Plus class="mr-2 h-4 w-4" />{t("users.addUser")}</Button>{/snippet}
 			</EmptyState>
 		</CardContent></Card>
 	{:else}
@@ -108,8 +102,10 @@
 							<TableCell><Badge variant={getRoleBadgeVariant(user.role)}>{getRoleLabel(user.role)}</Badge></TableCell>
 							<TableCell>
 								<div class="flex items-center gap-1">
-									<Button variant="ghost" size="icon-sm" onclick={() => { editing = user; form = { full_name: user.full_name ?? "", email: user.email, password: "", role: user.role }; open = true; }} aria-label={t("common.edit")}><Pencil class="h-4 w-4" /></Button>
-									{#if user.role !== "owner"}<Button variant="ghost" size="icon-sm" onclick={() => remove(user)} aria-label={t("common.delete")}><Trash2 class="h-4 w-4" /></Button>{/if}
+									<Button variant="ghost" size="icon-sm" onclick={() => openEdit(user)} aria-label={t("common.edit")}><Pencil class="h-4 w-4" /></Button>
+									{#if user.role !== "owner"}
+										<Button variant="ghost" size="icon-sm" onclick={() => { deleteTarget = user; deleteOpen = true; }} aria-label={t("common.delete")}><Trash2 class="h-4 w-4" /></Button>
+									{/if}
 								</div>
 							</TableCell>
 						</TableRow>

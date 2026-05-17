@@ -10,15 +10,15 @@
 	import { supabase } from "$lib/utils/supabase";
 	import { fmtCurrency } from "$lib/utils/format";
 	import { printReceipt, type ReceiptData } from "$lib/utils/receipt";
+	import { shortId } from "$lib/utils/helpers";
 	import { settings as globalSettings } from "$lib/state/settings.svelte";
 	import { ShoppingCart, Plus, Minus, Gift, X, Search, Check, Trash2, ChevronRight, Tag, Printer } from "@lucide/svelte";
-	import type { Product, CartItem } from "$lib/types/database";
+	import type { Product, CartItem, CategoryPartial } from "$lib/types/database";
 
-	type Category = { id: string; name: string; parent_id: string | null };
 	type Props = {
 		open: boolean;
 		products: Product[];
-		categories?: Category[];
+		categories?: CategoryPartial[];
 		activeSession: { id: string } | null;
 		user: { id: string; tenantId: string | null; facilityId: string | null };
 		onOpenChange?: (open: boolean) => void;
@@ -299,7 +299,7 @@
 								<div class="flex items-start justify-between gap-2">
 									<div class="flex-1 min-w-0">
 										<p class="font-semibold text-sm">{item.product.name}</p>
-										<p class="text-sm text-muted-foreground">{fmtCurrency(item.product.price)} each</p>
+										<p class="text-sm text-muted-foreground">{fmtCurrency(item.product.price)}</p>
 									</div>
 									<button
 										class="shrink-0 w-8 h-8 flex-center justify-center rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
@@ -330,7 +330,7 @@
 											onclick={() => toggleTreat(idx)}
 										>
 											<Gift class="icon-sm" />
-											{#if item.isTreat}Treat{/if}
+											{#if item.isTreat}{t("orders.treat")}{/if}
 										</button>
 										<p class="font-bold text-right min-w-[4rem] {item.isTreat ? 'line-through text-muted-foreground' : ''}">
 											{fmtCurrency(item.product.price * item.quantity)}
@@ -417,7 +417,7 @@
 								</div>
 								<div>
 									<p class="font-bold">{t("common.success")}</p>
-									<p class="text-xs opacity-70">#{lastOrderId.slice(0, 8)}</p>
+									<p class="text-xs opacity-70">#{shortId(lastOrderId)}</p>
 								</div>
 							</div>
 							<Button variant="outline" size="sm" onclick={handlePrintReceipt}>

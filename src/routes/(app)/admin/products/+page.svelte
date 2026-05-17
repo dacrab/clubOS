@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { t } from "$lib/i18n/index.svelte";
-	import { toast } from "svelte-sonner";
-	import { invalidateAll } from "$app/navigation";
 	import PageHeader from "$lib/components/layout/page-header.svelte";
 	import EmptyState from "$lib/components/layout/empty-state.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
@@ -19,149 +17,129 @@
 	import { settings } from "$lib/state/settings.svelte";
 	import { Plus, Pencil, Trash2, Package, FolderTree, AlertTriangle } from "@lucide/svelte";
 	import ConfirmDelete from "$lib/components/ui/confirm-delete/confirm-delete.svelte";
+	import Pagination from "$lib/components/ui/pagination/pagination.svelte";
 	import ImageUpload from "$lib/components/image-upload.svelte";
+	import { runCrud } from "$lib/utils/crud";
+	import { supabase } from "$lib/utils/supabase";
 	import type { Product, CategoryPartial, ProductForm } from "$lib/types/database";
 
 	const { data } = $props();
 
+	const blankProduct = (): ProductForm => ({ name: "", description: "", price: 0, stock_quantity: 0, category_id: "", image_url: "" });
+	const blankCategory = (): { name: string; description: string; parent_id: string } => ({ name: "", description: "", parent_id: "" });
+
 	let searchQuery = $state("");
-	
-	// Product CRUD state
+
 	let productOpen = $state(false);
 	let editingProduct = $state<Product | null>(null);
-	let productForm = $state<ProductForm>({ name: "", description: "", price: 0, stock_quantity: 0, category_id: "", image_url: "" });
+	let productForm = $state<ProductForm>(blankProduct());
 	let savingProduct = $state(false);
 
-	// Category CRUD state
 	let categoryOpen = $state(false);
 	let editingCategory = $state<CategoryPartial | null>(null);
-	let categoryForm = $state({ name: "", description: "", parent_id: "" });
+	let categoryForm = $state(blankCategory());
 	let savingCategory = $state(false);
-
-	const filtered = $derived(searchQuery ? data.paginatedProducts.filter((p: Product) => p.name.toLowerCase().includes(searchQuery.toLowerCase())) : data.paginatedProducts);
-	const lowStockProducts = $derived(data.lowStockProducts);
-	const getCategoryName = (id: string | null): string => id ? (data.categories as CategoryPartial[]).find((c) => c.id === id)?.name ?? "-" : "-";
-	const getStockBadge = (stock: number) => {
-		const threshold = settings.current.low_stock_threshold;
-		return stock <= 0 ? { variant: "destructive" as const, label: t("products.outOfStock") }
-			: stock <= threshold ? { variant: "warning" as const, label: t("products.lowStock") }
-			: { variant: "success" as const, label: t("products.inStock") };
-	};
-
-	async function saveProduct() {
-		if (!data.user.facilityId || !data.user.id) {
-			toast.error(t("common.error"));
-			return;
-		}
-		savingProduct = true;
-		try {
-			const payload = {
-				name: productForm.name,
-				description: productForm.description || null,
-				price: productForm.price,
-				stock_quantity: productForm.stock_quantity,
-				category_id: productForm.category_id || null,
-				image_url: productForm.image_url || null,
-				...(!editingProduct && { facility_id: data.user.facilityId, created_by: data.user.id })
-			};
-			
-			const { error } = editingProduct
-				? await data.supabase.from("products").update(payload).eq("id", editingProduct.id)
-				: await data.supabase.from("products").insert(payload);
-				
-			if (error) throw error;
-			productOpen = false;
-			toast.success(t("common.success"));
-			await invalidateAll();
-		} catch (err) {
-			console.error(err);
-			toast.error(t("common.error"));
-		} finally {
-			savingProduct = false;
-		}
-	}
 
 	let deleteTarget = $state<Product | null>(null);
 	let deleteOpen = $state(false);
-
-	async function deleteProduct(product: Product) {
-		deleteTarget = product;
-		deleteOpen = true;
-	}
-
-	async function confirmDeleteProduct() {
-		if (!deleteTarget) return;
-		try {
-			const { error } = await data.supabase.from("products").delete().eq("id", deleteTarget.id);
-			if (error) throw error;
-			toast.success(t("common.success"));
-			deleteOpen = false;
-			await invalidateAll();
-		} catch (err) {
-			console.error(err);
-			toast.error(t("common.error"));
-		}
-	}
-
-	async function saveCategory() {
-		if (!data.user.facilityId) {
-			toast.error(t("common.error"));
-			return;
-		}
-		savingCategory = true;
-		try {
-			const payload = {
-				name: categoryForm.name,
-				description: categoryForm.description || null,
-				parent_id: categoryForm.parent_id || null,
-				...(!editingCategory && { facility_id: data.user.facilityId })
-			};
-			
-			const { error } = editingCategory
-				? await data.supabase.from("categories").update(payload).eq("id", editingCategory.id)
-				: await data.supabase.from("categories").insert(payload);
-				
-			if (error) throw error;
-			categoryOpen = false;
-			toast.success(t("common.success"));
-			await invalidateAll();
-		} catch (err) {
-			console.error(err);
-			toast.error(t("common.error"));
-		} finally {
-			savingCategory = false;
-		}
-	}
-
 	let deleteCatTarget = $state<CategoryPartial | null>(null);
 	let deleteCatOpen = $state(false);
 
-	async function deleteCategory(cat: CategoryPartial) {
-		deleteCatTarget = cat;
-		deleteCatOpen = true;
+	const filtered = $derived(searchQuery
+		? data.paginatedProducts.filter((p: Product) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+		: data.paginatedProducts);
+	const lowStockProducts = $derived(data.lowStockProducts);
+	const getCategoryName = (id: string | null): string =>
+		id ? (data.categories as CategoryPartial[]).find((c) => c.id === id)?.name ?? "-" : "-";
+	const getStockBadge = (stock: number): { variant: "destructive" | "warning" | "success"; label: string } => {
+		const threshold = settings.current.low_stock_threshold;
+		return stock <= 0 ? { variant: "destructive", label: t("products.outOfStock") }
+			: stock <= threshold ? { variant: "warning", label: t("products.lowStock") }
+			: { variant: "success", label: t("products.inStock") };
+	};
+
+	function openProductCreate(): void {
+		editingProduct = null;
+		productForm = blankProduct();
+		productOpen = true;
+	}
+	function openProductEdit(p: Product): void {
+		editingProduct = p;
+		productForm = {
+			name: p.name,
+			description: p.description ?? "",
+			price: p.price,
+			stock_quantity: p.stock_quantity,
+			category_id: p.category_id ?? "",
+			image_url: p.image_url ?? "",
+		};
+		productOpen = true;
+	}
+	function openCategoryCreate(): void {
+		editingCategory = null;
+		categoryForm = blankCategory();
+		categoryOpen = true;
+	}
+	function openCategoryEdit(cat: CategoryPartial): void {
+		editingCategory = cat;
+		categoryForm = { name: cat.name, description: cat.description ?? "", parent_id: cat.parent_id ?? "" };
+		categoryOpen = true;
 	}
 
-	async function confirmDeleteCategory() {
+	async function saveProduct(): Promise<void> {
+		if (!data.user.facilityId || !data.user.id) return;
+		savingProduct = true;
+		const payload = {
+			name: productForm.name,
+			description: productForm.description || null,
+			price: productForm.price,
+			stock_quantity: productForm.stock_quantity,
+			category_id: productForm.category_id || null,
+			image_url: productForm.image_url || null,
+			...(!editingProduct && { facility_id: data.user.facilityId, created_by: data.user.id }),
+		};
+		const ok = await runCrud(() => editingProduct
+			? supabase.from("products").update(payload).eq("id", editingProduct.id)
+			: supabase.from("products").insert(payload));
+		if (ok) productOpen = false;
+		savingProduct = false;
+	}
+
+	async function saveCategory(): Promise<void> {
+		if (!data.user.facilityId) return;
+		savingCategory = true;
+		const payload = {
+			name: categoryForm.name,
+			description: categoryForm.description || null,
+			parent_id: categoryForm.parent_id || null,
+			...(!editingCategory && { facility_id: data.user.facilityId }),
+		};
+		const ok = await runCrud(() => editingCategory
+			? supabase.from("categories").update(payload).eq("id", editingCategory.id)
+			: supabase.from("categories").insert(payload));
+		if (ok) categoryOpen = false;
+		savingCategory = false;
+	}
+
+	async function confirmDeleteProduct(): Promise<void> {
+		if (!deleteTarget) return;
+		const target = deleteTarget;
+		const ok = await runCrud(() => supabase.from("products").delete().eq("id", target.id));
+		if (ok) deleteOpen = false;
+	}
+	async function confirmDeleteCategory(): Promise<void> {
 		if (!deleteCatTarget) return;
-		try {
-			const { error } = await data.supabase.from("categories").delete().eq("id", deleteCatTarget.id);
-			if (error) throw error;
-			deleteCatOpen = false;
-			toast.success(t("common.success"));
-			await invalidateAll();
-		} catch (err) {
-			console.error(err);
-			toast.error(t("common.error"));
-		}
+		const target = deleteCatTarget;
+		const ok = await runCrud(() => supabase.from("categories").delete().eq("id", target.id));
+		if (ok) deleteCatOpen = false;
 	}
-
 </script>
 
 <div class="space-y-6">
 	<PageHeader title={t("products.title")} description={t("products.subtitle")}>
 		{#snippet actions()}
-			<Button variant="outline" onclick={() => { editingCategory = null; categoryForm = { name: "", description: "", parent_id: "" }; categoryOpen = true; }}><FolderTree class="mr-2 icon-sm" />{t("products.manageCategories")}</Button>
-			<Button onclick={() => { editingProduct = null; productForm = { name: "", description: "", price: 0, stock_quantity: 0, category_id: "", image_url: "" }; productOpen = true; }}><Plus class="mr-2 icon-sm" />{t("products.addProduct")}</Button>
+			<Button variant="outline" onclick={openCategoryCreate}><FolderTree class="mr-2 icon-sm" />{t("products.manageCategories")}</Button>
+			<Button onclick={openProductCreate}><Plus class="mr-2 icon-sm" />{t("products.addProduct")}</Button>
 		{/snippet}
 	</PageHeader>
 
@@ -184,7 +162,7 @@
 	{#if filtered.length === 0}
 		<Card class="p-6">
 			<EmptyState title={t("products.empty.title")} description={t("products.empty.description")} icon={Package}>
-				{#snippet actions()}<Button onclick={() => { editingProduct = null; productForm = { name: "", description: "", price: 0, stock_quantity: 0, category_id: "", image_url: "" }; productOpen = true; }}><Plus class="mr-2 icon-sm" />{t("products.addProduct")}</Button>{/snippet}
+				{#snippet actions()}<Button onclick={openProductCreate}><Plus class="mr-2 icon-sm" />{t("products.addProduct")}</Button>{/snippet}
 			</EmptyState>
 		</Card>
 	{:else}
@@ -207,8 +185,8 @@
 							<TableCell><Badge variant={badge.variant}>{product.stock_quantity < 0 ? "∞" : product.stock_quantity}</Badge></TableCell>
 							<TableCell>
 								<div class="flex-center gap-1">
-									<Button variant="ghost" size="icon-sm" onclick={() => { editingProduct = product; productForm = { name: product.name, description: product.description ?? "", price: product.price, stock_quantity: product.stock_quantity, category_id: product.category_id ?? "", image_url: product.image_url ?? "" }; productOpen = true; }} aria-label={t("common.edit")}><Pencil class="icon-sm" /></Button>
-									<Button variant="ghost" size="icon-sm" onclick={() => deleteProduct(product)} aria-label={t("common.delete")}><Trash2 class="icon-sm" /></Button>
+									<Button variant="ghost" size="icon-sm" onclick={() => openProductEdit(product)} aria-label={t("common.edit")}><Pencil class="icon-sm" /></Button>
+									<Button variant="ghost" size="icon-sm" onclick={() => { deleteTarget = product; deleteOpen = true; }} aria-label={t("common.delete")}><Trash2 class="icon-sm" /></Button>
 								</div>
 							</TableCell>
 						</TableRow>
@@ -216,13 +194,7 @@
 				</TableBody>
 			</Table>
 		</Card>
-		{#if data.totalPages > 1}
-			<div class="flex items-center justify-center gap-2">
-				<Button variant="outline" size="sm" disabled={data.page <= 1} onclick={() => window.location.href = `?page=${data.page - 1}`}>Previous</Button>
-				<span class="text-sm text-muted-foreground">{data.page} / {data.totalPages}</span>
-				<Button variant="outline" size="sm" disabled={data.page >= data.totalPages} onclick={() => window.location.href = `?page=${data.page + 1}`}>Next</Button>
-			</div>
-		{/if}
+		<Pagination page={data.page} totalPages={data.totalPages} />
 	{/if}
 </div>
 
@@ -253,8 +225,8 @@
 				<div class="flex-between rounded-lg border p-2 hover:bg-accent">
 					<span class="font-medium">{cat.name}</span>
 					<div class="flex-center gap-1">
-						<Button variant="ghost" size="icon-sm" onclick={() => { editingCategory = cat; categoryForm = { name: cat.name, description: cat.description ?? "", parent_id: cat.parent_id ?? "" }; categoryOpen = true; }} aria-label={t("common.edit")}><Pencil class="icon-sm" /></Button>
-						<Button variant="ghost" size="icon-sm" onclick={() => deleteCategory(cat)} aria-label={t("common.delete")}><Trash2 class="icon-sm" /></Button>
+						<Button variant="ghost" size="icon-sm" onclick={() => openCategoryEdit(cat)} aria-label={t("common.edit")}><Pencil class="icon-sm" /></Button>
+						<Button variant="ghost" size="icon-sm" onclick={() => { deleteCatTarget = cat; deleteCatOpen = true; }} aria-label={t("common.delete")}><Trash2 class="icon-sm" /></Button>
 					</div>
 				</div>
 			{/each}

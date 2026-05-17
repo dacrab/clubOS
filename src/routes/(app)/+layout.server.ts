@@ -3,21 +3,14 @@ import type { LayoutServerLoad } from "./$types";
 import type { SessionUser } from "$lib/types/database";
 import { PRODUCTS_LIMIT, CATEGORIES_LIMIT } from "$lib/types/database";
 
+// Auth + subscription gating happens in hooks.server.ts. By the time we reach here,
+// the user is authenticated and has an active tenant + subscription.
 export const load: LayoutServerLoad = async ({ locals }) => {
 	const { user, supabase } = locals;
-
-	if (!user) {
-		throw redirect(307, "/");
-	}
+	if (!user) throw redirect(307, "/");
 
 	const { data: ctx } = await supabase.rpc("get_user_context", { p_user_id: user.id });
 	if (!ctx?.membership) throw redirect(307, "/onboarding");
-
-	const sub = ctx.subscription;
-	const now = new Date();
-	const isActive = sub && ["trialing", "active"].includes(sub.status) &&
-		((sub.periodEnd && new Date(sub.periodEnd) > now) || (sub.trialEnd && new Date(sub.trialEnd) > now));
-	if (!isActive) throw redirect(307, "/billing");
 
 	const sessionUser: SessionUser = {
 		id: user.id,
@@ -36,7 +29,6 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	return {
 		user: sessionUser,
 		settings: ctx.tenant?.settings ?? null,
-		subscription: sub ? { status: sub.status, planName: sub.planName, periodEnd: sub.periodEnd, trialEnd: sub.trialEnd } : null,
 		products: products ?? [],
 		categories: categories ?? [],
 		activeSession: ctx.activeSession,

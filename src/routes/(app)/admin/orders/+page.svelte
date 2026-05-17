@@ -9,6 +9,7 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
 	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
+	import Pagination from "$lib/components/ui/pagination/pagination.svelte";
 	import { ShoppingCart, Eye } from "@lucide/svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import type { OrderView } from "$lib/types/database";
@@ -48,13 +49,7 @@
 				{/each}
 			</TableBody>
 		</Table></Card>
-		{#if data.totalPages > 1}
-			<div class="flex items-center justify-center gap-2">
-				<Button variant="outline" size="sm" disabled={data.page <= 1} onclick={() => window.location.href = `?page=${data.page - 1}`}>Previous</Button>
-				<span class="text-sm text-muted-foreground">{data.page} / {data.totalPages}</span>
-				<Button variant="outline" size="sm" disabled={data.page >= data.totalPages} onclick={() => window.location.href = `?page=${data.page + 1}`}>Next</Button>
-			</div>
-		{/if}
+		<Pagination page={data.page} totalPages={data.totalPages} />
 	{/if}
 </div>
 

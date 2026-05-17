@@ -2,6 +2,10 @@ import { browser } from "$app/environment";
 
 export type Theme = "light" | "dark" | "system";
 
+const isValid = (v: unknown): v is Theme => v === "light" || v === "dark" || v === "system";
+const prefersDark = (): boolean =>
+	typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches;
+
 function createTheme(): {
 	readonly current: Theme;
 	readonly isDark: boolean;
@@ -12,35 +16,27 @@ function createTheme(): {
 
 	if (browser) {
 		const stored = localStorage.getItem("theme");
-		if (stored === "light" || stored === "dark" || stored === "system") {
-			current = stored;
-		}
+		if (isValid(stored)) current = stored;
 	}
 
-	const applyTheme = (): void => {
-		const isDark = current === "system"
-			? typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches
-			: current === "dark";
-		document.documentElement.classList[isDark ? "add" : "remove"]("dark");
+	const apply = (): void => {
+		const dark = current === "dark" || (current === "system" && prefersDark());
+		document.documentElement.classList[dark ? "add" : "remove"]("dark");
 	};
 
-	if (browser) applyTheme();
+	if (browser) apply();
 
 	return {
 		get current() { return current; },
-		get isDark() {
-			return current === "dark" || (current === "system" && browser && typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches);
-		},
-		setTheme(t: Theme) {
+		get isDark() { return current === "dark" || (current === "system" && browser && prefersDark()); },
+		setTheme(t) {
 			current = t;
 			if (browser) {
 				localStorage.setItem("theme", t);
-				applyTheme();
+				apply();
 			}
 		},
-		toggle(): void {
-			this.setTheme(this.isDark ? "light" : "dark");
-		},
+		toggle() { this.setTheme(this.isDark ? "light" : "dark"); },
 	};
 }
 

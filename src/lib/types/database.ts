@@ -1,5 +1,4 @@
 export type MemberRole = "owner" | "admin" | "manager" | "staff";
-export type RoleBadgeVariant = "destructive" | "default" | "secondary" | "outline";
 export type BookingType = "birthday" | "football" | "event" | "other";
 export type BookingStatus = "pending" | "confirmed" | "canceled" | "completed" | "no_show";
 export type SubscriptionStatus = "trialing" | "active" | "canceled" | "past_due" | "unpaid" | "paused";
@@ -7,77 +6,9 @@ export type SubscriptionStatus = "trialing" | "active" | "canceled" | "past_due"
 // Limits
 export const PRODUCTS_LIMIT = 500;
 export const CATEGORIES_LIMIT = 100;
-export const BOOKINGS_LIMIT = 200;
-export const ORDERS_LIMIT = 100;
-export const DASHBOARD_LIMIT = 5;
 export const USERS_PER_PAGE = 200;
 export const TRIAL_DAYS = 14;
 export const DEFAULT_TIMEZONE = "UTC";
-
-export interface Tenant {
-	id: string;
-	name: string;
-	slug: string;
-	settings: Record<string, unknown> | null;
-	created_at: string;
-	updated_at: string;
-}
-
-export interface Subscription {
-	id: string;
-	tenant_id: string;
-	stripe_subscription_id: string | null;
-	stripe_customer_id: string | null;
-	status: SubscriptionStatus;
-	plan_name: string | null;
-	current_period_end: string | null;
-	trial_end: string | null;
-	created_at: string;
-	updated_at: string;
-}
-
-export interface Facility {
-	id: string;
-	tenant_id: string;
-	name: string;
-	address: string | null;
-	phone: string | null;
-	email: string | null;
-	timezone: string;
-	created_at: string;
-	updated_at: string;
-}
-
-export interface User {
-	id: string;
-	full_name: string | null;
-	avatar_url: string | null;
-	created_at: string;
-	updated_at: string;
-}
-
-export interface Membership {
-	id: string;
-	user_id: string;
-	tenant_id: string;
-	facility_id: string | null;
-	role: MemberRole;
-	is_primary: boolean;
-	created_at: string;
-	user?: User;
-	tenant?: Tenant;
-	facility?: Facility;
-}
-
-export interface Category {
-	id: string;
-	facility_id: string;
-	parent_id: string | null;
-	name: string;
-	description: string | null;
-	created_at: string;
-	updated_at: string;
-}
 
 export interface Product {
 	id: string;
@@ -92,51 +23,6 @@ export interface Product {
 	created_at: string;
 	updated_at: string;
 	created_by: string | null;
-	category?: Category;
-}
-
-export interface RegisterSession {
-	id: string;
-	facility_id: string;
-	opened_by: string;
-	closed_by: string | null;
-	opened_at: string;
-	closed_at: string | null;
-	opening_cash: number;
-	closing_cash: number | null;
-	expected_cash: number | null;
-	notes: string | null;
-	created_at: string;
-	opened_by_user?: User;
-	closed_by_user?: User;
-}
-
-export interface Order {
-	id: string;
-	facility_id: string;
-	session_id: string | null;
-	subtotal: number;
-	discount_amount: number;
-	total_amount: number;
-	coupon_count: number;
-	created_at: string;
-	created_by: string;
-	items?: OrderItem[];
-	created_by_user?: User;
-}
-
-export interface OrderItem {
-	id: string;
-	order_id: string;
-	product_id: string;
-	product_name: string;
-	quantity: number;
-	unit_price: number;
-	line_total: number;
-	is_treat: boolean;
-	is_deleted: boolean;
-	created_at: string;
-	product?: Product;
 }
 
 export interface Booking {
@@ -154,7 +40,6 @@ export interface Booking {
 	created_at: string;
 	updated_at: string;
 	created_by: string;
-	created_by_user?: User;
 }
 
 export interface BookingDetails {
@@ -166,7 +51,7 @@ export interface BookingDetails {
 	[key: string]: unknown;
 }
 
-/** Product reference in order item (can be object or array depending on query) */
+/** Product reference in order item (object or array depending on query). */
 export type ProductRef = { id: string; name: string } | { id: string; name: string }[] | null;
 
 export interface OrderItemView {
@@ -190,7 +75,12 @@ export interface OrderView {
 	order_items: OrderItemView[];
 }
 
-export type CategoryPartial = Pick<Category, "id" | "name" | "parent_id" | "description">;
+export interface CategoryPartial {
+	id: string;
+	name: string;
+	parent_id: string | null;
+	description: string | null;
+}
 
 export interface ProductForm {
 	name: string;
@@ -221,11 +111,11 @@ export interface CartItem {
 	isTreat: boolean;
 }
 
-export type SessionUser = {
+export interface SessionUser {
 	id: string;
 	email: string;
 	username: string;
 	role: MemberRole;
 	tenantId: string | null;
 	facilityId: string | null;
-};
+}
