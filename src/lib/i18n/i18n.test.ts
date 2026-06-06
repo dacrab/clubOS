@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { en } from "./en";
-import { el } from "./el";
+import { beforeEach, describe, expect, it } from "vitest";
+import el from "./el.json";
+import en from "./en.json";
 import { i18n, t } from "./index.svelte";
 
 const getKeys = (obj: unknown, prefix = ""): string[] => {
@@ -11,20 +11,24 @@ const getKeys = (obj: unknown, prefix = ""): string[] => {
 	});
 };
 
-const getValue = (obj: unknown, path: string): unknown => path.split(".").reduce((a: unknown, p) => (a as Record<string, unknown>)?.[p], obj);
+const getValue = (obj: unknown, path: string): unknown =>
+	path.split(".").reduce((a: unknown, p) => (a as Record<string, unknown>)?.[p], obj);
 
 describe("i18n", () => {
 	it("en and el have matching keys", () => {
-		const enKeys = getKeys(en).sort(), elKeys = getKeys(el).sort();
-		expect(enKeys.filter(k => !elKeys.includes(k))).toEqual([]);
-		expect(elKeys.filter(k => !enKeys.includes(k))).toEqual([]);
+		const enKeys = getKeys(en).sort(),
+			elKeys = getKeys(el).sort();
+		expect(enKeys.filter((k) => !elKeys.includes(k))).toEqual([]);
+		expect(elKeys.filter((k) => !enKeys.includes(k))).toEqual([]);
 	});
 
 	it("placeholders match between locales", () => {
-		const issues = getKeys(en).filter(key => {
-			const enVal = getValue(en, key), elVal = getValue(el, key);
+		const issues = getKeys(en).filter((key) => {
+			const enVal = getValue(en, key),
+				elVal = getValue(el, key);
 			if (typeof enVal !== "string" || typeof elVal !== "string") return false;
-			const enP = (enVal.match(/\{\w+\}/g) || []).sort().join(), elP = (elVal.match(/\{\w+\}/g) || []).sort().join();
+			const enP = (enVal.match(/\{\w+\}/g) || []).sort().join(),
+				elP = (elVal.match(/\{\w+\}/g) || []).sort().join();
 			return enP !== elP;
 		});
 		expect(issues).toEqual([]);

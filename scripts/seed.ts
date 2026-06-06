@@ -22,8 +22,8 @@ import { createClient } from "@supabase/supabase-js";
 
 // ─── Env validation ────────────────────────────────────────────────────────
 
-const url      = process.env.PUBLIC_SUPABASE_URL;
-const key      = process.env.SUPABASE_SECRET_KEY;
+const url = process.env.PUBLIC_SUPABASE_URL;
+const key = process.env.SUPABASE_SECRET_KEY;
 const PASSWORD = process.env.SEED_PASSWORD;
 
 if (!url || !key || !PASSWORD) {
@@ -38,26 +38,26 @@ const supabase = createClient(url, key, {
 // ─── Seed data ─────────────────────────────────────────────────────────────
 
 const USERS = [
-	{ email: "owner@clubos.app",   name: "Demo Owner",   role: "owner"   },
-	{ email: "admin@clubos.app",   name: "Demo Admin",   role: "admin"   },
+	{ email: "owner@clubos.app", name: "Demo Owner", role: "owner" },
+	{ email: "admin@clubos.app", name: "Demo Admin", role: "admin" },
 	{ email: "manager@clubos.app", name: "Demo Manager", role: "manager" },
-	{ email: "staff@clubos.app",   name: "Demo Staff",   role: "staff"   },
+	{ email: "staff@clubos.app", name: "Demo Staff", role: "staff" },
 ] as const;
 
 const CATEGORIES = ["Καφέδες", "Σνακ", "Αναψυκτικά"] as const;
 type Category = (typeof CATEGORIES)[number];
 
 const PRODUCTS: { name: string; price: number; cat: Category; stock?: number }[] = [
-	{ name: "Espresso",          price: 2.0, cat: "Καφέδες" },
-	{ name: "Cappuccino",        price: 3.0, cat: "Καφέδες" },
-	{ name: "Freddo Espresso",   price: 3.0, cat: "Καφέδες" },
+	{ name: "Espresso", price: 2.0, cat: "Καφέδες" },
+	{ name: "Cappuccino", price: 3.0, cat: "Καφέδες" },
+	{ name: "Freddo Espresso", price: 3.0, cat: "Καφέδες" },
 	{ name: "Freddo Cappuccino", price: 3.5, cat: "Καφέδες" },
-	{ name: "Κρουασάν",          price: 2.5, cat: "Σνακ",        stock: 20 },
-	{ name: "Τοστ",              price: 3.0, cat: "Σνακ",        stock: 15 },
-	{ name: "Σάντουιτς",         price: 4.0, cat: "Σνακ",        stock: 10 },
-	{ name: "Νερό 500ml",        price: 0.5, cat: "Αναψυκτικά",  stock: 50 },
-	{ name: "Coca-Cola",         price: 2.0, cat: "Αναψυκτικά",  stock: 30 },
-	{ name: "Πορτοκαλάδα",       price: 2.0, cat: "Αναψυκτικά",  stock: 30 },
+	{ name: "Κρουασάν", price: 2.5, cat: "Σνακ", stock: 20 },
+	{ name: "Τοστ", price: 3.0, cat: "Σνακ", stock: 15 },
+	{ name: "Σάντουιτς", price: 4.0, cat: "Σνακ", stock: 10 },
+	{ name: "Νερό 500ml", price: 0.5, cat: "Αναψυκτικά", stock: 50 },
+	{ name: "Coca-Cola", price: 2.0, cat: "Αναψυκτικά", stock: 30 },
+	{ name: "Πορτοκαλάδα", price: 2.0, cat: "Αναψυκτικά", stock: 30 },
 ];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -80,7 +80,7 @@ async function seed(): Promise<void> {
 		.from("tenants")
 		.upsert(
 			{ name: "Demo Club", slug: "demo-club", settings: { currency_code: "EUR" } },
-			{ onConflict: "slug" }
+			{ onConflict: "slug" },
 		)
 		.select("id")
 		.single()
@@ -94,23 +94,20 @@ async function seed(): Promise<void> {
 		.from("subscriptions")
 		.upsert(
 			{
-				tenant_id:          tenant.id,
-				status:             "trialing",
-				plan_name:          "Trial",
-				trial_end:          trialEnd,
+				tenant_id: tenant.id,
+				status: "trialing",
+				plan_name: "Trial",
+				trial_end: trialEnd,
 				current_period_end: trialEnd,
 			},
-			{ onConflict: "tenant_id" }
+			{ onConflict: "tenant_id" },
 		)
 		.throwOnError();
 
 	// ── Facility ─────────────────────────────────────────────────────────────
 	const { data: facility } = await supabase
 		.from("facilities")
-		.upsert(
-			{ tenant_id: tenant.id, name: "Main Facility" },
-			{ onConflict: "tenant_id,name" }
-		)
+		.upsert({ tenant_id: tenant.id, name: "Main Facility" }, { onConflict: "tenant_id,name" })
 		.select("id")
 		.single()
 		.throwOnError();
@@ -132,12 +129,15 @@ async function seed(): Promise<void> {
 
 		if (!userId) {
 			const { data, error } = await supabase.auth.admin.createUser({
-				email:          u.email,
-				password:       PASSWORD,
-				email_confirm:  true,
-				user_metadata:  { full_name: u.name },
+				email: u.email,
+				password: PASSWORD,
+				email_confirm: true,
+				user_metadata: { full_name: u.name },
 			});
-			if (error) { warn(`Failed to create ${u.email}: ${error.message}`); continue; }
+			if (error) {
+				warn(`Failed to create ${u.email}: ${error.message}`);
+				continue;
+			}
 			userId = data.user?.id;
 		}
 
@@ -162,21 +162,20 @@ async function seed(): Promise<void> {
 			.eq("user_id", userId)
 			.eq("tenant_id", tenant.id);
 
-		const { data: existing } = await (
-			facilityId
-				? existingQuery.eq("facility_id", facilityId)
-				: existingQuery.is("facility_id", null)
+		const { data: existing } = await (facilityId
+			? existingQuery.eq("facility_id", facilityId)
+			: existingQuery.is("facility_id", null)
 		).maybeSingle();
 
 		if (!existing) {
 			await supabase
 				.from("memberships")
 				.insert({
-					user_id:     userId,
-					tenant_id:   tenant.id,
+					user_id: userId,
+					tenant_id: tenant.id,
 					facility_id: facilityId,
-					role:        u.role,
-					is_primary:  u.role === "owner",
+					role: u.role,
+					is_primary: u.role === "owner",
 				})
 				.throwOnError();
 		}
@@ -190,14 +189,15 @@ async function seed(): Promise<void> {
 		.from("categories")
 		.upsert(
 			CATEGORIES.map((name) => ({ facility_id: facility.id, name })),
-			{ onConflict: "facility_id,name" }
+			{ onConflict: "facility_id,name" },
 		)
 		.select("id, name")
 		.throwOnError();
 
-	const catMap = Object.fromEntries(
-		(catRows ?? []).map((c) => [c.name, c.id])
-	) as Record<Category, string>;
+	const catMap = Object.fromEntries((catRows ?? []).map((c) => [c.name, c.id])) as Record<
+		Category,
+		string
+	>;
 
 	step("Categories (3)");
 
@@ -206,15 +206,15 @@ async function seed(): Promise<void> {
 		.from("products")
 		.upsert(
 			PRODUCTS.map((p) => ({
-				facility_id:     facility.id,
-				category_id:     catMap[p.cat],
-				name:            p.name,
-				price:           p.price,
-				stock_quantity:  p.stock ?? 0,
+				facility_id: facility.id,
+				category_id: catMap[p.cat],
+				name: p.name,
+				price: p.price,
+				stock_quantity: p.stock ?? 0,
 				track_inventory: p.stock !== undefined,
-				created_by:      ownerId,
+				created_by: ownerId,
 			})),
-			{ onConflict: "facility_id,name" }
+			{ onConflict: "facility_id,name" },
 		)
 		.throwOnError();
 

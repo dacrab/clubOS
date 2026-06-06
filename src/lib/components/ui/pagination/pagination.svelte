@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import { t } from "$lib/i18n/index.svelte";
 
-	type Props = { page: number; totalPages: number };
-	let { page, totalPages }: Props = $props();
+type Props = { page: number; totalPages: number };
+let { page, totalPages }: Props = $props();
 
-	const goto = (p: number) => {
-		const url = new URL(window.location.href);
-		url.searchParams.set("page", String(p));
-		window.location.href = url.toString();
-	};
+const goto = (p: number) => {
+	const url = new URL(window.location.href);
+	url.searchParams.set("page", String(p));
+	window.location.href = url.toString();
+};
 </script>
 
 {#if totalPages > 1}

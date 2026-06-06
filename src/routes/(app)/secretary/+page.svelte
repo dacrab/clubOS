@@ -1,11 +1,16 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import PageHeader from "$lib/components/layout/page-header.svelte";
-	import Card, { CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card/card.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { Cake, CircleDot, Calendar } from "@lucide/svelte";
+import { Cake, Calendar, CircleDot } from "@lucide/svelte";
+import PageHeader from "$lib/components/layout/page-header.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card, {
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "$lib/components/ui/card/card.svelte";
+import { t } from "$lib/i18n/index.svelte";
 
-	const { data } = $props();
+const { data } = $props();
 </script>
 
 <div class="space-y-6">

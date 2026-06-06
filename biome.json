@@ -1,0 +1,110 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": {
+					"level": "on"
+				}
+			}
+		}
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"correctness": {
+				"noUnusedImports": "error",
+				"noUnusedVariables": "error",
+				"noUnusedFunctionParameters": "warn",
+				"useExhaustiveDependencies": "warn",
+				"noInnerDeclarations": "off",
+				"noSwitchDeclarations": "off"
+			},
+			"suspicious": {
+				"noConsole": "warn",
+				"noDebugger": "error",
+				"noExplicitAny": "error"
+			},
+			"complexity": {
+				"noUselessUndefined": "error"
+			},
+			"style": {
+				"noParameterAssign": "off",
+				"noNonNullAssertion": "off",
+				"useConsistentArrayType": "off",
+				"useImportType": "error"
+			}
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 100
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double",
+			"semicolons": "always",
+			"trailingCommas": "all"
+		}
+	},
+	"json": {
+		"formatter": {
+			"trailingCommas": "none"
+		}
+	},
+	"files": {
+		"includes": [
+			"src/**",
+			"scripts/**",
+			"*.config.*",
+			"biome.json",
+			"!!**/node_modules",
+			"!!**/.svelte-kit",
+			"!!**/.vercel",
+			"!!**/build",
+			"!!**/coverage",
+			"!!**/supabase",
+			"!!**/static",
+			"!!**/*.css"
+		]
+	},
+	"overrides": [
+		{
+			"includes": ["**/*.svelte", "**/*.svelte.ts"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedImports": "off",
+						"noUnusedVariables": "off",
+						"noUnusedFunctionParameters": "off"
+					},
+					"suspicious": {
+						"noImplicitAnyLet": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/*.{test,spec}.ts"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noConsole": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["*.config.*", "scripts/**/*.ts"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noConsole": "off"
+					}
+				}
+			}
+		}
+	]
+}

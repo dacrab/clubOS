@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 
 export interface StripeSubscription {
 	id: string;
+	customer: string;
 	status: string;
 	metadata?: { tenant_id?: string };
 	items?: { data?: { price?: { id?: string; nickname?: string } }[] };
@@ -31,18 +32,23 @@ export async function upsertSubscription(args: {
 }): Promise<void> {
 	const { tenantId, customerId, sub } = args;
 	const price = sub.items?.data?.[0]?.price;
-	const { error } = await getSupabaseAdmin().from("subscriptions").upsert({
-		tenant_id: tenantId,
-		stripe_customer_id: customerId,
-		stripe_subscription_id: sub.id,
-		stripe_price_id: price?.id ?? null,
-		status: sub.status,
-		plan_name: price?.nickname ?? "Subscription",
-		current_period_start: ts(sub.current_period_start),
-		current_period_end: ts(sub.current_period_end),
-		cancel_at_period_end: sub.cancel_at_period_end ?? false,
-		trial_start: ts(sub.trial_start),
-		trial_end: ts(sub.trial_end),
-	}, { onConflict: "tenant_id" });
+	const { error } = await getSupabaseAdmin()
+		.from("subscriptions")
+		.upsert(
+			{
+				tenant_id: tenantId,
+				stripe_customer_id: customerId,
+				stripe_subscription_id: sub.id,
+				stripe_price_id: price?.id ?? null,
+				status: sub.status,
+				plan_name: price?.nickname ?? "Subscription",
+				current_period_start: ts(sub.current_period_start),
+				current_period_end: ts(sub.current_period_end),
+				cancel_at_period_end: sub.cancel_at_period_end ?? false,
+				trial_start: ts(sub.trial_start),
+				trial_end: ts(sub.trial_end),
+			},
+			{ onConflict: "tenant_id" },
+		);
 	if (error) throw new Error(error.message);
 }

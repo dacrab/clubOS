@@ -1,18 +1,18 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import { fmtDate, fmtCurrency } from "$lib/utils/format";
-	import { shortId } from "$lib/utils/helpers";
-	import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
-	import { Eye } from "@lucide/svelte";
-	import { type OrderView } from "$lib/types/database";
+import { Eye } from "@lucide/svelte";
+import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
+import Badge from "$lib/components/ui/badge/badge.svelte";
+import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import type { OrderView } from "$lib/types/database";
+import { fmtCurrency, fmtDate } from "$lib/utils/format";
+import { shortId } from "$lib/utils/helpers";
 
-	type Props = { orders: OrderView[]; title?: string };
+type Props = { orders: OrderView[]; title?: string };
 
-	let { orders, title }: Props = $props();
-	let selectedOrder = $state<OrderView | null>(null);
-	let showDialog = $state(false);
+let { orders, title }: Props = $props();
+let selectedOrder = $state<OrderView | null>(null);
+let showDialog = $state(false);
 </script>
 
 <Card>

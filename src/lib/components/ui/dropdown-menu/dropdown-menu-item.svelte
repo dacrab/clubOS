@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
-	import { cn } from "$lib/utils/cn";
-	import type { Snippet } from "svelte";
+import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
+import type { Snippet } from "svelte";
+import { cn } from "$lib/utils/cn";
 
-	type Props = {
-		class?: string;
-		disabled?: boolean;
-		onSelect?: () => void;
-		children?: Snippet;
-	};
+type Props = {
+	class?: string;
+	disabled?: boolean;
+	onSelect?: () => void;
+	children?: Snippet;
+};
 
-	let { class: className = "", disabled = false, onSelect, children }: Props = $props();
+let { class: className = "", disabled = false, onSelect, children }: Props = $props();
 </script>
 
 <DropdownMenuPrimitive.Item

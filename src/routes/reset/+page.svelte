@@ -1,38 +1,46 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-	import { toast } from "svelte-sonner";
-	import { t } from "$lib/i18n/index.svelte";
-	import { supabase } from "$lib/utils/supabase";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import Label from "$lib/components/ui/label/label.svelte";
-	import Card, { CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card/card.svelte";
+import { toast } from "svelte-sonner";
+import { goto } from "$app/navigation";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card, {
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "$lib/components/ui/card/card.svelte";
+import Input from "$lib/components/ui/input/input.svelte";
+import Label from "$lib/components/ui/label/label.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import { supabase } from "$lib/utils/supabase";
 
-	let password = $state("");
-	let confirmPassword = $state("");
-	let loading = $state(false);
+let password = $state("");
+let confirmPassword = $state("");
+let loading = $state(false);
 
-	async function handleReset(e: Event) {
-		e.preventDefault();
-		if (!password || !confirmPassword) { toast.error(t("auth.fillAllFields")); return; }
-
-		loading = true;
-		try {
-			if (password !== confirmPassword) throw new Error(t("auth.passwordMismatch"));
-			if (password.length < 8) throw new Error(t("signup.passwordTooShort"));
-			
-			const { error } = await supabase.auth.updateUser({ password });
-			if (error) throw error;
-			
-			toast.success(t("auth.passwordUpdated"));
-			await goto("/");
-		} catch (err) {
-			const message = err instanceof Error ? err.message : t("common.error");
-			toast.error(message);
-		} finally {
-			loading = false;
-		}
+async function handleReset(e: Event) {
+	e.preventDefault();
+	if (!password || !confirmPassword) {
+		toast.error(t("auth.fillAllFields"));
+		return;
 	}
+
+	loading = true;
+	try {
+		if (password !== confirmPassword) throw new Error(t("auth.passwordMismatch"));
+		if (password.length < 8) throw new Error(t("signup.passwordTooShort"));
+
+		const { error } = await supabase.auth.updateUser({ password });
+		if (error) throw error;
+
+		toast.success(t("auth.passwordUpdated"));
+		await goto("/");
+	} catch (err) {
+		const message = err instanceof Error ? err.message : t("common.error");
+		toast.error(message);
+	} finally {
+		loading = false;
+	}
+}
 </script>
 
 <div class="flex min-h-screen items-center justify-center p-4">

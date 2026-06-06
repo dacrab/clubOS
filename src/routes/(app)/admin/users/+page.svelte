@@ -1,77 +1,87 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import PageHeader from "$lib/components/layout/page-header.svelte";
-	import EmptyState from "$lib/components/layout/empty-state.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import Label from "$lib/components/ui/label/label.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
-	import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
-	import Select from "$lib/components/ui/select/select.svelte";
-	import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
-	import SelectContent from "$lib/components/ui/select/select-content.svelte";
-	import SelectItem from "$lib/components/ui/select/select-item.svelte";
-	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
-	import { Plus, Pencil, Trash2, Users } from "@lucide/svelte";
-	import ConfirmDelete from "$lib/components/ui/confirm-delete/confirm-delete.svelte";
-	import type { UserView, UserForm, MemberRole } from "$lib/types/database";
-	import { getRoleBadgeVariant } from "$lib/utils/helpers";
-	import { runCrud } from "$lib/utils/crud";
+import { Pencil, Plus, Trash2, Users } from "@lucide/svelte";
+import EmptyState from "$lib/components/layout/empty-state.svelte";
+import PageHeader from "$lib/components/layout/page-header.svelte";
+import Badge from "$lib/components/ui/badge/badge.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
+import ConfirmDelete from "$lib/components/ui/confirm-delete/confirm-delete.svelte";
+import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
+import Input from "$lib/components/ui/input/input.svelte";
+import Label from "$lib/components/ui/label/label.svelte";
+import Select from "$lib/components/ui/select/select.svelte";
+import SelectContent from "$lib/components/ui/select/select-content.svelte";
+import SelectItem from "$lib/components/ui/select/select-item.svelte";
+import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
+import Table, {
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "$lib/components/ui/table/table.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import type { MemberRole, UserForm, UserView } from "$lib/types/database";
+import { runCrud } from "$lib/utils/crud";
+import { getRoleBadgeVariant } from "$lib/utils/helpers";
 
-	const { data } = $props();
+const { data } = $props();
 
-	const ROLES: MemberRole[] = ["owner", "admin", "manager", "staff"];
-	const getRoleLabel = (role: MemberRole): string => t(`users.roles.${role}`);
-	const blankForm = (): UserForm => ({ full_name: "", email: "", password: "", role: "staff" });
+const ROLES: MemberRole[] = ["owner", "admin", "manager", "staff"];
+const getRoleLabel = (role: MemberRole): string => t(`users.roles.${role}`);
+const blankForm = (): UserForm => ({ full_name: "", email: "", password: "", role: "staff" });
 
-	let open = $state(false);
-	let editing = $state<UserView | null>(null);
-	let form = $state<UserForm>(blankForm());
-	let saving = $state(false);
+let open = $state(false);
+let editing = $state<UserView | null>(null);
+let form = $state<UserForm>(blankForm());
+let saving = $state(false);
 
-	let deleteTarget = $state<UserView | null>(null);
-	let deleteOpen = $state(false);
+let deleteTarget = $state<UserView | null>(null);
+let deleteOpen = $state(false);
 
-	function openCreate(): void {
-		editing = null;
-		form = blankForm();
-		open = true;
-	}
+function openCreate(): void {
+	editing = null;
+	form = blankForm();
+	open = true;
+}
 
-	function openEdit(user: UserView): void {
-		editing = user;
-		form = { full_name: user.full_name ?? "", email: user.email, password: "", role: user.role };
-		open = true;
-	}
+function openEdit(user: UserView): void {
+	editing = user;
+	form = { full_name: user.full_name ?? "", email: user.email, password: "", role: user.role };
+	open = true;
+}
 
-	async function save(): Promise<void> {
-		saving = true;
-		const payload = {
-			full_name: form.full_name,
-			role: form.role,
-			...(form.password && { password: form.password }),
-			...(!editing && { email: form.email }),
-		};
-		const ok = await runCrud(async () => {
-			const url = editing ? `/api/admin/users/${editing.id}` : "/api/admin/users";
-			const method = editing ? "PATCH" : "POST";
-			const res = await fetch(url, { method, body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } });
-			if (!res.ok) throw new Error(await res.text());
+async function save(): Promise<void> {
+	saving = true;
+	const payload = {
+		full_name: form.full_name,
+		role: form.role,
+		...(form.password && { password: form.password }),
+		...(!editing && { email: form.email }),
+	};
+	const ok = await runCrud(async () => {
+		const url = editing ? `/api/admin/users/${editing.id}` : "/api/admin/users";
+		const method = editing ? "PATCH" : "POST";
+		const res = await fetch(url, {
+			method,
+			body: JSON.stringify(payload),
+			headers: { "Content-Type": "application/json" },
 		});
-		if (ok) open = false;
-		saving = false;
-	}
+		if (!res.ok) throw new Error(await res.text());
+	});
+	if (ok) open = false;
+	saving = false;
+}
 
-	async function confirmRemove(): Promise<void> {
-		if (!deleteTarget) return;
-		const target = deleteTarget;
-		const ok = await runCrud(async () => {
-			const res = await fetch(`/api/admin/users/${target.id}`, { method: "DELETE" });
-			if (!res.ok) throw new Error(await res.text());
-		});
-		if (ok) deleteOpen = false;
-	}
+async function confirmRemove(): Promise<void> {
+	if (!deleteTarget) return;
+	const target = deleteTarget;
+	const ok = await runCrud(async () => {
+		const res = await fetch(`/api/admin/users/${target.id}`, { method: "DELETE" });
+		if (!res.ok) throw new Error(await res.text());
+	});
+	if (ok) deleteOpen = false;
+}
 </script>
 
 <div class="space-y-6">

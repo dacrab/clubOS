@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { cn } from "$lib/utils/cn";
-	import type { Snippet } from "svelte";
+import type { Snippet } from "svelte";
+import { cn } from "$lib/utils/cn";
 
-	type Props = {
-		title: string;
-		description?: string;
-		class?: string;
-		actions?: Snippet;
-	};
+type Props = {
+	title: string;
+	description?: string;
+	class?: string;
+	actions?: Snippet;
+};
 
-	let { title, description, class: className = "", actions }: Props = $props();
+let { title, description, class: className = "", actions }: Props = $props();
 </script>
 
 <div class={cn("flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between", className)}>

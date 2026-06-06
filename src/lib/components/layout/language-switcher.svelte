@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { i18n, t } from "$lib/i18n/index.svelte";
-	import DropdownMenu from "$lib/components/ui/dropdown-menu/dropdown-menu.svelte";
-	import DropdownMenuTrigger from "$lib/components/ui/dropdown-menu/dropdown-menu-trigger.svelte";
-	import DropdownMenuContent from "$lib/components/ui/dropdown-menu/dropdown-menu-content.svelte";
-	import DropdownMenuItem from "$lib/components/ui/dropdown-menu/dropdown-menu-item.svelte";
-	import DropdownMenuSeparator from "$lib/components/ui/dropdown-menu/dropdown-menu-separator.svelte";
-	import DropdownMenuLabel from "$lib/components/ui/dropdown-menu/dropdown-menu-label.svelte";
-	import { Globe } from "@lucide/svelte";
+import { Globe } from "@lucide/svelte";
+import DropdownMenu from "$lib/components/ui/dropdown-menu/dropdown-menu.svelte";
+import DropdownMenuContent from "$lib/components/ui/dropdown-menu/dropdown-menu-content.svelte";
+import DropdownMenuItem from "$lib/components/ui/dropdown-menu/dropdown-menu-item.svelte";
+import DropdownMenuLabel from "$lib/components/ui/dropdown-menu/dropdown-menu-label.svelte";
+import DropdownMenuSeparator from "$lib/components/ui/dropdown-menu/dropdown-menu-separator.svelte";
+import DropdownMenuTrigger from "$lib/components/ui/dropdown-menu/dropdown-menu-trigger.svelte";
+import { i18n, t } from "$lib/i18n/index.svelte";
 
-	type Props = { showLabel?: boolean };
-	let { showLabel = false }: Props = $props();
+type Props = { showLabel?: boolean };
+let { showLabel = false }: Props = $props();
 </script>
 
 <DropdownMenu>

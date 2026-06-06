@@ -1,24 +1,23 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import { session } from "$lib/state/session.svelte";
-	import DropdownMenu from "$lib/components/ui/dropdown-menu/dropdown-menu.svelte";
-	import DropdownMenuTrigger from "$lib/components/ui/dropdown-menu/dropdown-menu-trigger.svelte";
-	import DropdownMenuContent from "$lib/components/ui/dropdown-menu/dropdown-menu-content.svelte";
-	import DropdownMenuItem from "$lib/components/ui/dropdown-menu/dropdown-menu-item.svelte";
-	import DropdownMenuSeparator from "$lib/components/ui/dropdown-menu/dropdown-menu-separator.svelte";
-	import DropdownMenuLabel from "$lib/components/ui/dropdown-menu/dropdown-menu-label.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import ThemeToggle from "$lib/components/layout/theme-toggle.svelte";
-	import LanguageSwitcher from "$lib/components/layout/language-switcher.svelte";
-	import { User, LogOut } from "@lucide/svelte";
-	import type { MemberRole } from "$lib/types/database";
-	import { getRoleBadgeVariant } from "$lib/utils/helpers";
+import { LogOut, User } from "@lucide/svelte";
+import LanguageSwitcher from "$lib/components/layout/language-switcher.svelte";
+import ThemeToggle from "$lib/components/layout/theme-toggle.svelte";
+import Badge from "$lib/components/ui/badge/badge.svelte";
+import DropdownMenu from "$lib/components/ui/dropdown-menu/dropdown-menu.svelte";
+import DropdownMenuContent from "$lib/components/ui/dropdown-menu/dropdown-menu-content.svelte";
+import DropdownMenuItem from "$lib/components/ui/dropdown-menu/dropdown-menu-item.svelte";
+import DropdownMenuLabel from "$lib/components/ui/dropdown-menu/dropdown-menu-label.svelte";
+import DropdownMenuSeparator from "$lib/components/ui/dropdown-menu/dropdown-menu-separator.svelte";
+import DropdownMenuTrigger from "$lib/components/ui/dropdown-menu/dropdown-menu-trigger.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import { session } from "$lib/state/session.svelte";
+import { getRoleBadgeVariant } from "$lib/utils/helpers";
 
-	type Props = { public?: boolean; showLogo?: boolean };
-	let { public: isPublic = false, showLogo = true }: Props = $props();
+type Props = { public?: boolean; showLogo?: boolean };
+let { public: isPublic = false, showLogo = true }: Props = $props();
 
-	const roleLabel = $derived(session.user?.role ? t(`users.roles.${session.user.role}`) : "");
-	const roleBadgeVariant = $derived(getRoleBadgeVariant(session.user?.role as MemberRole | undefined));
+const roleLabel = $derived(session.user?.role ? t(`users.roles.${session.user.role}`) : "");
+const roleBadgeVariant = $derived(getRoleBadgeVariant(session.user?.role));
 </script>
 
 {#if isPublic}

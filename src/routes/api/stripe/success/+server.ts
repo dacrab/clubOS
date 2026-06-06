@@ -1,7 +1,7 @@
 import { redirect } from "@sveltejs/kit";
-import type { RequestHandler } from "./$types";
 import { env } from "$env/dynamic/private";
-import { stripeGet, upsertSubscription, type StripeSubscription } from "$lib/server/stripe";
+import { type StripeSubscription, stripeGet, upsertSubscription } from "$lib/server/stripe";
+import type { RequestHandler } from "./$types";
 
 interface CheckoutSession {
 	customer: string;

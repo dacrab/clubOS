@@ -1,138 +1,171 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import PageHeader from "$lib/components/layout/page-header.svelte";
-	import EmptyState from "$lib/components/layout/empty-state.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import Label from "$lib/components/ui/label/label.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Card from "$lib/components/ui/card/card.svelte";
-	import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
-	import Select from "$lib/components/ui/select/select.svelte";
-	import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
-	import SelectContent from "$lib/components/ui/select/select-content.svelte";
-	import SelectItem from "$lib/components/ui/select/select-item.svelte";
-	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
-	import { fmtCurrency } from "$lib/utils/format";
-	import { settings } from "$lib/state/settings.svelte";
-	import { Plus, Pencil, Trash2, Package, FolderTree, AlertTriangle } from "@lucide/svelte";
-	import ConfirmDelete from "$lib/components/ui/confirm-delete/confirm-delete.svelte";
-	import Pagination from "$lib/components/ui/pagination/pagination.svelte";
-	import ImageUpload from "$lib/components/image-upload.svelte";
-	import { runCrud } from "$lib/utils/crud";
-	import { supabase } from "$lib/utils/supabase";
-	import type { Product, CategoryPartial, ProductForm } from "$lib/types/database";
+import { AlertTriangle, FolderTree, Package, Pencil, Plus, Trash2 } from "@lucide/svelte";
+import ImageUpload from "$lib/components/image-upload.svelte";
+import EmptyState from "$lib/components/layout/empty-state.svelte";
+import PageHeader from "$lib/components/layout/page-header.svelte";
+import Badge from "$lib/components/ui/badge/badge.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card from "$lib/components/ui/card/card.svelte";
+import ConfirmDelete from "$lib/components/ui/confirm-delete/confirm-delete.svelte";
+import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
+import Input from "$lib/components/ui/input/input.svelte";
+import Label from "$lib/components/ui/label/label.svelte";
+import Pagination from "$lib/components/ui/pagination/pagination.svelte";
+import Select from "$lib/components/ui/select/select.svelte";
+import SelectContent from "$lib/components/ui/select/select-content.svelte";
+import SelectItem from "$lib/components/ui/select/select-item.svelte";
+import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
+import Table, {
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "$lib/components/ui/table/table.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import { settings } from "$lib/state/settings.svelte";
+import type { CategoryPartial, Product, ProductForm } from "$lib/types/database";
+import { runCrud } from "$lib/utils/crud";
+import { fmtCurrency } from "$lib/utils/format";
+import { supabase } from "$lib/utils/supabase";
 
-	const { data } = $props();
+const { data } = $props();
 
-	const blankProduct = (): ProductForm => ({ name: "", description: "", price: 0, stock_quantity: 0, category_id: "", image_url: "" });
-	const blankCategory = (): { name: string; description: string; parent_id: string } => ({ name: "", description: "", parent_id: "" });
+const blankProduct = (): ProductForm => ({
+	name: "",
+	description: "",
+	price: 0,
+	stock_quantity: 0,
+	category_id: "",
+	image_url: "",
+});
+const blankCategory = (): { name: string; description: string; parent_id: string } => ({
+	name: "",
+	description: "",
+	parent_id: "",
+});
 
-	let searchQuery = $state("");
+let searchQuery = $state("");
 
-	let productOpen = $state(false);
-	let editingProduct = $state<Product | null>(null);
-	let productForm = $state<ProductForm>(blankProduct());
-	let savingProduct = $state(false);
+let productOpen = $state(false);
+let editingProduct = $state<Product | null>(null);
+let productForm = $state<ProductForm>(blankProduct());
+let savingProduct = $state(false);
 
-	let categoryOpen = $state(false);
-	let editingCategory = $state<CategoryPartial | null>(null);
-	let categoryForm = $state(blankCategory());
-	let savingCategory = $state(false);
+let categoryOpen = $state(false);
+let editingCategory = $state<CategoryPartial | null>(null);
+let categoryForm = $state(blankCategory());
+let savingCategory = $state(false);
 
-	let deleteTarget = $state<Product | null>(null);
-	let deleteOpen = $state(false);
-	let deleteCatTarget = $state<CategoryPartial | null>(null);
-	let deleteCatOpen = $state(false);
+let deleteTarget = $state<Product | null>(null);
+let deleteOpen = $state(false);
+let deleteCatTarget = $state<CategoryPartial | null>(null);
+let deleteCatOpen = $state(false);
 
-	const filtered = $derived(searchQuery
-		? data.paginatedProducts.filter((p: Product) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-		: data.paginatedProducts);
-	const lowStockProducts = $derived(data.lowStockProducts);
-	const getCategoryName = (id: string | null): string =>
-		id ? (data.categories as CategoryPartial[]).find((c) => c.id === id)?.name ?? "-" : "-";
-	const getStockBadge = (stock: number): { variant: "destructive" | "warning" | "success"; label: string } => {
-		const threshold = settings.current.low_stock_threshold;
-		return stock <= 0 ? { variant: "destructive", label: t("products.outOfStock") }
-			: stock <= threshold ? { variant: "warning", label: t("products.lowStock") }
+const filtered = $derived(
+	searchQuery
+		? data.paginatedProducts.filter((p: Product) =>
+				p.name.toLowerCase().includes(searchQuery.toLowerCase()),
+			)
+		: data.paginatedProducts,
+);
+const lowStockProducts = $derived(data.lowStockProducts);
+const getCategoryName = (id: string | null): string =>
+	id ? ((data.categories as CategoryPartial[]).find((c) => c.id === id)?.name ?? "-") : "-";
+const getStockBadge = (
+	stock: number,
+): { variant: "destructive" | "warning" | "success"; label: string } => {
+	const threshold = settings.current.low_stock_threshold;
+	return stock <= 0
+		? { variant: "destructive", label: t("products.outOfStock") }
+		: stock <= threshold
+			? { variant: "warning", label: t("products.lowStock") }
 			: { variant: "success", label: t("products.inStock") };
+};
+
+function openProductCreate(): void {
+	editingProduct = null;
+	productForm = blankProduct();
+	productOpen = true;
+}
+function openProductEdit(p: Product): void {
+	editingProduct = p;
+	productForm = {
+		name: p.name,
+		description: p.description ?? "",
+		price: p.price,
+		stock_quantity: p.stock_quantity,
+		category_id: p.category_id ?? "",
+		image_url: p.image_url ?? "",
 	};
+	productOpen = true;
+}
+function openCategoryCreate(): void {
+	editingCategory = null;
+	categoryForm = blankCategory();
+	categoryOpen = true;
+}
+function openCategoryEdit(cat: CategoryPartial): void {
+	editingCategory = cat;
+	categoryForm = {
+		name: cat.name,
+		description: cat.description ?? "",
+		parent_id: cat.parent_id ?? "",
+	};
+	categoryOpen = true;
+}
 
-	function openProductCreate(): void {
-		editingProduct = null;
-		productForm = blankProduct();
-		productOpen = true;
-	}
-	function openProductEdit(p: Product): void {
-		editingProduct = p;
-		productForm = {
-			name: p.name,
-			description: p.description ?? "",
-			price: p.price,
-			stock_quantity: p.stock_quantity,
-			category_id: p.category_id ?? "",
-			image_url: p.image_url ?? "",
-		};
-		productOpen = true;
-	}
-	function openCategoryCreate(): void {
-		editingCategory = null;
-		categoryForm = blankCategory();
-		categoryOpen = true;
-	}
-	function openCategoryEdit(cat: CategoryPartial): void {
-		editingCategory = cat;
-		categoryForm = { name: cat.name, description: cat.description ?? "", parent_id: cat.parent_id ?? "" };
-		categoryOpen = true;
-	}
-
-	async function saveProduct(): Promise<void> {
-		if (!data.user.facilityId || !data.user.id) return;
-		savingProduct = true;
-		const payload = {
-			name: productForm.name,
-			description: productForm.description || null,
-			price: productForm.price,
-			stock_quantity: productForm.stock_quantity,
-			category_id: productForm.category_id || null,
-			image_url: productForm.image_url || null,
-			...(!editingProduct && { facility_id: data.user.facilityId, created_by: data.user.id }),
-		};
-		const ok = await runCrud(() => editingProduct
+async function saveProduct(): Promise<void> {
+	if (!data.user.facilityId || !data.user.id) return;
+	savingProduct = true;
+	const payload = {
+		name: productForm.name,
+		description: productForm.description || null,
+		price: productForm.price,
+		stock_quantity: productForm.stock_quantity,
+		category_id: productForm.category_id || null,
+		image_url: productForm.image_url || null,
+		...(!editingProduct && { facility_id: data.user.facilityId, created_by: data.user.id }),
+	};
+	const ok = await runCrud(() =>
+		editingProduct
 			? supabase.from("products").update(payload).eq("id", editingProduct.id)
-			: supabase.from("products").insert(payload));
-		if (ok) productOpen = false;
-		savingProduct = false;
-	}
+			: supabase.from("products").insert(payload),
+	);
+	if (ok) productOpen = false;
+	savingProduct = false;
+}
 
-	async function saveCategory(): Promise<void> {
-		if (!data.user.facilityId) return;
-		savingCategory = true;
-		const payload = {
-			name: categoryForm.name,
-			description: categoryForm.description || null,
-			parent_id: categoryForm.parent_id || null,
-			...(!editingCategory && { facility_id: data.user.facilityId }),
-		};
-		const ok = await runCrud(() => editingCategory
+async function saveCategory(): Promise<void> {
+	if (!data.user.facilityId) return;
+	savingCategory = true;
+	const payload = {
+		name: categoryForm.name,
+		description: categoryForm.description || null,
+		parent_id: categoryForm.parent_id || null,
+		...(!editingCategory && { facility_id: data.user.facilityId }),
+	};
+	const ok = await runCrud(() =>
+		editingCategory
 			? supabase.from("categories").update(payload).eq("id", editingCategory.id)
-			: supabase.from("categories").insert(payload));
-		if (ok) categoryOpen = false;
-		savingCategory = false;
-	}
+			: supabase.from("categories").insert(payload),
+	);
+	if (ok) categoryOpen = false;
+	savingCategory = false;
+}
 
-	async function confirmDeleteProduct(): Promise<void> {
-		if (!deleteTarget) return;
-		const target = deleteTarget;
-		const ok = await runCrud(() => supabase.from("products").delete().eq("id", target.id));
-		if (ok) deleteOpen = false;
-	}
-	async function confirmDeleteCategory(): Promise<void> {
-		if (!deleteCatTarget) return;
-		const target = deleteCatTarget;
-		const ok = await runCrud(() => supabase.from("categories").delete().eq("id", target.id));
-		if (ok) deleteCatOpen = false;
-	}
+async function confirmDeleteProduct(): Promise<void> {
+	if (!deleteTarget) return;
+	const target = deleteTarget;
+	const ok = await runCrud(() => supabase.from("products").delete().eq("id", target.id));
+	if (ok) deleteOpen = false;
+}
+async function confirmDeleteCategory(): Promise<void> {
+	if (!deleteCatTarget) return;
+	const target = deleteCatTarget;
+	const ok = await runCrud(() => supabase.from("categories").delete().eq("id", target.id));
+	if (ok) deleteCatOpen = false;
+}
 </script>
 
 <div class="space-y-6">

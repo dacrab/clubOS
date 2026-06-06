@@ -1,45 +1,58 @@
 <script lang="ts">
-	import { toast } from "svelte-sonner";
-	import { t } from "$lib/i18n/index.svelte";
-	import { supabase } from "$lib/utils/supabase";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import Label from "$lib/components/ui/label/label.svelte";
-	import Card, { CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
-	import Header from "$lib/components/layout/header.svelte";
+import { toast } from "svelte-sonner";
+import Header from "$lib/components/layout/header.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card, {
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "$lib/components/ui/card/card.svelte";
+import Input from "$lib/components/ui/input/input.svelte";
+import Label from "$lib/components/ui/label/label.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import { supabase } from "$lib/utils/supabase";
 
-	let email = $state("");
-	let password = $state("");
-	let loading = $state(false);
+let email = $state("");
+let password = $state("");
+let loading = $state(false);
 
-	async function handleLogin(e: Event) {
-		e.preventDefault();
-		if (!email || !password) { toast.error(t("auth.invalidCredentials")); return; }
-
-		loading = true;
-		try {
-			const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-			if (error || !data.user) throw new Error(t("auth.invalidCredentials"));
-			toast.success(t("auth.welcomeBack"));
-			window.location.href = "/";
-		} catch (err) {
-			const message = err instanceof Error ? err.message : t("common.error");
-			toast.error(message);
-			loading = false;
-		}
+async function handleLogin(e: Event) {
+	e.preventDefault();
+	if (!email || !password) {
+		toast.error(t("auth.invalidCredentials"));
+		return;
 	}
 
-	async function handleForgotPassword() {
-		if (!email) { toast.error(t("auth.enterEmailFirst")); return; }
-		try {
-			const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset` });
-			if (error) throw error;
-			toast.success(t("auth.resetEmailSent"));
-		} catch (err) {
-			const message = err instanceof Error ? err.message : t("common.error");
-			toast.error(message);
-		}
+	loading = true;
+	try {
+		const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+		if (error || !data.user) throw new Error(t("auth.invalidCredentials"));
+		toast.success(t("auth.welcomeBack"));
+		window.location.href = "/";
+	} catch (err) {
+		const message = err instanceof Error ? err.message : t("common.error");
+		toast.error(message);
+		loading = false;
 	}
+}
+
+async function handleForgotPassword() {
+	if (!email) {
+		toast.error(t("auth.enterEmailFirst"));
+		return;
+	}
+	try {
+		const { error } = await supabase.auth.resetPasswordForEmail(email, {
+			redirectTo: `${window.location.origin}/reset`,
+		});
+		if (error) throw error;
+		toast.success(t("auth.resetEmailSent"));
+	} catch (err) {
+		const message = err instanceof Error ? err.message : t("common.error");
+		toast.error(message);
+	}
+}
 </script>
 
 <div class="page-public">

@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { Select as SelectPrimitive } from "bits-ui";
-	import { cn } from "$lib/utils/cn";
-	import { ChevronDown } from "@lucide/svelte";
-	import type { Snippet } from "svelte";
+import { ChevronDown } from "@lucide/svelte";
+import { Select as SelectPrimitive } from "bits-ui";
+import type { Snippet } from "svelte";
+import { cn } from "$lib/utils/cn";
 
-	type Props = {
-		class?: string;
-		placeholder?: string;
-		selected?: string;
-		children?: Snippet;
-	};
+type Props = {
+	class?: string;
+	placeholder?: string;
+	selected?: string;
+	children?: Snippet;
+};
 
-	let { class: className = "", placeholder = "Select...", selected, children }: Props = $props();
+let { class: className = "", placeholder = "Select...", selected, children }: Props = $props();
 </script>
 
 <SelectPrimitive.Trigger>

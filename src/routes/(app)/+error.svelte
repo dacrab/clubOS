@@ -1,15 +1,22 @@
 <script lang="ts">
-	import { page } from "$app/state";
-	import { t } from "$lib/i18n/index.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Card, { CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card/card.svelte";
-	import { AlertTriangle, Home, RotateCcw } from "@lucide/svelte";
+import { AlertTriangle, Home, RotateCcw } from "@lucide/svelte";
+import { page } from "$app/state";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card, {
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "$lib/components/ui/card/card.svelte";
+import { t } from "$lib/i18n/index.svelte";
 
-	const errorInfo = $derived.by(() => {
-		if (page.status === 404) return { title: t("errors.notFound.title"), desc: t("errors.notFound.description") };
-		if (page.status === 403 || page.status === 401) return { title: t("errors.unauthorized.title"), desc: t("errors.unauthorized.description") };
-		return { title: t("errors.generic.title"), desc: t("errors.generic.description") };
-	});
+const errorInfo = $derived.by(() => {
+	if (page.status === 404)
+		return { title: t("errors.notFound.title"), desc: t("errors.notFound.description") };
+	if (page.status === 403 || page.status === 401)
+		return { title: t("errors.unauthorized.title"), desc: t("errors.unauthorized.description") };
+	return { title: t("errors.generic.title"), desc: t("errors.generic.description") };
+});
 </script>
 
 <div class="flex min-h-[60vh] items-center justify-center p-4">

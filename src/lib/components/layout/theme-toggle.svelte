@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { theme } from "$lib/state/theme.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { Sun, Moon } from "@lucide/svelte";
+import { Moon, Sun } from "@lucide/svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import { theme } from "$lib/state/theme.svelte";
 </script>
 
 <Button variant="ghost" size="icon" onclick={() => theme.toggle()}>

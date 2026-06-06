@@ -1,18 +1,24 @@
 <script lang="ts">
-	import { Select as SelectPrimitive } from "bits-ui";
-	import { cn } from "$lib/utils/cn";
-	import { Check } from "@lucide/svelte";
-	import type { Snippet } from "svelte";
+import { Check } from "@lucide/svelte";
+import { Select as SelectPrimitive } from "bits-ui";
+import type { Snippet } from "svelte";
+import { cn } from "$lib/utils/cn";
 
-	type Props = {
-		value: string;
-		label?: string;
-		disabled?: boolean;
-		class?: string;
-		children?: Snippet;
-	};
+type Props = {
+	value: string;
+	label?: string;
+	disabled?: boolean;
+	class?: string;
+	children?: Snippet;
+};
 
-	let { value, label, disabled = false, class: className = "", children: childrenSnippet }: Props = $props();
+let {
+	value,
+	label,
+	disabled = false,
+	class: className = "",
+	children: childrenSnippet,
+}: Props = $props();
 </script>
 
 <SelectPrimitive.Item

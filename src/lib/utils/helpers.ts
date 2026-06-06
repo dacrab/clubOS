@@ -1,12 +1,15 @@
-import type { MemberRole, ProductRef, OrderItemView } from "$lib/types/database";
+import type { MemberRole, OrderItemView, ProductRef } from "$lib/types/database";
 
 type BadgeVariant = "destructive" | "default" | "secondary" | "outline";
 
 export const getRoleBadgeVariant = (role: MemberRole | undefined): BadgeVariant =>
-	role === "owner" ? "destructive"
-		: role === "admin" ? "default"
-		: role === "manager" ? "secondary"
-		: "outline";
+	role === "owner"
+		? "destructive"
+		: role === "admin"
+			? "default"
+			: role === "manager"
+				? "secondary"
+				: "outline";
 
 export const shortId = (id: string): string => id.slice(0, 8);
 

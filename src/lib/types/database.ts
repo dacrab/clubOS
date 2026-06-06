@@ -1,7 +1,13 @@
 export type MemberRole = "owner" | "admin" | "manager" | "staff";
 export type BookingType = "birthday" | "football" | "event" | "other";
 export type BookingStatus = "pending" | "confirmed" | "canceled" | "completed" | "no_show";
-export type SubscriptionStatus = "trialing" | "active" | "canceled" | "past_due" | "unpaid" | "paused";
+export type SubscriptionStatus =
+	| "trialing"
+	| "active"
+	| "canceled"
+	| "past_due"
+	| "unpaid"
+	| "paused";
 
 // Limits
 export const PRODUCTS_LIMIT = 500;

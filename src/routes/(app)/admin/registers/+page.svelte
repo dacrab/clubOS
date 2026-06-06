@@ -1,24 +1,31 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import { fmtDate, fmtCurrency } from "$lib/utils/format";
-	import { shortId, getActiveOrderItems } from "$lib/utils/helpers";
-	import PageHeader from "$lib/components/layout/page-header.svelte";
-	import EmptyState from "$lib/components/layout/empty-state.svelte";
-	import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
-	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
-	import { DollarSign, Eye, ChevronDown, ChevronUp } from "@lucide/svelte";
-	import { type OrderView } from "$lib/types/database";
+import { ChevronDown, ChevronUp, DollarSign, Eye } from "@lucide/svelte";
+import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
+import EmptyState from "$lib/components/layout/empty-state.svelte";
+import PageHeader from "$lib/components/layout/page-header.svelte";
+import Badge from "$lib/components/ui/badge/badge.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
+import Table, {
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "$lib/components/ui/table/table.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import type { OrderView } from "$lib/types/database";
+import { fmtCurrency, fmtDate } from "$lib/utils/format";
+import { getActiveOrderItems, shortId } from "$lib/utils/helpers";
 
-	const { data } = $props();
+const { data } = $props();
 
-	let selectedOrder = $state<OrderView | null>(null);
-	let showDialog = $state(false);
-	let expandedSession = $state<string | null>(null);
+let selectedOrder = $state<OrderView | null>(null);
+let showDialog = $state(false);
+let expandedSession = $state<string | null>(null);
 
-	const getSessionOrders = (sid: string) => data.orders.filter((o: OrderView) => o.session_id === sid);
+const getSessionOrders = (sid: string) =>
+	data.orders.filter((o: OrderView) => o.session_id === sid);
 </script>
 
 <div class="space-y-6">

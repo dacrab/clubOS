@@ -1,7 +1,7 @@
 import { redirect } from "@sveltejs/kit";
-import type { PageServerLoad } from "./$types";
 import { getHomeForRole } from "$lib/config/auth";
 import type { MemberRole } from "$lib/types/database";
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const { user, supabase } = locals;

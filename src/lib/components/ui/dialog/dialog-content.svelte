@@ -1,23 +1,23 @@
 <script lang="ts">
-	import { Dialog as DialogPrimitive } from "bits-ui";
-	import { cn } from "$lib/utils/cn";
-	import { X } from "@lucide/svelte";
-	import type { Snippet } from "svelte";
+import { X } from "@lucide/svelte";
+import { Dialog as DialogPrimitive } from "bits-ui";
+import type { Snippet } from "svelte";
+import { cn } from "$lib/utils/cn";
 
-	type Props = {
-		class?: string;
-		children?: Snippet;
-		showClose?: boolean;
-	};
+type Props = {
+	class?: string;
+	children?: Snippet;
+	showClose?: boolean;
+};
 
-	let { class: className = "", children, showClose = true }: Props = $props();
+let { class: className = "", children, showClose = true }: Props = $props();
 
-	function handleInteractOutside(e: Event) {
-		const target = e.target as HTMLElement;
-		if (target?.closest(".flatpickr-calendar")) {
-			e.preventDefault();
-		}
+function handleInteractOutside(e: Event) {
+	const target = e.target as HTMLElement;
+	if (target?.closest(".flatpickr-calendar")) {
+		e.preventDefault();
 	}
+}
 </script>
 
 <DialogPrimitive.Portal>

@@ -1,4 +1,4 @@
-import { json, error } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 import type { RequestHandler } from "./$types";

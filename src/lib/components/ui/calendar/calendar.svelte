@@ -1,25 +1,25 @@
 <script lang="ts">
-	import { Calendar as CalendarPrimitive } from "bits-ui";
-	import { ChevronLeft, ChevronRight } from "@lucide/svelte";
-	import { cn } from "$lib/utils/cn";
-	import { buttonVariants } from "$lib/components/ui/button/button.svelte";
-	import type { DateValue } from "@internationalized/date";
+import type { DateValue } from "@internationalized/date";
+import { ChevronLeft, ChevronRight } from "@lucide/svelte";
+import { Calendar as CalendarPrimitive } from "bits-ui";
+import { buttonVariants } from "$lib/components/ui/button/button.svelte";
+import { cn } from "$lib/utils/cn";
 
-	type Props = {
-		value?: DateValue;
-		placeholder?: DateValue;
-		class?: string;
-		weekdayFormat?: "narrow" | "short" | "long";
-		onValueChange?: (value: DateValue | undefined) => void;
-	};
+type Props = {
+	value?: DateValue;
+	placeholder?: DateValue;
+	class?: string;
+	weekdayFormat?: "narrow" | "short" | "long";
+	onValueChange?: (value: DateValue | undefined) => void;
+};
 
-	let {
-		value = $bindable(),
-		placeholder = $bindable(),
-		class: className,
-		weekdayFormat = "short",
-		onValueChange,
-	}: Props = $props();
+let {
+	value = $bindable(),
+	placeholder = $bindable(),
+	class: className,
+	weekdayFormat = "short",
+	onValueChange,
+}: Props = $props();
 </script>
 
 <CalendarPrimitive.Root

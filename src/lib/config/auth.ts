@@ -3,7 +3,7 @@ import type { MemberRole } from "$lib/types/database";
 export type Plan = "basic" | "pro" | "enterprise";
 export type PlanIcon = "Building2" | "Users" | "Zap";
 
-export interface PlanDef {
+interface PlanDef {
 	id: Plan;
 	name: string;
 	price: string;
@@ -71,5 +71,4 @@ const ROLE_HOME: Record<MemberRole, string> = {
 	staff: "/staff",
 };
 
-export const getHomeForRole = (role: MemberRole | string | null | undefined): string =>
-	role && role in ROLE_HOME ? ROLE_HOME[role as MemberRole] : role ? "/staff" : "/";
+export const getHomeForRole = (role: MemberRole | null): string => (role ? ROLE_HOME[role] : "/");

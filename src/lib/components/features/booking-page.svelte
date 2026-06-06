@@ -1,180 +1,202 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import { toast } from "svelte-sonner";
-	import PageHeader from "$lib/components/layout/page-header.svelte";
-	import EmptyState from "$lib/components/layout/empty-state.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import Label from "$lib/components/ui/label/label.svelte";
-	import Textarea from "$lib/components/ui/textarea/textarea.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
-	import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
-	import Select from "$lib/components/ui/select/select.svelte";
-	import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
-	import SelectContent from "$lib/components/ui/select/select-content.svelte";
-	import SelectItem from "$lib/components/ui/select/select-item.svelte";
-	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
-	import { supabase } from "$lib/utils/supabase";
-	import DatePicker from "$lib/components/ui/date-picker/date-time-picker.svelte";
-	import { fmtDate, tomorrowAt } from "$lib/utils/format";
-	import { settings } from "$lib/state/settings.svelte";
-	import { Plus, Pencil, Trash2, Package } from "@lucide/svelte";
-	import ConfirmDelete from "$lib/components/ui/confirm-delete/confirm-delete.svelte";
-	import Pagination from "$lib/components/ui/pagination/pagination.svelte";
-	import { runCrud } from "$lib/utils/crud";
-	import type { Booking, BookingStatus, BookingType, BookingDetails } from "$lib/types/database";
+import { Package, Pencil, Plus, Trash2 } from "@lucide/svelte";
+import { toast } from "svelte-sonner";
+import EmptyState from "$lib/components/layout/empty-state.svelte";
+import PageHeader from "$lib/components/layout/page-header.svelte";
+import Badge from "$lib/components/ui/badge/badge.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
+import ConfirmDelete from "$lib/components/ui/confirm-delete/confirm-delete.svelte";
+import DatePicker from "$lib/components/ui/date-picker/date-time-picker.svelte";
+import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
+import Input from "$lib/components/ui/input/input.svelte";
+import Label from "$lib/components/ui/label/label.svelte";
+import Pagination from "$lib/components/ui/pagination/pagination.svelte";
+import Select from "$lib/components/ui/select/select.svelte";
+import SelectContent from "$lib/components/ui/select/select-content.svelte";
+import SelectItem from "$lib/components/ui/select/select-item.svelte";
+import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
+import Table, {
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "$lib/components/ui/table/table.svelte";
+import Textarea from "$lib/components/ui/textarea/textarea.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import { settings } from "$lib/state/settings.svelte";
+import type { Booking, BookingDetails, BookingStatus, BookingType } from "$lib/types/database";
+import { runCrud } from "$lib/utils/crud";
+import { fmtDate, tomorrowAt } from "$lib/utils/format";
+import { supabase } from "$lib/utils/supabase";
 
-	type Props = {
-		type: BookingType;
-		bookings: Booking[];
-		user: { id: string; tenantId: string | null; facilityId: string | null };
-		icon?: typeof Package;
-		page?: number;
-		totalPages?: number;
-		search?: string;
-	};
+type Props = {
+	type: BookingType;
+	bookings: Booking[];
+	user: { id: string; tenantId: string | null; facilityId: string | null };
+	icon?: typeof Package;
+	page?: number;
+	totalPages?: number;
+	search?: string;
+};
 
-	let { type, bookings, user, icon = Package, page = 1, totalPages = 1, search = "" }: Props = $props();
+let {
+	type,
+	bookings,
+	user,
+	icon = Package,
+	page = 1,
+	totalPages = 1,
+	search = "",
+}: Props = $props();
 
-	const isBirthday = $derived(type === "birthday");
-	const prefix = $derived(isBirthday ? "bookings.birthday" : "bookings.football");
+const isBirthday = $derived(type === "birthday");
+const prefix = $derived(isBirthday ? "bookings.birthday" : "bookings.football");
 
-	// Sensible booking defaults (not exposed in settings UI)
-	const DEFAULT_HOUR = { birthday: 15, football: 18 } as const;
-	const FOOTBALL_PLAYERS = { default: 10, min: 2, max: 22 } as const;
+// Sensible booking defaults (not exposed in settings UI)
+const DEFAULT_HOUR = { birthday: 15, football: 18 } as const;
+const FOOTBALL_PLAYERS = { default: 10, min: 2, max: 22 } as const;
 
-	let showDialog = $state(false);
-	let editingItem = $state<Booking | null>(null);
-	let saving = $state(false);
-	type FormData = {
-		customer_name: string;
-		customer_phone: string;
-		starts_at: string;
-		notes: string;
-		status: BookingStatus;
-		num_children: number;
-		num_adults: number;
-		field_number: string;
-		num_players: number;
-	};
-	let formData = $state<FormData>({
-		customer_name: "",
-		customer_phone: "",
-		starts_at: "",
-		notes: "",
-		status: "confirmed",
-		num_children: 1,
-		num_adults: 0,
-		field_number: "1",
-		num_players: FOOTBALL_PLAYERS.default,
-	});
+let showDialog = $state(false);
+let editingItem = $state<Booking | null>(null);
+let saving = $state(false);
+type FormData = {
+	customer_name: string;
+	customer_phone: string;
+	starts_at: string;
+	notes: string;
+	status: BookingStatus;
+	num_children: number;
+	num_adults: number;
+	field_number: string;
+	num_players: number;
+};
+let formData = $state<FormData>({
+	customer_name: "",
+	customer_phone: "",
+	starts_at: "",
+	notes: "",
+	status: "confirmed",
+	num_children: 1,
+	num_adults: 0,
+	field_number: "1",
+	num_players: FOOTBALL_PLAYERS.default,
+});
 
-	const getStatusBadge = (s: BookingStatus) =>
-		s === "confirmed" ? ("success" as const) : s === "canceled" ? ("destructive" as const) : ("secondary" as const);
+const getStatusBadge = (s: BookingStatus) =>
+	s === "confirmed"
+		? ("success" as const)
+		: s === "canceled"
+			? ("destructive" as const)
+			: ("secondary" as const);
 
-	function openDialog(item?: Booking) {
-		editingItem = item ?? null;
-		if (item) {
-			const details = item.details ?? {};
-			formData = {
-				customer_name: item.customer_name,
-				customer_phone: item.customer_phone ?? "",
-				starts_at: item.starts_at.slice(0, 16),
-				notes: item.notes ?? "",
-				status: item.status,
-				num_children: details.num_children ?? 1,
-				num_adults: details.num_adults ?? 0,
-				field_number: details.field_number ?? "1",
-				num_players: details.num_players ?? 10,
-			};
-		} else {
-			const defaultHour = isBirthday ? DEFAULT_HOUR.birthday : DEFAULT_HOUR.football;
-			const pad = (n: number) => String(n).padStart(2, "0");
-			const d = tomorrowAt(defaultHour);
-			const startsAt = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(defaultHour)}:00`;
-			formData = {
-				customer_name: "",
-				customer_phone: "",
-				starts_at: startsAt,
-				notes: "",
-				status: "confirmed",
-				num_children: 1,
-				num_adults: 0,
-				field_number: "1",
-				num_players: FOOTBALL_PLAYERS.default,
-			};
-		}
-		showDialog = true;
+function openDialog(item?: Booking) {
+	editingItem = item ?? null;
+	if (item) {
+		const details = item.details ?? {};
+		formData = {
+			customer_name: item.customer_name,
+			customer_phone: item.customer_phone ?? "",
+			starts_at: item.starts_at.slice(0, 16),
+			notes: item.notes ?? "",
+			status: item.status,
+			num_children: details.num_children ?? 1,
+			num_adults: details.num_adults ?? 0,
+			field_number: details.field_number ?? "1",
+			num_players: details.num_players ?? 10,
+		};
+	} else {
+		const defaultHour = isBirthday ? DEFAULT_HOUR.birthday : DEFAULT_HOUR.football;
+		const pad = (n: number) => String(n).padStart(2, "0");
+		const d = tomorrowAt(defaultHour);
+		const startsAt = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(defaultHour)}:00`;
+		formData = {
+			customer_name: "",
+			customer_phone: "",
+			starts_at: startsAt,
+			notes: "",
+			status: "confirmed",
+			num_children: 1,
+			num_adults: 0,
+			field_number: "1",
+			num_players: FOOTBALL_PLAYERS.default,
+		};
 	}
+	showDialog = true;
+}
 
-	async function checkConflict(): Promise<boolean> {
-		const time = new Date(formData.starts_at);
-		const buffer = isBirthday ? settings.current.appointment_buffer_min : 120;
-		let query = supabase
-			.from("bookings")
-			.select("id")
-			.eq("facility_id", user.facilityId)
-			.eq("type", type)
-			.neq("status", "canceled")
-			.gte("starts_at", new Date(time.getTime() - buffer * 60000).toISOString())
-			.lte("starts_at", new Date(time.getTime() + buffer * 60000).toISOString());
+async function checkConflict(): Promise<boolean> {
+	const time = new Date(formData.starts_at);
+	const buffer = isBirthday ? settings.current.appointment_buffer_min : 120;
+	let query = supabase
+		.from("bookings")
+		.select("id")
+		.eq("facility_id", user.facilityId)
+		.eq("type", type)
+		.neq("status", "canceled")
+		.gte("starts_at", new Date(time.getTime() - buffer * 60000).toISOString())
+		.lte("starts_at", new Date(time.getTime() + buffer * 60000).toISOString());
 
-		if (editingItem) query = query.neq("id", editingItem.id);
-		const { data } = await query;
-		return (data?.length ?? 0) > 0;
+	if (editingItem) query = query.neq("id", editingItem.id);
+	const { data } = await query;
+	return (data?.length ?? 0) > 0;
+}
+
+async function handleSave(): Promise<void> {
+	if (!formData.customer_name || !formData.customer_phone || !formData.starts_at) {
+		toast.error(t("common.error"));
+		return;
 	}
-
-	async function handleSave(): Promise<void> {
-		if (!formData.customer_name || !formData.customer_phone || !formData.starts_at) {
-			toast.error(t("common.error"));
+	saving = true;
+	try {
+		if (settings.current.prevent_overlaps && (await checkConflict())) {
+			toast.error(t(`${prefix}.conflict`));
 			return;
 		}
-		saving = true;
-		try {
-			if (settings.current.prevent_overlaps && (await checkConflict())) {
-				toast.error(t(`${prefix}.conflict`));
-				return;
-			}
 
-			const startsAt = new Date(formData.starts_at);
-			const durationMin = isBirthday ? settings.current.birthday_duration_min : settings.current.football_duration_min;
-			const endsAt = new Date(startsAt.getTime() + durationMin * 60 * 1000);
+		const startsAt = new Date(formData.starts_at);
+		const durationMin = isBirthday
+			? settings.current.birthday_duration_min
+			: settings.current.football_duration_min;
+		const endsAt = new Date(startsAt.getTime() + durationMin * 60 * 1000);
 
-			const details: BookingDetails = isBirthday
-				? { num_children: formData.num_children, num_adults: formData.num_adults }
-				: { field_number: formData.field_number, num_players: formData.num_players };
+		const details: BookingDetails = isBirthday
+			? { num_children: formData.num_children, num_adults: formData.num_adults }
+			: { field_number: formData.field_number, num_players: formData.num_players };
 
-			const payload = {
-				facility_id: user.facilityId,
-				type,
-				customer_name: formData.customer_name,
-				customer_phone: formData.customer_phone,
-				starts_at: startsAt.toISOString(),
-				ends_at: endsAt.toISOString(),
-				status: formData.status,
-				notes: formData.notes || null,
-				details,
-			};
+		const payload = {
+			facility_id: user.facilityId,
+			type,
+			customer_name: formData.customer_name,
+			customer_phone: formData.customer_phone,
+			starts_at: startsAt.toISOString(),
+			ends_at: endsAt.toISOString(),
+			status: formData.status,
+			notes: formData.notes || null,
+			details,
+		};
 
-			const ok = await runCrud(() => editingItem
+		const ok = await runCrud(() =>
+			editingItem
 				? supabase.from("bookings").update(payload).eq("id", editingItem.id)
-				: supabase.from("bookings").insert({ ...payload, created_by: user.id }));
-			if (ok) showDialog = false;
-		} finally {
-			saving = false;
-		}
+				: supabase.from("bookings").insert({ ...payload, created_by: user.id }),
+		);
+		if (ok) showDialog = false;
+	} finally {
+		saving = false;
 	}
+}
 
-	let deleteTarget = $state<Booking | null>(null);
-	let deleteOpen = $state(false);
+let deleteTarget = $state<Booking | null>(null);
+let deleteOpen = $state(false);
 
-	async function confirmDelete(): Promise<void> {
-		if (!deleteTarget) return;
-		const target = deleteTarget;
-		const ok = await runCrud(() => supabase.from("bookings").delete().eq("id", target.id));
-		if (ok) deleteOpen = false;
-	}
+async function confirmDelete(): Promise<void> {
+	if (!deleteTarget) return;
+	const target = deleteTarget;
+	const ok = await runCrud(() => supabase.from("bookings").delete().eq("id", target.id));
+	if (ok) deleteOpen = false;
+}
 </script>
 
 <div class="space-y-6">

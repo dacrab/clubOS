@@ -1,45 +1,57 @@
 <script lang="ts">
-	import { toast } from "svelte-sonner";
-	import { t } from "$lib/i18n/index.svelte";
-	import { supabase } from "$lib/utils/supabase";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import Label from "$lib/components/ui/label/label.svelte";
-	import Card, { CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "$lib/components/ui/card/card.svelte";
-	import Header from "$lib/components/layout/header.svelte";
-	import { ArrowRight, Loader2 } from "@lucide/svelte";
+import { ArrowRight, Loader2 } from "@lucide/svelte";
+import { toast } from "svelte-sonner";
+import Header from "$lib/components/layout/header.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card, {
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from "$lib/components/ui/card/card.svelte";
+import Input from "$lib/components/ui/input/input.svelte";
+import Label from "$lib/components/ui/label/label.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import { supabase } from "$lib/utils/supabase";
 
-	let email = $state("");
-	let password = $state("");
-	let confirmPassword = $state("");
-	let fullName = $state("");
-	let loading = $state(false);
+let email = $state("");
+let password = $state("");
+let confirmPassword = $state("");
+let fullName = $state("");
+let loading = $state(false);
 
-	async function handleSignup(e: Event) {
-		e.preventDefault();
-		if (!email || !password || !confirmPassword || !fullName) { toast.error(t("signup.fillAllFields")); return; }
-
-		loading = true;
-		try {
-			if (password !== confirmPassword) throw new Error(t("auth.passwordMismatch"));
-			if (password.length < 8) throw new Error(t("signup.passwordTooShort"));
-			
-			const { data, error } = await supabase.auth.signUp({
-				email,
-				password,
-				options: { data: { full_name: fullName, role: "admin" }, emailRedirectTo: `${window.location.origin}/onboarding` },
-			});
-			if (error) throw error;
-			if (!data.user) throw new Error("Signup failed");
-			
-			toast.success(t("signup.accountCreated"));
-			window.location.href = "/onboarding";
-		} catch (err) {
-			const message = err instanceof Error ? err.message : t("common.error");
-			toast.error(message);
-			loading = false;
-		}
+async function handleSignup(e: Event) {
+	e.preventDefault();
+	if (!email || !password || !confirmPassword || !fullName) {
+		toast.error(t("signup.fillAllFields"));
+		return;
 	}
+
+	loading = true;
+	try {
+		if (password !== confirmPassword) throw new Error(t("auth.passwordMismatch"));
+		if (password.length < 8) throw new Error(t("signup.passwordTooShort"));
+
+		const { data, error } = await supabase.auth.signUp({
+			email,
+			password,
+			options: {
+				data: { full_name: fullName, role: "admin" },
+				emailRedirectTo: `${window.location.origin}/onboarding`,
+			},
+		});
+		if (error) throw error;
+		if (!data.user) throw new Error("Signup failed");
+
+		toast.success(t("signup.accountCreated"));
+		window.location.href = "/onboarding";
+	} catch (err) {
+		const message = err instanceof Error ? err.message : t("common.error");
+		toast.error(message);
+		loading = false;
+	}
+}
 </script>
 
 <div class="page-public">

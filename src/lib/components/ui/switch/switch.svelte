@@ -1,15 +1,20 @@
 <script lang="ts">
-	import { Switch as SwitchPrimitive } from "bits-ui";
-	import { cn } from "$lib/utils/cn";
+import { Switch as SwitchPrimitive } from "bits-ui";
+import { cn } from "$lib/utils/cn";
 
-	type Props = {
-		checked?: boolean;
-		onCheckedChange?: (checked: boolean) => void;
-		disabled?: boolean;
-		class?: string;
-	};
+type Props = {
+	checked?: boolean;
+	onCheckedChange?: (checked: boolean) => void;
+	disabled?: boolean;
+	class?: string;
+};
 
-	let { checked = $bindable(false), onCheckedChange, disabled = false, class: className = "" }: Props = $props();
+let {
+	checked = $bindable(false),
+	onCheckedChange,
+	disabled = false,
+	class: className = "",
+}: Props = $props();
 </script>
 
 <SwitchPrimitive.Root

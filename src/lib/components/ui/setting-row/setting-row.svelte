@@ -1,15 +1,15 @@
 <script lang="ts">
-	import Label from "$lib/components/ui/label/label.svelte";
-	import type { Snippet } from "svelte";
+import type { Snippet } from "svelte";
+import Label from "$lib/components/ui/label/label.svelte";
 
-	type Props = {
-		id?: string;
-		label: string;
-		description?: string;
-		children: Snippet;
-	};
+type Props = {
+	id?: string;
+	label: string;
+	description?: string;
+	children: Snippet;
+};
 
-	let { id, label, description, children }: Props = $props();
+let { id, label, description, children }: Props = $props();
 </script>
 
 <div class="flex items-center justify-between">

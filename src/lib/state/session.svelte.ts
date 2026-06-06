@@ -6,13 +6,21 @@ function createSession(): {
 	setUser: (u: SessionUser | null) => void;
 	clear: () => void;
 } {
-	let user = $state<SessionUser | null>(null);
+	let user = $state(null as SessionUser | null);
 
 	return {
-		get user() { return user; },
-		get isAuthenticated() { return user !== null; },
-		setUser(u) { user = u; },
-		clear() { user = null; },
+		get user() {
+			return user;
+		},
+		get isAuthenticated() {
+			return user !== null;
+		},
+		setUser(u) {
+			user = u;
+		},
+		clear() {
+			user = null;
+		},
 	};
 }
 

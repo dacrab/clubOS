@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { Popover as PopoverPrimitive } from "bits-ui";
-	import { cn } from "$lib/utils/cn";
-	import type { Snippet } from "svelte";
+import { Popover as PopoverPrimitive } from "bits-ui";
+import type { Snippet } from "svelte";
+import { cn } from "$lib/utils/cn";
 
-	type Props = {
-		class?: string;
-		children?: Snippet;
-		align?: "start" | "center" | "end";
-		sideOffset?: number;
-	};
+type Props = {
+	class?: string;
+	children?: Snippet;
+	align?: "start" | "center" | "end";
+	sideOffset?: number;
+};
 
-	let { class: className, children, align = "center", sideOffset = 4 }: Props = $props();
+let { class: className, children, align = "center", sideOffset = 4 }: Props = $props();
 </script>
 
 <PopoverPrimitive.Portal>

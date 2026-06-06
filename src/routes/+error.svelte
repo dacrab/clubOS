@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { page } from "$app/state";
-	import { t } from "$lib/i18n/index.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { Home } from "@lucide/svelte";
+import { Home } from "@lucide/svelte";
+import { page } from "$app/state";
+import Button from "$lib/components/ui/button/button.svelte";
+import { t } from "$lib/i18n/index.svelte";
 
-	const is404 = $derived(page.status === 404);
-	const isUnauthorized = $derived(page.status === 401 || page.status === 403);
+const is404 = $derived(page.status === 404);
+const isUnauthorized = $derived(page.status === 401 || page.status === 403);
 </script>
 
 <div class="flex min-h-screen flex-col items-center justify-center px-4 text-center">

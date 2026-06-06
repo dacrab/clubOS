@@ -1,20 +1,25 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Card, { CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
-	import { PLANS, type Plan, type PlanIcon } from "$lib/config/auth";
-	import { Building2, Users, Zap, Check, Loader2 } from "@lucide/svelte";
+import { Building2, Check, Loader2, Users, Zap } from "@lucide/svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card, {
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "$lib/components/ui/card/card.svelte";
+import { PLANS, type Plan, type PlanIcon } from "$lib/config/auth";
+import { t } from "$lib/i18n/index.svelte";
 
-	const ICONS = { Building2, Users, Zap } as const satisfies Record<PlanIcon, unknown>;
+const ICONS = { Building2, Users, Zap } as const satisfies Record<PlanIcon, unknown>;
 
-	type Props = {
-		loading?: boolean;
-		selectedPlan?: Plan | null;
-		onSelect: (plan: Plan) => void;
-		variant?: "grid" | "list";
-	};
+type Props = {
+	loading?: boolean;
+	selectedPlan?: Plan | null;
+	onSelect: (plan: Plan) => void;
+	variant?: "grid" | "list";
+};
 
-	let { loading = false, selectedPlan = null, onSelect, variant = "grid" }: Props = $props();
+let { loading = false, selectedPlan = null, onSelect, variant = "grid" }: Props = $props();
 </script>
 
 {#if variant === "grid"}

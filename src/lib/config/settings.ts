@@ -1,6 +1,6 @@
-export type DateFormatType = "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD" | "DD.MM.YYYY" | "DD-MM-YYYY";
-export type TimeFormatType = "24h" | "12h";
-export type CurrencyCodeType = "EUR" | "USD" | "GBP" | "CHF" | "PLN" | "CZK" | "SEK" | "NOK" | "DKK";
+type DateFormatType = "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD" | "DD.MM.YYYY" | "DD-MM-YYYY";
+type TimeFormatType = "24h" | "12h";
+type CurrencyCodeType = "EUR" | "USD" | "GBP" | "CHF" | "PLN" | "CZK" | "SEK" | "NOK" | "DKK";
 
 export interface TenantSettings {
 	// Regional
@@ -32,8 +32,10 @@ export const DEFAULT_SETTINGS: TenantSettings = {
 	football_duration_min: 120,
 };
 
-export const mergeSettings = (s: Partial<TenantSettings> | null): TenantSettings =>
-	({ ...DEFAULT_SETTINGS, ...(s ?? {}) });
+export const mergeSettings = (s: Partial<TenantSettings> | null): TenantSettings => ({
+	...DEFAULT_SETTINGS,
+	...(s ?? {}),
+});
 
 export const CURRENCY_OPTIONS = [
 	{ value: "EUR", labelKey: "settings.currencies.EUR", symbol: "€" },

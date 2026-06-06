@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
-import type { RequestHandler } from "./$types";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
-import { TRIAL_DAYS, DEFAULT_TIMEZONE } from "$lib/types/database";
+import { DEFAULT_TIMEZONE, TRIAL_DAYS } from "$lib/types/database";
+import type { RequestHandler } from "./$types";
 
 interface Body {
 	tenant?: { name: string; slug: string };
@@ -13,7 +13,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) return json({ error: "Unauthorized" }, { status: 401 });
 
 	const { tenant, facility, createTrial = true } = (await request.json()) as Body;
-	if (!tenant?.name || !facility?.name) return json({ error: "Missing required fields" }, { status: 400 });
+	if (!tenant?.name || !facility?.name)
+		return json({ error: "Missing required fields" }, { status: 400 });
 
 	const { supabase } = locals;
 	const admin = getSupabaseAdmin();
@@ -29,8 +30,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		if (existing) return json({ tenantId: existing.tenant_id });
 
 		const { data: tenantData, error: tenantError } = await admin
-			.from("tenants").insert({ name: tenant.name, slug: tenant.slug })
-			.select().single();
+			.from("tenants")
+			.insert({ name: tenant.name, slug: tenant.slug })
+			.select()
+			.single();
 		if (tenantError) throw tenantError;
 
 		const { error: facilityError } = await admin.from("facilities").insert({
@@ -66,6 +69,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 		return json({ tenantId: tenantData.id });
 	} catch (err) {
-		return json({ error: err instanceof Error ? err.message : "Failed to complete onboarding" }, { status: 500 });
+		return json(
+			{ error: err instanceof Error ? err.message : "Failed to complete onboarding" },
+			{ status: 500 },
+		);
 	}
 };

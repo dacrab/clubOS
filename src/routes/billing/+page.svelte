@@ -1,40 +1,45 @@
 <script lang="ts">
-	import { toast } from "svelte-sonner";
-	import { t } from "$lib/i18n/index.svelte";
-	import PlanSelector from "$lib/components/features/plan-selector.svelte";
-	import Header from "$lib/components/layout/header.svelte";
-	import { PLANS, type Plan } from "$lib/config/auth";
-	import { AlertCircle } from "@lucide/svelte";
+import { AlertCircle } from "@lucide/svelte";
+import { toast } from "svelte-sonner";
+import PlanSelector from "$lib/components/features/plan-selector.svelte";
+import Header from "$lib/components/layout/header.svelte";
+import { PLANS, type Plan } from "$lib/config/auth";
+import { t } from "$lib/i18n/index.svelte";
 
-	const { data } = $props();
+const { data } = $props();
 
-	let loading = $state(false);
-	let selectedPlan = $state<Plan | null>(null);
+let loading = $state(false);
+let selectedPlan = $state<Plan | null>(null);
 
-	async function handleSelect(planId: Plan) {
-		if (!data.user?.id || !data.user?.email) {
-			toast.error(t("common.error"));
-			return;
-		}
-		selectedPlan = planId;
-		const plan = PLANS.find((p) => p.id === planId);
-		if (!plan) return;
-
-		loading = true;
-		try {
-			const res = await fetch("/api/stripe/checkout", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ priceId: plan.priceId, userId: data.user.id, email: data.user.email, tenantId: data.tenantId }),
-			});
-			const { url, error: stripeError } = await res.json();
-			if (stripeError) throw new Error(stripeError);
-			window.location.href = url;
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t("common.error"));
-			loading = false;
-		}
+async function handleSelect(planId: Plan) {
+	if (!data.user?.id || !data.user?.email) {
+		toast.error(t("common.error"));
+		return;
 	}
+	selectedPlan = planId;
+	const plan = PLANS.find((p) => p.id === planId);
+	if (!plan) return;
+
+	loading = true;
+	try {
+		const res = await fetch("/api/stripe/checkout", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				priceId: plan.priceId,
+				userId: data.user.id,
+				email: data.user.email,
+				tenantId: data.tenantId,
+			}),
+		});
+		const { url, error: stripeError } = await res.json();
+		if (stripeError) throw new Error(stripeError);
+		window.location.href = url;
+	} catch (err) {
+		toast.error(err instanceof Error ? err.message : t("common.error"));
+		loading = false;
+	}
+}
 </script>
 
 <div class="page-public">

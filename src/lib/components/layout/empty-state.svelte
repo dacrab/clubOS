@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { cn } from "$lib/utils/cn";
-	import { Package } from "@lucide/svelte";
-	import type { Snippet } from "svelte";
+import { Package } from "@lucide/svelte";
+import type { Snippet } from "svelte";
+import { cn } from "$lib/utils/cn";
 
-	type Props = {
-		title: string;
-		description?: string;
-		icon?: typeof Package;
-		class?: string;
-		actions?: Snippet;
-	};
+type Props = {
+	title: string;
+	description?: string;
+	icon?: typeof Package;
+	class?: string;
+	actions?: Snippet;
+};
 
-	let { title, description, icon: Icon = Package, class: className = "", actions }: Props = $props();
+let { title, description, icon: Icon = Package, class: className = "", actions }: Props = $props();
 </script>
 
 <div class={cn("flex flex-col items-center justify-center py-12 text-center", className)}>

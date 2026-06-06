@@ -1,31 +1,72 @@
+import type { Session, User } from "@supabase/supabase-js";
 import { vi } from "vitest";
-import type { User, Session } from "@supabase/supabase-js";
 import type { MemberRole, SubscriptionStatus } from "$lib/types/database";
 
-export interface MockUser { id: string; email: string; role?: MemberRole }
-export interface MockTenant { id: string; name: string; slug: string }
-export interface MockMembership { userId: string; tenantId: string; facilityId: string | null; role: MemberRole; isPrimary: boolean }
-export interface MockSubscription { tenantId: string; status: SubscriptionStatus; trialEnd?: Date; currentPeriodEnd?: Date; stripeCustomerId?: string }
+export interface MockUser {
+	id: string;
+	email: string;
+	role?: MemberRole;
+}
+export interface MockTenant {
+	id: string;
+	name: string;
+	slug: string;
+}
+export interface MockMembership {
+	userId: string;
+	tenantId: string;
+	facilityId: string | null;
+	role: MemberRole;
+	isPrimary: boolean;
+}
+export interface MockSubscription {
+	tenantId: string;
+	status: SubscriptionStatus;
+	trialEnd?: Date;
+	currentPeriodEnd?: Date;
+	stripeCustomerId?: string;
+}
 
 export const generateId = (): string => `test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const futureDate = (days: number): Date => new Date(Date.now() + days * 86_400_000);
 
-export const createMockUser = (o: Partial<MockUser> = {}): MockUser =>
-	({ id: generateId(), email: `test-${Date.now()}@example.com`, role: "staff", ...o });
+export const createMockUser = (o: Partial<MockUser> = {}): MockUser => ({
+	id: generateId(),
+	email: `test-${Date.now()}@example.com`,
+	role: "staff",
+	...o,
+});
 
-export const createMockTenant = (o: Partial<MockTenant> = {}): MockTenant =>
-	({ id: generateId(), name: `Tenant ${Date.now()}`, slug: `tenant-${Date.now()}`, ...o });
+export const createMockTenant = (o: Partial<MockTenant> = {}): MockTenant => ({
+	id: generateId(),
+	name: `Tenant ${Date.now()}`,
+	slug: `tenant-${Date.now()}`,
+	...o,
+});
 
 export const createMockMembership = (
 	userId: string,
 	tenantId: string,
 	o: Partial<Omit<MockMembership, "userId" | "tenantId">> = {},
-): MockMembership => ({ userId, tenantId, facilityId: null, role: "staff", isPrimary: false, ...o });
+): MockMembership => ({
+	userId,
+	tenantId,
+	facilityId: null,
+	role: "staff",
+	isPrimary: false,
+	...o,
+});
 
 export const createMockSubscription = (
 	tenantId: string,
 	o: Partial<Omit<MockSubscription, "tenantId">> = {},
-): MockSubscription => ({ tenantId, status: "trialing", trialEnd: futureDate(14), currentPeriodEnd: futureDate(14), ...o });
+): MockSubscription => ({
+	tenantId,
+	status: "trialing",
+	trialEnd: futureDate(14),
+	currentPeriodEnd: futureDate(14),
+	...o,
+});
 
 export interface SupabaseMockConfig {
 	user?: MockUser | null;
@@ -50,29 +91,49 @@ const buildAuthUser = (u: MockUser): User => ({
 	updated_at: new Date().toISOString(),
 });
 
-export const createSupabaseMock = (config: SupabaseMockConfig = {}): {
+export const createSupabaseMock = (
+	config: SupabaseMockConfig = {},
+): {
 	auth: { getUser: ReturnType<typeof vi.fn>; getSession: ReturnType<typeof vi.fn> };
 	from: ReturnType<typeof vi.fn>;
 	rpc: ReturnType<typeof vi.fn>;
 } => {
 	const { user, memberships = [], subscriptions = [], tenants = [] } = config;
 	const authUser = user ? buildAuthUser(user) : null;
-	const session: Session | null = authUser ? {
-		access_token: `token-${Date.now()}`,
-		refresh_token: `refresh-${Date.now()}`,
-		expires_in: 3600,
-		expires_at: Math.floor(Date.now() / 1000) + 3600,
-		token_type: "bearer",
-		user: authUser,
-	} : null;
+	const session: Session | null = authUser
+		? {
+				access_token: `token-${Date.now()}`,
+				refresh_token: `refresh-${Date.now()}`,
+				expires_in: 3600,
+				expires_at: Math.floor(Date.now() / 1000) + 3600,
+				token_type: "bearer",
+				user: authUser,
+			}
+		: null;
 
 	const tableData: Record<string, () => Record<string, unknown>[]> = {
-		memberships: () => memberships.map((m) => ({ user_id: m.userId, tenant_id: m.tenantId, facility_id: m.facilityId, role: m.role, is_primary: m.isPrimary })),
-		subscriptions: () => subscriptions.map((s) => ({ tenant_id: s.tenantId, status: s.status, trial_end: s.trialEnd?.toISOString(), current_period_end: s.currentPeriodEnd?.toISOString() })),
+		memberships: () =>
+			memberships.map((m) => ({
+				user_id: m.userId,
+				tenant_id: m.tenantId,
+				facility_id: m.facilityId,
+				role: m.role,
+				is_primary: m.isPrimary,
+			})),
+		subscriptions: () =>
+			subscriptions.map((s) => ({
+				tenant_id: s.tenantId,
+				status: s.status,
+				stripe_customer_id: s.stripeCustomerId ?? null,
+				trial_end: s.trialEnd?.toISOString(),
+				current_period_end: s.currentPeriodEnd?.toISOString(),
+			})),
 		tenants: () => tenants.map((t) => ({ id: t.id, name: t.name, slug: t.slug })),
 	};
 
-	const createBuilder = (table: string): {
+	const createBuilder = (
+		table: string,
+	): {
 		select: ReturnType<typeof vi.fn>;
 		eq: ReturnType<typeof vi.fn>;
 		order: ReturnType<typeof vi.fn>;
@@ -82,13 +143,18 @@ export const createSupabaseMock = (config: SupabaseMockConfig = {}): {
 	} => {
 		let filters: { col: string; val: unknown }[] = [];
 		const fetchOne = (): Record<string, unknown> | null => {
-			const rows = (tableData[table]?.() ?? []).filter((r) => filters.every((f) => (r as Record<string, unknown>)[f.col] === f.val));
+			const rows = (tableData[table]?.() ?? []).filter((r) =>
+				filters.every((f) => (r as Record<string, unknown>)[f.col] === f.val),
+			);
 			filters = [];
 			return rows[0] ?? null;
 		};
 		const b = {
 			select: vi.fn().mockReturnThis(),
-			eq: vi.fn((c, v) => { filters.push({ col: c, val: v }); return b; }),
+			eq: vi.fn((c, v) => {
+				filters.push({ col: c, val: v });
+				return b;
+			}),
 			order: vi.fn().mockReturnThis(),
 			limit: vi.fn().mockReturnThis(),
 			single: vi.fn(() => {
@@ -101,20 +167,30 @@ export const createSupabaseMock = (config: SupabaseMockConfig = {}): {
 	};
 
 	const primary = memberships[0] ?? null;
-	const subscription = primary ? subscriptions.find((s) => s.tenantId === primary.tenantId) ?? null : null;
-	const tenant = primary ? tenants.find((t) => t.id === primary.tenantId) ?? null : null;
+	const subscription = primary
+		? (subscriptions.find((s) => s.tenantId === primary.tenantId) ?? null)
+		: null;
+	const tenant = primary ? (tenants.find((t) => t.id === primary.tenantId) ?? null) : null;
 
-	const userContext = primary ? {
-		membership: { role: primary.role, tenantId: primary.tenantId, facilityId: primary.facilityId },
-		subscription: subscription ? {
-			status: subscription.status,
-			trialEnd: subscription.trialEnd?.toISOString() ?? null,
-			periodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
-		} : null,
-		tenant: tenant ? { id: tenant.id, name: tenant.name, settings: {} } : null,
-		profile: { fullName: authUser?.user_metadata?.full_name ?? "Test" },
-		activeSession: null,
-	} : null;
+	const userContext = primary
+		? {
+				membership: {
+					role: primary.role,
+					tenantId: primary.tenantId,
+					facilityId: primary.facilityId,
+				},
+				subscription: subscription
+					? {
+							status: subscription.status,
+							trialEnd: subscription.trialEnd?.toISOString() ?? null,
+							periodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
+						}
+					: null,
+				tenant: tenant ? { id: tenant.id, name: tenant.name, settings: {} } : null,
+				profile: { fullName: authUser?.user_metadata?.full_name ?? "Test" },
+				activeSession: null,
+			}
+		: null;
 
 	return {
 		auth: {
@@ -130,7 +206,9 @@ export const createSupabaseMock = (config: SupabaseMockConfig = {}): {
 	};
 };
 
-export const createMockRequest = (o: { method?: string; body?: unknown; headers?: Record<string, string> } = {}): Request => {
+export const createMockRequest = (
+	o: { method?: string; body?: unknown; headers?: Record<string, string> } = {},
+): Request => {
 	const { method = "GET", body, headers = {} } = o;
 	return new Request("http://localhost", {
 		method,
@@ -139,7 +217,9 @@ export const createMockRequest = (o: { method?: string; body?: unknown; headers?
 	});
 };
 
-export const createMockLocals = (config: SupabaseMockConfig = {}): {
+export const createMockLocals = (
+	config: SupabaseMockConfig = {},
+): {
 	user: User | null;
 	session: Session | null;
 	supabase: ReturnType<typeof createSupabaseMock>;
@@ -153,7 +233,10 @@ export const createMockLocals = (config: SupabaseMockConfig = {}): {
 	};
 };
 
-const buildScenario = (role: MemberRole, subOverrides: Partial<Omit<MockSubscription, "tenantId">> = {}): SupabaseMockConfig => {
+const buildScenario = (
+	role: MemberRole,
+	subOverrides: Partial<Omit<MockSubscription, "tenantId">> = {},
+): SupabaseMockConfig => {
 	const user = createMockUser({ role });
 	const tenant = createMockTenant();
 	return {
@@ -167,7 +250,8 @@ const buildScenario = (role: MemberRole, subOverrides: Partial<Omit<MockSubscrip
 export const scenarios = {
 	unauthenticated: (): SupabaseMockConfig => ({}),
 	needsOnboarding: (): SupabaseMockConfig => ({ user: createMockUser() }),
-	expiredTrial: (): SupabaseMockConfig => buildScenario("owner", { trialEnd: futureDate(-1), currentPeriodEnd: futureDate(-1) }),
-	activeSubscription: (role: MemberRole = "owner"): SupabaseMockConfig => buildScenario(role, { status: "active", currentPeriodEnd: futureDate(30) }),
-	activeTrial: (role: MemberRole = "owner"): SupabaseMockConfig => buildScenario(role),
+	expiredTrial: (): SupabaseMockConfig =>
+		buildScenario("owner", { trialEnd: futureDate(-1), currentPeriodEnd: futureDate(-1) }),
+	activeSubscription: (role: MemberRole = "owner"): SupabaseMockConfig =>
+		buildScenario(role, { status: "active", currentPeriodEnd: futureDate(30) }),
 };

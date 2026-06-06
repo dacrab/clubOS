@@ -1,73 +1,77 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import PageHeader from "$lib/components/layout/page-header.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import Label from "$lib/components/ui/label/label.svelte";
-	import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
-	import Separator from "$lib/components/ui/separator/separator.svelte";
-	import Dialog from "$lib/components/ui/dialog/dialog.svelte";
-	import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
-	import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
-	import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
-	import DialogDescription from "$lib/components/ui/dialog/dialog-description.svelte";
-	import DialogFooter from "$lib/components/ui/dialog/dialog-footer.svelte";
-	import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
-	import NewSaleDialog from "$lib/components/features/new-sale-dialog.svelte";
-	import RecentOrders from "$lib/components/features/recent-orders.svelte";
-	import { fmtDate, fmtCurrency } from "$lib/utils/format";
-	import { runCrud } from "$lib/utils/crud";
-	import { supabase } from "$lib/utils/supabase";
-	import { DollarSign, Plus } from "@lucide/svelte";
+import { DollarSign, Plus } from "@lucide/svelte";
+import NewSaleDialog from "$lib/components/features/new-sale-dialog.svelte";
+import RecentOrders from "$lib/components/features/recent-orders.svelte";
+import PageHeader from "$lib/components/layout/page-header.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
+import Dialog from "$lib/components/ui/dialog/dialog.svelte";
+import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
+import DialogDescription from "$lib/components/ui/dialog/dialog-description.svelte";
+import DialogFooter from "$lib/components/ui/dialog/dialog-footer.svelte";
+import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
+import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
+import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
+import Input from "$lib/components/ui/input/input.svelte";
+import Label from "$lib/components/ui/label/label.svelte";
+import Separator from "$lib/components/ui/separator/separator.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import { runCrud } from "$lib/utils/crud";
+import { fmtCurrency, fmtDate } from "$lib/utils/format";
+import { supabase } from "$lib/utils/supabase";
 
-	const { data } = $props();
+const { data } = $props();
 
-	let showNewSaleDialog = $state(false);
-	let showOpenDialog = $state(false);
-	let showCloseDialog = $state(false);
-	let closingName = $state("");
-	let closingNotes = $state("");
-	let countedCash = $state(0);
-	let expectedCash = $state(0);
-	let processing = $state(false);
+let showNewSaleDialog = $state(false);
+let showOpenDialog = $state(false);
+let showCloseDialog = $state(false);
+let closingName = $state("");
+let closingNotes = $state("");
+let countedCash = $state(0);
+let expectedCash = $state(0);
+let processing = $state(false);
 
-	const cashDifference = $derived(countedCash - expectedCash);
+const cashDifference = $derived(countedCash - expectedCash);
 
-	async function openRegister(): Promise<void> {
-		if (!data.user.facilityId) return;
-		processing = true;
-		const ok = await runCrud(() => supabase.from("register_sessions").insert({
+async function openRegister(): Promise<void> {
+	if (!data.user.facilityId) return;
+	processing = true;
+	const ok = await runCrud(() =>
+		supabase.from("register_sessions").insert({
 			facility_id: data.user.facilityId,
 			opened_by: data.user.id,
 			opened_at: new Date().toISOString(),
 			opening_cash: 0,
-		}));
-		processing = false;
-		if (ok) showOpenDialog = false;
-	}
+		}),
+	);
+	processing = false;
+	if (ok) showOpenDialog = false;
+}
 
-	function openCloseDialog(): void {
-		expectedCash = data.activeSession?.opening_cash ?? 0;
-		countedCash = expectedCash;
-		showCloseDialog = true;
-	}
+function openCloseDialog(): void {
+	expectedCash = data.activeSession?.opening_cash ?? 0;
+	countedCash = expectedCash;
+	showCloseDialog = true;
+}
 
-	async function closeRegister(): Promise<void> {
-		if (!closingName.trim() || !data.activeSession) return;
-		processing = true;
-		const ok = await runCrud(() => supabase.rpc("close_register_session", {
+async function closeRegister(): Promise<void> {
+	if (!closingName.trim() || !data.activeSession) return;
+	processing = true;
+	const ok = await runCrud(() =>
+		supabase.rpc("close_register_session", {
 			p_session_id: data.activeSession.id,
 			p_closed_by: data.user.id,
 			p_closing_cash: countedCash,
 			p_closing_notes: closingNotes || null,
-		}));
-		processing = false;
-		if (ok) {
-			showCloseDialog = false;
-			closingName = closingNotes = "";
-			countedCash = 0;
-		}
+		}),
+	);
+	processing = false;
+	if (ok) {
+		showCloseDialog = false;
+		closingName = closingNotes = "";
+		countedCash = 0;
 	}
+}
 </script>
 
 <div class="space-y-6">

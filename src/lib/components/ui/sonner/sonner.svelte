@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { Toaster as SonnerToaster, type ToasterProps } from "svelte-sonner";
-	import { theme } from "$lib/state/theme.svelte";
+import { Toaster as SonnerToaster, type ToasterProps } from "svelte-sonner";
+import { theme } from "$lib/state/theme.svelte";
 
-	let { ...restProps }: ToasterProps = $props();
+let { ...restProps }: ToasterProps = $props();
 
-	const toastTheme = $derived(theme.isDark ? "dark" : "light");
+const toastTheme = $derived(theme.isDark ? "dark" : "light");
 </script>
 
 <SonnerToaster

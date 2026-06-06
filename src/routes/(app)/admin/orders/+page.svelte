@@ -1,23 +1,29 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import { fmtDate, fmtCurrency } from "$lib/utils/format";
-	import { shortId, getActiveOrderItems } from "$lib/utils/helpers";
-	import PageHeader from "$lib/components/layout/page-header.svelte";
-	import EmptyState from "$lib/components/layout/empty-state.svelte";
-	import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
-	import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
-	import Pagination from "$lib/components/ui/pagination/pagination.svelte";
-	import { ShoppingCart, Eye } from "@lucide/svelte";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import type { OrderView } from "$lib/types/database";
+import { Eye, ShoppingCart } from "@lucide/svelte";
+import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
+import EmptyState from "$lib/components/layout/empty-state.svelte";
+import PageHeader from "$lib/components/layout/page-header.svelte";
+import Badge from "$lib/components/ui/badge/badge.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
+import Input from "$lib/components/ui/input/input.svelte";
+import Pagination from "$lib/components/ui/pagination/pagination.svelte";
+import Table, {
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "$lib/components/ui/table/table.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import type { OrderView } from "$lib/types/database";
+import { fmtCurrency, fmtDate } from "$lib/utils/format";
+import { getActiveOrderItems, shortId } from "$lib/utils/helpers";
 
-	const { data } = $props();
+const { data } = $props();
 
-	let selectedOrder = $state<OrderView | null>(null);
-	let showDialog = $state(false);
+let selectedOrder = $state<OrderView | null>(null);
+let showDialog = $state(false);
 </script>
 
 <div class="space-y-6">

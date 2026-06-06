@@ -1,13 +1,13 @@
 <script lang="ts">
-	import type { HTMLInputAttributes } from "svelte/elements";
-	import { cn } from "$lib/utils/cn";
+import type { HTMLInputAttributes } from "svelte/elements";
+import { cn } from "$lib/utils/cn";
 
-	type Props = Omit<HTMLInputAttributes, "value"> & {
-		class?: string;
-		value?: string | number;
-	};
+type Props = Omit<HTMLInputAttributes, "value"> & {
+	class?: string;
+	value?: string | number;
+};
 
-	let { class: className = "", value = $bindable(""), ...restProps }: Props = $props();
+let { class: className = "", value = $bindable(""), ...restProps }: Props = $props();
 </script>
 
 <input

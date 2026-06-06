@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
-	import { cn } from "$lib/utils/cn";
-	import type { Snippet } from "svelte";
+import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
+import type { Snippet } from "svelte";
+import { cn } from "$lib/utils/cn";
 
-	type Props = {
-		class?: string;
-		align?: "start" | "center" | "end";
-		sideOffset?: number;
-		children?: Snippet;
-	};
+type Props = {
+	class?: string;
+	align?: "start" | "center" | "end";
+	sideOffset?: number;
+	children?: Snippet;
+};
 
-	let { class: className = "", align = "center", sideOffset = 4, children }: Props = $props();
+let { class: className = "", align = "center", sideOffset = 4, children }: Props = $props();
 </script>
 
 <DropdownMenuPrimitive.Portal>

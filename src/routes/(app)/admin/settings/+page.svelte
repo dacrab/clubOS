@@ -1,53 +1,62 @@
 <script lang="ts">
-	import { untrack } from "svelte";
-	import { enhance } from "$app/forms";
-	import { t, i18n, type Locale } from "$lib/i18n/index.svelte";
-	import { theme, type Theme } from "$lib/state/theme.svelte";
-	import { toast } from "svelte-sonner";
-	import { invalidateAll } from "$app/navigation";
-	import PageHeader from "$lib/components/layout/page-header.svelte";
-	import Card, { CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card/card.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import Switch from "$lib/components/ui/switch/switch.svelte";
-	import Select from "$lib/components/ui/select/select.svelte";
-	import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
-	import SelectContent from "$lib/components/ui/select/select-content.svelte";
-	import SelectItem from "$lib/components/ui/select/select-item.svelte";
-	import Separator from "$lib/components/ui/separator/separator.svelte";
-	import SettingRow from "$lib/components/ui/setting-row/setting-row.svelte";
-	import { CURRENCY_OPTIONS, DATE_FORMAT_OPTIONS, TIME_FORMAT_OPTIONS } from "$lib/config/settings";
-	import { Save, RotateCcw } from "@lucide/svelte";
+import { RotateCcw, Save } from "@lucide/svelte";
+import { untrack } from "svelte";
+import { toast } from "svelte-sonner";
+import { enhance } from "$app/forms";
+import { invalidateAll } from "$app/navigation";
+import PageHeader from "$lib/components/layout/page-header.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card, {
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "$lib/components/ui/card/card.svelte";
+import Input from "$lib/components/ui/input/input.svelte";
+import Select from "$lib/components/ui/select/select.svelte";
+import SelectContent from "$lib/components/ui/select/select-content.svelte";
+import SelectItem from "$lib/components/ui/select/select-item.svelte";
+import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
+import Separator from "$lib/components/ui/separator/separator.svelte";
+import SettingRow from "$lib/components/ui/setting-row/setting-row.svelte";
+import Switch from "$lib/components/ui/switch/switch.svelte";
+import { CURRENCY_OPTIONS, DATE_FORMAT_OPTIONS, TIME_FORMAT_OPTIONS } from "$lib/config/settings";
+import { i18n, type Locale, t } from "$lib/i18n/index.svelte";
+import { type Theme, theme } from "$lib/state/theme.svelte";
 
-	const THEME_OPTIONS: { value: Theme; labelKey: string }[] = [
-		{ value: "system", labelKey: "settings.themes.system" },
-		{ value: "light", labelKey: "settings.themes.light" },
-		{ value: "dark", labelKey: "settings.themes.dark" },
-	];
-	const LANGUAGE_OPTIONS: { value: Locale; labelKey: string }[] = [
-		{ value: "en", labelKey: "settings.languages.en" },
-		{ value: "el", labelKey: "settings.languages.el" },
-	];
+const THEME_OPTIONS: { value: Theme; labelKey: string }[] = [
+	{ value: "system", labelKey: "settings.themes.system" },
+	{ value: "light", labelKey: "settings.themes.light" },
+	{ value: "dark", labelKey: "settings.themes.dark" },
+];
+const LANGUAGE_OPTIONS: { value: Locale; labelKey: string }[] = [
+	{ value: "en", labelKey: "settings.languages.en" },
+	{ value: "el", labelKey: "settings.languages.el" },
+];
 
-	const { data } = $props();
+const { data } = $props();
 
-	// Local editable copy of server settings; re-clones whenever server data changes.
-	let settings = $state(untrack(() => ({ ...data.settings })));
-	let saved = $state("");
-	$effect(() => {
-		const next = JSON.stringify(data.settings);
-		if (next !== saved) {
-			settings = { ...data.settings };
-			saved = next;
-		}
-	});
-	let saving = $state(false);
-	const hasChanges = $derived(JSON.stringify(settings) !== saved);
+// Local editable copy of server settings; re-clones whenever server data changes.
+let settings = $state(untrack(() => ({ ...data.settings })));
+let saved = $state("");
+$effect(() => {
+	const next = JSON.stringify(data.settings);
+	if (next !== saved) {
+		settings = { ...data.settings };
+		saved = next;
+	}
+});
+let saving = $state(false);
+const hasChanges = $derived(JSON.stringify(settings) !== saved);
 
-	const optionLabel = (opts: readonly { value: string; labelKey: string }[], v: string | null): string =>
-		t(opts.find((o) => o.value === v)?.labelKey ?? "");
+const optionLabel = (
+	opts: readonly { value: string; labelKey: string }[],
+	v: string | null,
+): string => t(opts.find((o) => o.value === v)?.labelKey ?? "");
 
-	const handleReset = (): void => { settings = { ...data.settings }; };
+const handleReset = (): void => {
+	settings = { ...data.settings };
+};
 </script>
 
 <form

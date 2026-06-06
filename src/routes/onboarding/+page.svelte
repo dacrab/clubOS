@@ -1,113 +1,137 @@
 <script lang="ts">
-	import { toast } from "svelte-sonner";
-	import { t } from "$lib/i18n/index.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import Label from "$lib/components/ui/label/label.svelte";
-	import Header from "$lib/components/layout/header.svelte";
-	import Card, { CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
-	import Select from "$lib/components/ui/select/select.svelte";
-	import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
-	import SelectContent from "$lib/components/ui/select/select-content.svelte";
-	import SelectItem from "$lib/components/ui/select/select-item.svelte";
-	import PlanSelector from "$lib/components/features/plan-selector.svelte";
-	import { PLANS, type Plan } from "$lib/config/auth";
-	import { Building2, MapPin, Phone, Mail, Check, Loader2 } from "@lucide/svelte";
+import { Building2, Check, Loader2, Mail, MapPin, Phone } from "@lucide/svelte";
+import { toast } from "svelte-sonner";
+import PlanSelector from "$lib/components/features/plan-selector.svelte";
+import Header from "$lib/components/layout/header.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card, {
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "$lib/components/ui/card/card.svelte";
+import Input from "$lib/components/ui/input/input.svelte";
+import Label from "$lib/components/ui/label/label.svelte";
+import Select from "$lib/components/ui/select/select.svelte";
+import SelectContent from "$lib/components/ui/select/select-content.svelte";
+import SelectItem from "$lib/components/ui/select/select-item.svelte";
+import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
+import { PLANS, type Plan } from "$lib/config/auth";
+import { t } from "$lib/i18n/index.svelte";
 
-	type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3;
 
-	const { data } = $props();
+const { data } = $props();
 
-	let currentStep = $state<Step>(1);
-	let loading = $state(false);
-	let completed = $state(false);
-	let selectedPlan = $state<Plan | null>(null);
+let currentStep = $state<Step>(1);
+let loading = $state(false);
+let completed = $state(false);
+let selectedPlan = $state<Plan | null>(null);
 
-	let tenantName = $state("");
-	let facilityName = $state("");
-	let facilityAddress = $state("");
-	let facilityPhone = $state("");
-	let facilityEmail = $state("");
-	let timezone = $state("Europe/Athens");
+let tenantName = $state("");
+let facilityName = $state("");
+let facilityAddress = $state("");
+let facilityPhone = $state("");
+let facilityEmail = $state("");
+let timezone = $state("Europe/Athens");
 
-	const TIMEZONES = [
-		{ value: "Europe/Athens", label: "Athens (GMT+2/+3)" },
-		{ value: "Europe/London", label: "London (GMT+0/+1)" },
-		{ value: "Europe/Paris", label: "Paris (GMT+1/+2)" },
-		{ value: "Europe/Berlin", label: "Berlin (GMT+1/+2)" },
-		{ value: "America/New_York", label: "New York (GMT-5/-4)" },
-		{ value: "America/Los_Angeles", label: "Los Angeles (GMT-8/-7)" },
-	];
+const TIMEZONES = [
+	{ value: "Europe/Athens", label: "Athens (GMT+2/+3)" },
+	{ value: "Europe/London", label: "London (GMT+0/+1)" },
+	{ value: "Europe/Paris", label: "Paris (GMT+1/+2)" },
+	{ value: "Europe/Berlin", label: "Berlin (GMT+1/+2)" },
+	{ value: "America/New_York", label: "New York (GMT-5/-4)" },
+	{ value: "America/Los_Angeles", label: "Los Angeles (GMT-8/-7)" },
+];
 
-	const STEPS = [
-		{ number: 1, title: t("onboarding.step1Title"), description: t("onboarding.step1Desc") },
-		{ number: 2, title: t("onboarding.step2Title"), description: t("onboarding.step2Desc") },
-		{ number: 3, title: t("onboarding.step3Title"), description: t("onboarding.step3Desc") },
-	];
+const STEPS = [
+	{ number: 1, title: t("onboarding.step1Title"), description: t("onboarding.step1Desc") },
+	{ number: 2, title: t("onboarding.step2Title"), description: t("onboarding.step2Desc") },
+	{ number: 3, title: t("onboarding.step3Title"), description: t("onboarding.step3Desc") },
+];
 
-	function nextStep(): void {
-		if (currentStep === 1 && !tenantName) { toast.error(t("onboarding.enterBusinessName")); return; }
-		if (currentStep === 2 && !facilityName) { toast.error(t("onboarding.enterFacilityName")); return; }
-		if (currentStep < 3) currentStep = (currentStep + 1) as Step;
+function nextStep(): void {
+	if (currentStep === 1 && !tenantName) {
+		toast.error(t("onboarding.enterBusinessName"));
+		return;
 	}
-
-	function prevStep(): void {
-		if (currentStep > 1) currentStep = (currentStep - 1) as Step;
+	if (currentStep === 2 && !facilityName) {
+		toast.error(t("onboarding.enterFacilityName"));
+		return;
 	}
+	if (currentStep < 3) currentStep = (currentStep + 1) as Step;
+}
 
-	function payload() {
-		return {
-			tenant: { name: tenantName, slug: tenantName.toLowerCase().replace(/[^a-z0-9]+/g, "-") },
-			facility: { name: facilityName, address: facilityAddress || null, phone: facilityPhone || null, email: facilityEmail || null, timezone },
-		};
-	}
+function prevStep(): void {
+	if (currentStep > 1) currentStep = (currentStep - 1) as Step;
+}
 
-	async function completeOnboarding(): Promise<{ tenantId: string }> {
-		const res = await fetch("/api/onboarding/complete", {
+function payload() {
+	return {
+		tenant: { name: tenantName, slug: tenantName.toLowerCase().replace(/[^a-z0-9]+/g, "-") },
+		facility: {
+			name: facilityName,
+			address: facilityAddress || null,
+			phone: facilityPhone || null,
+			email: facilityEmail || null,
+			timezone,
+		},
+	};
+}
+
+async function completeOnboarding(): Promise<{ tenantId: string }> {
+	const res = await fetch("/api/onboarding/complete", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(payload()),
+	});
+	const result = await res.json();
+	if (!res.ok) throw new Error(result.error);
+	return result;
+}
+
+async function handlePlanSelect(planId: Plan): Promise<void> {
+	selectedPlan = planId;
+	const plan = PLANS.find((p) => p.id === planId);
+	if (!plan || !data.user) return;
+
+	loading = true;
+	try {
+		const { tenantId } = await completeOnboarding();
+		const res = await fetch("/api/stripe/checkout", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(payload()),
+			body: JSON.stringify({
+				priceId: plan.priceId,
+				userId: data.user.id,
+				email: data.user.email,
+				tenantId,
+			}),
 		});
-		const result = await res.json();
-		if (!res.ok) throw new Error(result.error);
-		return result;
+		const { url, error: stripeError } = await res.json();
+		if (stripeError) throw new Error(stripeError);
+		window.location.href = url;
+	} catch (err) {
+		toast.error(err instanceof Error ? err.message : t("common.error"));
+		loading = false;
 	}
+}
 
-	async function handlePlanSelect(planId: Plan): Promise<void> {
-		selectedPlan = planId;
-		const plan = PLANS.find((p) => p.id === planId);
-		if (!plan || !data.user) return;
-
-		loading = true;
-		try {
-			const { tenantId } = await completeOnboarding();
-			const res = await fetch("/api/stripe/checkout", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ priceId: plan.priceId, userId: data.user.id, email: data.user.email, tenantId }),
-			});
-			const { url, error: stripeError } = await res.json();
-			if (stripeError) throw new Error(stripeError);
-			window.location.href = url;
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t("common.error"));
-			loading = false;
-		}
+async function skipPaymentForNow(): Promise<void> {
+	loading = true;
+	try {
+		await completeOnboarding();
+		completed = true;
+		toast.success(t("onboarding.completed"));
+		setTimeout(() => {
+			window.location.href = "/admin";
+		}, 2000);
+	} catch (err) {
+		toast.error(err instanceof Error ? err.message : t("common.error"));
+	} finally {
+		loading = false;
 	}
-
-	async function skipPaymentForNow(): Promise<void> {
-		loading = true;
-		try {
-			await completeOnboarding();
-			completed = true;
-			toast.success(t("onboarding.completed"));
-			setTimeout(() => { window.location.href = "/admin"; }, 2000);
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t("common.error"));
-		} finally {
-			loading = false;
-		}
-	}
+}
 </script>
 
 <div class="page-public">

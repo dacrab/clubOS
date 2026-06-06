@@ -1,26 +1,27 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import { fmtCurrency, currentCurrencySymbol } from "$lib/utils/format";
-	import { BarChart3 } from "@lucide/svelte";
+import { BarChart3 } from "@lucide/svelte";
+import { t } from "$lib/i18n/index.svelte";
+import { currentCurrencySymbol, fmtCurrency } from "$lib/utils/format";
 
-	type Day = { date: string; revenue: number };
-	type Props = { days: Day[] };
-	let { days }: Props = $props();
+type Day = { date: string; revenue: number };
+type Props = { days: Day[] };
+let { days }: Props = $props();
 
-	const HEIGHT = 240;
-	const PAD = { top: 8, right: 8, bottom: 32, left: 56 };
-	const GAP = 0.3;
-	const TICKS = [0, 0.25, 0.5, 0.75, 1];
+const HEIGHT = 240;
+const PAD = { top: 8, right: 8, bottom: 32, left: 56 };
+const GAP = 0.3;
+const TICKS = [0, 0.25, 0.5, 0.75, 1];
 
-	const max = $derived(Math.max(...days.map((d) => d.revenue), 1));
-	const innerW = $derived(400 - PAD.left - PAD.right);
-	const innerH = $derived(HEIGHT - PAD.top - PAD.bottom);
-	const barW = $derived(((1 - GAP) * innerW) / days.length);
+const max = $derived(Math.max(...days.map((d) => d.revenue), 1));
+const innerW = $derived(400 - PAD.left - PAD.right);
+const innerH = $derived(HEIGHT - PAD.top - PAD.bottom);
+const barW = $derived(((1 - GAP) * innerW) / days.length);
 
-	const x = (i: number): number => PAD.left + (i / days.length) * innerW + (GAP * innerW) / days.length / 2;
+const x = (i: number): number =>
+	PAD.left + (i / days.length) * innerW + (GAP * innerW) / days.length / 2;
 
-	let tip = $state<{ x: number; y: number; date: string; revenue: number } | null>(null);
-	const hasData = $derived(days.some((d) => d.revenue > 0));
+let tip = $state<{ x: number; y: number; date: string; revenue: number } | null>(null);
+const hasData = $derived(days.some((d) => d.revenue > 0));
 </script>
 
 {#if hasData}

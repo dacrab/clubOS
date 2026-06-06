@@ -1,23 +1,29 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import { fmtDate, fmtCurrency } from "$lib/utils/format";
-	import Dialog from "$lib/components/ui/dialog/dialog.svelte";
-	import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
-	import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
-	import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
-	import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/table.svelte";
-	import Separator from "$lib/components/ui/separator/separator.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import { Gift } from "@lucide/svelte";
-	import type { OrderView } from "$lib/types/database";
-	import { getActiveOrderItems, getProductName, shortId } from "$lib/utils/helpers";
+import { Gift } from "@lucide/svelte";
+import Badge from "$lib/components/ui/badge/badge.svelte";
+import Dialog from "$lib/components/ui/dialog/dialog.svelte";
+import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
+import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
+import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
+import Separator from "$lib/components/ui/separator/separator.svelte";
+import Table, {
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "$lib/components/ui/table/table.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import type { OrderView } from "$lib/types/database";
+import { fmtCurrency, fmtDate } from "$lib/utils/format";
+import { getActiveOrderItems, getProductName, shortId } from "$lib/utils/helpers";
 
-	type Props = {
-		open: boolean;
-		order: OrderView | null;
-	};
+type Props = {
+	open: boolean;
+	order: OrderView | null;
+};
 
-	let { open = $bindable(), order }: Props = $props();
+let { open = $bindable(), order }: Props = $props();
 </script>
 
 <Dialog bind:open>

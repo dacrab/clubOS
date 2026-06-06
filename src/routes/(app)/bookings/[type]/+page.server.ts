@@ -1,6 +1,6 @@
 import { error } from "@sveltejs/kit";
-import type { PageServerLoad } from "./$types";
 import type { BookingType } from "$lib/types/database";
+import type { PageServerLoad } from "./$types";
 
 const VALID_TYPES: BookingType[] = ["birthday", "football", "event", "other"];
 const PER_PAGE = 25;
@@ -32,5 +32,11 @@ export const load: PageServerLoad = async ({ locals, params, parent, url }) => {
 
 	const { data: bookings, count } = await query.range(from, to);
 
-	return { bookings: bookings ?? [], type, page, totalPages: Math.ceil((count ?? 0) / PER_PAGE), search };
+	return {
+		bookings: bookings ?? [],
+		type,
+		page,
+		totalPages: Math.ceil((count ?? 0) / PER_PAGE),
+		search,
+	};
 };

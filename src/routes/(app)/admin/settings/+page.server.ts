@@ -1,6 +1,6 @@
 import { fail } from "@sveltejs/kit";
-import type { Actions, PageServerLoad } from "./$types";
 import { DEFAULT_SETTINGS, mergeSettings, type TenantSettings } from "$lib/config/settings";
+import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
 	const { user } = await parent();
@@ -26,11 +26,19 @@ export const actions: Actions = {
 	save: async ({ request, locals }) => {
 		const { supabase, user } = locals;
 		if (!user) return fail(401, { error: "Unauthorized" });
-		if (!user.role || !["owner", "admin"].includes(user.role)) return fail(403, { error: "Forbidden" });
 
-		const { data: m } = await supabase.from("memberships").select("tenant_id").eq("user_id", user.id).eq("is_primary", true).single();
-		const tenantId = m?.tenant_id;
-		if (!tenantId) return fail(400, { error: "No tenant" });
+		const { data: membership } = await supabase
+			.from("memberships")
+			.select("role, tenant_id")
+			.eq("user_id", user.id)
+			.eq("is_primary", true)
+			.single();
+
+		if (!membership || !["owner", "admin"].includes(membership.role)) {
+			return fail(403, { error: "Forbidden" });
+		}
+
+		const tenantId = membership.tenant_id;
 
 		const formData = await request.formData();
 		const settingsJson = formData.get("settings");

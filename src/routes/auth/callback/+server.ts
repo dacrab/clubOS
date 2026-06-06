@@ -7,7 +7,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	};
 
 	if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-		if (!session) return json({ success: false, error: "Missing session payload" }, { status: 400 });
+		if (!session)
+			return json({ success: false, error: "Missing session payload" }, { status: 400 });
 		try {
 			const { error } = await locals.supabase.auth.setSession({
 				access_token: session.access_token,
@@ -15,7 +16,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			});
 			if (error) return json({ success: false, error: error.message }, { status: 401 });
 		} catch (err) {
-			return json({ success: false, error: err instanceof Error ? err.message : "Session setup failed" }, { status: 401 });
+			return json(
+				{ success: false, error: err instanceof Error ? err.message : "Session setup failed" },
+				{ status: 401 },
+			);
 		}
 	} else if (event === "SIGNED_OUT") {
 		const { error } = await locals.supabase.auth.signOut();

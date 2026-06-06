@@ -1,43 +1,56 @@
 <script lang="ts">
-	import { page } from "$app/state";
-	import { cn } from "$lib/utils/cn";
-	import { t } from "$lib/i18n/index.svelte";
-	import { session } from "$lib/state/session.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Separator from "$lib/components/ui/separator/separator.svelte";
-	import { LayoutDashboard, Package, ShoppingCart, DollarSign, Users, Settings, CircleDot, Cake, ChevronLeft, ChevronRight, LogOut } from "@lucide/svelte";
-	import type { MemberRole } from "$lib/types/database";
+import {
+	Cake,
+	ChevronLeft,
+	ChevronRight,
+	CircleDot,
+	DollarSign,
+	LayoutDashboard,
+	LogOut,
+	Package,
+	Settings,
+	ShoppingCart,
+	Users,
+} from "@lucide/svelte";
+import { page } from "$app/state";
+import Button from "$lib/components/ui/button/button.svelte";
+import Separator from "$lib/components/ui/separator/separator.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import { session } from "$lib/state/session.svelte";
+import type { MemberRole } from "$lib/types/database";
+import { cn } from "$lib/utils/cn";
 
-	type NavItem = { label: string; href: string; icon: typeof LayoutDashboard };
+type NavItem = { label: string; href: string; icon: typeof LayoutDashboard };
 
-	let collapsed = $state(false);
+let collapsed = $state(false);
 
-	const adminNav: NavItem[] = [
-		{ label: "nav.dashboard", href: "/admin", icon: LayoutDashboard },
-		{ label: "nav.products", href: "/admin/products", icon: Package },
-		{ label: "nav.orders", href: "/admin/orders", icon: ShoppingCart },
-		{ label: "nav.registers", href: "/admin/registers", icon: DollarSign },
+const adminNav: NavItem[] = [
+	{ label: "nav.dashboard", href: "/admin", icon: LayoutDashboard },
+	{ label: "nav.products", href: "/admin/products", icon: Package },
+	{ label: "nav.orders", href: "/admin/orders", icon: ShoppingCart },
+	{ label: "nav.registers", href: "/admin/registers", icon: DollarSign },
+	{ label: "nav.birthdays", href: "/bookings/birthday", icon: Cake },
+	{ label: "nav.football", href: "/bookings/football", icon: CircleDot },
+	{ label: "nav.users", href: "/admin/users", icon: Users },
+	{ label: "nav.settings", href: "/admin/settings", icon: Settings },
+];
+
+const navConfig: Record<MemberRole, NavItem[]> = {
+	owner: adminNav,
+	admin: adminNav,
+	manager: [
+		{ label: "nav.dashboard", href: "/secretary", icon: LayoutDashboard },
 		{ label: "nav.birthdays", href: "/bookings/birthday", icon: Cake },
 		{ label: "nav.football", href: "/bookings/football", icon: CircleDot },
-		{ label: "nav.users", href: "/admin/users", icon: Users },
-		{ label: "nav.settings", href: "/admin/settings", icon: Settings },
-	];
+	],
+	staff: [{ label: "nav.dashboard", href: "/staff", icon: LayoutDashboard }],
+};
 
-	const navConfig: Record<MemberRole, NavItem[]> = {
-		owner: adminNav,
-		admin: adminNav,
-		manager: [
-			{ label: "nav.dashboard", href: "/secretary", icon: LayoutDashboard },
-			{ label: "nav.birthdays", href: "/bookings/birthday", icon: Cake },
-			{ label: "nav.football", href: "/bookings/football", icon: CircleDot },
-		],
-		staff: [
-			{ label: "nav.dashboard", href: "/staff", icon: LayoutDashboard },
-		],
-	};
-
-	const navItems = $derived(navConfig[session.user?.role ?? "staff"] ?? navConfig.staff);
-	const isActive = (href: string) => href === "/admin" || href === "/secretary" || href === "/staff" ? page.url.pathname === href : page.url.pathname.startsWith(href);
+const navItems = $derived(navConfig[session.user?.role ?? "staff"] ?? navConfig.staff);
+const isActive = (href: string) =>
+	href === "/admin" || href === "/secretary" || href === "/staff"
+		? page.url.pathname === href
+		: page.url.pathname.startsWith(href);
 </script>
 
 <aside class={cn("fixed left-0 top-0 z-40 flex h-screen flex-col border-r bg-sidebar transition-all duration-200", collapsed ? "w-16" : "w-64")}>

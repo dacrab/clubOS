@@ -1,8 +1,8 @@
 import { json } from "@sveltejs/kit";
-import type { RequestHandler } from "./$types";
 import { env } from "$env/dynamic/private";
+import { type StripeSubscription, stripeGet, upsertSubscription } from "$lib/server/stripe";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
-import { stripeGet, upsertSubscription, ts, type StripeSubscription } from "$lib/server/stripe";
+import type { RequestHandler } from "./$types";
 
 const enc = new TextEncoder();
 const toHex = (buf: ArrayBuffer): string =>
@@ -14,7 +14,13 @@ async function verifySignature(payload: string, header: string, secret: string):
 	if (!timestamp || !sig) return false;
 	if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return false;
 
-	const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+	const key = await crypto.subtle.importKey(
+		"raw",
+		enc.encode(secret),
+		{ name: "HMAC", hash: "SHA-256" },
+		false,
+		["sign"],
+	);
 	const signed = await crypto.subtle.sign("HMAC", key, enc.encode(`${timestamp}.${payload}`));
 	return toHex(signed) === sig;
 }
@@ -39,7 +45,10 @@ export const POST: RequestHandler = async ({ request }) => {
 		case "checkout.session.completed": {
 			const session = event.data.object;
 			if (session.mode !== "subscription" || !session.subscription) break;
-			const sub = await stripeGet<StripeSubscription>(`/subscriptions/${session.subscription}`, STRIPE_SECRET_KEY);
+			const sub = await stripeGet<StripeSubscription>(
+				`/subscriptions/${session.subscription}`,
+				STRIPE_SECRET_KEY,
+			);
 			const tenantId = sub.metadata?.tenant_id;
 			if (!tenantId) break;
 			await upsertSubscription({ tenantId, customerId: session.customer, sub });
@@ -50,18 +59,16 @@ export const POST: RequestHandler = async ({ request }) => {
 			const sub = event.data.object as StripeSubscription;
 			const tenantId = sub.metadata?.tenant_id;
 			if (!tenantId) break;
-			await admin.from("subscriptions").update({
-				status: sub.status,
-				current_period_start: ts(sub.current_period_start),
-				current_period_end: ts(sub.current_period_end),
-				cancel_at_period_end: sub.cancel_at_period_end ?? false,
-			}).eq("tenant_id", tenantId);
+			await upsertSubscription({ tenantId, customerId: sub.customer, sub });
 			break;
 		}
 		case "invoice.payment_failed": {
 			const subId = event.data.object.subscription;
 			if (!subId) break;
-			await admin.from("subscriptions").update({ status: "past_due" }).eq("stripe_subscription_id", subId);
+			await admin
+				.from("subscriptions")
+				.update({ status: "past_due" })
+				.eq("stripe_subscription_id", subId);
 			break;
 		}
 	}

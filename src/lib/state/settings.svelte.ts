@@ -5,12 +5,14 @@ function createSettings(): {
 	readonly current: TenantSettings;
 	setSettings: (newSettings: Partial<TenantSettings>) => void;
 } {
-	let current = $state<TenantSettings>(DEFAULT_SETTINGS);
+	let current = $state(DEFAULT_SETTINGS);
 
 	return {
-		get current() { return current; },
+		get current() {
+			return current;
+		},
 		setSettings(newSettings: Partial<TenantSettings>) {
-			current = { ...DEFAULT_SETTINGS, ...newSettings };
+			current = { ...current, ...newSettings };
 		},
 	};
 }

@@ -1,143 +1,180 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import { toast } from "svelte-sonner";
-	import { invalidateAll } from "$app/navigation";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Dialog from "$lib/components/ui/dialog/dialog.svelte";
-	import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
-	import { supabase } from "$lib/utils/supabase";
-	import { fmtCurrency } from "$lib/utils/format";
-	import { printReceipt, type ReceiptData } from "$lib/utils/receipt";
-	import { shortId } from "$lib/utils/helpers";
-	import { settings as globalSettings } from "$lib/state/settings.svelte";
-	import { ShoppingCart, Plus, Minus, Gift, X, Search, Check, Trash2, ChevronRight, Tag, Printer } from "@lucide/svelte";
-	import type { Product, CartItem, CategoryPartial } from "$lib/types/database";
+import {
+	Check,
+	ChevronRight,
+	Gift,
+	Minus,
+	Plus,
+	Printer,
+	Search,
+	ShoppingCart,
+	Tag,
+	Trash2,
+	X,
+} from "@lucide/svelte";
+import { toast } from "svelte-sonner";
+import { invalidateAll } from "$app/navigation";
+import Badge from "$lib/components/ui/badge/badge.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Dialog from "$lib/components/ui/dialog/dialog.svelte";
+import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
+import Input from "$lib/components/ui/input/input.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import { settings as globalSettings } from "$lib/state/settings.svelte";
+import type { CartItem, CategoryPartial, Product } from "$lib/types/database";
+import { fmtCurrency } from "$lib/utils/format";
+import { shortId } from "$lib/utils/helpers";
+import { printReceipt, type ReceiptData } from "$lib/utils/receipt";
+import { supabase } from "$lib/utils/supabase";
 
-	type Props = {
-		open: boolean;
-		products: Product[];
-		categories?: CategoryPartial[];
-		activeSession: { id: string } | null;
-		user: { id: string; tenantId: string | null; facilityId: string | null };
-		onOpenChange?: (open: boolean) => void;
-	};
+type Props = {
+	open: boolean;
+	products: Product[];
+	categories?: CategoryPartial[];
+	activeSession: { id: string } | null;
+	user: { id: string; tenantId: string | null; facilityId: string | null };
+	onOpenChange?: (open: boolean) => void;
+};
 
-	let { open = $bindable(), products, categories = [], activeSession, user, onOpenChange }: Props = $props();
+let {
+	open = $bindable(),
+	products,
+	categories = [],
+	activeSession,
+	user,
+	onOpenChange,
+}: Props = $props();
 
-	let selectedCategory = $state<string | null>(null);
-	let cart = $state<CartItem[]>([]);
-	let couponCount = $state(0);
-	let searchQuery = $state("");
-	let processing = $state(false);
-	let lastOrderId = $state<string | null>(null);
-	let lastOrderData = $state<ReceiptData | null>(null);
-	let showCart = $state(false);
+let selectedCategory = $state<string | null>(null);
+let cart = $state<CartItem[]>([]);
+let couponCount = $state(0);
+let searchQuery = $state("");
+let processing = $state(false);
+let lastOrderId = $state<string | null>(null);
+let lastOrderData = $state<ReceiptData | null>(null);
+let showCart = $state(false);
 
-	function close() { open = false; onOpenChange?.(false); }
+function close() {
+	open = false;
+	onOpenChange?.(false);
+}
 
-	function handlePrintReceipt(): void {
-		if (lastOrderData) printReceipt(lastOrderData);
-	}
+function handlePrintReceipt(): void {
+	if (lastOrderData) printReceipt(lastOrderData);
+}
 
-	const COUPON_VALUE = $derived(globalSettings.current.coupons_value);
-	const rootCategories = $derived(categories.filter(c => !c.parent_id));
+const COUPON_VALUE = $derived(globalSettings.current.coupons_value);
+const rootCategories = $derived(categories.filter((c) => !c.parent_id));
 
-	let searchResults = $state<Product[]>([]);
+let searchResults = $state<Product[]>([]);
 
-	$effect(() => {
-		const q = searchQuery;
-		let timeout: ReturnType<typeof setTimeout> | null = null;
-		let cancelled = false;
+$effect(() => {
+	const q = searchQuery;
+	let timeout: ReturnType<typeof setTimeout> | null = null;
+	let cancelled = false;
 
-		if (q.trim() && user.facilityId) {
-			timeout = setTimeout(async () => {
-				if (cancelled) return;
-				const { data } = await supabase.rpc("search_products", { facility_uuid: user.facilityId, search_text: q });
-				if (!cancelled) searchResults = (data as Product[]) ?? [];
-			}, 200);
-		} else {
-			searchResults = [];
-		}
-
-		return () => {
-			cancelled = true;
-			if (timeout) clearTimeout(timeout);
-		};
-	});
-
-	const filteredProducts = $derived.by(() => {
-		if (searchQuery.trim()) return searchResults;
-		if (!selectedCategory) return products;
-		return products.filter(p => p.category_id === selectedCategory);
-	});
-
-	const subtotal = $derived(cart.reduce((s, i) => s + (i.isTreat ? 0 : i.product.price * i.quantity), 0));
-	const discount = $derived(couponCount * COUPON_VALUE);
-	const total = $derived(Math.max(0, subtotal - discount));
-	const treatCount = $derived(cart.reduce((s, i) => s + (i.isTreat ? i.quantity : 0), 0));
-	const cartItemCount = $derived(cart.reduce((s, i) => s + i.quantity, 0));
-
-	function addToCart(product: Product) {
-		const existing = cart.find(i => i.product.id === product.id && !i.isTreat);
-		if (existing) existing.quantity++;
-		else cart.push({ product, quantity: 1, isTreat: false });
-		cart = [...cart];
-		lastOrderId = null;
-	}
-
-	function updateQuantity(idx: number, delta: number) {
-		cart[idx].quantity += delta;
-		cart = cart[idx].quantity <= 0 ? cart.filter((_, i) => i !== idx) : [...cart];
-	}
-
-	function toggleTreat(idx: number) {
-		cart[idx].isTreat = !cart[idx].isTreat;
-		cart = [...cart];
-	}
-
-	function clearCart() {
-		cart = [];
-		couponCount = 0;
-		lastOrderId = null;
-	}
-
-	async function submitOrder(): Promise<void> {
-		if (!cart.length) { toast.error(t("orders.emptyCart")); return; }
-		if (!activeSession) { toast.error(t("register.noActiveSession")); return; }
-		if (processing) return;
-		processing = true;
-		try {
-			const { data, error } = await supabase.rpc("create_order", {
-				p_facility_id: user.facilityId,
-				p_session_id: activeSession.id,
-				p_user_id: user.id,
-				p_items: cart.map(i => ({
-					product_id: i.product.id,
-					quantity: i.quantity,
-					unit_price: i.product.price,
-					is_treat: i.isTreat,
-				})),
-				p_coupon_count: couponCount,
-				p_coupon_value: COUPON_VALUE,
+	if (q.trim() && user.facilityId) {
+		timeout = setTimeout(async () => {
+			if (cancelled) return;
+			const { data } = await supabase.rpc("search_products", {
+				facility_uuid: user.facilityId,
+				search_text: q,
 			});
-
-			if (error) throw error;
-			if (data?.error) { toast.error(data.error); processing = false; return; }
-
-			lastOrderId = data.id;
-			lastOrderData = { items: [...cart], total, discount, couponCount, orderId: data.id };
-			toast.success(t("common.success"));
-			clearCart();
-			showCart = false;
-			await invalidateAll();
-		} catch {
-			toast.error(t("common.error"));
-		} finally {
-			processing = false;
-		}
+			if (!cancelled) searchResults = (data as Product[]) ?? [];
+		}, 200);
+	} else {
+		searchResults = [];
 	}
+
+	return () => {
+		cancelled = true;
+		if (timeout) clearTimeout(timeout);
+	};
+});
+
+const filteredProducts = $derived.by(() => {
+	if (searchQuery.trim()) return searchResults;
+	if (!selectedCategory) return products;
+	return products.filter((p) => p.category_id === selectedCategory);
+});
+
+const subtotal = $derived(
+	cart.reduce((s, i) => s + (i.isTreat ? 0 : i.product.price * i.quantity), 0),
+);
+const discount = $derived(couponCount * COUPON_VALUE);
+const total = $derived(Math.max(0, subtotal - discount));
+const treatCount = $derived(cart.reduce((s, i) => s + (i.isTreat ? i.quantity : 0), 0));
+const cartItemCount = $derived(cart.reduce((s, i) => s + i.quantity, 0));
+
+function addToCart(product: Product) {
+	const existing = cart.find((i) => i.product.id === product.id && !i.isTreat);
+	if (existing) existing.quantity++;
+	else cart.push({ product, quantity: 1, isTreat: false });
+	cart = [...cart];
+	lastOrderId = null;
+}
+
+function updateQuantity(idx: number, delta: number) {
+	cart[idx].quantity += delta;
+	cart = cart[idx].quantity <= 0 ? cart.filter((_, i) => i !== idx) : [...cart];
+}
+
+function toggleTreat(idx: number) {
+	cart[idx].isTreat = !cart[idx].isTreat;
+	cart = [...cart];
+}
+
+function clearCart() {
+	cart = [];
+	couponCount = 0;
+	lastOrderId = null;
+}
+
+async function submitOrder(): Promise<void> {
+	if (!cart.length) {
+		toast.error(t("orders.emptyCart"));
+		return;
+	}
+	if (!activeSession) {
+		toast.error(t("register.noActiveSession"));
+		return;
+	}
+	if (processing) return;
+	processing = true;
+	try {
+		const { data, error } = await supabase.rpc("create_order", {
+			p_facility_id: user.facilityId,
+			p_session_id: activeSession.id,
+			p_user_id: user.id,
+			p_items: cart.map((i) => ({
+				product_id: i.product.id,
+				quantity: i.quantity,
+				unit_price: i.product.price,
+				is_treat: i.isTreat,
+			})),
+			p_coupon_count: couponCount,
+			p_coupon_value: COUPON_VALUE,
+		});
+
+		if (error) throw error;
+		if (data?.error) {
+			toast.error(data.error);
+			processing = false;
+			return;
+		}
+
+		lastOrderId = data.id;
+		lastOrderData = { items: [...cart], total, discount, couponCount, orderId: data.id };
+		toast.success(t("common.success"));
+		clearCart();
+		showCart = false;
+		await invalidateAll();
+	} catch {
+		toast.error(t("common.error"));
+	} finally {
+		processing = false;
+	}
+}
 </script>
 
 <Dialog bind:open {onOpenChange}>

@@ -1,40 +1,66 @@
 <script lang="ts">
-	import { t } from "$lib/i18n/index.svelte";
-	import { fmtCurrency } from "$lib/utils/format";
-	import PageHeader from "$lib/components/layout/page-header.svelte";
-	import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import NewSaleDialog from "$lib/components/features/new-sale-dialog.svelte";
-	import RecentOrders from "$lib/components/features/recent-orders.svelte";
-	import RevenueChart from "$lib/components/features/revenue-chart.svelte";
-	import { DollarSign, ShoppingCart, Package, TrendingUp, Plus, BarChart3, Star, Layers } from "@lucide/svelte";
+import {
+	BarChart3,
+	DollarSign,
+	Layers,
+	Package,
+	Plus,
+	ShoppingCart,
+	Star,
+	TrendingUp,
+} from "@lucide/svelte";
+import NewSaleDialog from "$lib/components/features/new-sale-dialog.svelte";
+import RecentOrders from "$lib/components/features/recent-orders.svelte";
+import RevenueChart from "$lib/components/features/revenue-chart.svelte";
+import PageHeader from "$lib/components/layout/page-header.svelte";
+import Button from "$lib/components/ui/button/button.svelte";
+import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
+import { t } from "$lib/i18n/index.svelte";
+import { fmtCurrency } from "$lib/utils/format";
 
-	const { data } = $props();
+const { data } = $props();
 
-	let showNewSaleDialog = $state(false);
+let showNewSaleDialog = $state(false);
 
-	type CategorySale = { name: string; quantity: number };
-	const totalCategorySales = $derived(data.analytics.categorySales.reduce((s: number, c: CategorySale) => s + c.quantity, 0));
+type CategorySale = { name: string; quantity: number };
+const totalCategorySales = $derived(
+	data.analytics.categorySales.reduce((s: number, c: CategorySale) => s + c.quantity, 0),
+);
 
-	const stats = $derived([
-		{ label: t("dashboard.todayRevenue"), value: fmtCurrency(data.stats.todayRevenue), icon: DollarSign, tone: "primary" },
-		{ label: t("dashboard.totalOrders"), value: data.stats.todayOrders, icon: ShoppingCart, tone: "blue" },
-		{ label: t("dashboard.lowStock"), value: data.stats.lowStockCount, icon: Package, tone: "amber" },
-		{ label: t("dashboard.activeUsers"), value: data.stats.activeUsers, icon: TrendingUp, tone: "emerald" },
-	] as const);
+const stats = $derived([
+	{
+		label: t("dashboard.todayRevenue"),
+		value: fmtCurrency(data.stats.todayRevenue),
+		icon: DollarSign,
+		tone: "primary",
+	},
+	{
+		label: t("dashboard.totalOrders"),
+		value: data.stats.todayOrders,
+		icon: ShoppingCart,
+		tone: "blue",
+	},
+	{ label: t("dashboard.lowStock"), value: data.stats.lowStockCount, icon: Package, tone: "amber" },
+	{
+		label: t("dashboard.activeUsers"),
+		value: data.stats.activeUsers,
+		icon: TrendingUp,
+		tone: "emerald",
+	},
+] as const);
 
-	const TONE_BG: Record<string, string> = {
-		primary: "bg-primary/10",
-		blue: "bg-blue-500/10",
-		amber: "bg-amber-500/10",
-		emerald: "bg-emerald-500/10",
-	};
-	const TONE_FG: Record<string, string> = {
-		primary: "text-primary",
-		blue: "text-blue-500",
-		amber: "text-amber-500",
-		emerald: "text-emerald-500",
-	};
+const TONE_BG: Record<string, string> = {
+	primary: "bg-primary/10",
+	blue: "bg-blue-500/10",
+	amber: "bg-amber-500/10",
+	emerald: "bg-emerald-500/10",
+};
+const TONE_FG: Record<string, string> = {
+	primary: "text-primary",
+	blue: "text-blue-500",
+	amber: "text-amber-500",
+	emerald: "text-emerald-500",
+};
 </script>
 
 <div class="space-y-6 animate-fade-in">

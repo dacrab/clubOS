@@ -27,8 +27,12 @@ function createTheme(): {
 	if (browser) apply();
 
 	return {
-		get current() { return current; },
-		get isDark() { return current === "dark" || (current === "system" && browser && prefersDark()); },
+		get current() {
+			return current;
+		},
+		get isDark() {
+			return current === "dark" || (current === "system" && browser && prefersDark());
+		},
 		setTheme(t) {
 			current = t;
 			if (browser) {
@@ -36,7 +40,9 @@ function createTheme(): {
 				apply();
 			}
 		},
-		toggle() { this.setTheme(this.isDark ? "light" : "dark"); },
+		toggle() {
+			this.setTheme(this.isDark ? "light" : "dark");
+		},
 	};
 }
 

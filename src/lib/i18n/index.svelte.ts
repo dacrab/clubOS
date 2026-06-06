@@ -1,16 +1,22 @@
 import { browser } from "$app/environment";
-import { en, type TranslationsStructure } from "./en";
-import { el } from "./el";
+import el from "./el.json";
+import en from "./en.json";
+import type { TranslationsStructure } from "./types";
 
 export type Locale = "en" | "el";
 
-const translations: Record<Locale, TranslationsStructure> = { en, el };
+const translations: Record<Locale, TranslationsStructure> = { en, el: el as TranslationsStructure };
 
 const getNestedValue = (obj: unknown, path: string): string => {
-	const result = path.split(".").reduce<unknown>(
-		(acc, key) => (acc && typeof acc === "object" && key in acc ? (acc as Record<string, unknown>)[key] : undefined),
-		obj
-	);
+	const result = path
+		.split(".")
+		.reduce<unknown>(
+			(acc, key) =>
+				acc && typeof acc === "object" && key in acc
+					? (acc as Record<string, unknown>)[key]
+					: undefined,
+			obj,
+		);
 	return typeof result === "string" ? result : path;
 };
 
@@ -27,7 +33,9 @@ function createI18n(): {
 	}
 
 	return {
-		get locale() { return locale; },
+		get locale() {
+			return locale;
+		},
 		setLocale(l: Locale) {
 			locale = l;
 			if (browser) {

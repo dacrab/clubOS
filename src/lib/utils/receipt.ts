@@ -1,6 +1,6 @@
 import { t } from "$lib/i18n/index.svelte";
-import { fmtCurrency } from "$lib/utils/format";
 import type { CartItem } from "$lib/types/database";
+import { fmtCurrency } from "$lib/utils/format";
 import { shortId } from "$lib/utils/helpers";
 
 export interface ReceiptData {
@@ -18,12 +18,16 @@ export function printReceipt(data: ReceiptData): void {
 	if (!w) return;
 
 	const itemsHtml = data.items
-		.map((i) => `<div class="item"><span>${i.quantity}x ${i.product.name}${i.isTreat ? ` (${t("orders.treat")})` : ""}</span><span>${i.isTreat ? "-" : fmtCurrency(i.product.price * i.quantity)}</span></div>`)
+		.map(
+			(i) =>
+				`<div class="item"><span>${i.quantity}x ${i.product.name}${i.isTreat ? ` (${t("orders.treat")})` : ""}</span><span>${i.isTreat ? "-" : fmtCurrency(i.product.price * i.quantity)}</span></div>`,
+		)
 		.join("");
 
-	const discountHtml = data.discount > 0
-		? `<div class="item"><span>${t("orders.discount")} (${data.couponCount} ${t("orders.coupons").toLowerCase()})</span><span>-${fmtCurrency(data.discount)}</span></div>`
-		: "";
+	const discountHtml =
+		data.discount > 0
+			? `<div class="item"><span>${t("orders.discount")} (${data.couponCount} ${t("orders.coupons").toLowerCase()})</span><span>-${fmtCurrency(data.discount)}</span></div>`
+			: "";
 
 	const html = `<!DOCTYPE html>
 <html><head><title>${t("orders.receipt")}</title>
@@ -49,7 +53,7 @@ ${discountHtml}
 <p class="center">#${data.orderId ? shortId(data.orderId) : "N/A"}</p>
 </body></html>`;
 
-	w.document.write(html);
+	w.document.documentElement.innerHTML = html;
 	w.document.close();
 	w.print();
 }

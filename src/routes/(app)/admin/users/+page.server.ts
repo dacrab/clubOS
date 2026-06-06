@@ -1,6 +1,6 @@
-import type { PageServerLoad } from "./$types";
-import { USERS_PER_PAGE } from "$lib/types/database";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
+import { USERS_PER_PAGE } from "$lib/types/database";
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const { user } = await parent();
@@ -14,9 +14,9 @@ export const load: PageServerLoad = async ({ parent }) => {
 	if (!tenantUsers?.length) return { users: [] };
 
 	const { data: authData } = await admin.auth.admin.listUsers({ perPage: USERS_PER_PAGE });
-	const emailMap = new Map(authData.users.map(u => [u.id, u.email]));
+	const emailMap = new Map(authData.users.map((u) => [u.id, u.email]));
 
-	const users = tenantUsers.map(u => ({
+	const users = tenantUsers.map((u) => ({
 		id: u.user_id,
 		email: emailMap.get(u.user_id) ?? "",
 		full_name: u.full_name,

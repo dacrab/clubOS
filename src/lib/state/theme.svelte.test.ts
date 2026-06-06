@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const matchMedia = vi.fn(() => ({ matches: false }));
 const classList = { add: vi.fn(), remove: vi.fn() };
@@ -7,14 +7,18 @@ const store: Record<string, string> = {};
 vi.stubGlobal("matchMedia", matchMedia);
 vi.stubGlobal("localStorage", {
 	getItem: vi.fn((k: string) => store[k] ?? null),
-	setItem: vi.fn((k: string, v: string) => { store[k] = v; }),
+	setItem: vi.fn((k: string, v: string) => {
+		store[k] = v;
+	}),
 });
 vi.stubGlobal("document", { documentElement: { classList } });
 
 describe("theme", () => {
 	beforeEach(() => {
 		vi.resetModules();
-		Object.keys(store).forEach((k) => Reflect.deleteProperty(store, k));
+		Object.keys(store).forEach((k) => {
+			Reflect.deleteProperty(store, k);
+		});
 		vi.clearAllMocks();
 		matchMedia.mockReturnValue({ matches: false });
 	});
@@ -25,7 +29,7 @@ describe("theme", () => {
 	});
 
 	it("loads theme from localStorage", async () => {
-		store["theme"] = "dark";
+		store.theme = "dark";
 		const { theme } = await import("./theme.svelte");
 		expect(theme.current).toBe("dark");
 	});
