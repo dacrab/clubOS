@@ -18,12 +18,12 @@ jobs:
     steps:
       - name: Get PR and check author
         id: pr
-        uses: actions/github-script@v7
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
         with:
           script: |
             const prs = context.payload.workflow_run.pull_requests;
             if (!prs || prs.length === 0) {
-              core.setFailed("No PR associated with this workflow run");
+              core.setOutput("url", "");
               return;
             }
             const pr = prs[0];
@@ -33,14 +33,16 @@ jobs:
               pull_number: pr.number,
             });
             if (prData.user.login !== 'dependabot[bot]') {
-              core.setFailed("PR author is not dependabot, skipping");
+              core.setOutput("url", "");
               return;
             }
             core.setOutput("url", pr.html_url);
 
       - name: Enable auto-merge
+        if: steps.pr.outputs.url != ''
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ steps.pr.outputs.url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
 
