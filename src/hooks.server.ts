@@ -1,5 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
-import { type Handle, redirect } from "@sveltejs/kit";
+import { sequence } from "@sveltejs/kit/hooks";
+import { handleErrorWithSentry, sentryHandle } from "@sentry/sveltekit";
+import { type Handle, type HandleServerError, redirect } from "@sveltejs/kit";
 import { env as publicEnv } from "$env/dynamic/public";
 import { getHomeForRole } from "$lib/config/auth";
 import type { MemberRole } from "$lib/types/database";
@@ -26,7 +28,7 @@ const isActive = (
 	);
 };
 
-export const handle: Handle = async ({ event, resolve }) => {
+const authHandle: Handle = async ({ event, resolve }) => {
 	const { PUBLIC_SUPABASE_URL: url, PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: anon } = publicEnv;
 	if (!(url && anon)) throw new Error("Missing PUBLIC_SUPABASE env");
 
@@ -97,3 +99,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	return resolve(event);
 };
+
+export const handle = sequence(sentryHandle(), authHandle);
+
+export const handleError = handleErrorWithSentry() satisfies HandleServerError;

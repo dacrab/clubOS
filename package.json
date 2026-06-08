@@ -15,7 +15,7 @@
 		"test:watch": "vitest",
 		"db:seed": "bun scripts/seed.ts"
 	},
-"devDependencies": {
+	"devDependencies": {
 		"@biomejs/biome": "^2.4.16",
 		"@sveltejs/adapter-vercel": "^6.3.3",
 		"@sveltejs/kit": "^2.63.0",
@@ -36,6 +36,7 @@
 	"dependencies": {
 		"@internationalized/date": "^3.12.2",
 		"@lucide/svelte": "^1.17.0",
+		"@sentry/sveltekit": "^10.56.0",
 		"@supabase/ssr": "^0.10.3",
 		"@supabase/supabase-js": "^2.107.0",
 		"@vercel/analytics": "^2.0.1",
