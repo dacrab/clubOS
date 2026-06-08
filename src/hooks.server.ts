@@ -1,7 +1,7 @@
-import { createServerClient } from "@supabase/ssr";
-import { sequence } from "@sveltejs/kit/hooks";
 import { handleErrorWithSentry, sentryHandle } from "@sentry/sveltekit";
+import { createServerClient } from "@supabase/ssr";
 import { type Handle, type HandleServerError, redirect } from "@sveltejs/kit";
+import { sequence } from "@sveltejs/kit/hooks";
 import { env as publicEnv } from "$env/dynamic/public";
 import { getHomeForRole } from "$lib/config/auth";
 import type { MemberRole } from "$lib/types/database";
