@@ -1,0 +1,3 @@
+setup:
+  project: clubos
+  config: dev_app
