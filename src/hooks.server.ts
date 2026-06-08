@@ -104,4 +104,6 @@ const authHandle: Handle = async ({ event, resolve }) => {
 
 export const handle = enableSentry ? sequence(sentryHandle(), authHandle) : authHandle;
 
-export const handleError = (enableSentry ? handleErrorWithSentry() : undefined) satisfies HandleServerError | undefined;
+export const handleError = (enableSentry ? handleErrorWithSentry() : undefined) satisfies
+	| HandleServerError
+	| undefined;
