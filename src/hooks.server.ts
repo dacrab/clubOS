@@ -6,6 +6,8 @@ import { env as publicEnv } from "$env/dynamic/public";
 import { getHomeForRole } from "$lib/config/auth";
 import type { MemberRole } from "$lib/types/database";
 
+const enableSentry = typeof process !== "undefined" && !process.env.VITEST;
+
 const PUBLIC_ROUTES = ["/", "/reset", "/auth/callback", "/logout", "/signup"];
 const AUTH_ONLY_ROUTES = ["/onboarding", "/billing"];
 
@@ -100,6 +102,6 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const handle = sequence(sentryHandle(), authHandle);
+export const handle = enableSentry ? sequence(sentryHandle(), authHandle) : authHandle;
 
-export const handleError = handleErrorWithSentry() satisfies HandleServerError;
+export const handleError = (enableSentry ? handleErrorWithSentry() : undefined) satisfies HandleServerError | undefined;
