@@ -168,13 +168,13 @@ otp_expiry = 3600
 enable_signup = false
 enable_confirmations = false
 
-# Multi-factor-authentication - not used in this app
+# Multi-factor-authentication
 [auth.mfa]
-max_enrolled_factors = 0
+max_enrolled_factors = 10
 
 [auth.mfa.totp]
-enroll_enabled = false
-verify_enabled = false
+enroll_enabled = true
+verify_enabled = true
 
 # Configure MFA via Phone Messaging
 [auth.mfa.phone]
