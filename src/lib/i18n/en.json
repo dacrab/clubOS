@@ -123,7 +123,6 @@
 		"timezone": "Timezone",
 		"enterBusinessName": "Please enter your business name",
 		"enterFacilityName": "Please enter your facility name",
-		"complete": "Complete",
 		"completed": "Setup completed!",
 		"welcomeTitle": "Welcome to clubOS!",
 		"welcomeDesc": "Your account is ready. Redirecting to dashboard...",
@@ -204,6 +203,7 @@
 		"noItems": "No items in this order",
 		"receipt": "Receipt",
 		"printReceipt": "Print Receipt",
+		"searchById": "Search by ID",
 		"thankYou": "Thank you for your purchase!",
 		"empty": {
 			"title": "No orders yet",

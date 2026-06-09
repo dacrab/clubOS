@@ -7,24 +7,25 @@ import Card, {
 	CardHeader,
 	CardTitle,
 } from "$lib/components/ui/card/card.svelte";
-import { PLANS, type Plan, type PlanIcon } from "$lib/config/auth";
 import { t } from "$lib/i18n/index.svelte";
+import type { PlanId, PlanIcon, PlanData } from "$lib/config/plans";
 
 const ICONS = { Building2, Users, Zap } as const satisfies Record<PlanIcon, unknown>;
 
 type Props = {
+	plans: readonly PlanData[];
 	loading?: boolean;
-	selectedPlan?: Plan | null;
-	onSelect: (plan: Plan) => void;
+	selectedPlan?: PlanId | null;
+	onSelect: (plan: PlanId) => void;
 	variant?: "grid" | "list";
 };
 
-let { loading = false, selectedPlan = null, onSelect, variant = "grid" }: Props = $props();
+let { plans, loading = false, selectedPlan = null, onSelect, variant = "grid" }: Props = $props();
 </script>
 
 {#if variant === "grid"}
 	<div class="grid gap-6 md:grid-cols-3">
-		{#each PLANS as plan (plan.id)}
+		{#each plans as plan (plan.id)}
 			{@const Icon = ICONS[plan.icon]}
 			<Card class="relative flex flex-col transition-smooth hover:border-primary {plan.popular ? 'border-primary ring-2 ring-primary/20' : ''}">
 				{#if plan.popular}
@@ -54,7 +55,7 @@ let { loading = false, selectedPlan = null, onSelect, variant = "grid" }: Props 
 	</div>
 {:else}
 	<div class="grid gap-4">
-		{#each PLANS as plan (plan.id)}
+		{#each plans as plan (plan.id)}
 			{@const Icon = ICONS[plan.icon]}
 			<button
 				type="button"

@@ -3,21 +3,21 @@ import { AlertCircle } from "@lucide/svelte";
 import { toast } from "svelte-sonner";
 import PlanSelector from "$lib/components/features/plan-selector.svelte";
 import Header from "$lib/components/layout/header.svelte";
-import { PLANS, type Plan } from "$lib/config/auth";
 import { t } from "$lib/i18n/index.svelte";
+import type { PlanId } from "$lib/config/plans";
 
 const { data } = $props();
 
 let loading = $state(false);
-let selectedPlan = $state<Plan | null>(null);
+let selectedPlan = $state<PlanId | null>(null);
 
-async function handleSelect(planId: Plan) {
+async function handleSelect(planId: PlanId) {
 	if (!data.user?.id || !data.user?.email) {
 		toast.error(t("common.error"));
 		return;
 	}
 	selectedPlan = planId;
-	const plan = PLANS.find((p) => p.id === planId);
+	const plan = data.plans.find((p: { id: PlanId }) => p.id === planId);
 	if (!plan) return;
 
 	loading = true;
@@ -55,7 +55,7 @@ async function handleSelect(planId: Plan) {
 				<p class="mt-2 text-muted-foreground">{t("billing.subscriptionRequiredDesc")}</p>
 			</div>
 
-			<PlanSelector {loading} {selectedPlan} onSelect={handleSelect} variant="grid" />
+			<PlanSelector plans={data.plans} {loading} {selectedPlan} onSelect={handleSelect} variant="grid" />
 
 			<p class="mt-8 text-center text-sm text-muted-foreground">{t("billing.securePayment")}</p>
 		</div>

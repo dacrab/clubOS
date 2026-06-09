@@ -1,5 +1,6 @@
 import { redirect } from "@sveltejs/kit";
 import { getHomeForRole } from "$lib/config/auth";
+import { fetchPlansFromStripe } from "$lib/server/plans";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -17,8 +18,11 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 	if (membership?.tenant_id) throw redirect(307, getHomeForRole(membership.role));
 
+	const plans = await fetchPlansFromStripe();
+
 	return {
 		user: { id: user.id, email: user.email ?? "", fullName: user.user_metadata?.full_name ?? "" },
 		sessionId: url.searchParams.get("session_id"),
+		plans,
 	};
 };

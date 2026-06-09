@@ -16,8 +16,8 @@ import Select from "$lib/components/ui/select/select.svelte";
 import SelectContent from "$lib/components/ui/select/select-content.svelte";
 import SelectItem from "$lib/components/ui/select/select-item.svelte";
 import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
-import { PLANS, type Plan } from "$lib/config/auth";
 import { t } from "$lib/i18n/index.svelte";
+import type { PlanId } from "$lib/config/plans";
 
 type Step = 1 | 2 | 3;
 
@@ -26,7 +26,7 @@ const { data } = $props();
 let currentStep = $state<Step>(1);
 let loading = $state(false);
 let completed = $state(false);
-let selectedPlan = $state<Plan | null>(null);
+let selectedPlan = $state<PlanId | null>(null);
 
 let tenantName = $state("");
 let facilityName = $state("");
@@ -90,9 +90,9 @@ async function completeOnboarding(): Promise<{ tenantId: string }> {
 	return result;
 }
 
-async function handlePlanSelect(planId: Plan): Promise<void> {
+async function handlePlanSelect(planId: PlanId): Promise<void> {
 	selectedPlan = planId;
-	const plan = PLANS.find((p) => p.id === planId);
+	const plan = data.plans.find((p: { id: PlanId }) => p.id === planId);
 	if (!plan || !data.user) return;
 
 	loading = true;
@@ -197,7 +197,7 @@ async function skipPaymentForNow(): Promise<void> {
 								</div>
 								<div class="pt-4 border-t">
 									<h4 class="font-medium mb-4">{t("onboarding.choosePlan")}</h4>
-									<PlanSelector {loading} {selectedPlan} onSelect={handlePlanSelect} variant="list" />
+									<PlanSelector plans={data.plans} {loading} {selectedPlan} onSelect={handlePlanSelect} variant="list" />
 								</div>
 							</div>
 						{/if}
