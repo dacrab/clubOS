@@ -3,8 +3,8 @@ import { AlertCircle } from "@lucide/svelte";
 import { toast } from "svelte-sonner";
 import PlanSelector from "$lib/components/features/plan-selector.svelte";
 import Header from "$lib/components/layout/header.svelte";
-import { t } from "$lib/i18n/index.svelte";
 import type { PlanId } from "$lib/config/plans";
+import { t } from "$lib/i18n/index.svelte";
 
 const { data } = $props();
 

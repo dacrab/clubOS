@@ -1,6 +1,6 @@
 import { env } from "$env/dynamic/private";
-import { stripeGet } from "./stripe";
 import { PLANS_META, type PlanData } from "$lib/config/plans";
+import { stripeGet } from "./stripe";
 
 export async function fetchPlansFromStripe(): Promise<PlanData[]> {
 	const key = env.STRIPE_SECRET_KEY;

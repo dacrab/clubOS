@@ -7,8 +7,8 @@ import Card, {
 	CardHeader,
 	CardTitle,
 } from "$lib/components/ui/card/card.svelte";
+import type { PlanData, PlanIcon, PlanId } from "$lib/config/plans";
 import { t } from "$lib/i18n/index.svelte";
-import type { PlanId, PlanIcon, PlanData } from "$lib/config/plans";
 
 const ICONS = { Building2, Users, Zap } as const satisfies Record<PlanIcon, unknown>;
 

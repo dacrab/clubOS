@@ -16,8 +16,8 @@ import Select from "$lib/components/ui/select/select.svelte";
 import SelectContent from "$lib/components/ui/select/select-content.svelte";
 import SelectItem from "$lib/components/ui/select/select-item.svelte";
 import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
-import { t } from "$lib/i18n/index.svelte";
 import type { PlanId } from "$lib/config/plans";
+import { t } from "$lib/i18n/index.svelte";
 
 type Step = 1 | 2 | 3;
 
