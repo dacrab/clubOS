@@ -24,7 +24,7 @@ export interface MockSubscription {
 	status: SubscriptionStatus;
 	trialEnd?: Date;
 	currentPeriodEnd?: Date;
-	stripeCustomerId?: string;
+	polarCustomerId?: string;
 }
 
 export const generateId = (): string => `test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -124,7 +124,7 @@ export const createSupabaseMock = (
 			subscriptions.map((s) => ({
 				tenant_id: s.tenantId,
 				status: s.status,
-				stripe_customer_id: s.stripeCustomerId ?? null,
+				polar_customer_id: s.polarCustomerId ?? null,
 				trial_end: s.trialEnd?.toISOString(),
 				current_period_end: s.currentPeriodEnd?.toISOString(),
 			})),

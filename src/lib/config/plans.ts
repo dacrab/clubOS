@@ -4,7 +4,9 @@ export type PlanIcon = "Building2" | "Users" | "Zap";
 export interface PlanMeta {
 	id: PlanId;
 	name: string;
-	priceId: string;
+	productId: string;
+	amount: number;
+	currency: string;
 	descriptionKey: string;
 	featureKeys: readonly string[];
 	icon: PlanIcon;
@@ -15,7 +17,9 @@ export const PLANS_META: readonly PlanMeta[] = [
 	{
 		id: "basic",
 		name: "Basic",
-		priceId: "price_1Sc4wV9fJvoeQ48O2RI2I9bl",
+		productId: "d77854a0-c363-4419-a60b-8e78741d79db",
+		amount: 2900,
+		currency: "eur",
 		descriptionKey: "signup.plans.basic.description",
 		featureKeys: [
 			"signup.plans.basic.feature1",
@@ -29,7 +33,9 @@ export const PLANS_META: readonly PlanMeta[] = [
 	{
 		id: "pro",
 		name: "Pro",
-		priceId: "price_1Sc4wV9fJvoeQ48Ot0p9YmNm",
+		productId: "5c4ab2ff-333a-444c-aa59-98324c2f6bbe",
+		amount: 7900,
+		currency: "eur",
 		descriptionKey: "signup.plans.pro.description",
 		featureKeys: [
 			"signup.plans.pro.feature1",
@@ -44,7 +50,9 @@ export const PLANS_META: readonly PlanMeta[] = [
 	{
 		id: "enterprise",
 		name: "Enterprise",
-		priceId: "price_1Sc4wV9fJvoeQ48OdmvyM2jy",
+		productId: "54b1dfa4-ce0e-49db-9a98-6fcae873365d",
+		amount: 19900,
+		currency: "eur",
 		descriptionKey: "signup.plans.enterprise.description",
 		featureKeys: [
 			"signup.plans.enterprise.feature1",
@@ -59,7 +67,5 @@ export const PLANS_META: readonly PlanMeta[] = [
 ];
 
 export interface PlanData extends PlanMeta {
-	amount: number;
-	currency: string;
 	price: string;
 }

@@ -1,4 +1,4 @@
-import { fetchPlansFromStripe } from "$lib/server/plans";
+import { fetchPlans } from "$lib/server/plans";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.limit(1)
 		.single();
 
-	const plans = await fetchPlansFromStripe();
+	const plans = await fetchPlans();
 
 	return {
 		user: { id: user.id, email: user.email },

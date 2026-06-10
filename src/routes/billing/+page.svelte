@@ -22,18 +22,18 @@ async function handleSelect(planId: PlanId) {
 
 	loading = true;
 	try {
-		const res = await fetch("/api/stripe/checkout", {
+		const res = await fetch("/api/billing/checkout", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				priceId: plan.priceId,
+				planId: plan.id,
 				userId: data.user.id,
 				email: data.user.email,
 				tenantId: data.tenantId,
 			}),
 		});
-		const { url, error: stripeError } = await res.json();
-		if (stripeError) throw new Error(stripeError);
+		const { url, error: polarError } = await res.json();
+		if (polarError) throw new Error(polarError);
 		window.location.href = url;
 	} catch (err) {
 		toast.error(err instanceof Error ? err.message : t("common.error"));

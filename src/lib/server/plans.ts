@@ -1,28 +1,8 @@
-import { env } from "$env/dynamic/private";
 import { PLANS_META, type PlanData } from "$lib/config/plans";
-import { stripeGet } from "./stripe";
 
-export async function fetchPlansFromStripe(): Promise<PlanData[]> {
-	const key = env.STRIPE_SECRET_KEY;
-	if (!key) return PLANS_META.map((m) => ({ ...m, amount: 0, currency: "eur", price: "—" }));
-
-	const plans = await Promise.all(
-		PLANS_META.map(async (meta) => {
-			try {
-				const price = await stripeGet<{ unit_amount: number; currency: string }>(
-					`/prices/${meta.priceId}`,
-					key,
-				);
-				return {
-					...meta,
-					amount: price.unit_amount,
-					currency: price.currency,
-					price: `€${price.unit_amount / 100}`,
-				};
-			} catch {
-				return { ...meta, amount: 0, currency: "eur", price: "—" };
-			}
-		}),
-	);
-	return plans;
+export async function fetchPlans(): Promise<PlanData[]> {
+	return PLANS_META.map((meta) => ({
+		...meta,
+		price: meta.currency === "eur" ? `€${meta.amount / 100}` : `$${meta.amount / 100}`,
+	}));
 }

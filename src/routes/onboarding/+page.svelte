@@ -98,18 +98,18 @@ async function handlePlanSelect(planId: PlanId): Promise<void> {
 	loading = true;
 	try {
 		const { tenantId } = await completeOnboarding();
-		const res = await fetch("/api/stripe/checkout", {
+		const res = await fetch("/api/billing/checkout", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				priceId: plan.priceId,
+				planId: plan.id,
 				userId: data.user.id,
 				email: data.user.email,
 				tenantId,
 			}),
 		});
-		const { url, error: stripeError } = await res.json();
-		if (stripeError) throw new Error(stripeError);
+		const { url, error: polarError } = await res.json();
+		if (polarError) throw new Error(polarError);
 		window.location.href = url;
 	} catch (err) {
 		toast.error(err instanceof Error ? err.message : t("common.error"));
