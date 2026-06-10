@@ -49,7 +49,9 @@ export const POST: RequestHandler = async ({ request }) => {
 		case "checkout.created":
 		case "checkout.updated": {
 			if (event.data.status === "succeeded" && event.data.subscription_id) {
-				const sub = await polarGet<Record<string, unknown>>(`/subscriptions/${event.data.subscription_id}`);
+				const sub = await polarGet<Record<string, unknown>>(
+					`/subscriptions/${event.data.subscription_id}`,
+				);
 				const metadata = event.data.customer_metadata as Record<string, string> | undefined;
 				const tenantId = metadata?.tenant_id;
 				if (!tenantId) break;
@@ -62,7 +64,9 @@ export const POST: RequestHandler = async ({ request }) => {
 					subscriptionId: event.data.subscription_id,
 					status: "active",
 					planName: plan?.name ?? "Subscription",
-					currentPeriodEnd: sub.current_period_end ? new Date(sub.current_period_end as string).toISOString() : null,
+					currentPeriodEnd: sub.current_period_end
+						? new Date(sub.current_period_end as string).toISOString()
+						: null,
 					trialStart: null,
 					trialEnd: null,
 				});
@@ -84,7 +88,9 @@ export const POST: RequestHandler = async ({ request }) => {
 				subscriptionId: subData.id ?? "",
 				status: subData.status ?? "active",
 				planName: plan?.name ?? "Subscription",
-				currentPeriodEnd: subData.current_period_end ? new Date(subData.current_period_end as string).toISOString() : null,
+				currentPeriodEnd: subData.current_period_end
+					? new Date(subData.current_period_end as string).toISOString()
+					: null,
 				trialStart: null,
 				trialEnd: null,
 			});

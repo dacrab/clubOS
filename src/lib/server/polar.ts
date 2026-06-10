@@ -79,21 +79,28 @@ export async function upsertSubscription(args: {
 	trialStart: string | null;
 	trialEnd: string | null;
 }): Promise<void> {
-	const { tenantId, customerId, subscriptionId, status, planName, currentPeriodEnd, trialStart, trialEnd } = args;
-	const { error } = await getSupabaseAdmin()
-		.from("subscriptions")
-		.upsert(
-			{
-				tenant_id: tenantId,
-				polar_customer_id: customerId,
-				polar_subscription_id: subscriptionId,
-				status,
-				plan_name: planName,
-				current_period_end: currentPeriodEnd,
-				trial_start: trialStart,
-				trial_end: trialEnd,
-			},
-			{ onConflict: "tenant_id" },
-		);
+	const {
+		tenantId,
+		customerId,
+		subscriptionId,
+		status,
+		planName,
+		currentPeriodEnd,
+		trialStart,
+		trialEnd,
+	} = args;
+	const { error } = await getSupabaseAdmin().from("subscriptions").upsert(
+		{
+			tenant_id: tenantId,
+			polar_customer_id: customerId,
+			polar_subscription_id: subscriptionId,
+			status,
+			plan_name: planName,
+			current_period_end: currentPeriodEnd,
+			trial_start: trialStart,
+			trial_end: trialEnd,
+		},
+		{ onConflict: "tenant_id" },
+	);
 	if (error) throw new Error(error.message);
 }

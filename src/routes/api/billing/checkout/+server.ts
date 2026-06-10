@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { createCheckout } from "$lib/server/polar";
 import { PLANS_META } from "$lib/config/plans";
+import { createCheckout } from "$lib/server/polar";
 import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ request }) => {
