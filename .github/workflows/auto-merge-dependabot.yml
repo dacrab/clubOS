@@ -42,7 +42,7 @@ jobs:
       - name: Fetch Dependabot metadata
         id: metadata
         if: steps.pr.outputs.url != ''
-        uses: dependabot/fetch-metadata@d7267f1a0b23c3b7c3ef42d0c69b505bf287cf65 # v2.3.0
+        uses: dependabot/fetch-metadata@d7267f607e9d3fb96fc2fbe83e0af444713e90b7 # v2.3.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           pr-number: ${{ steps.pr.outputs.number }}
