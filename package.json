@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "doppler run -- vite dev",
-		"build": "which doppler > /dev/null 2>&1 && doppler run -- vite build || vite build",
+		"build": "doppler run -- vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && knip && biome check .",
 		"typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
