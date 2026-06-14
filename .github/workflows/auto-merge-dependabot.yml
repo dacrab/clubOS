@@ -16,27 +16,27 @@ jobs:
       github.event.workflow_run.event == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - name: Get PR and check author
+      - name: Find Dependabot PR
         id: pr
         uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
         with:
           script: |
-            const prs = context.payload.workflow_run.pull_requests;
-            if (!prs || prs.length === 0) {
+            const headBranch = context.payload.workflow_run.head_branch;
+            if (!headBranch || !headBranch.startsWith('dependabot/')) {
               core.setOutput("url", "");
               return;
             }
-            const pr = prs[0];
-            const { data: prData } = await github.rest.pulls.get({
+            const { data: prs } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: pr.number,
+              head: `${context.repo.owner}:${headBranch}`,
+              state: 'open'
             });
-            if (prData.user.login !== 'dependabot[bot]') {
+            if (prs.length === 0) {
               core.setOutput("url", "");
               return;
             }
-            core.setOutput("url", pr.html_url);
+            core.setOutput("url", prs[0].html_url);
 
       - name: Enable auto-merge
         if: steps.pr.outputs.url != ''
@@ -44,5 +44,3 @@ jobs:
         env:
           PR_URL: ${{ steps.pr.outputs.url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-
