@@ -16,14 +16,15 @@ jobs:
       github.event.workflow_run.event == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - name: Find Dependabot PR
-        id: pr
+      - name: Find and merge Dependabot PR
         uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           script: |
             const headBranch = context.payload.workflow_run.head_branch;
             if (!headBranch || !headBranch.startsWith('dependabot/')) {
-              core.setOutput("url", "");
+              core.info(`Not a Dependabot branch: ${headBranch}`);
               return;
             }
             const { data: prs } = await github.rest.pulls.list({
@@ -33,25 +34,15 @@ jobs:
               state: 'open'
             });
             if (prs.length === 0) {
-              core.setOutput("url", "");
+              core.info(`No open PR found for branch ${headBranch}`);
               return;
             }
-            core.setOutput("url", prs[0].html_url);
-            core.setOutput("number", prs[0].number);
-
-      - name: Fetch Dependabot metadata
-        id: metadata
-        if: steps.pr.outputs.url != ''
-        uses: dependabot/fetch-metadata@d7267f607e9d3fb96fc2fbe83e0af444713e90b7 # v2.3.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          pr-number: ${{ steps.pr.outputs.number }}
-
-      - name: Merge non-major updates
-        if: >
-          steps.pr.outputs.url != '' &&
-          steps.metadata.outputs.update-type != 'version-update:semver-major'
-        run: gh pr merge --squash "$PR_URL"
-        env:
-          PR_URL: ${{ steps.pr.outputs.url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            const pr = prs[0];
+            core.info(`Merging Dependabot PR #${pr.number}: ${pr.title}`);
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              merge_method: 'squash'
+            });
+            core.info(`✓ PR #${pr.number} merged`);
