@@ -37,10 +37,21 @@ jobs:
               return;
             }
             core.setOutput("url", prs[0].html_url);
+            core.setOutput("number", prs[0].number);
 
-      - name: Enable auto-merge
+      - name: Fetch Dependabot metadata
+        id: metadata
         if: steps.pr.outputs.url != ''
-        run: gh pr merge --auto --squash "$PR_URL"
+        uses: dependabot/fetch-metadata@d7267f1a0b23c3b7c3ef42d0c69b505bf287cf65 # v2.3.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pr-number: ${{ steps.pr.outputs.number }}
+
+      - name: Merge non-major updates
+        if: >
+          steps.pr.outputs.url != '' &&
+          steps.metadata.outputs.update-type != 'version-update:semver-major'
+        run: gh pr merge --squash "$PR_URL"
         env:
           PR_URL: ${{ steps.pr.outputs.url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
