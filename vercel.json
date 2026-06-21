@@ -5,5 +5,5 @@
       "schedule": "0 8 * * *"
     }
   ],
-  "ignoreCommand": "[ \"$VERCEL_GIT_COMMIT_AUTHOR_LOGIN\" = \"dependabot[bot]\" ] && exit 0 || exit 1"
+  "ignoreCommand": "case \"$VERCEL_GIT_COMMIT_REF\" in dependabot/*) exit 0;; *) exit 1;; esac"
 }
