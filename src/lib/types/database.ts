@@ -9,7 +9,6 @@ export type SubscriptionStatus =
 	| "unpaid"
 	| "paused";
 
-// Limits
 export const PRODUCTS_LIMIT = 500;
 export const CATEGORIES_LIMIT = 100;
 export const USERS_PER_PAGE = 200;

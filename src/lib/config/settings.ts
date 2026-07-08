@@ -3,15 +3,11 @@ type TimeFormatType = "24h" | "12h";
 type CurrencyCodeType = "EUR" | "USD" | "GBP" | "CHF" | "PLN" | "CZK" | "SEK" | "NOK" | "DKK";
 
 export interface TenantSettings {
-	// Regional
 	currency_code: CurrencyCodeType;
 	date_format: DateFormatType;
 	time_format: TimeFormatType;
-	// Inventory
 	low_stock_threshold: number;
-	// Sales
 	coupons_value: number;
-	// Bookings
 	football_fields_count: number;
 	appointment_buffer_min: number;
 	prevent_overlaps: boolean;
