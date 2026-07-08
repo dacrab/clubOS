@@ -89,7 +89,9 @@ const getStatusBadge = (s: BookingStatus) =>
 		? ("success" as const)
 		: s === "canceled"
 			? ("destructive" as const)
-			: ("secondary" as const);
+			: s === "no_show"
+				? ("warning" as const)
+				: ("secondary" as const);
 
 function openDialog(item?: Booking) {
 	editingItem = item ?? null;
@@ -326,7 +328,7 @@ async function confirmDelete(): Promise<void> {
 			<Select bind:value={formData.status}>
 				<SelectTrigger selected={t(`bookings.status.${formData.status}`)} />
 				<SelectContent>
-					{#each ["pending", "confirmed", "canceled", "completed"] as status (status)}
+					{#each ["pending", "confirmed", "canceled", "completed", "no_show"] as status (status)}
 						<SelectItem value={status}>{t(`bookings.status.${status}`)}</SelectItem>
 					{/each}
 				</SelectContent>

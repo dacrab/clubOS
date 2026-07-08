@@ -16,15 +16,15 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		const tenantId = metadata?.tenant_id;
 		const productId = (checkoutData.products as Array<{ id: string }> | undefined)?.[0]?.id;
 
-		if (!productId || !tenantId || !locals.user) {
+		if (!productId || !tenantId || !customerId || !subscriptionId || !locals.user) {
 			throw redirect(307, "/billing?error=missing_data");
 		}
 
 		const plan = PLANS_META.find((p) => p.productId === productId);
 		await upsertSubscription({
 			tenantId,
-			customerId: customerId ?? "",
-			subscriptionId: subscriptionId ?? "",
+			customerId,
+			subscriptionId,
 			status: "active",
 			planName: plan?.name ?? "Subscription",
 			currentPeriodEnd: null,

@@ -8,15 +8,11 @@ function polarToken(): string {
 	return token;
 }
 
-let _polarHeaders: Record<string, string> | null = null;
 function polarHeaders(): Record<string, string> {
-	if (!_polarHeaders) {
-		_polarHeaders = {
-			Authorization: `Bearer ${polarToken()}`,
-			"Content-Type": "application/json",
-		};
-	}
-	return _polarHeaders;
+	return {
+		Authorization: `Bearer ${polarToken()}`,
+		"Content-Type": "application/json",
+	};
 }
 
 export async function polarPost<T = unknown>(

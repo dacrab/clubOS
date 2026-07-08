@@ -50,6 +50,7 @@ export const DATE_FORMAT_OPTIONS = [
 	{ value: "MM/DD/YYYY", labelKey: "settings.dateFormats.MMDDYYYY" },
 	{ value: "YYYY-MM-DD", labelKey: "settings.dateFormats.YYYYMMDD" },
 	{ value: "DD.MM.YYYY", labelKey: "settings.dateFormats.DDMMYYYY_DOT" },
+	{ value: "DD-MM-YYYY", labelKey: "settings.dateFormats.DDMMYYYY_DASH" },
 ] as const;
 
 export const TIME_FORMAT_OPTIONS = [

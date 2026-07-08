@@ -13,8 +13,8 @@ export async function runCrud(
 		toast.success(t("common.success"));
 		await invalidateAll();
 		return true;
-	} catch (_err) {
-		toast.error(t("common.error"));
+	} catch (err) {
+		toast.error(err instanceof Error ? err.message : t("common.error"));
 		return false;
 	}
 }

@@ -255,7 +255,7 @@ async function submitOrder(): Promise<void> {
 								<span class="font-semibold text-sm leading-tight line-clamp-2 min-h-[2.5rem]">{product.name}</span>
 								<div class="mt-auto pt-3 flex items-end justify-between">
 									<span class="text-lg font-bold text-primary">{fmtCurrency(product.price)}</span>
-									{#if product.stock_quantity >= 0}
+									{#if product.track_inventory && product.stock_quantity > 0}
 										<Badge variant="outline" class="text-[10px] px-1.5">{product.stock_quantity}</Badge>
 									{/if}
 								</div>

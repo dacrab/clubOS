@@ -56,8 +56,8 @@ export interface BookingDetails {
 	[key: string]: unknown;
 }
 
-/** Product reference in order item (object or array depending on query). */
-export type ProductRef = { id: string; name: string } | { id: string; name: string }[] | null;
+/** Product reference in order item. */
+export type ProductRef = { id: string; name: string } | null;
 
 export interface OrderItemView {
 	id: string;

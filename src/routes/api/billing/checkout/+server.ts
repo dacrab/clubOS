@@ -18,7 +18,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!plan) return json({ error: "Invalid plan" }, { status: 400 });
 
 	try {
-		const origin = request.headers.get("origin") ?? "http://localhost:5173";
+		const origin = request.headers.get("origin") ?? new URL(request.url).origin;
 		const checkout = await createCheckout({
 			productId: plan.productId,
 			email,
