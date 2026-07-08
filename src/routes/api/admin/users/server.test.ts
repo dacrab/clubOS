@@ -60,7 +60,7 @@ describe("POST /api/admin/users", () => {
 		const res = await POST({
 			request: json({ email: "x@x.com", password: "pass", role: "staff", full_name: "Test" }),
 			locals: adminLocals,
-		} as never);
+		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(200);
 		expect(mockCreateUser).toHaveBeenCalled();
 		expect(mockInsert).toHaveBeenCalled();
@@ -72,7 +72,7 @@ describe("POST /api/admin/users", () => {
 		const res = await POST({
 			request: json({ email: "x@x.com", password: "pass", role: "staff", full_name: "Test" }),
 			locals: adminLocals,
-		} as never);
+		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(400);
 		expect(mockDeleteUser).toHaveBeenCalledWith("new1");
 	});
@@ -81,7 +81,7 @@ describe("POST /api/admin/users", () => {
 		const res = await POST({
 			request: json({ email: "x@x.com", password: "pass" }),
 			locals: adminLocals,
-		} as never);
+		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(400);
 		expect(mockCreateUser).not.toHaveBeenCalled();
 	});
@@ -91,7 +91,7 @@ describe("POST /api/admin/users", () => {
 		const res = await POST({
 			request: json({ email: "x@x.com", password: "pass", role: "staff", full_name: "Test" }),
 			locals: unauthLocals,
-		} as never);
+		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(401);
 		expect(mockCreateUser).not.toHaveBeenCalled();
 	});
@@ -101,7 +101,7 @@ describe("POST /api/admin/users", () => {
 		const res = await POST({
 			request: json({ email: "x@x.com", password: "pass", role: "staff", full_name: "Test" }),
 			locals: adminLocals,
-		} as never);
+		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(403);
 		expect(mockCreateUser).not.toHaveBeenCalled();
 	});
@@ -111,7 +111,7 @@ describe("POST /api/admin/users", () => {
 		const res = await POST({
 			request: json({ email: "x@x.com", password: "pass", role: "owner", full_name: "Test" }),
 			locals: adminLocals,
-		} as never);
+		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(403);
 		expect(mockCreateUser).not.toHaveBeenCalled();
 	});
@@ -127,7 +127,7 @@ describe("PUT /api/admin/users", () => {
 		const res = await PUT({
 			request: json({ id: "u2", full_name: "Updated", role: "manager" }, "PUT"),
 			locals: adminLocals,
-		} as never);
+		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(204);
 		expect(mockUpdateUserById).toHaveBeenCalledWith(
 			"u2",
@@ -139,7 +139,7 @@ describe("PUT /api/admin/users", () => {
 		const res = await PUT({
 			request: json({ full_name: "Updated" }, "PUT"),
 			locals: adminLocals,
-		} as never);
+		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(400);
 	});
 
@@ -148,7 +148,7 @@ describe("PUT /api/admin/users", () => {
 		const res = await PUT({
 			request: json({ id: "u2", full_name: "Updated" }, "PUT"),
 			locals: unauthLocals,
-		} as never);
+		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(401);
 	});
 
@@ -157,7 +157,7 @@ describe("PUT /api/admin/users", () => {
 		const res = await PUT({
 			request: json({ id: "u2", role: "owner" }, "PUT"),
 			locals: adminLocals,
-		} as never);
+		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(403);
 	});
 });
@@ -168,13 +168,15 @@ describe("DELETE /api/admin/users", () => {
 		const res = await DELETE({
 			request: json({ id: "u2" }, "DELETE"),
 			locals: adminLocals,
-		} as never);
+		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(204);
 		expect(mockDeleteUser).toHaveBeenCalledWith("u2");
 	});
 
 	it("returns 400 when id is missing", async () => {
-		const res = await DELETE({ request: json({}, "DELETE"), locals: adminLocals } as never);
+		const res = await DELETE({ request: json({}, "DELETE"), locals: adminLocals } as Parameters<
+			typeof POST
+		>[0]);
 		expect(res.status).toBe(400);
 	});
 
@@ -183,7 +185,7 @@ describe("DELETE /api/admin/users", () => {
 		const res = await DELETE({
 			request: json({ id: "u2" }, "DELETE"),
 			locals: unauthLocals,
-		} as never);
+		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(401);
 	});
 
@@ -192,7 +194,7 @@ describe("DELETE /api/admin/users", () => {
 		const res = await DELETE({
 			request: json({ id: "u2" }, "DELETE"),
 			locals: adminLocals,
-		} as never);
+		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(403);
 	});
 });

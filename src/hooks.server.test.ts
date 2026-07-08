@@ -50,7 +50,9 @@ describe("hooks.server", () => {
 		};
 	};
 	const runHandle = async (event: ReturnType<typeof createEvent>): Promise<Response> =>
-		(await import("./hooks.server")).handle({ event, resolve } as never);
+		(await import("./hooks.server")).handle({ event, resolve } as unknown as Parameters<
+			typeof import("./hooks.server").handle
+		>[0]);
 
 	describe("public routes", () => {
 		it.each(["/", "/signup", "/reset"])("allows access to %s without auth", async (route) => {
@@ -136,7 +138,10 @@ describe("hooks.server", () => {
 		] as const)("%s allows %s", async (route, role) => {
 			const freshResolve = vi.fn().mockResolvedValue(new Response());
 			const event = createEvent(route, scenarios.activeSubscription(role));
-			await (await import("./hooks.server")).handle({ event, resolve: freshResolve } as never);
+			await (await import("./hooks.server")).handle({
+				event,
+				resolve: freshResolve,
+			} as unknown as Parameters<typeof import("./hooks.server").handle>[0]);
 			expect(freshResolve).toHaveBeenCalledOnce();
 		});
 	});

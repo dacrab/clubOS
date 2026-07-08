@@ -1,3 +1,4 @@
+import { CURRENCY_OPTIONS } from "$lib/config/settings";
 import { settings } from "$lib/state/settings.svelte";
 
 const DATE_FORMATS = {
@@ -41,17 +42,9 @@ export function fmtCurrency(value: number): string {
 	}).format(value);
 }
 
-const CURRENCY_SYMBOLS: Record<string, string> = {
-	USD: "$",
-	EUR: "€",
-	GBP: "£",
-	CHF: "CHF",
-	PLN: "zł",
-	CZK: "Kč",
-	SEK: "kr",
-	NOK: "kr",
-	DKK: "kr",
-};
+const CURRENCY_SYMBOLS = Object.fromEntries(
+	CURRENCY_OPTIONS.map((c) => [c.value, c.symbol]),
+) as Record<string, string>;
 
 export function currentCurrencySymbol(): string {
 	return CURRENCY_SYMBOLS[settings.current.currency_code] ?? "?";
