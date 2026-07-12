@@ -4,9 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
 const hasSentryCredentials = Boolean(
-	process.env.SENTRY_AUTH_TOKEN &&
-		process.env.SENTRY_ORG &&
-		process.env.SENTRY_PROJECT,
+	process.env.SENTRY_AUTH_TOKEN && process.env.SENTRY_ORG && process.env.SENTRY_PROJECT,
 );
 
 const sentryOptions = {
@@ -15,11 +13,7 @@ const sentryOptions = {
 };
 
 export default defineConfig({
-	plugins: [
-		sentrySvelteKit(sentryOptions),
-		tailwindcss(),
-		sveltekit(),
-	],
+	plugins: [sentrySvelteKit(sentryOptions), tailwindcss(), sveltekit()],
 	build: {
 		target: "es2022",
 		minify: "esbuild",
