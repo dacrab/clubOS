@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("$app/environment", () => ({ browser: true }));
+
 const matchMedia = vi.fn(() => ({ matches: false }));
 const classList = { add: vi.fn(), remove: vi.fn() };
 const store: Record<string, string> = {};
@@ -54,5 +56,14 @@ describe("theme", () => {
 		theme.setTheme("light");
 		theme.toggle();
 		expect(theme.current).toBe("dark");
+	});
+
+	it("applies the dark class to <html> and removes it for light", async () => {
+		const { theme } = await import("./theme.svelte");
+		theme.setTheme("dark");
+		expect(classList.add).toHaveBeenCalledWith("dark");
+		classList.remove.mockClear();
+		theme.setTheme("light");
+		expect(classList.remove).toHaveBeenCalledWith("dark");
 	});
 });

@@ -51,8 +51,11 @@ describe("t()", () => {
 		expect(t("common.save")).toBe("Αποθήκευση");
 	});
 
-	it("handles placeholder keys without replacement", () => {
-		const result = t("common.deleteConfirm");
-		expect(result).toContain("{name}");
+	it("keeps placeholder tokens verbatim when there are no params", () => {
+		expect(t("common.deleteConfirm")).toBe("Delete {name}?");
+	});
+
+	it("returns the key for a nested object (not a leaf string)", () => {
+		expect(t("common")).toBe("common");
 	});
 });

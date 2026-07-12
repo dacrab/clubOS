@@ -146,7 +146,7 @@ describe("POST /api/onboarding/complete", () => {
 			req({ tenant: { name: "Club" }, facility: { name: "Main" } }) as unknown as PostArgs,
 		);
 		expect(response.status).toBe(500);
-		expect((await response.json()).error).toBeDefined();
+		expect((await response.json()).error).toBe("Failed to complete onboarding");
 	});
 
 	it("returns 500 when facility creation fails", async () => {
@@ -162,7 +162,7 @@ describe("POST /api/onboarding/complete", () => {
 			}) as unknown as PostArgs,
 		);
 		expect(response.status).toBe(500);
-		expect((await response.json()).error).toBeDefined();
+		expect((await response.json()).error).toBe("Failed to complete onboarding");
 	});
 
 	it("returns 500 when membership creation fails", async () => {
@@ -176,6 +176,21 @@ describe("POST /api/onboarding/complete", () => {
 			}) as unknown as PostArgs,
 		);
 		expect(response.status).toBe(500);
-		expect((await response.json()).error).toBeDefined();
+		expect((await response.json()).error).toBe("Failed to complete onboarding");
+	});
+
+	it("does not create a tenant when user already has a membership", async () => {
+		const user = createMockUser(),
+			tenant = createMockTenant();
+		const { request } = req({ tenant: { name: "New" }, facility: { name: "Main" } }, user);
+		const locals = createMockLocals({
+			user,
+			memberships: [createMockMembership(user.id, tenant.id, { role: "owner" })],
+			tenants: [tenant],
+		});
+		const response = await POST({ request, locals } as unknown as PostArgs);
+		expect(response.status).toBe(200);
+		expect((await response.json()).tenantId).toBe(tenant.id);
+		expect(mockAdmin.from).not.toHaveBeenCalledWith("tenants");
 	});
 });

@@ -20,6 +20,8 @@ vi.mock("@supabase/ssr", () => ({
 	createServerClient: (...args: unknown[]) => mockSupabaseClient(...args),
 }));
 
+import { handle } from "./hooks.server";
+
 describe("hooks.server", () => {
 	let resolve: ReturnType<typeof vi.fn>;
 
@@ -50,9 +52,7 @@ describe("hooks.server", () => {
 		};
 	};
 	const runHandle = async (event: ReturnType<typeof createEvent>): Promise<Response> =>
-		(await import("./hooks.server")).handle({ event, resolve } as unknown as Parameters<
-			typeof import("./hooks.server").handle
-		>[0]);
+		handle({ event, resolve } as unknown as Parameters<typeof handle>[0]);
 
 	describe("public routes", () => {
 		it.each(["/", "/signup", "/reset"])("allows access to %s without auth", async (route) => {
@@ -136,13 +136,8 @@ describe("hooks.server", () => {
 			["/secretary", "manager"],
 			["/staff", "staff"],
 		] as const)("%s allows %s", async (route, role) => {
-			const freshResolve = vi.fn().mockResolvedValue(new Response());
-			const event = createEvent(route, scenarios.activeSubscription(role));
-			await (await import("./hooks.server")).handle({
-				event,
-				resolve: freshResolve,
-			} as unknown as Parameters<typeof import("./hooks.server").handle>[0]);
-			expect(freshResolve).toHaveBeenCalledOnce();
+			await runHandle(createEvent(route, scenarios.activeSubscription(role)));
+			expect(resolve).toHaveBeenCalledOnce();
 		});
 	});
 

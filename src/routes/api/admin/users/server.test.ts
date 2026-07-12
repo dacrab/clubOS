@@ -62,8 +62,18 @@ describe("POST /api/admin/users", () => {
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(200);
-		expect(mockCreateUser).toHaveBeenCalled();
-		expect(mockInsert).toHaveBeenCalled();
+		expect(await res.json()).toEqual({ id: "new1" });
+		expect(mockCreateUser).toHaveBeenCalledWith(
+			expect.objectContaining({ email: "x@x.com", password: "pass", email_confirm: true }),
+		);
+		expect(mockInsert).toHaveBeenCalledWith(
+			expect.objectContaining({
+				user_id: "new1",
+				tenant_id: "t1",
+				role: "staff",
+				is_primary: true,
+			}),
+		);
 	});
 
 	it("rolls back auth user on membership error", async () => {
@@ -131,8 +141,12 @@ describe("PUT /api/admin/users", () => {
 		expect(res.status).toBe(204);
 		expect(mockUpdateUserById).toHaveBeenCalledWith(
 			"u2",
-			expect.objectContaining({ user_metadata: expect.any(Object) }),
+			expect.objectContaining({
+				user_metadata: expect.objectContaining({ full_name: "Updated", role: "manager" }),
+			}),
 		);
+		expect(mockUpdate).toHaveBeenCalledWith({ role: "manager" });
+		expect(mockEq).toHaveBeenCalledWith("user_id", "u2");
 	});
 
 	it("returns 400 when id is missing", async () => {
@@ -171,6 +185,17 @@ describe("DELETE /api/admin/users", () => {
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(204);
 		expect(mockDeleteUser).toHaveBeenCalledWith("u2");
+	});
+
+	it("returns 404 when user has no membership in the caller tenant", async () => {
+		mockMembershipSelect.mockResolvedValueOnce({ data: { tenant_id: "t1", role: "owner" } });
+		mockMembershipSelect.mockResolvedValueOnce({ data: null, error: { message: "Not found" } });
+		const res = await DELETE({
+			request: json({ id: "u2" }, "DELETE"),
+			locals: adminLocals,
+		} as Parameters<typeof POST>[0]);
+		expect(res.status).toBe(404);
+		expect(mockDeleteUser).not.toHaveBeenCalled();
 	});
 
 	it("returns 400 when id is missing", async () => {

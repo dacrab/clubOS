@@ -23,5 +23,5 @@ export const shortId = (id: string): string => id.slice(0, 8);
 
 export const getProductName = (p: ProductRef): string => p?.name ?? "Unknown";
 
-export const getActiveOrderItems = (items: OrderItemView[]): OrderItemView[] =>
+export const getActiveOrderItems = (items: OrderItemView[] | null | undefined): OrderItemView[] =>
 	items?.filter((i) => !i.is_deleted) ?? [];
