@@ -19,6 +19,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { DAY_MS } from "../src/lib/types/database";
 
 // ─── Env validation ────────────────────────────────────────────────────────
 
@@ -89,7 +90,7 @@ async function seed(): Promise<void> {
 	if (!tenant) throw new Error("Failed to upsert tenant");
 
 	// ── Subscription ────────────────────────────────────────────────────────
-	const trialEnd = new Date(Date.now() + 14 * 86_400_000).toISOString();
+	const trialEnd = new Date(Date.now() + 14 * DAY_MS).toISOString();
 	await supabase
 		.from("subscriptions")
 		.upsert(

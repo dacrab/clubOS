@@ -18,6 +18,7 @@ import {
 import { CalendarIcon } from "@lucide/svelte";
 import { t } from "$lib/i18n/index.svelte";
 import { cn } from "$lib/utils/cn";
+import { formatDateTimeLocal } from "$lib/utils/format";
 
 type Props = {
 	value?: string;
@@ -73,13 +74,14 @@ $effect(() => {
 
 function formatOutput(date: DateValue | undefined, h: string, m: string): string {
 	if (!date) return "";
-	const year = date.year;
-	const month = date.month.toString().padStart(2, "0");
-	const day = date.day.toString().padStart(2, "0");
-	if (enableTime) {
-		return `${year}-${month}-${day} ${h}:${m}`;
-	}
-	return `${year}-${month}-${day}`;
+	const dt = new Date(
+		date.year,
+		date.month - 1,
+		date.day,
+		Number.parseInt(h, 10),
+		Number.parseInt(m, 10),
+	);
+	return formatDateTimeLocal(dt, enableTime);
 }
 
 function handleDateSelect(newDate: DateValue | undefined) {

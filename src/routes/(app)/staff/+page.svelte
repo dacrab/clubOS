@@ -55,11 +55,12 @@ function openCloseDialog(): void {
 }
 
 async function closeRegister(): Promise<void> {
-	if (!closingName.trim() || !data.activeSession) return;
+	const session = data.activeSession;
+	if (!closingName.trim() || !session) return;
 	processing = true;
 	const ok = await runCrud(() =>
 		supabase.rpc("close_register_session", {
-			p_session_id: data.activeSession.id,
+			p_session_id: session.id,
 			p_closed_by: data.user.id,
 			p_closing_cash: countedCash,
 			p_closing_notes: closingNotes || null,
@@ -96,7 +97,7 @@ async function closeRegister(): Promise<void> {
 	{:else}
 		<div class="grid gap-6 lg:grid-cols-2">
 			<Card><CardContent class="pt-6 space-y-4">
-				<div class="flex items-center justify-between"><span class="text-sm text-muted-foreground">{t("register.openedAt")}</span><span class="font-medium">{fmtDate(data.activeSession.opened_at)}</span></div>
+				<div class="flex items-center justify-between"><span class="text-sm text-muted-foreground">{t("register.openedAt")}</span><span class="font-medium">{fmtDate(data.activeSession.opened_at ?? "")}</span></div>
 				<Separator />
 				<div class="flex items-center justify-center"><Button size="lg" class="w-full max-w-xs" onclick={() => showNewSaleDialog = true}><Plus class="mr-2 h-5 w-5" />{t("orders.newSale")}</Button></div>
 			</CardContent></Card>

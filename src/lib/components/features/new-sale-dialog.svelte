@@ -115,8 +115,11 @@ function addToCart(product: Product) {
 }
 
 function updateQuantity(idx: number, delta: number) {
-	cart[idx].quantity += delta;
-	cart = cart[idx].quantity <= 0 ? cart.filter((_, i) => i !== idx) : [...cart];
+	const nextQty = cart[idx].quantity + delta;
+	cart =
+		nextQty <= 0
+			? cart.filter((_, i) => i !== idx)
+			: cart.map((item, i) => (i === idx ? { ...item, quantity: nextQty } : item));
 }
 
 function toggleTreat(idx: number) {

@@ -4,24 +4,27 @@ import { type Handle, type HandleServerError, redirect } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import { env as publicEnv } from "$env/dynamic/public";
 import { getHomeForRole } from "$lib/config/auth";
-import type { MemberRole } from "$lib/types/database";
 
 const enableSentry = typeof process !== "undefined" && !process.env.VITEST;
 
 const PUBLIC_ROUTES = ["/", "/reset", "/auth/callback", "/logout", "/signup"];
 const AUTH_ONLY_ROUTES = ["/onboarding", "/billing"];
 
-type Ctx = {
-	role: MemberRole | null;
-	tenantId: string | null;
-	facilityId: string | null;
-	active: boolean;
+const EMPTY_CTX: App.UserContext = {
+	membership: null,
+	profile: null,
+	tenant: null,
+	subscription: null,
+	activeSession: null,
 };
-const EMPTY_CTX: Ctx = { role: null, tenantId: null, facilityId: null, active: false };
 
-const isActive = (
-	sub: { status?: string; periodEnd?: string | null; trialEnd?: string | null } | null,
-): boolean => {
+type SubscriptionState = {
+	status?: string;
+	periodEnd?: string | null;
+	trialEnd?: string | null;
+} | null;
+
+const isActive = (sub: SubscriptionState): boolean => {
 	if (!sub || (sub.status !== "trialing" && sub.status !== "active")) return false;
 	const now = Date.now();
 	return (
@@ -59,36 +62,43 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	const isPublic = PUBLIC_ROUTES.includes(path) || path.startsWith("/api/");
 	const isAuthOnly = AUTH_ONLY_ROUTES.includes(path);
 
-	let cached: Ctx | undefined;
-	const getCtx = async (): Promise<Ctx> => {
+	let cached: App.UserContext | undefined;
+	const getCtx = async (): Promise<App.UserContext> => {
 		if (cached) return cached;
 		if (!user) {
 			cached = EMPTY_CTX;
 			return cached;
 		}
 		const { data: ctx } = await supabase.rpc("get_user_context", { p_user_id: user.id });
-		if (!ctx?.membership) {
-			cached = EMPTY_CTX;
-			return cached;
-		}
-		cached = {
-			role: ctx.membership.role,
-			tenantId: ctx.membership.tenantId,
-			facilityId: ctx.membership.facilityId,
-			active: isActive(ctx.subscription),
-		};
+		cached = ctx?.membership
+			? {
+					membership: {
+						role: ctx.membership.role,
+						tenantId: ctx.membership.tenantId,
+						facilityId: ctx.membership.facilityId,
+					},
+					profile: ctx.profile,
+					tenant: ctx.tenant,
+					subscription: ctx.subscription,
+					activeSession: ctx.activeSession,
+				}
+			: EMPTY_CTX;
+		event.locals.userCtx = cached;
 		return cached;
 	};
 
 	if (path === "/" && user) {
-		const { role } = await getCtx();
-		if (role) throw redirect(307, getHomeForRole(role));
+		const { membership } = await getCtx();
+		if (membership?.role) throw redirect(307, getHomeForRole(membership.role));
 	}
 
 	if (isPublic) return resolve(event);
 	if (!user) throw redirect(307, "/");
 
-	const { role, tenantId, active } = await getCtx();
+	const ctx = await getCtx();
+	const role = ctx.membership?.role ?? null;
+	const tenantId = ctx.membership?.tenantId ?? null;
+	const active = isActive(ctx.subscription as SubscriptionState);
 
 	if (!tenantId && !isAuthOnly) throw redirect(307, "/onboarding");
 	if (tenantId && !active && !isAuthOnly) throw redirect(307, "/billing");

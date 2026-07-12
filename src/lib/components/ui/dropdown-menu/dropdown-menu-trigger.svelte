@@ -1,5 +1,4 @@
 <script lang="ts">
-// biome-ignore lint/style/useImportType: used as Svelte component in template
 import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 import type { Snippet } from "svelte";
 import { buttonVariants } from "$lib/components/ui/button/button.svelte";

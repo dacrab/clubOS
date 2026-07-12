@@ -42,6 +42,14 @@ export function fmtCurrency(value: number): string {
 	}).format(value);
 }
 
+/** Format a Date as a local `YYYY-MM-DD` or `YYYY-MM-DDTHH:MM` string. */
+export function formatDateTimeLocal(date: Date, withTime = true): string {
+	const pad = (n: number): string => String(n).padStart(2, "0");
+	const base = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+	if (!withTime) return base;
+	return `${base}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 const CURRENCY_SYMBOLS = Object.fromEntries(
 	CURRENCY_OPTIONS.map((c) => [c.value, c.symbol]),
 ) as Record<string, string>;

@@ -5,6 +5,7 @@ import PlanSelector from "$lib/components/features/plan-selector.svelte";
 import Header from "$lib/components/layout/header.svelte";
 import type { PlanId } from "$lib/config/plans";
 import { t } from "$lib/i18n/index.svelte";
+import { startCheckout } from "$lib/utils/checkout";
 
 const { data } = $props();
 
@@ -22,19 +23,12 @@ async function handleSelect(planId: PlanId) {
 
 	loading = true;
 	try {
-		const res = await fetch("/api/billing/checkout", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				planId: plan.id,
-				userId: data.user.id,
-				email: data.user.email,
-				tenantId: data.tenantId,
-			}),
+		window.location.href = await startCheckout({
+			planId: plan.id,
+			userId: data.user.id,
+			email: data.user.email,
+			tenantId: data.tenantId,
 		});
-		const { url, error: polarError } = await res.json();
-		if (polarError) throw new Error(polarError);
-		window.location.href = url;
 	} catch (err) {
 		toast.error(err instanceof Error ? err.message : t("common.error"));
 		loading = false;

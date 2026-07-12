@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
-import { DEFAULT_TIMEZONE, TRIAL_DAYS } from "$lib/types/database";
+import { DAY_MS, DEFAULT_TIMEZONE, TRIAL_DAYS } from "$lib/types/database";
 import type { RequestHandler } from "./$types";
 
 interface Body {
@@ -56,7 +56,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		if (membershipError) throw membershipError;
 
 		if (createTrial) {
-			const trialEnd = new Date(Date.now() + TRIAL_DAYS * 86_400_000).toISOString();
+			const trialEnd = new Date(Date.now() + TRIAL_DAYS * DAY_MS).toISOString();
 			const { error: subError } = await admin.from("subscriptions").insert({
 				tenant_id: tenantData.id,
 				status: "trialing",

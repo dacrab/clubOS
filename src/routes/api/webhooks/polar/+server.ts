@@ -30,6 +30,32 @@ function findPlanByProductId(productId: string) {
 	return PLANS_META.find((p) => p.productId === productId);
 }
 
+function toIso(value: unknown): string | null {
+	return value ? new Date(value as string).toISOString() : null;
+}
+
+async function syncSubscription(
+	tenantId: string,
+	args: {
+		customerId?: string;
+		subscriptionId?: string;
+		status: string;
+		planName?: string;
+		currentPeriodEnd?: string | null;
+	},
+): Promise<void> {
+	await upsertSubscription({
+		tenantId,
+		customerId: args.customerId ?? "",
+		subscriptionId: args.subscriptionId ?? "",
+		status: args.status,
+		planName: args.planName ?? "Subscription",
+		currentPeriodEnd: args.currentPeriodEnd ?? null,
+		trialStart: null,
+		trialEnd: null,
+	});
+}
+
 export const POST: RequestHandler = async ({ request }) => {
 	const secret = env.POLAR_WEBHOOK_SECRET;
 	if (!secret) {
@@ -58,17 +84,12 @@ export const POST: RequestHandler = async ({ request }) => {
 
 				const productId = (event.data.products as Array<{ id: string }> | undefined)?.[0]?.id;
 				const plan = productId ? findPlanByProductId(productId) : undefined;
-				await upsertSubscription({
-					tenantId,
-					customerId: event.data.customer_id ?? "",
+				await syncSubscription(tenantId, {
+					customerId: event.data.customer_id,
 					subscriptionId: event.data.subscription_id,
 					status: "active",
-					planName: plan?.name ?? "Subscription",
-					currentPeriodEnd: sub.current_period_end
-						? new Date(sub.current_period_end as string).toISOString()
-						: null,
-					trialStart: null,
-					trialEnd: null,
+					planName: plan?.name,
+					currentPeriodEnd: toIso(sub.current_period_end),
 				});
 			}
 			break;
@@ -82,17 +103,12 @@ export const POST: RequestHandler = async ({ request }) => {
 
 			const productId = subData.product_id as string | undefined;
 			const plan = productId ? findPlanByProductId(productId) : undefined;
-			await upsertSubscription({
-				tenantId,
-				customerId: subData.customer_id ?? "",
-				subscriptionId: subData.id ?? "",
+			await syncSubscription(tenantId, {
+				customerId: subData.customer_id,
+				subscriptionId: subData.id,
 				status: subData.status ?? "active",
-				planName: plan?.name ?? "Subscription",
-				currentPeriodEnd: subData.current_period_end
-					? new Date(subData.current_period_end as string).toISOString()
-					: null,
-				trialStart: null,
-				trialEnd: null,
+				planName: plan?.name,
+				currentPeriodEnd: toIso(subData.current_period_end),
 			});
 			break;
 		}
@@ -102,15 +118,10 @@ export const POST: RequestHandler = async ({ request }) => {
 			const tenantId = meta?.tenant_id;
 			if (!tenantId) break;
 
-			await upsertSubscription({
-				tenantId,
-				customerId: subData.customer_id ?? "",
-				subscriptionId: subData.id ?? "",
+			await syncSubscription(tenantId, {
+				customerId: subData.customer_id,
+				subscriptionId: subData.id,
 				status: "canceled",
-				planName: "Subscription",
-				currentPeriodEnd: null,
-				trialStart: null,
-				trialEnd: null,
 			});
 			break;
 		}

@@ -3,15 +3,20 @@ import { sveltekit } from "@sveltejs/kit/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
+const hasSentryCredentials = Boolean(
+	process.env.SENTRY_AUTH_TOKEN &&
+		process.env.SENTRY_ORG &&
+		process.env.SENTRY_PROJECT,
+);
+
+const sentryOptions = {
+	autoUploadSourceMaps: hasSentryCredentials,
+	telemetry: hasSentryCredentials,
+};
+
 export default defineConfig({
 	plugins: [
-		sentrySvelteKit({
-			sourceMapsUploadOptions: {
-				org: process.env.SENTRY_ORG,
-				project: process.env.SENTRY_PROJECT,
-				authToken: process.env.SENTRY_AUTH_TOKEN,
-			},
-		}),
+		sentrySvelteKit(sentryOptions),
 		tailwindcss(),
 		sveltekit(),
 	],

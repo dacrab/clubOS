@@ -18,6 +18,8 @@ import SelectItem from "$lib/components/ui/select/select-item.svelte";
 import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
 import type { PlanId } from "$lib/config/plans";
 import { t } from "$lib/i18n/index.svelte";
+import { DEFAULT_TIMEZONE } from "$lib/types/database";
+import { startCheckout } from "$lib/utils/checkout";
 
 type Step = 1 | 2 | 3;
 
@@ -33,7 +35,7 @@ let facilityName = $state("");
 let facilityAddress = $state("");
 let facilityPhone = $state("");
 let facilityEmail = $state("");
-let timezone = $state("Europe/Athens");
+let timezone = $state(DEFAULT_TIMEZONE);
 
 const TIMEZONES = [
 	{ value: "Europe/Athens", label: "Athens (GMT+2/+3)" },
@@ -98,19 +100,12 @@ async function handlePlanSelect(planId: PlanId): Promise<void> {
 	loading = true;
 	try {
 		const { tenantId } = await completeOnboarding();
-		const res = await fetch("/api/billing/checkout", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				planId: plan.id,
-				userId: data.user.id,
-				email: data.user.email,
-				tenantId,
-			}),
+		window.location.href = await startCheckout({
+			planId: plan.id,
+			userId: data.user.id,
+			email: data.user.email,
+			tenantId,
 		});
-		const { url, error: polarError } = await res.json();
-		if (polarError) throw new Error(polarError);
-		window.location.href = url;
 	} catch (err) {
 		toast.error(err instanceof Error ? err.message : t("common.error"));
 		loading = false;
@@ -190,7 +185,7 @@ async function skipPaymentForNow(): Promise<void> {
 							<div class="space-y-4">
 								<div class="space-y-2">
 									<Label>{t("onboarding.timezone")}</Label>
-									<Select value={timezone} onValueChange={(v) => timezone = v || "Europe/Athens"}>
+									<Select value={timezone} onValueChange={(v) => timezone = v || DEFAULT_TIMEZONE}>
 										<SelectTrigger selected={TIMEZONES.find((tz) => tz.value === timezone)?.label} />
 										<SelectContent>{#each TIMEZONES as tz (tz.value)}<SelectItem value={tz.value}>{tz.label}</SelectItem>{/each}</SelectContent>
 									</Select>

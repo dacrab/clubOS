@@ -34,6 +34,11 @@ const LANGUAGE_OPTIONS: { value: Locale; labelKey: string }[] = [
 	{ value: "el", labelKey: "settings.languages.el" },
 ];
 
+const MAX_FOOTBALL_FIELDS = 20;
+const MAX_APPOINTMENT_BUFFER_MIN = 120;
+const MAX_BIRTHDAY_DURATION_MIN = 480;
+const MAX_FOOTBALL_DURATION_MIN = 300;
+
 const { data } = $props();
 
 // Local editable copy of server settings; re-clones whenever server data changes.
@@ -113,19 +118,19 @@ const handleReset = (): void => {
 			</CardHeader>
 			<CardContent class="space-y-4">
 				<SettingRow id="fields" label={t("settings.footballFieldsCount")} description={t("settings.footballFieldsCountDesc")}>
-					<Input id="fields" type="number" min="1" max="20" bind:value={settings.football_fields_count} class="w-20" />
+					<Input id="fields" type="number" min="1" max={MAX_FOOTBALL_FIELDS} bind:value={settings.football_fields_count} class="w-20" />
 				</SettingRow>
 				<Separator />
 				<SettingRow id="buffer" label={t("settings.appointmentBuffer")} description={t("settings.appointmentBufferDesc")}>
-					<Input id="buffer" type="number" min="0" max="120" bind:value={settings.appointment_buffer_min} class="w-20" />
+					<Input id="buffer" type="number" min="0" max={MAX_APPOINTMENT_BUFFER_MIN} bind:value={settings.appointment_buffer_min} class="w-20" />
 				</SettingRow>
 				<Separator />
 				<SettingRow id="bdur" label={t("settings.birthdayDuration")} description={t("settings.birthdayDurationDesc")}>
-					<Input id="bdur" type="number" min="30" max="480" bind:value={settings.birthday_duration_min} class="w-20" />
+					<Input id="bdur" type="number" min="30" max={MAX_BIRTHDAY_DURATION_MIN} bind:value={settings.birthday_duration_min} class="w-20" />
 				</SettingRow>
 				<Separator />
 				<SettingRow id="fdur" label={t("settings.footballDuration")} description={t("settings.footballDurationDesc")}>
-					<Input id="fdur" type="number" min="30" max="300" bind:value={settings.football_duration_min} class="w-20" />
+					<Input id="fdur" type="number" min="30" max={MAX_FOOTBALL_DURATION_MIN} bind:value={settings.football_duration_min} class="w-20" />
 				</SettingRow>
 				<Separator />
 				<SettingRow label={t("settings.preventOverlaps")} description={t("settings.preventOverlapsDesc")}>

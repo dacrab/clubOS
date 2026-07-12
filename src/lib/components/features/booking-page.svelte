@@ -28,7 +28,8 @@ import { t } from "$lib/i18n/index.svelte";
 import { settings } from "$lib/state/settings.svelte";
 import type { Booking, BookingDetails, BookingStatus, BookingType } from "$lib/types/database";
 import { runCrud } from "$lib/utils/crud";
-import { fmtDate, tomorrowAt } from "$lib/utils/format";
+import { fmtDate, formatDateTimeLocal, tomorrowAt } from "$lib/utils/format";
+import { getBookingStatusBadgeVariant } from "$lib/utils/helpers";
 import { supabase } from "$lib/utils/supabase";
 
 type Props = {
@@ -84,14 +85,8 @@ let formData = $state<FormData>({
 	num_players: FOOTBALL_PLAYERS.default,
 });
 
-const getStatusBadge = (s: BookingStatus) =>
-	s === "confirmed"
-		? ("success" as const)
-		: s === "canceled"
-			? ("destructive" as const)
-			: s === "no_show"
-				? ("warning" as const)
-				: ("secondary" as const);
+const getStatusBadge = (s: BookingStatus): ReturnType<typeof getBookingStatusBadgeVariant> =>
+	getBookingStatusBadgeVariant(s);
 
 function openDialog(item?: Booking) {
 	editingItem = item ?? null;
@@ -110,9 +105,7 @@ function openDialog(item?: Booking) {
 		};
 	} else {
 		const defaultHour = isBirthday ? DEFAULT_HOUR.birthday : DEFAULT_HOUR.football;
-		const pad = (n: number) => String(n).padStart(2, "0");
-		const d = tomorrowAt(defaultHour);
-		const startsAt = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(defaultHour)}:00`;
+		const startsAt = formatDateTimeLocal(tomorrowAt(defaultHour));
 		formData = {
 			customer_name: "",
 			customer_phone: "",

@@ -1,5 +1,5 @@
 export type MemberRole = "owner" | "admin" | "manager" | "staff";
-export type BookingType = "birthday" | "football" | "event" | "other";
+export type BookingType = "birthday" | "football";
 export type BookingStatus = "pending" | "confirmed" | "canceled" | "completed" | "no_show";
 export type SubscriptionStatus =
 	| "trialing"
@@ -13,7 +13,8 @@ export const PRODUCTS_LIMIT = 500;
 export const CATEGORIES_LIMIT = 100;
 export const USERS_PER_PAGE = 200;
 export const TRIAL_DAYS = 14;
-export const DEFAULT_TIMEZONE = "UTC";
+export const DEFAULT_TIMEZONE = "Europe/Athens";
+export const DAY_MS = 86_400_000;
 
 export interface Product {
 	id: string;
@@ -123,4 +124,11 @@ export interface SessionUser {
 	role: MemberRole;
 	tenantId: string | null;
 	facilityId: string | null;
+}
+
+export interface RegisterSession {
+	id: string;
+	opening_cash?: number | null;
+	opened_at?: string | null;
+	[key: string]: unknown;
 }

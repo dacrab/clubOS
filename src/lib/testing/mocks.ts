@@ -1,6 +1,7 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { vi } from "vitest";
 import type { MemberRole, SubscriptionStatus } from "$lib/types/database";
+import { DAY_MS } from "$lib/types/database";
 
 export interface MockUser {
 	id: string;
@@ -28,7 +29,7 @@ export interface MockSubscription {
 }
 
 export const generateId = (): string => `test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-const futureDate = (days: number): Date => new Date(Date.now() + days * 86_400_000);
+const futureDate = (days: number): Date => new Date(Date.now() + days * DAY_MS);
 
 export const createMockUser = (o: Partial<MockUser> = {}): MockUser => ({
 	id: generateId(),

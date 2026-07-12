@@ -31,6 +31,15 @@ const ROLES: MemberRole[] = ["owner", "admin", "manager", "staff"];
 const getRoleLabel = (role: MemberRole): string => t(`users.roles.${role}`);
 const blankForm = (): UserForm => ({ full_name: "", email: "", password: "", role: "staff" });
 
+async function apiFetch(url: string, method: string, body?: unknown): Promise<void> {
+	const res = await fetch(url, {
+		method,
+		headers: { "Content-Type": "application/json" },
+		body: body ? JSON.stringify(body) : undefined,
+	});
+	if (!res.ok) throw new Error(await res.text());
+}
+
 let open = $state(false);
 let editing = $state<UserView | null>(null);
 let form = $state<UserForm>(blankForm());
@@ -62,12 +71,7 @@ async function save(): Promise<void> {
 	const ok = await runCrud(async () => {
 		const url = editing ? `/api/admin/users/${editing.id}` : "/api/admin/users";
 		const method = editing ? "PATCH" : "POST";
-		const res = await fetch(url, {
-			method,
-			body: JSON.stringify(payload),
-			headers: { "Content-Type": "application/json" },
-		});
-		if (!res.ok) throw new Error(await res.text());
+		await apiFetch(url, method, payload);
 	});
 	if (ok) open = false;
 	saving = false;
@@ -77,8 +81,7 @@ async function confirmRemove(): Promise<void> {
 	if (!deleteTarget) return;
 	const target = deleteTarget;
 	const ok = await runCrud(async () => {
-		const res = await fetch(`/api/admin/users/${target.id}`, { method: "DELETE" });
-		if (!res.ok) throw new Error(await res.text());
+		await apiFetch(`/api/admin/users/${target.id}`, "DELETE");
 	});
 	if (ok) deleteOpen = false;
 }

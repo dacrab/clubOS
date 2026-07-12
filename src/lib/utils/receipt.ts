@@ -1,7 +1,16 @@
-import { t } from "$lib/i18n/index.svelte";
+import { i18n, t } from "$lib/i18n/index.svelte";
 import type { CartItem } from "$lib/types/database";
 import { fmtCurrency } from "$lib/utils/format";
 import { shortId } from "$lib/utils/helpers";
+
+function escapeHtml(value: string): string {
+	return value
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;");
+}
 
 export interface ReceiptData {
 	items: CartItem[];
@@ -20,7 +29,7 @@ export function printReceipt(data: ReceiptData): void {
 	const itemsHtml = data.items
 		.map(
 			(i) =>
-				`<div class="item"><span>${i.quantity}x ${i.product.name}${i.isTreat ? ` (${t("orders.treat")})` : ""}</span><span>${i.isTreat ? "-" : fmtCurrency(i.product.price * i.quantity)}</span></div>`,
+				`<div class="item"><span>${i.quantity}x ${escapeHtml(i.product.name)}${i.isTreat ? ` (${t("orders.treat")})` : ""}</span><span>${i.isTreat ? "-" : fmtCurrency(i.product.price * i.quantity)}</span></div>`,
 		)
 		.join("");
 
@@ -41,7 +50,7 @@ hr{border:none;border-top:1px dashed #000;margin:8px 0}
 </style></head>
 <body>
 <h2>${t("orders.receipt")}</h2>
-<p class="center">${new Date().toLocaleString()}</p>
+<p class="center">${new Date().toLocaleString(i18n.locale)}</p>
 <hr>
 ${itemsHtml}
 <hr>
