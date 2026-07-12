@@ -65,6 +65,7 @@ let saving = $state(false);
 type FormData = {
 	customer_name: string;
 	customer_phone: string;
+	customer_email: string;
 	starts_at: string;
 	notes: string;
 	status: BookingStatus;
@@ -76,6 +77,7 @@ type FormData = {
 let formData = $state<FormData>({
 	customer_name: "",
 	customer_phone: "",
+	customer_email: "",
 	starts_at: "",
 	notes: "",
 	status: "confirmed",
@@ -95,6 +97,7 @@ function openDialog(item?: Booking) {
 		formData = {
 			customer_name: item.customer_name,
 			customer_phone: item.customer_phone ?? "",
+			customer_email: item.customer_email ?? "",
 			starts_at: item.starts_at.slice(0, 16),
 			notes: item.notes ?? "",
 			status: item.status,
@@ -109,6 +112,7 @@ function openDialog(item?: Booking) {
 		formData = {
 			customer_name: "",
 			customer_phone: "",
+			customer_email: "",
 			starts_at: startsAt,
 			notes: "",
 			status: "confirmed",
@@ -165,6 +169,7 @@ async function handleSave(): Promise<void> {
 			type,
 			customer_name: formData.customer_name,
 			customer_phone: formData.customer_phone,
+			customer_email: formData.customer_email || null,
 			starts_at: startsAt.toISOString(),
 			ends_at: endsAt.toISOString(),
 			status: formData.status,
@@ -172,12 +177,28 @@ async function handleSave(): Promise<void> {
 			details,
 		};
 
-		const ok = await runCrud(() =>
-			editingItem
-				? supabase.from("bookings").update(payload).eq("id", editingItem.id)
-				: supabase.from("bookings").insert({ ...payload, created_by: user.id }),
-		);
-		if (ok) showDialog = false;
+		let newId: string | null = null;
+		const ok = await runCrud(async () => {
+			if (editingItem) {
+				return supabase.from("bookings").update(payload).eq("id", editingItem.id);
+			}
+			const { data, error: err } = await supabase
+				.from("bookings")
+				.insert({ ...payload, created_by: user.id })
+				.select("id");
+			newId = data?.[0]?.id ?? null;
+			return { error: err };
+		});
+		if (ok) {
+			showDialog = false;
+			if (newId && payload.customer_email) {
+				fetch("/api/booking/confirm", {
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					body: JSON.stringify({ id: newId }),
+				}).catch(() => {});
+			}
+		}
 	} finally {
 		saving = false;
 	}
@@ -287,6 +308,10 @@ async function confirmDelete(): Promise<void> {
 	<div class="space-y-2">
 		<Label for="phone">{t("bookings.customerPhone")}</Label>
 		<Input id="phone" bind:value={formData.customer_phone} required />
+	</div>
+	<div class="space-y-2">
+		<Label for="email">Email</Label>
+		<Input id="email" type="email" bind:value={formData.customer_email} placeholder="customer@example.com" />
 	</div>
 	<div class="space-y-2">
 		<Label>{t("bookings.dateTime")}</Label>
