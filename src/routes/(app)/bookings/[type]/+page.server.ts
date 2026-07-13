@@ -6,8 +6,9 @@ const VALID_TYPES: BookingType[] = ["birthday", "football"];
 const PER_PAGE = 25;
 
 export const load: PageServerLoad = async ({ locals, params, parent, url }) => {
-	const type = params.type as BookingType;
-	if (!VALID_TYPES.includes(type)) throw error(404, "Invalid booking type");
+	const rawType: string = params.type;
+	if (!VALID_TYPES.includes(rawType as BookingType)) throw error(404, "Invalid booking type");
+	const type: BookingType = rawType as BookingType;
 
 	const { supabase } = locals;
 	const { user } = await parent();

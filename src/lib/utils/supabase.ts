@@ -2,10 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { browser } from "$app/environment";
 import { env } from "$env/dynamic/public";
 
-const { PUBLIC_SUPABASE_URL: url, PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: anonKey } = env as {
-	PUBLIC_SUPABASE_URL?: string;
-	PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY?: string;
-};
+const url: string | undefined = env.PUBLIC_SUPABASE_URL;
+const anonKey: string | undefined = env.PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
 if (!url) throw new Error("Missing PUBLIC_SUPABASE_URL");
 if (!anonKey) throw new Error("Missing PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY");

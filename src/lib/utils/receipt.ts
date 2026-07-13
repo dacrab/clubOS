@@ -22,6 +22,7 @@ export interface ReceiptData {
 
 export function printReceipt(data: ReceiptData): void {
 	if (!data.items.length) return;
+	const orderId = data.orderId;
 
 	const w = window.open("", "_blank", "width=300,height=600");
 	if (!w) return;
@@ -59,7 +60,7 @@ ${discountHtml}
 <div class="item total"><span>${t("orders.total")}</span><span>${fmtCurrency(data.total)}</span></div>
 <hr>
 <p class="center">${t("orders.thankYou")}</p>
-<p class="center">#${data.orderId ? shortId(data.orderId) : "N/A"}</p>
+<p class="center">#${orderId ? shortId(orderId) : "N/A"}</p>
 </body></html>`;
 
 	w.document.documentElement.innerHTML = html;

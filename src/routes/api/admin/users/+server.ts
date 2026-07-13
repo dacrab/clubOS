@@ -22,7 +22,8 @@ async function requireAdmin(locals: App.Locals): Promise<AdminCtx | Response> {
 		.eq("is_primary", true)
 		.single();
 	if (!m || (m.role !== "owner" && m.role !== "admin")) return text("Forbidden", 403);
-	return { tenantId: m.tenant_id, callerRole: m.role as MemberRole };
+	const callerRole: MemberRole = m.role === "owner" ? "owner" : "admin";
+	return { tenantId: m.tenant_id, callerRole };
 }
 
 /** Owners can assign any role; admins cannot assign owner. */

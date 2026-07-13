@@ -104,7 +104,7 @@ function openDialog(item?: Booking) {
 			num_children: details.num_children ?? 1,
 			num_adults: details.num_adults ?? 0,
 			field_number: details.field_number ?? "1",
-			num_players: details.num_players ?? 10,
+			num_players: details.num_players ?? FOOTBALL_PLAYERS.default,
 		};
 	} else {
 		const defaultHour = isBirthday ? DEFAULT_HOUR.birthday : DEFAULT_HOUR.football;
@@ -125,21 +125,18 @@ function openDialog(item?: Booking) {
 	showDialog = true;
 }
 
-async function checkConflict(): Promise<boolean> {
-	const time = new Date(formData.starts_at);
-	const buffer = isBirthday ? settings.current.appointment_buffer_min : 120;
-	let query = supabase
-		.from("bookings")
-		.select("id")
-		.eq("facility_id", user.facilityId)
-		.eq("type", type)
-		.neq("status", "canceled")
-		.gte("starts_at", new Date(time.getTime() - buffer * 60000).toISOString())
-		.lte("starts_at", new Date(time.getTime() + buffer * 60000).toISOString());
-
-	if (editingItem) query = query.neq("id", editingItem.id);
-	const { data } = await query;
-	return (data?.length ?? 0) > 0;
+async function checkConflict(startsAt: Date, endsAt: Date): Promise<boolean> {
+	// Use the authoritative server-side RPC (Postgres OVERLAPS). The previous
+	// client-side SELECT with a ±buffer window could disagree with the server
+	// and let overlapping bookings through.
+	const { data } = await supabase.rpc("check_booking_conflict", {
+		p_facility_id: user.facilityId,
+		p_type: type,
+		p_starts_at: startsAt.toISOString(),
+		p_ends_at: endsAt.toISOString(),
+		...(editingItem ? { p_exclude_id: editingItem.id } : {}),
+	});
+	return Boolean(data);
 }
 
 async function handleSave(): Promise<void> {
@@ -149,16 +146,16 @@ async function handleSave(): Promise<void> {
 	}
 	saving = true;
 	try {
-		if (settings.current.prevent_overlaps && (await checkConflict())) {
-			toast.error(t(`${prefix}.conflict`));
-			return;
-		}
-
 		const startsAt = new Date(formData.starts_at);
 		const durationMin = isBirthday
 			? settings.current.birthday_duration_min
 			: settings.current.football_duration_min;
 		const endsAt = new Date(startsAt.getTime() + durationMin * 60 * 1000);
+
+		if (settings.current.prevent_overlaps && (await checkConflict(startsAt, endsAt))) {
+			toast.error(t(`${prefix}.conflict`));
+			return;
+		}
 
 		const details: BookingDetails = isBirthday
 			? { num_children: formData.num_children, num_adults: formData.num_adults }

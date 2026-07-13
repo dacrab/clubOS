@@ -4,8 +4,9 @@ import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ request }) => {
+	// Fail-closed: missing CRON_SECRET = no auth on this route.
 	const authHeader = request.headers.get("authorization");
-	if (env.CRON_SECRET && authHeader !== `Bearer ${env.CRON_SECRET}`) {
+	if (!env.CRON_SECRET || authHeader !== `Bearer ${env.CRON_SECRET}`) {
 		throw error(401, "Unauthorized");
 	}
 

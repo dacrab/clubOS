@@ -5,7 +5,10 @@ import type { TranslationsStructure } from "./types";
 
 export type Locale = "en" | "el";
 
-const translations: Record<Locale, TranslationsStructure> = { en, el: el as TranslationsStructure };
+const translations: Record<Locale, TranslationsStructure> = {
+	en,
+	el: el as unknown as TranslationsStructure,
+};
 
 const getNestedValue = (obj: unknown, path: string): string => {
 	const result = path

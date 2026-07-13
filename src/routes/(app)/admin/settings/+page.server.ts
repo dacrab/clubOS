@@ -16,8 +16,14 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		.eq("id", user.tenantId)
 		.single();
 
+	const rawSettings: unknown = tenant?.settings;
+	const partialSettings: Partial<TenantSettings> | null =
+		rawSettings && typeof rawSettings === "object"
+			? (rawSettings as Partial<TenantSettings>)
+			: null;
+
 	return {
-		settings: mergeSettings(tenant?.settings as Partial<TenantSettings> | null),
+		settings: mergeSettings(partialSettings),
 		tenantId: user.tenantId,
 	};
 };

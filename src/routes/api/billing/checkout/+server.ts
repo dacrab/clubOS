@@ -1,28 +1,30 @@
 import { json } from "@sveltejs/kit";
 import { PLANS_META } from "$lib/config/plans";
 import { createCheckout } from "$lib/server/polar";
+import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 import type { RequestHandler } from "./$types";
 
-export const POST: RequestHandler = async ({ request }) => {
-	const { planId, userId, email, tenantId } = (await request.json()) as {
-		planId: string;
-		userId: string;
-		email: string;
-		tenantId?: string;
-	};
+export const POST: RequestHandler = async ({ request, locals }) => {
+	if (!locals.user) return json({ error: "Unauthorized" }, { status: 401 });
+	const claims = locals.user;
+	const body = (await request.json().catch(() => ({}))) as { planId?: string };
 
-	if (!planId || !userId || !email)
-		return json({ error: "Missing required fields" }, { status: 400 });
-
-	const plan = PLANS_META.find((p) => p.id === planId);
+	const plan = PLANS_META.find((p) => p.id === body.planId);
 	if (!plan) return json({ error: "Invalid plan" }, { status: 400 });
 
+	// Derive tenantId server-side from the authenticated session. Body-trust was
+	// the previous bug — a caller could pass any tenantId and bind a subscription
+	// to a tenant they didn't own.
+	const admin = getSupabaseAdmin();
+	const { data: ctx } = await admin.rpc("get_user_context", { p_user_id: claims.id });
+	const tenantId = ctx?.membership?.tenantId ?? null;
+
 	try {
-		const origin = request.headers.get("origin") ?? new URL(request.url).origin;
+		const origin = request.headers.get("origin") ?? "http://localhost:5173";
 		const checkout = await createCheckout({
 			productId: plan.productId,
-			email,
-			userId,
+			email: claims.email ?? "",
+			userId: claims.id,
 			tenantId,
 			successUrl: `${origin}/api/billing/success?checkout_id={CHECKOUT_ID}`,
 			cancelUrl: `${origin}/billing`,

@@ -4,11 +4,9 @@ import { env } from "$env/dynamic/private";
 let client: SupabaseClient | undefined;
 
 export function getSupabaseAdmin(): SupabaseClient {
-	const { SUPABASE_URL: url, SUPABASE_SECRET_KEY: key } = env as {
-		SUPABASE_URL?: string;
-		SUPABASE_SECRET_KEY?: string;
-	};
-	if (!(url && key)) throw new Error("Missing SUPABASE_URL or SUPABASE_SECRET_KEY");
+	const url: string | undefined = env.SUPABASE_URL;
+	const key: string | undefined = env.SUPABASE_SECRET_KEY;
+	if (!url || !key) throw new Error("Missing SUPABASE_URL or SUPABASE_SECRET_KEY");
 	if (!client) {
 		client = createClient(url, key, {
 			auth: { persistSession: false, autoRefreshToken: false },
