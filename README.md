@@ -7,7 +7,7 @@ Modern point-of-sale and club management system for sports facilities, entertain
 - **Point of Sale** - Fast checkout with products, categories, treats, and coupons
 - **Bookings** - Manage birthday parties and field reservations
 - **Multi-tenant** - Support multiple locations with role-based access
-- **Subscriptions** - Stripe-powered billing with trial periods
+- **Subscriptions** - Polar.sh-powered billing with trial periods
 - **Multilingual** - English and Greek support
 
 ## Quick Start
@@ -40,7 +40,7 @@ bun run test         # Run tests
 - **SvelteKit 2** - Full-stack framework
 - **Supabase** - Database and authentication
 - **Tailwind CSS v4** - Styling
-- **Stripe** - Payment processing
+- **Polar.sh** - Payment processing
 
 ## Deployment
 

@@ -20,7 +20,12 @@ export async function startCheckout(args: StartCheckoutArgs): Promise<string> {
 			tenantId: args.tenantId,
 		}),
 	});
-	const { url, error } = await res.json();
-	if (error) throw new Error(error);
-	return url;
+	let body: { url?: string; error?: string };
+	try {
+		body = await res.json();
+	} catch {
+		throw new Error(`Unexpected response: ${res.status} ${res.statusText}`);
+	}
+	if (!res.ok || body.error) throw new Error(body.error ?? "Checkout request failed");
+	return body.url!;
 }

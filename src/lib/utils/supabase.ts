@@ -23,6 +23,9 @@ if (browser) {
 			headers: { "content-type": "application/json" },
 			credentials: "same-origin",
 			body: JSON.stringify({ event, session: payload }),
-		}).catch((_err) => {});
+		}).catch((err) => {
+			// biome-ignore lint/suspicious/noConsole: intentional error logging for auth sync failures
+			console.error("Auth sync failed", err);
+		});
 	});
 }
