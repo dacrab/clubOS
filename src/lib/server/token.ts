@@ -2,8 +2,8 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { env } from "$env/dynamic/private";
 
 function getSecret(): string {
-	const secret = env.BOOKING_TOKEN_SECRET ?? env.CRON_SECRET;
-	if (!secret) throw new Error("Missing BOOKING_TOKEN_SECRET or CRON_SECRET env var");
+	const secret = env.BOOKING_TOKEN_SECRET;
+	if (!secret) throw new Error("Missing BOOKING_TOKEN_SECRET env var");
 	return secret;
 }
 

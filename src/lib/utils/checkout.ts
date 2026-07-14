@@ -27,5 +27,6 @@ export async function startCheckout(args: StartCheckoutArgs): Promise<string> {
 		throw new Error(`Unexpected response: ${res.status} ${res.statusText}`);
 	}
 	if (!res.ok || body.error) throw new Error(body.error ?? "Checkout request failed");
-	return body.url!;
+	if (!body.url) throw new Error("Checkout response missing URL");
+	return body.url;
 }

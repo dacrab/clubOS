@@ -13,7 +13,9 @@ export const supabase = createClient(url, anonKey);
 const SYNCED_EVENTS = new Set(["SIGNED_IN", "TOKEN_REFRESHED", "SIGNED_OUT"]);
 
 if (browser) {
-	supabase.auth.onAuthStateChange((event, session) => {
+	const {
+		data: { subscription },
+	} = supabase.auth.onAuthStateChange((event, session) => {
 		if (!SYNCED_EVENTS.has(event)) return;
 		const payload = session
 			? { access_token: session.access_token, refresh_token: session.refresh_token }
@@ -28,4 +30,10 @@ if (browser) {
 			console.error("Auth sync failed", err);
 		});
 	});
+
+	if (import.meta.hot) {
+		import.meta.hot.dispose(() => {
+			subscription.unsubscribe();
+		});
+	}
 }

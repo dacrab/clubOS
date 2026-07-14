@@ -29,6 +29,22 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
 	}
 }
 
+export function buildBookingEmailLines(booking: {
+	customer_name: string;
+	customer_phone: string | null;
+	starts_at: string;
+	type: string;
+	notes: string | null;
+}): string[] {
+	return [
+		`Customer: ${booking.customer_name}`,
+		`Phone: ${booking.customer_phone ?? "—"}`,
+		`Date: ${new Date(booking.starts_at).toLocaleString("en-GB", { timeZone: "Europe/Athens" })}`,
+		`Type: ${booking.type}`,
+		booking.notes ? `Notes: ${booking.notes}` : null,
+	].filter(Boolean) as string[];
+}
+
 export function buildBookingEmailHtml(
 	heading: string,
 	bodyLines: string[],

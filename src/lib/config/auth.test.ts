@@ -16,7 +16,7 @@ describe("getHomeForRole", () => {
 		expect(getHomeForRole(null)).toBe("/");
 	});
 
-	it("returns undefined for an unknown role", () => {
-		expect(getHomeForRole("unknown" as MemberRole)).toBeUndefined();
+	it("falls back to / for an unknown role", () => {
+		expect(getHomeForRole("unknown" as MemberRole)).toBe("/");
 	});
 });

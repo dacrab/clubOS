@@ -193,7 +193,10 @@ async function handleSave(): Promise<void> {
 					method: "POST",
 					headers: { "content-type": "application/json" },
 					body: JSON.stringify({ id: newId }),
-				}).catch(() => {});
+				}).catch((err) => {
+					// biome-ignore lint/suspicious/noConsole: intentional error logging for email failures
+					console.error("Failed to send booking confirmation email", err);
+				});
 			}
 		}
 	} finally {

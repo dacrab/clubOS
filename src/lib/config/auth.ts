@@ -7,4 +7,5 @@ const ROLE_HOME: Record<MemberRole, string> = {
 	staff: "/staff",
 };
 
-export const getHomeForRole = (role: MemberRole | null): string => (role ? ROLE_HOME[role] : "/");
+export const getHomeForRole = (role: MemberRole | null): string =>
+	role && role in ROLE_HOME ? ROLE_HOME[role as MemberRole] : "/";

@@ -1,34 +1,6 @@
+import { canAssign, requireAdmin, text } from "$lib/server/admin-helpers";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
-import type { MemberRole } from "$lib/types/database";
 import type { RequestHandler } from "./$types";
-
-interface AdminCtx {
-	tenantId: string;
-	callerRole: MemberRole;
-}
-
-const text = (msg: string, status: number): Response => new Response(msg, { status });
-
-/**
- * Resolve caller's primary membership and ensure they're an admin or owner.
- * Returns a Response (to short-circuit) on failure, the context on success.
- */
-async function requireAdmin(locals: App.Locals): Promise<AdminCtx | Response> {
-	if (!locals.user) return text("Unauthorized", 401);
-	const { data: m } = await getSupabaseAdmin()
-		.from("memberships")
-		.select("tenant_id, role")
-		.eq("user_id", locals.user.id)
-		.eq("is_primary", true)
-		.single();
-	if (!m || (m.role !== "owner" && m.role !== "admin")) return text("Forbidden", 403);
-	const callerRole: MemberRole = m.role === "owner" ? "owner" : "admin";
-	return { tenantId: m.tenant_id, callerRole };
-}
-
-/** Owners can assign any role; admins cannot assign owner. */
-const canAssign = (caller: MemberRole, target: MemberRole | undefined): boolean =>
-	!target || caller === "owner" || target !== "owner";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const ctx = await requireAdmin(locals);
