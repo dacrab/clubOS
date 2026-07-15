@@ -69,7 +69,6 @@ const filtered = $derived(
 			)
 		: data.paginatedProducts,
 );
-const lowStockProducts = $derived(data.lowStockProducts);
 const getCategoryName = (id: string | null): string =>
 	id ? ((data.categories as CategoryPartial[]).find((c) => c.id === id)?.name ?? "-") : "-";
 const getStockBadge = (
@@ -176,7 +175,7 @@ async function confirmDeleteCategory(): Promise<void> {
 		{/snippet}
 	</PageHeader>
 
-	{#if lowStockProducts.length > 0}
+	{#if data.lowStockProducts.length > 0}
 		<Card class="border-amber-500 bg-amber-50 dark:bg-amber-950/20 p-4">
 			<div class="flex-center gap-3">
 				<div class="flex-center justify-center w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50">
@@ -184,7 +183,7 @@ async function confirmDeleteCategory(): Promise<void> {
 				</div>
 				<div class="flex-1">
 					<p class="font-semibold text-amber-800 dark:text-amber-200">{t("products.lowStockAlert")}</p>
-					<p class="text-sm text-amber-700 dark:text-amber-300">{lowStockProducts.map((p: Product) => `${p.name} (${p.stock_quantity})`).join(", ")}</p>
+					<p class="text-sm text-amber-700 dark:text-amber-300">{data.lowStockProducts.map((p: Product) => `${p.name} (${p.stock_quantity})`).join(", ")}</p>
 				</div>
 			</div>
 		</Card>

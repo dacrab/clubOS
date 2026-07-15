@@ -8,4 +8,4 @@ const ROLE_HOME: Record<MemberRole, string> = {
 };
 
 export const getHomeForRole = (role: MemberRole | null): string =>
-	role && role in ROLE_HOME ? ROLE_HOME[role as MemberRole] : "/";
+	role && role in ROLE_HOME ? ROLE_HOME[role] : "/";

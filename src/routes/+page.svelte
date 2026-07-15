@@ -11,6 +11,7 @@ import Card, {
 import Input from "$lib/components/ui/input/input.svelte";
 import Label from "$lib/components/ui/label/label.svelte";
 import { t } from "$lib/i18n/index.svelte";
+import { toErrorMessage } from "$lib/utils/crud";
 import { supabase } from "$lib/utils/supabase";
 
 let email = $state("");
@@ -31,8 +32,7 @@ async function handleLogin(e: Event) {
 		toast.success(t("auth.welcomeBack"));
 		window.location.href = "/";
 	} catch (err) {
-		const message = err instanceof Error ? err.message : t("common.error");
-		toast.error(message);
+		toast.error(toErrorMessage(err));
 		loading = false;
 	}
 }
@@ -49,8 +49,7 @@ async function handleForgotPassword() {
 		if (error) throw error;
 		toast.success(t("auth.resetEmailSent"));
 	} catch (err) {
-		const message = err instanceof Error ? err.message : t("common.error");
-		toast.error(message);
+		toast.error(toErrorMessage(err));
 	}
 }
 </script>

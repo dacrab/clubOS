@@ -1,11 +1,11 @@
-type DateFormatType = "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD" | "DD.MM.YYYY" | "DD-MM-YYYY";
-type TimeFormatType = "24h" | "12h";
-type CurrencyCodeType = "EUR" | "USD" | "GBP" | "CHF" | "PLN" | "CZK" | "SEK" | "NOK" | "DKK";
+type DateFormat = "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD" | "DD.MM.YYYY" | "DD-MM-YYYY";
+type TimeFormat = "24h" | "12h";
+type CurrencyCode = "EUR" | "USD" | "GBP" | "CHF" | "PLN" | "CZK" | "SEK" | "NOK" | "DKK";
 
 export interface TenantSettings {
-	currency_code: CurrencyCodeType;
-	date_format: DateFormatType;
-	time_format: TimeFormatType;
+	currency_code: CurrencyCode;
+	date_format: DateFormat;
+	time_format: TimeFormat;
 	low_stock_threshold: number;
 	coupons_value: number;
 	football_fields_count: number;

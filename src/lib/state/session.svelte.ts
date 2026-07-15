@@ -6,7 +6,7 @@ function createSession(): {
 	setUser: (u: SessionUser | null) => void;
 	clear: () => void;
 } {
-	let user = $state(null as SessionUser | null);
+	let user = $state<SessionUser | null>(null);
 
 	return {
 		get user() {

@@ -9,7 +9,7 @@ function polarToken(): string {
 	return token;
 }
 
-let _polarHeaders: Record<string, string> | null = null;
+let _polarHeaders: Record<string, string> | undefined;
 function polarHeaders(): Record<string, string> {
 	if (!_polarHeaders) {
 		_polarHeaders = {

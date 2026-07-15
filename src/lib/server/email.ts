@@ -1,4 +1,7 @@
+import { error, json } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
+import { getSupabaseAdmin } from "$lib/server/supabase-admin";
+import { generateBookingToken } from "$lib/server/token";
 
 const RESEND_API_KEY = env.RESEND_API_KEY;
 
@@ -62,4 +65,34 @@ ${bodyLines.map((l) => `<tr><td style="padding:4px 0;color:#374151">${l}</td></t
 ${cta}
 <tr><td style="padding:24px 0 0;font-size:12px;color:#9ca3af">ClubOS — automated booking notification</td></tr>
 </table>`;
+}
+
+export async function sendBookingEmail(
+	bookingId: string,
+	subjectPrefix: string,
+	heading: string,
+	ctaLabel: string,
+): Promise<Response> {
+	if (!canSendEmail()) {
+		return json({ sent: false, reason: "RESEND_API_KEY not configured" });
+	}
+
+	const admin = getSupabaseAdmin();
+	const { data: booking } = await admin.from("bookings").select("*").eq("id", bookingId).single();
+	if (!booking) throw error(404, "Booking not found");
+
+	if (!booking.customer_email) {
+		return json({ sent: false, reason: "No customer email on booking" });
+	}
+
+	const origin = env.ORIGIN ?? "http://localhost:5173";
+	const manageUrl = `${origin}/booking/${booking.id}/manage?token=${generateBookingToken(booking.id)}`;
+
+	await sendEmail(
+		booking.customer_email,
+		`${subjectPrefix} — ${booking.customer_name}`,
+		buildBookingEmailHtml(heading, buildBookingEmailLines(booking), manageUrl, ctaLabel),
+	);
+
+	return json({ sent: true });
 }

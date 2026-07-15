@@ -4,6 +4,10 @@ import { t } from "$lib/i18n/index.svelte";
 
 type Result = { error?: unknown };
 
+export function toErrorMessage(err: unknown): string {
+	return err instanceof Error ? err.message : t("common.error");
+}
+
 export async function runCrud(
 	fn: () => PromiseLike<Result | undefined> | Result | undefined,
 	options?: { skipInvalidate?: boolean },

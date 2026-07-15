@@ -1,20 +1,10 @@
 <script lang="ts">
-import { Cake, Calendar, CircleDot, MoreHorizontal } from "@lucide/svelte";
+import { Cake, CircleDot } from "@lucide/svelte";
 import BookingPage from "$lib/components/features/booking-page.svelte";
-import type { BookingType } from "$lib/types/database";
 
 const { data } = $props();
 
-const icons = {
-	birthday: Cake,
-	football: CircleDot,
-	event: Calendar,
-	other: MoreHorizontal,
-} satisfies Record<string, typeof Cake>;
-
-// data.type is BookingType (includes event/other), cast to BookingType for BookingPage
-const type = $derived(data.type as BookingType);
-const icon = $derived(icons[data.type] ?? Calendar);
+const icon = $derived(data.type === "birthday" ? Cake : CircleDot);
 </script>
 
-<BookingPage {type} bookings={data.bookings} user={data.user} {icon} page={data.page} totalPages={data.totalPages} search={data.search} />
+<BookingPage type={data.type} bookings={data.bookings} user={data.user} {icon} page={data.page} totalPages={data.totalPages} search={data.search} />

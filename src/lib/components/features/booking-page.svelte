@@ -87,9 +87,6 @@ let formData = $state<FormData>({
 	num_players: FOOTBALL_PLAYERS.default,
 });
 
-const getStatusBadge = (s: BookingStatus): ReturnType<typeof getBookingStatusBadgeVariant> =>
-	getBookingStatusBadgeVariant(s);
-
 function openDialog(item?: Booking) {
 	editingItem = item ?? null;
 	if (item) {
@@ -279,7 +276,7 @@ async function confirmDelete(): Promise<void> {
 								<TableCell>{details.num_players ?? 0}</TableCell>
 							{/if}
 							<TableCell>
-								<Badge variant={getStatusBadge(item.status)}>{t(`bookings.status.${item.status}`)}</Badge>
+								<Badge variant={getBookingStatusBadgeVariant(item.status)}>{t(`bookings.status.${item.status}`)}</Badge>
 							</TableCell>
 							<TableCell>
 								<div class="flex items-center gap-1">

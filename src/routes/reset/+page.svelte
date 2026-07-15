@@ -11,6 +11,7 @@ import Card, {
 import Input from "$lib/components/ui/input/input.svelte";
 import Label from "$lib/components/ui/label/label.svelte";
 import { t } from "$lib/i18n/index.svelte";
+import { toErrorMessage } from "$lib/utils/crud";
 import { supabase } from "$lib/utils/supabase";
 
 let password = $state("");
@@ -35,8 +36,7 @@ async function handleReset(e: Event) {
 		toast.success(t("auth.passwordUpdated"));
 		await goto("/");
 	} catch (err) {
-		const message = err instanceof Error ? err.message : t("common.error");
-		toast.error(message);
+		toast.error(toErrorMessage(err));
 	} finally {
 		loading = false;
 	}
