@@ -45,7 +45,7 @@ export function buildBookingEmailLines(booking: {
 		`Date: ${new Date(booking.starts_at).toLocaleString("en-GB", { timeZone: "Europe/Athens" })}`,
 		`Type: ${booking.type}`,
 		booking.notes ? `Notes: ${booking.notes}` : null,
-	].filter(Boolean) as string[];
+	].filter((x): x is string => x !== null);
 }
 
 export function buildBookingEmailHtml(

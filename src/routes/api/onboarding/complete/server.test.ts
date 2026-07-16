@@ -13,7 +13,11 @@ vi.mock("$lib/server/supabase-admin", () => ({ getSupabaseAdmin: () => mockAdmin
 
 const { POST } = await import("./+server");
 
-type PostArgs = Parameters<typeof POST>[0];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const PostHandler = POST as unknown as (args: {
+	request: Request;
+	locals: Record<string, unknown>;
+}) => Promise<Response>;
 
 describe("POST /api/onboarding/complete", () => {
 	beforeEach(() => {
@@ -56,18 +60,18 @@ describe("POST /api/onboarding/complete", () => {
 			memberships: [createMockMembership(user.id, tenant.id, { role: "owner" })],
 			tenants: [tenant],
 		});
-		const response = await POST({ request, locals } as unknown as PostArgs);
+		const response = await PostHandler({ request, locals });
 		expect(response.status).toBe(200);
 		expect((await response.json()).tenantId).toBe(tenant.id);
 	});
 
 	it("creates tenant, facility, membership, subscription", async () => {
 		const { tenantId } = mockTables();
-		const response = await POST(
+		const response = await PostHandler(
 			req({
 				tenant: { name: "Club", slug: "club" },
 				facility: { name: "Main" },
-			}) as unknown as PostArgs,
+			}),
 		);
 		expect(response.status).toBe(200);
 		expect((await response.json()).tenantId).toBe(tenantId);
@@ -76,12 +80,12 @@ describe("POST /api/onboarding/complete", () => {
 	it("skips subscription when createTrial=false", async () => {
 		const subInsert = vi.fn().mockResolvedValue({ error: null });
 		mockTables({ subscriptions: { insert: subInsert } });
-		await POST(
+		await PostHandler(
 			req({
 				tenant: { name: "Club" },
 				facility: { name: "Main" },
 				createTrial: false,
-			}) as unknown as PostArgs,
+			}),
 		);
 		expect(subInsert).not.toHaveBeenCalled();
 	});
@@ -90,9 +94,7 @@ describe("POST /api/onboarding/complete", () => {
 		const memberInsert = vi.fn().mockResolvedValue({ error: null });
 		const subInsert = vi.fn().mockResolvedValue({ error: null });
 		mockTables({ memberships: { insert: memberInsert }, subscriptions: { insert: subInsert } });
-		await POST(
-			req({ tenant: { name: "Club" }, facility: { name: "Main" } }) as unknown as PostArgs,
-		);
+		await PostHandler(req({ tenant: { name: "Club" }, facility: { name: "Main" } }));
 		expect(memberInsert).toHaveBeenCalledWith(
 			expect.objectContaining({ role: "owner", is_primary: true }),
 		);
@@ -102,31 +104,31 @@ describe("POST /api/onboarding/complete", () => {
 	});
 
 	it("returns 401 when user is not authenticated", async () => {
-		const response = await POST({
+		const response = await PostHandler({
 			request: createMockRequest({
 				method: "POST",
 				body: { tenant: { name: "Club" }, facility: { name: "Main" } },
 			}),
 			locals: createMockLocals({}),
-		} as unknown as PostArgs);
+		});
 		expect(response.status).toBe(401);
 		expect((await response.json()).error).toBe("Unauthorized");
 	});
 
 	it("returns 400 when tenant.name is missing", async () => {
-		const response = await POST(
-			req({ tenant: { slug: "club" }, facility: { name: "Main" } }) as unknown as PostArgs,
+		const response = await PostHandler(
+			req({ tenant: { slug: "club" }, facility: { name: "Main" } }),
 		);
 		expect(response.status).toBe(400);
 		expect((await response.json()).error).toBe("Missing required fields");
 	});
 
 	it("returns 400 when facility.name is missing", async () => {
-		const response = await POST(
+		const response = await PostHandler(
 			req({
 				tenant: { name: "Club" },
 				facility: { address: "123 Main St" },
-			}) as unknown as PostArgs,
+			}),
 		);
 		expect(response.status).toBe(400);
 		expect((await response.json()).error).toBe("Missing required fields");
@@ -142,8 +144,8 @@ describe("POST /api/onboarding/complete", () => {
 				}),
 			},
 		});
-		const response = await POST(
-			req({ tenant: { name: "Club" }, facility: { name: "Main" } }) as unknown as PostArgs,
+		const response = await PostHandler(
+			req({ tenant: { name: "Club" }, facility: { name: "Main" } }),
 		);
 		expect(response.status).toBe(500);
 		expect((await response.json()).error).toBe("Failed to complete onboarding");
@@ -155,11 +157,11 @@ describe("POST /api/onboarding/complete", () => {
 				insert: () => Promise.resolve({ data: null, error: { message: "Facility error" } }),
 			},
 		});
-		const response = await POST(
+		const response = await PostHandler(
 			req({
 				tenant: { name: "Club", slug: "club" },
 				facility: { name: "Main" },
-			}) as unknown as PostArgs,
+			}),
 		);
 		expect(response.status).toBe(500);
 		expect((await response.json()).error).toBe("Failed to complete onboarding");
@@ -169,11 +171,11 @@ describe("POST /api/onboarding/complete", () => {
 		mockTables({
 			memberships: { insert: () => Promise.resolve({ error: { message: "Membership error" } }) },
 		});
-		const response = await POST(
+		const response = await PostHandler(
 			req({
 				tenant: { name: "Club", slug: "club" },
 				facility: { name: "Main" },
-			}) as unknown as PostArgs,
+			}),
 		);
 		expect(response.status).toBe(500);
 		expect((await response.json()).error).toBe("Failed to complete onboarding");
@@ -188,7 +190,7 @@ describe("POST /api/onboarding/complete", () => {
 			memberships: [createMockMembership(user.id, tenant.id, { role: "owner" })],
 			tenants: [tenant],
 		});
-		const response = await POST({ request, locals } as unknown as PostArgs);
+		const response = await PostHandler({ request, locals });
 		expect(response.status).toBe(200);
 		expect((await response.json()).tenantId).toBe(tenant.id);
 		expect(mockAdmin.from).not.toHaveBeenCalledWith("tenants");

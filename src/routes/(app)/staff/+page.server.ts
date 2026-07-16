@@ -25,14 +25,14 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 			.order("name"),
 	]);
 
-	const orders = (recentOrders ?? []).map((o) => ({
+	const orders: OrderView[] = (recentOrders ?? []).map((o: Record<string, unknown>) => ({
 		...o,
-		order_items: o.order_items.map(
-			(
-				it: { products?: Array<{ id: string; name: string }> | null } & Record<string, unknown>,
-			) => ({
+		order_items: ((o.order_items as Record<string, unknown>[]) ?? []).map(
+			(it: Record<string, unknown>) => ({
 				...it,
-				products: Array.isArray(it.products) ? (it.products[0] ?? null) : (it.products ?? null),
+				products: Array.isArray(it.products)
+					? ((it.products as Record<string, unknown>[])[0] ?? null)
+					: (it.products ?? null),
 			}),
 		),
 	})) as OrderView[];

@@ -51,8 +51,8 @@ describe("hooks.server", () => {
 			request: new Request(`http://localhost${pathname}`),
 		};
 	};
-	const runHandle = async (event: ReturnType<typeof createEvent>): Promise<Response> =>
-		handle({ event, resolve } as unknown as Parameters<typeof handle>[0]);
+	const runHandle = async (event: unknown): Promise<Response> =>
+		handle({ event, resolve } as Parameters<typeof handle>[0]);
 
 	describe("public routes", () => {
 		it.each(["/", "/signup", "/reset"])("allows access to %s without auth", async (route) => {

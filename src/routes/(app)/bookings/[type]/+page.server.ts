@@ -1,14 +1,14 @@
 import { error } from "@sveltejs/kit";
+import { BookingTypeSchema } from "$lib/schemas";
 import type { BookingType } from "$lib/types/database";
 import type { PageServerLoad } from "./$types";
 
-const VALID_TYPES: BookingType[] = ["birthday", "football"];
 const PER_PAGE = 25;
 
 export const load: PageServerLoad = async ({ locals, params, parent, url }) => {
-	const rawType: string = params.type;
-	if (!VALID_TYPES.includes(rawType as BookingType)) throw error(404, "Invalid booking type");
-	const type: BookingType = rawType as BookingType;
+	const parsedType = BookingTypeSchema.safeParse(params.type);
+	if (!parsedType.success) throw error(404, "Invalid booking type");
+	const type: BookingType = parsedType.data;
 
 	const { supabase } = locals;
 	const { user } = await parent();

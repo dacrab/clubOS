@@ -5,9 +5,13 @@ import type { TranslationsStructure } from "./types";
 
 export type Locale = "en" | "el";
 
+function isTranslations(v: unknown): v is TranslationsStructure {
+	return typeof v === "object" && v !== null;
+}
+
 const translations: Record<Locale, TranslationsStructure> = {
 	en,
-	el: el as unknown as TranslationsStructure,
+	el: isTranslations(el) ? el : (en as TranslationsStructure),
 };
 
 const getNestedValue = (obj: unknown, path: string): string => {

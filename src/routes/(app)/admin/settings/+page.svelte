@@ -22,7 +22,7 @@ import SettingRow from "$lib/components/ui/setting-row/setting-row.svelte";
 import Switch from "$lib/components/ui/switch/switch.svelte";
 import { CURRENCY_OPTIONS, DATE_FORMAT_OPTIONS, TIME_FORMAT_OPTIONS } from "$lib/config/settings";
 import { i18n, type Locale, t } from "$lib/i18n/index.svelte";
-import { type Theme, theme } from "$lib/state/theme.svelte";
+import { isValid as isValidTheme, type Theme, theme } from "$lib/state/theme.svelte";
 
 const THEME_OPTIONS: { value: Theme; labelKey: string }[] = [
 	{ value: "system", labelKey: "settings.themes.system" },
@@ -146,7 +146,7 @@ const handleReset = (): void => {
 			</CardHeader>
 			<CardContent class="space-y-4">
 				<SettingRow label={t("settings.theme")} description={t("settings.themeDesc")}>
-					<Select value={theme.current} onValueChange={(v) => theme.setTheme(v as Theme)}>
+					<Select value={theme.current} onValueChange={(v) => { if (isValidTheme(v)) theme.setTheme(v); }}>
 						<SelectTrigger class="w-40" selected={optionLabel(THEME_OPTIONS, theme.current)} />
 						<SelectContent>
 							{#each THEME_OPTIONS as o (o.value)}
@@ -157,7 +157,7 @@ const handleReset = (): void => {
 				</SettingRow>
 				<Separator />
 				<SettingRow label={t("settings.language")} description={t("settings.languageDesc")}>
-					<Select value={i18n.locale} onValueChange={(v) => i18n.setLocale(v as Locale)}>
+					<Select value={i18n.locale} onValueChange={(v) => { if (v === "en" || v === "el") i18n.setLocale(v); }}>
 						<SelectTrigger class="w-40" selected={optionLabel(LANGUAGE_OPTIONS, i18n.locale)} />
 						<SelectContent>
 							{#each LANGUAGE_OPTIONS as o (o.value)}

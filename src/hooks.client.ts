@@ -1,8 +1,9 @@
 import * as Sentry from "@sentry/sveltekit";
 import type { HandleClientError } from "@sveltejs/kit";
+import { env } from "$env/dynamic/public";
 
-const SENTRY_DSN = process.env.SENTRY_DSN;
-const ENV = process.env.VERCEL_ENV || process.env.NODE_ENV || "development";
+const SENTRY_DSN = env.PUBLIC_SENTRY_DSN;
+const ENV = env.PUBLIC_VERCEL_ENV || env.PUBLIC_NODE_ENV || "development";
 
 if (SENTRY_DSN) {
 	Sentry.init({

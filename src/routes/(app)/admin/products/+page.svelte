@@ -70,7 +70,7 @@ const filtered = $derived(
 		: data.paginatedProducts,
 );
 const getCategoryName = (id: string | null): string =>
-	id ? ((data.categories as CategoryPartial[]).find((c) => c.id === id)?.name ?? "-") : "-";
+	id ? (data.categories.find((c: CategoryPartial) => c.id === id)?.name ?? "-") : "-";
 const getStockBadge = (
 	stock: number,
 ): { variant: "destructive" | "warning" | "success"; label: string } => {

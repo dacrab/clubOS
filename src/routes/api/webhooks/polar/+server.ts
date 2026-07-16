@@ -10,7 +10,12 @@ const toHex = (buf: ArrayBuffer): string =>
 	Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
 
 async function verifySignature(payload: string, header: string, secret: string): Promise<boolean> {
-	const parts = Object.fromEntries(header.split(",").map((p) => p.split("=") as [string, string]));
+	const parts = Object.fromEntries(
+		header.split(",").map((p) => {
+			const [k, ...rest] = p.split("=");
+			return [k, rest.join("=")] as [string, string];
+		}),
+	);
 	const { t: timestamp, v1: sig } = parts;
 	if (!timestamp || !sig) return false;
 	if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return false;
@@ -26,12 +31,28 @@ async function verifySignature(payload: string, header: string, secret: string):
 	return toHex(signed) === sig;
 }
 
-function findPlanByProductId(productId: string) {
-	return PLANS_META.find((p) => p.productId === productId);
+function safeStr(val: unknown): string | null {
+	return typeof val === "string" ? val : null;
 }
 
-function toIso(value: unknown): string | null {
-	return value ? new Date(value as string).toISOString() : null;
+function safeMeta(val: unknown): Record<string, string> | null {
+	if (!val || typeof val !== "object") return null;
+	const r = val as Record<string, unknown>;
+	if (typeof r.tenant_id !== "string") return null;
+	const result: Record<string, string> = {};
+	for (const [k, v] of Object.entries(r)) {
+		if (typeof v === "string") result[k] = v;
+	}
+	return result;
+}
+
+function safeData(val: unknown): Record<string, unknown> {
+	if (!val || typeof val !== "object") return {};
+	const result: Record<string, unknown> = {};
+	for (const [k, v] of Object.entries(val)) {
+		result[k] = v;
+	}
+	return result;
 }
 
 async function syncSubscription(
@@ -56,6 +77,18 @@ async function syncSubscription(
 	});
 }
 
+function toIso(value: unknown): string | null {
+	return typeof value === "string" ? new Date(value).toISOString() : null;
+}
+
+function firstProductId(products: unknown): string | null {
+	if (!Array.isArray(products) || products.length === 0) return null;
+	const first = products[0];
+	return first && typeof first === "object"
+		? safeStr(Object.hasOwn(first, "id") ? (first as Record<string, unknown>).id : null)
+		: null;
+}
+
 export const POST: RequestHandler = async ({ request }) => {
 	const secret = env.POLAR_WEBHOOK_SECRET;
 	if (!secret) {
@@ -68,25 +101,31 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ error: "Invalid signature" }, { status: 400 });
 	}
 
-	const event = JSON.parse(body);
+	const event: unknown = JSON.parse(body);
+	const eventType = safeStr(
+		event && typeof event === "object" ? (event as Record<string, unknown>).type : null,
+	);
+	const rawData =
+		event && typeof event === "object" ? (event as Record<string, unknown>).data : null;
+	const eventData = safeData(rawData);
 	const admin = getSupabaseAdmin();
 
-	switch (event.type) {
+	switch (eventType) {
 		case "checkout.created":
 		case "checkout.updated": {
-			if (event.data.status === "succeeded" && event.data.subscription_id) {
-				const sub = await polarGet<Record<string, unknown>>(
-					`/subscriptions/${event.data.subscription_id}`,
-				);
-				const metadata = event.data.customer_metadata as Record<string, string> | undefined;
-				const tenantId = metadata?.tenant_id;
+			const status = safeStr(eventData.status);
+			const subId = safeStr(eventData.subscription_id);
+			if (status === "succeeded" && subId) {
+				const sub = await polarGet<Record<string, unknown>>(`/subscriptions/${subId}`);
+				const meta = safeMeta(eventData.customer_metadata);
+				const tenantId = meta?.tenant_id ?? null;
 				if (!tenantId) break;
 
-				const productId = (event.data.products as Array<{ id: string }> | undefined)?.[0]?.id;
-				const plan = productId ? findPlanByProductId(productId) : undefined;
+				const productId = firstProductId(eventData.products);
+				const plan = productId ? PLANS_META.find((p) => p.productId === productId) : undefined;
 				await syncSubscription(tenantId, {
-					customerId: event.data.customer_id,
-					subscriptionId: event.data.subscription_id,
+					customerId: safeStr(eventData.customer_id) ?? undefined,
+					subscriptionId: subId,
 					status: "active",
 					planName: plan?.name,
 					currentPeriodEnd: toIso(sub.current_period_end),
@@ -96,42 +135,39 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 		case "subscription.active":
 		case "subscription.updated": {
-			const subData = event.data;
-			const meta = subData.customer_metadata as Record<string, string> | undefined;
-			const tenantId = meta?.tenant_id;
+			const meta = safeMeta(eventData.customer_metadata);
+			const tenantId = meta?.tenant_id ?? null;
 			if (!tenantId) break;
 
-			const productId = subData.product_id as string | undefined;
-			const plan = productId ? findPlanByProductId(productId) : undefined;
+			const productId = safeStr(eventData.product_id);
+			const plan = productId ? PLANS_META.find((p) => p.productId === productId) : undefined;
 			await syncSubscription(tenantId, {
-				customerId: subData.customer_id,
-				subscriptionId: subData.id,
-				status: subData.status ?? "active",
+				customerId: safeStr(eventData.customer_id) ?? undefined,
+				subscriptionId: safeStr(eventData.id) ?? undefined,
+				status: safeStr(eventData.status) ?? "active",
 				planName: plan?.name,
-				currentPeriodEnd: toIso(subData.current_period_end),
+				currentPeriodEnd: toIso(eventData.current_period_end),
 			});
 			break;
 		}
 		case "subscription.canceled": {
-			const subData = event.data;
-			const meta = subData.customer_metadata as Record<string, string> | undefined;
-			const tenantId = meta?.tenant_id;
+			const meta = safeMeta(eventData.customer_metadata);
+			const tenantId = meta?.tenant_id ?? null;
 			if (!tenantId) break;
 
 			await syncSubscription(tenantId, {
-				customerId: subData.customer_id,
-				subscriptionId: subData.id,
+				customerId: safeStr(eventData.customer_id) ?? undefined,
+				subscriptionId: safeStr(eventData.id) ?? undefined,
 				status: "canceled",
 			});
 			break;
 		}
 		case "subscription.revoked": {
-			const subData = event.data;
-			const meta = subData.customer_metadata as Record<string, string> | undefined;
-			const tenantId = meta?.tenant_id;
+			const meta = safeMeta(eventData.customer_metadata);
+			const tenantId = meta?.tenant_id ?? null;
 			if (!tenantId) break;
 
-			const subId = subData.id as string | undefined;
+			const subId = safeStr(eventData.id);
 			if (subId) {
 				await admin
 					.from("subscriptions")

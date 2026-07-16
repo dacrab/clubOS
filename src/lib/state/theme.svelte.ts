@@ -2,7 +2,9 @@ import { browser } from "$app/environment";
 
 export type Theme = "light" | "dark" | "system";
 
-const isValid = (v: unknown): v is Theme => v === "light" || v === "dark" || v === "system";
+export function isValid(v: unknown): v is Theme {
+	return v === "light" || v === "dark" || v === "system";
+}
 const prefersDark = (): boolean =>
 	typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches;
 

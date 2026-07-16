@@ -1,3 +1,4 @@
+import { AdminUserUpdateSchema } from "$lib/schemas";
 import { canAssign, requireAdmin, text } from "$lib/server/admin-helpers";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 import type { RequestHandler } from "./$types";
@@ -6,8 +7,11 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const ctx = await requireAdmin(locals);
 	if (ctx instanceof Response) return ctx;
 
-	const { full_name, role, password } = await request.json();
-	if (!canAssign(ctx.callerRole, role)) return text("Cannot assign higher privileges", 403);
+	const parsed = AdminUserUpdateSchema.safeParse(await request.json().catch(() => ({})));
+	if (!parsed.success) return text("Invalid request body", 400);
+
+	const { full_name, role, password } = parsed.data;
+	if (role && !canAssign(ctx.callerRole, role)) return text("Cannot assign higher privileges", 403);
 
 	const admin = getSupabaseAdmin();
 	const meta: Record<string, unknown> = {};
@@ -20,7 +24,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
 	if (Object.keys(updates).length) {
 		const { error } = await admin.auth.admin.updateUserById(params.id, updates);
-		if (error) return text(error.message, 400);
+		if (error) return text("Failed to update user", 400);
 	}
 
 	if (full_name) await admin.from("users").update({ full_name }).eq("id", params.id);
@@ -51,5 +55,5 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 	if (!membership) return text("User not found in your tenant", 404);
 
 	const { error } = await admin.auth.admin.deleteUser(params.id);
-	return error ? text(error.message, 400) : new Response(null, { status: 204 });
+	return error ? text("Failed to delete user", 400) : new Response(null, { status: 204 });
 };

@@ -18,18 +18,23 @@ const EMPTY_CTX: App.UserContext = {
 	activeSession: null,
 };
 
-type SubscriptionState = {
-	status?: string;
-	periodEnd?: string | null;
-	trialEnd?: string | null;
-} | null;
+interface SubscriptionLike {
+	status: string;
+	periodEnd?: string;
+	trialEnd?: string;
+}
 
-const isActive = (sub: SubscriptionState): boolean => {
-	if (!sub || (sub.status !== "trialing" && sub.status !== "active")) return false;
+const isActive = (sub: unknown): boolean => {
+	if (!sub || typeof sub !== "object") return false;
+	const s = sub as SubscriptionLike;
+	const status = s.status;
+	if (typeof status !== "string" || (status !== "trialing" && status !== "active")) return false;
 	const now = Date.now();
+	const periodEnd = s.periodEnd;
+	const trialEnd = s.trialEnd;
 	return (
-		(!!sub.periodEnd && new Date(sub.periodEnd).getTime() > now) ||
-		(!!sub.trialEnd && new Date(sub.trialEnd).getTime() > now)
+		(typeof periodEnd === "string" && new Date(periodEnd).getTime() > now) ||
+		(typeof trialEnd === "string" && new Date(trialEnd).getTime() > now)
 	);
 };
 
@@ -98,7 +103,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	const ctx = await getCtx();
 	const role = ctx.membership?.role ?? null;
 	const tenantId = ctx.membership?.tenantId ?? null;
-	const active = isActive(ctx.subscription as SubscriptionState);
+	const active = isActive(ctx.subscription);
 
 	if (!tenantId && !isAuthOnly) throw redirect(307, "/onboarding");
 	if (tenantId && !active && !isAuthOnly) throw redirect(307, "/billing");

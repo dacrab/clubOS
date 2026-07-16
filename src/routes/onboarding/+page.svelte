@@ -61,11 +61,11 @@ function nextStep(): void {
 		toast.error(t("onboarding.enterFacilityName"));
 		return;
 	}
-	if (currentStep < 3) currentStep = (currentStep + 1) as Step;
+	if (currentStep < 3) currentStep = (currentStep + 1) as 1 | 2 | 3;
 }
 
 function prevStep(): void {
-	if (currentStep > 1) currentStep = (currentStep - 1) as Step;
+	if (currentStep > 1) currentStep = (currentStep - 1) as 1 | 2 | 3;
 }
 
 function payload() {

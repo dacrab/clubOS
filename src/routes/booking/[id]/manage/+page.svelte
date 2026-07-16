@@ -6,7 +6,19 @@ import Label from "$lib/components/ui/label/label.svelte";
 import type { Booking } from "$lib/types/database";
 
 const { data, form } = $props();
-let booking = $derived(data.booking as Booking);
+
+function isBooking(v: unknown): v is Booking {
+	if (!v || typeof v !== "object") return false;
+	const b = v as Record<string, unknown>;
+	return (
+		typeof b.id === "string" &&
+		typeof b.customer_name === "string" &&
+		typeof b.starts_at === "string" &&
+		typeof b.status === "string"
+	);
+}
+
+let booking = $derived(isBooking(data.booking) ? data.booking : ({} as Booking));
 
 let cancelMode = $state(false);
 let cancelReason = $state("");

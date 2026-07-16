@@ -1,5 +1,6 @@
 import { fail } from "@sveltejs/kit";
 import { DEFAULT_SETTINGS, mergeSettings, type TenantSettings } from "$lib/config/settings";
+import { TenantSettingsSchema } from "$lib/schemas";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
@@ -17,10 +18,10 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		.single();
 
 	const rawSettings: unknown = tenant?.settings;
-	const partialSettings: Partial<TenantSettings> | null =
+	const partialSettings: Partial<TenantSettings> =
 		rawSettings && typeof rawSettings === "object"
-			? (rawSettings as Partial<TenantSettings>)
-			: null;
+			? (Object.assign({}, rawSettings as Record<string, unknown>) as Partial<TenantSettings>)
+			: {};
 
 	return {
 		settings: mergeSettings(partialSettings),
@@ -51,8 +52,13 @@ export const actions: Actions = {
 		if (typeof settingsJson !== "string") return fail(400, { error: "Invalid settings" });
 
 		try {
-			const settings = JSON.parse(settingsJson) as Partial<TenantSettings>;
-			const { error } = await supabase.from("tenants").update({ settings }).eq("id", tenantId);
+			const parsed = JSON.parse(settingsJson);
+			const validated = TenantSettingsSchema.safeParse(parsed);
+			if (!validated.success) return fail(400, { error: "Invalid settings structure" });
+			const { error } = await supabase
+				.from("tenants")
+				.update({ settings: validated.data })
+				.eq("id", tenantId);
 			if (error) return fail(500, { error: error.message });
 			return { success: true };
 		} catch {

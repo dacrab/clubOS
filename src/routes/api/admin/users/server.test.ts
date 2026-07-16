@@ -58,13 +58,13 @@ describe("POST /api/admin/users", () => {
 		mockCreateUser.mockResolvedValueOnce({ data: { user: { id: "new1" } }, error: null });
 		mockInsert.mockResolvedValueOnce({ error: null });
 		const res = await POST({
-			request: json({ email: "x@x.com", password: "pass", role: "staff", full_name: "Test" }),
+			request: json({ email: "x@x.com", password: "pass123", role: "staff", full_name: "Test" }),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(200);
 		expect(await res.json()).toEqual({ id: "new1" });
 		expect(mockCreateUser).toHaveBeenCalledWith(
-			expect.objectContaining({ email: "x@x.com", password: "pass", email_confirm: true }),
+			expect.objectContaining({ email: "x@x.com", password: "pass123", email_confirm: true }),
 		);
 		expect(mockInsert).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -80,7 +80,7 @@ describe("POST /api/admin/users", () => {
 		mockCreateUser.mockResolvedValueOnce({ data: { user: { id: "new1" } }, error: null });
 		mockInsert.mockResolvedValueOnce({ error: { message: "Duplicate" } });
 		const res = await POST({
-			request: json({ email: "x@x.com", password: "pass", role: "staff", full_name: "Test" }),
+			request: json({ email: "x@x.com", password: "pass123", role: "staff", full_name: "Test" }),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(400);
@@ -89,7 +89,7 @@ describe("POST /api/admin/users", () => {
 
 	it("returns 400 with missing fields", async () => {
 		const res = await POST({
-			request: json({ email: "x@x.com", password: "pass" }),
+			request: json({ email: "x@x.com", password: "pass123" }),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(400);
@@ -99,7 +99,7 @@ describe("POST /api/admin/users", () => {
 	it("returns 401 when user is not authenticated", async () => {
 		const unauthLocals = { user: null } as Partial<App.Locals> as App.Locals;
 		const res = await POST({
-			request: json({ email: "x@x.com", password: "pass", role: "staff", full_name: "Test" }),
+			request: json({ email: "x@x.com", password: "pass123", role: "staff", full_name: "Test" }),
 			locals: unauthLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(401);
@@ -109,7 +109,7 @@ describe("POST /api/admin/users", () => {
 	it("returns 403 when non-admin (staff role) tries to create user", async () => {
 		mockMembershipSelect.mockResolvedValueOnce({ data: { tenant_id: "t1", role: "staff" } });
 		const res = await POST({
-			request: json({ email: "x@x.com", password: "pass", role: "staff", full_name: "Test" }),
+			request: json({ email: "x@x.com", password: "pass123", role: "staff", full_name: "Test" }),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(403);
@@ -119,7 +119,7 @@ describe("POST /api/admin/users", () => {
 	it("returns 403 when admin tries to escalate privilege (create owner)", async () => {
 		mockMembershipSelect.mockResolvedValueOnce({ data: { tenant_id: "t1", role: "admin" } });
 		const res = await POST({
-			request: json({ email: "x@x.com", password: "pass", role: "owner", full_name: "Test" }),
+			request: json({ email: "x@x.com", password: "pass123", role: "owner", full_name: "Test" }),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(403);

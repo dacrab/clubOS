@@ -13,7 +13,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		id: user.id,
 		email: user.email ?? "",
 		username: userCtx.profile?.fullName ?? user.email ?? "",
-		role: userCtx.membership.role as SessionUser["role"],
+		role: userCtx.membership.role ?? "staff",
 		tenantId: userCtx.membership.tenantId,
 		facilityId: userCtx.membership.facilityId,
 	};

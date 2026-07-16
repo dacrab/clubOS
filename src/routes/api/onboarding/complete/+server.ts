@@ -1,26 +1,21 @@
 import { json } from "@sveltejs/kit";
+import { OnboardingBodySchema } from "$lib/schemas";
 import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 import { DAY_MS, DEFAULT_TIMEZONE, TRIAL_DAYS } from "$lib/types/database";
 import type { RequestHandler } from "./$types";
 
-interface Body {
-	tenant?: { name: string; slug: string };
-	facility?: { name: string; address?: string; phone?: string; email?: string; timezone?: string };
-	createTrial?: boolean;
-}
-
 export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) return json({ error: "Unauthorized" }, { status: 401 });
 
-	const { tenant, facility, createTrial = true } = (await request.json()) as Body;
-	if (!tenant?.name || !facility?.name)
-		return json({ error: "Missing required fields" }, { status: 400 });
+	const parsed = OnboardingBodySchema.safeParse(await request.json().catch(() => ({})));
+	if (!parsed.success) return json({ error: "Missing required fields" }, { status: 400 });
+
+	const { tenant, facility, createTrial = true } = parsed.data;
 
 	const { supabase } = locals;
 	const admin = getSupabaseAdmin();
 
 	try {
-		// Idempotent: if user already belongs to a tenant, return it.
 		const { data: existing } = await supabase
 			.from("memberships")
 			.select("tenant_id")
@@ -29,9 +24,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			.single();
 		if (existing) return json({ tenantId: existing.tenant_id });
 
+		const slug = tenant.slug ?? tenant.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
 		const { data: tenantData, error: tenantError } = await admin
 			.from("tenants")
-			.insert({ name: tenant.name, slug: tenant.slug })
+			.insert({ name: tenant.name, slug })
 			.select()
 			.single();
 		if (tenantError) throw tenantError;
@@ -68,10 +65,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 
 		return json({ tenantId: tenantData.id });
-	} catch (err) {
-		return json(
-			{ error: err instanceof Error ? err.message : "Failed to complete onboarding" },
-			{ status: 500 },
-		);
+	} catch {
+		return json({ error: "Failed to complete onboarding" }, { status: 500 });
 	}
 };

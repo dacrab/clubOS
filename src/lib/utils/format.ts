@@ -50,9 +50,10 @@ export function formatDateTimeLocal(date: Date, withTime = true): string {
 	return `${base}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+type CurrencyValue = (typeof CURRENCY_OPTIONS)[number]["value"];
 const CURRENCY_SYMBOLS = Object.fromEntries(
 	CURRENCY_OPTIONS.map((c) => [c.value, c.symbol]),
-) as Record<string, string>;
+) as Partial<Record<CurrencyValue, string>>;
 
 export function currentCurrencySymbol(): string {
 	return CURRENCY_SYMBOLS[settings.current.currency_code] ?? "?";

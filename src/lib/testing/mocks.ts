@@ -144,8 +144,8 @@ export const createSupabaseMock = (
 	} => {
 		let filters: { col: string; val: unknown }[] = [];
 		const fetchOne = (): Record<string, unknown> | null => {
-			const rows = (tableData[table]?.() ?? []).filter((r) =>
-				filters.every((f) => (r as Record<string, unknown>)[f.col] === f.val),
+			const rows = (tableData[table]?.() ?? []).filter((r: Record<string, unknown>) =>
+				filters.every((f) => r[f.col] === f.val),
 			);
 			filters = [];
 			return rows[0] ?? null;
@@ -229,7 +229,15 @@ export const createMockLocals = (
 	const authUser = config.user ? buildAuthUser(config.user) : null;
 	return {
 		user: authUser,
-		session: authUser ? ({ access_token: "x", user: authUser } as Session) : null,
+		session: authUser
+			? {
+					access_token: "x",
+					refresh_token: "r",
+					expires_in: 3600,
+					token_type: "bearer",
+					user: authUser,
+				}
+			: null,
 		supabase,
 	};
 };

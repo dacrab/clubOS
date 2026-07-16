@@ -14,6 +14,7 @@
         "@vercel/speed-insights": "^2.0.0",
         "bits-ui": "^2.18.1",
         "svelte-sonner": "^1.1.1",
+        "zod": "^4.4.3",
       },
       "devDependencies": {
         "@biomejs/biome": "^2.5.3",
