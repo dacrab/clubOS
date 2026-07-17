@@ -15,7 +15,7 @@ export async function requireAdmin(locals: App.Locals): Promise<AdminCtx | Respo
 		.eq("is_primary", true)
 		.single();
 	if (!m || (m.role !== "owner" && m.role !== "admin")) return text("Forbidden", 403);
-	const callerRole: MemberRole = m.role === "owner" ? "owner" : "admin";
+	const callerRole = m.role === "owner" ? "owner" : "admin";
 	return { tenantId: m.tenant_id, callerRole };
 }
 

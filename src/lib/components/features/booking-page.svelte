@@ -55,7 +55,6 @@ let {
 const isBirthday = $derived(type === "birthday");
 const prefix = $derived(isBirthday ? "bookings.birthday" : "bookings.football");
 
-// Sensible booking defaults (not exposed in settings UI)
 const DEFAULT_HOUR = { birthday: 15, football: 18 } as const;
 const FOOTBALL_PLAYERS = { default: 10, min: 2, max: 22 } as const;
 
@@ -123,9 +122,6 @@ function openDialog(item?: Booking) {
 }
 
 async function checkConflict(startsAt: Date, endsAt: Date): Promise<boolean> {
-	// Use the authoritative server-side RPC (Postgres OVERLAPS). The previous
-	// client-side SELECT with a ±buffer window could disagree with the server
-	// and let overlapping bookings through.
 	const { data } = await supabase.rpc("check_booking_conflict", {
 		p_facility_id: user.facilityId,
 		p_type: type,

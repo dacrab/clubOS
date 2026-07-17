@@ -15,9 +15,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const plan = PLANS_META.find((p) => p.id === planId);
 	if (!plan) return json({ error: "Invalid plan" }, { status: 400 });
 
-	// Derive tenantId server-side from the authenticated session. Body-trust was
-	// the previous bug — a caller could pass any tenantId and bind a subscription
-	// to a tenant they didn't own.
 	const admin = getSupabaseAdmin();
 	const { data: ctx } = await admin.rpc("get_user_context", { p_user_id: claims.id });
 	const tenantId = ctx?.membership?.tenantId ?? null;

@@ -1,17 +1,8 @@
 import { z } from "zod";
-import type { BookingType, MemberRole } from "$lib/types/database";
 
 export const MemberRoleSchema = z.enum(["owner", "admin", "manager", "staff"]);
 
 export const BookingTypeSchema = z.enum(["birthday", "football"]);
-
-export const BookingStatusSchema = z.enum([
-	"pending",
-	"confirmed",
-	"canceled",
-	"completed",
-	"no_show",
-]);
 
 export const BookingIdSchema = z.string().uuid();
 
@@ -77,13 +68,3 @@ export const AdminUserUpdateSchema = z.object({
 export const AdminUserDeleteSchema = z.object({
 	id: z.string().min(1),
 });
-
-export function parseMemberRole(val: string): MemberRole | null {
-	const result = MemberRoleSchema.safeParse(val);
-	return result.success ? result.data : null;
-}
-
-export function parseBookingType(val: string): BookingType | null {
-	const result = BookingTypeSchema.safeParse(val);
-	return result.success ? result.data : null;
-}

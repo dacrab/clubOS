@@ -41,7 +41,6 @@ const MAX_FOOTBALL_DURATION_MIN = 300;
 
 const { data } = $props();
 
-// Local editable copy of server settings; re-clones whenever server data changes.
 let settings = $state(untrack(() => ({ ...data.settings })));
 let saved = $state("");
 $effect(() => {

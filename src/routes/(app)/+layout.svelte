@@ -6,7 +6,6 @@ import { settings } from "$lib/state/settings.svelte";
 
 const { data, children } = $props();
 
-// Sync server data into client stores before render on every navigation
 $effect.pre(() => {
 	session.setUser(data.user);
 	if (data.settings) settings.setSettings(data.settings);

@@ -9,7 +9,7 @@ function isTranslations(v: unknown): v is TranslationsStructure {
 	return typeof v === "object" && v !== null;
 }
 
-const translations: Record<Locale, TranslationsStructure> = {
+const translations = {
 	en,
 	el: isTranslations(el) ? el : (en as TranslationsStructure),
 };

@@ -23,7 +23,6 @@ export interface ReceiptData {
 export function printReceipt(data: ReceiptData): void {
 	if (!data.items.length) return;
 	const orderId = data.orderId;
-
 	const w = window.open("", "_blank", "width=300,height=600");
 	if (!w) return;
 

@@ -17,14 +17,11 @@ import Button from "$lib/components/ui/button/button.svelte";
 import Separator from "$lib/components/ui/separator/separator.svelte";
 import { t } from "$lib/i18n/index.svelte";
 import { session } from "$lib/state/session.svelte";
-import type { MemberRole } from "$lib/types/database";
 import { cn } from "$lib/utils/cn";
-
-type NavItem = { label: string; href: string; icon: typeof LayoutDashboard };
 
 let collapsed = $state(false);
 
-const adminNav: NavItem[] = [
+const adminNav = [
 	{ label: "nav.dashboard", href: "/admin", icon: LayoutDashboard },
 	{ label: "nav.products", href: "/admin/products", icon: Package },
 	{ label: "nav.orders", href: "/admin/orders", icon: ShoppingCart },
@@ -35,7 +32,7 @@ const adminNav: NavItem[] = [
 	{ label: "nav.settings", href: "/admin/settings", icon: Settings },
 ];
 
-const navConfig: Record<MemberRole, NavItem[]> = {
+const navConfig = {
 	owner: adminNav,
 	admin: adminNav,
 	manager: [

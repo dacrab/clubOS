@@ -11,8 +11,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const { data: ctx } = await supabase.rpc("get_user_context", { p_user_id: user.id });
 	if (!ctx?.membership) throw redirect(307, "/onboarding");
-	const role: MemberRole = VALID_ROLES.includes(ctx.membership.role)
-		? ctx.membership.role
-		: "staff";
+	const role = VALID_ROLES.includes(ctx.membership.role) ? ctx.membership.role : "staff";
 	throw redirect(307, getHomeForRole(role));
 };

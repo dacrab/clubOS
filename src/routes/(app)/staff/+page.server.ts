@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 			.order("name"),
 	]);
 
-	const orders: OrderView[] = (recentOrders ?? []).map((o: Record<string, unknown>) => ({
+	const orders = (recentOrders ?? []).map((o: Record<string, unknown>) => ({
 		...o,
 		order_items: ((o.order_items as Record<string, unknown>[]) ?? []).map(
 			(it: Record<string, unknown>) => ({
