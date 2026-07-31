@@ -1,13 +1,34 @@
 export type MemberRole = "owner" | "admin" | "manager" | "staff";
-export type BookingType = "birthday" | "football";
+export type BookingType = "birthday" | "football" | "event" | "other";
 export type BookingStatus = "pending" | "confirmed" | "canceled" | "completed" | "no_show";
-export type SubscriptionStatus =
-	| "trialing"
-	| "active"
-	| "canceled"
-	| "past_due"
-	| "unpaid"
-	| "paused";
+
+export const SUBSCRIPTION_STATUSES = [
+	"trialing",
+	"active",
+	"canceled",
+	"past_due",
+	"unpaid",
+	"paused",
+] as const;
+export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number];
+
+export const DB_ACTIONS = [
+	"products.insert",
+	"products.update",
+	"products.delete",
+	"products.search",
+	"categories.insert",
+	"categories.update",
+	"categories.delete",
+	"bookings.insert",
+	"bookings.update",
+	"bookings.delete",
+	"bookings.checkConflict",
+	"registerSessions.insert",
+	"registerSessions.close",
+	"orders.create",
+] as const;
+export type DbAction = (typeof DB_ACTIONS)[number];
 
 export const PRODUCTS_LIMIT = 500;
 export const CATEGORIES_LIMIT = 100;
@@ -26,6 +47,7 @@ export interface Product {
 	stock_quantity: number;
 	track_inventory: boolean;
 	image_url: string | null;
+	search_vector: string | null;
 	created_at: string;
 	updated_at: string;
 	created_by: string | null;
@@ -54,10 +76,8 @@ export interface BookingDetails {
 	num_children?: number;
 	num_adults?: number;
 	package_type?: string;
-	[key: string]: unknown;
 }
 
-/** Product reference in order item. */
 export type ProductRef = { id: string; name: string } | null;
 
 export interface OrderItemView {
@@ -67,7 +87,7 @@ export interface OrderItemView {
 	line_total: number;
 	is_treat: boolean;
 	is_deleted: boolean;
-	products: ProductRef;
+	product_ref: ProductRef;
 }
 
 export interface OrderView {
@@ -128,7 +148,14 @@ export interface SessionUser {
 
 export interface RegisterSession {
 	id: string;
-	opening_cash?: number | null;
-	opened_at?: string | null;
-	[key: string]: unknown;
+	facility_id: string;
+	opened_by: string;
+	closed_by: string | null;
+	opened_at: string;
+	closed_at: string | null;
+	opening_cash: string;
+	closing_cash: string | null;
+	expected_cash: string | null;
+	notes: string | null;
+	created_at: string;
 }

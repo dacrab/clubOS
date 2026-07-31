@@ -1,34 +1,32 @@
+# Dependencies
 node_modules
 
-# Output
+# Build output
 .output
 .vercel
 /.svelte-kit
 /build
 coverage/
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Env
+# Env & secrets
 .env
 .env.*
 !.env.example
+doppler.json
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Playwright
 test-results/
 playwright-report/
 playwright/.cache/
 
-# Supabase
-supabase/.temp/
-supabase/.branches/
-
 # IDE
 .idea/
-*.swp
-package-lock.json
-# IDE
 .vscode/
+*.swp
 
+# Misc
+package-lock.json

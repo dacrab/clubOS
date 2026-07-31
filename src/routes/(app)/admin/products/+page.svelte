@@ -25,9 +25,9 @@ import Table, {
 import { t } from "$lib/i18n/index.svelte";
 import { settings } from "$lib/state/settings.svelte";
 import type { CategoryPartial, Product, ProductForm } from "$lib/types/database";
+import { api } from "$lib/utils/api";
 import { runCrud } from "$lib/utils/crud";
 import { fmtCurrency } from "$lib/utils/format";
-import { supabase } from "$lib/utils/supabase";
 
 const { data } = $props();
 
@@ -126,11 +126,14 @@ async function saveProduct(): Promise<void> {
 		image_url: productForm.image_url || null,
 		...(!editingProduct && { facility_id: data.user.facilityId, created_by: data.user.id }),
 	};
-	const ok = await runCrud(() =>
-		editingProduct
-			? supabase.from("products").update(payload).eq("id", editingProduct.id)
-			: supabase.from("products").insert(payload),
-	);
+	const ok = await runCrud(async () => {
+		if (editingProduct) {
+			await api("products.update", { data: payload, filter: { id: editingProduct.id } });
+		} else {
+			await api("products.insert", { data: payload });
+		}
+		return {};
+	});
 	if (ok) productOpen = false;
 	savingProduct = false;
 }
@@ -144,11 +147,14 @@ async function saveCategory(): Promise<void> {
 		parent_id: categoryForm.parent_id || null,
 		...(!editingCategory && { facility_id: data.user.facilityId }),
 	};
-	const ok = await runCrud(() =>
-		editingCategory
-			? supabase.from("categories").update(payload).eq("id", editingCategory.id)
-			: supabase.from("categories").insert(payload),
-	);
+	const ok = await runCrud(async () => {
+		if (editingCategory) {
+			await api("categories.update", { data: payload, filter: { id: editingCategory.id } });
+		} else {
+			await api("categories.insert", { data: payload });
+		}
+		return {};
+	});
 	if (ok) categoryOpen = false;
 	savingCategory = false;
 }
@@ -156,13 +162,19 @@ async function saveCategory(): Promise<void> {
 async function confirmDeleteProduct(): Promise<void> {
 	if (!deleteTarget) return;
 	const target = deleteTarget;
-	const ok = await runCrud(() => supabase.from("products").delete().eq("id", target.id));
+	const ok = await runCrud(async () => {
+		await api("products.delete", { filter: { id: target.id } });
+		return {};
+	});
 	if (ok) deleteOpen = false;
 }
 async function confirmDeleteCategory(): Promise<void> {
 	if (!deleteCatTarget) return;
 	const target = deleteCatTarget;
-	const ok = await runCrud(() => supabase.from("categories").delete().eq("id", target.id));
+	const ok = await runCrud(async () => {
+		await api("categories.delete", { filter: { id: target.id } });
+		return {};
+	});
 	if (ok) deleteCatOpen = false;
 }
 </script>

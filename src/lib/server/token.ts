@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { env } from "$env/dynamic/private";
 
 function getSecret(): string {
@@ -8,9 +8,7 @@ function getSecret(): string {
 }
 
 export function generateBookingToken(bookingId: string): string {
-	return createHash("sha256")
-		.update(bookingId + getSecret())
-		.digest("hex");
+	return createHmac("sha256", getSecret()).update(bookingId).digest("hex");
 }
 
 export function verifyBookingToken(bookingId: string, token: string): boolean {

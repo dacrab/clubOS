@@ -1,5 +1,6 @@
 <script lang="ts">
 import { LogOut, User } from "@lucide/svelte";
+import { SignOutButton } from "svelte-clerk";
 import LanguageSwitcher from "$lib/components/layout/language-switcher.svelte";
 import ThemeToggle from "$lib/components/layout/theme-toggle.svelte";
 import Badge from "$lib/components/ui/badge/badge.svelte";
@@ -45,7 +46,9 @@ const roleBadgeVariant = $derived(getRoleBadgeVariant(session.user?.role));
 						<DropdownMenuLabel>{session.user.username || session.user.email}</DropdownMenuLabel>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem>
-							<a href="/logout" class="flex-center gap-2"><LogOut class="icon-sm" />{t("nav.logout")}</a>
+							<SignOutButton>
+								<button class="flex-center gap-2 w-full"><LogOut class="icon-sm" />{t("nav.logout")}</button>
+							</SignOutButton>
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>

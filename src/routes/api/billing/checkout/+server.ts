@@ -1,13 +1,14 @@
 import { json } from "@sveltejs/kit";
 import { PLANS_META } from "$lib/config/plans";
 import { CheckoutBodySchema } from "$lib/schemas";
+import { resolveUserContext } from "$lib/server/auth";
 import { createCheckout } from "$lib/server/polar";
-import { getSupabaseAdmin } from "$lib/server/supabase-admin";
 import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-	if (!locals.user) return json({ error: "Unauthorized" }, { status: 401 });
-	const claims = locals.user;
+	const userId = locals.userId;
+	if (!userId) return json({ error: "Unauthorized" }, { status: 401 });
+
 	const parsed = CheckoutBodySchema.safeParse(await request.json().catch(() => ({})));
 	if (!parsed.success) return json({ error: "Invalid request body" }, { status: 400 });
 	const { planId } = parsed.data;
@@ -15,16 +16,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const plan = PLANS_META.find((p) => p.id === planId);
 	if (!plan) return json({ error: "Invalid plan" }, { status: 400 });
 
-	const admin = getSupabaseAdmin();
-	const { data: ctx } = await admin.rpc("get_user_context", { p_user_id: claims.id });
-	const tenantId = ctx?.membership?.tenantId ?? null;
+	const ctx = await resolveUserContext(userId);
+	const tenantId = ctx.membership?.tenantId ?? undefined;
 
 	try {
 		const origin = request.headers.get("origin") ?? "http://localhost:5173";
 		const checkout = await createCheckout({
 			productId: plan.productId,
-			email: claims.email ?? "",
-			userId: claims.id,
+			email: "",
+			userId,
 			tenantId,
 			successUrl: `${origin}/api/billing/success?checkout_id={CHECKOUT_ID}`,
 			cancelUrl: `${origin}/billing`,

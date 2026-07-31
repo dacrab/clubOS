@@ -3,7 +3,6 @@ import type { OrderItemView } from "$lib/types/database";
 import {
 	getActiveOrderItems,
 	getBookingStatusBadgeVariant,
-	getProductName,
 	getRoleBadgeVariant,
 	shortId,
 } from "./helpers";
@@ -49,16 +48,6 @@ describe("shortId", () => {
 	});
 });
 
-describe("getProductName", () => {
-	it("returns the product name", () => {
-		expect(getProductName({ id: "p1", name: "Soda" })).toBe("Soda");
-	});
-
-	it("falls back to Unknown for null", () => {
-		expect(getProductName(null)).toBe("Unknown");
-	});
-});
-
 describe("getActiveOrderItems", () => {
 	const item = (id: string, is_deleted: boolean): OrderItemView => ({
 		id,
@@ -67,7 +56,7 @@ describe("getActiveOrderItems", () => {
 		line_total: 1,
 		is_treat: false,
 		is_deleted,
-		products: { id, name: id },
+		product_ref: { id, name: id },
 	});
 
 	it("filters out soft-deleted items", () => {

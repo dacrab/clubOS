@@ -1,57 +1,13 @@
 <script lang="ts">
-import { toast } from "svelte-sonner";
+import { SignIn } from "svelte-clerk";
 import Header from "$lib/components/layout/header.svelte";
-import Button from "$lib/components/ui/button/button.svelte";
 import Card, {
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
 } from "$lib/components/ui/card/card.svelte";
-import Input from "$lib/components/ui/input/input.svelte";
-import Label from "$lib/components/ui/label/label.svelte";
 import { t } from "$lib/i18n/index.svelte";
-import { toErrorMessage } from "$lib/utils/crud";
-import { supabase } from "$lib/utils/supabase";
-
-let email = $state("");
-let password = $state("");
-let loading = $state(false);
-
-async function handleLogin(e: Event) {
-	e.preventDefault();
-	if (!email || !password) {
-		toast.error(t("auth.invalidCredentials"));
-		return;
-	}
-
-	loading = true;
-	try {
-		const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-		if (error || !data.user) throw new Error(t("auth.invalidCredentials"));
-		toast.success(t("auth.welcomeBack"));
-		window.location.href = "/";
-	} catch (err) {
-		toast.error(toErrorMessage(err));
-		loading = false;
-	}
-}
-
-async function handleForgotPassword() {
-	if (!email) {
-		toast.error(t("auth.enterEmailFirst"));
-		return;
-	}
-	try {
-		const { error } = await supabase.auth.resetPasswordForEmail(email, {
-			redirectTo: `${window.location.origin}/reset`,
-		});
-		if (error) throw error;
-		toast.success(t("auth.resetEmailSent"));
-	} catch (err) {
-		toast.error(toErrorMessage(err));
-	}
-}
 </script>
 
 <div class="page-public">
@@ -63,20 +19,20 @@ async function handleForgotPassword() {
 				<CardDescription>{t("auth.subtitle")}</CardDescription>
 			</CardHeader>
 			<CardContent>
-				<form onsubmit={handleLogin} class="space-y-4">
-					<div class="space-y-2">
-						<Label for="email">{t("auth.email")}</Label>
-						<Input id="email" type="email" placeholder="email@example.com" bind:value={email} required />
-					</div>
-					<div class="space-y-2">
-						<div class="flex items-center justify-between">
-							<Label for="password">{t("auth.password")}</Label>
-							<button type="button" class="text-xs text-primary hover:underline" onclick={handleForgotPassword}>{t("auth.forgotPassword")}</button>
-						</div>
-						<Input id="password" type="password" bind:value={password} required />
-					</div>
-					<Button type="submit" class="w-full" disabled={loading}>{loading ? t("auth.signingIn") : t("auth.login")}</Button>
-				</form>
+				<SignIn
+					routing="hash"
+					signUpUrl="/signup"
+					forceRedirectUrl="/"
+					appearance={{
+						elements: {
+							rootBox: "w-full",
+							card: "shadow-none p-0",
+							header: "hidden",
+							socialButtonsBlockButton: "text-sm",
+							formButtonPrimary: "bg-primary hover:bg-primary/90 text-sm",
+						},
+					}}
+				/>
 				<p class="mt-4 text-center text-sm text-muted-foreground">
 					{t("signup.dontHaveAccount")} <a href="/signup" class="text-primary hover:underline">{t("signup.signUpNow")}</a>
 				</p>

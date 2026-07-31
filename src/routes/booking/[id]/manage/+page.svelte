@@ -98,7 +98,7 @@ function fmt(iso: string): string {
 	{#if form?.rescheduleSent}
 		<p class="mt-4 text-green-600">Reschedule request sent. Staff will contact you.</p>
 	{/if}
-	{#if form?.message}
-		<p class="mt-4 text-red-600">{form.message}</p>
+	{#if form?.rescheduleMessage}
+		<p class="mt-4 text-red-600">{form.rescheduleMessage}</p>
 	{/if}
 </div>

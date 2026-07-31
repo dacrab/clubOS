@@ -65,7 +65,7 @@
 			"!!**/.vercel",
 			"!!**/build",
 			"!!**/coverage",
-			"!!**/supabase",
+
 			"!!**/static",
 			"!!**/*.css"
 		]

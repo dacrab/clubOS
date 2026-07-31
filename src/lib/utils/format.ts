@@ -23,7 +23,8 @@ export function fmtDate(date: string | Date, includeTime = true): string {
 	const fmt = settings.current.date_format;
 	const pad = (n: number): string => String(n).padStart(2, "0");
 	const [day, month, year] = [pad(d.getDate()), pad(d.getMonth() + 1), String(d.getFullYear())];
-	const dateStr = DATE_FORMATS[fmt](day, month, year);
+	const formatter = DATE_FORMATS[fmt as keyof typeof DATE_FORMATS] ?? DATE_FORMATS["DD/MM/YYYY"];
+	const dateStr = formatter(day, month, year);
 
 	if (!includeTime) return dateStr;
 	const h24 = d.getHours();

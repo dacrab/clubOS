@@ -3,9 +3,10 @@ import { CURRENCY_OPTIONS } from "$lib/config/settings";
 
 const SYMBOLS = Object.fromEntries(CURRENCY_OPTIONS.map((c) => [c.value, c.symbol]));
 
-export async function fetchPlans(): Promise<PlanData[]> {
-	return PLANS_META.map((meta) => ({
-		...meta,
-		price: `${SYMBOLS[meta.currency.toUpperCase()] ?? "€"}${meta.amount / 100}`,
-	}));
+export function fetchPlans(): PlanData[] {
+	return PLANS_META.map((meta) => {
+		const code = meta.currency?.toUpperCase();
+		const symbol = code && code in SYMBOLS ? SYMBOLS[code as keyof typeof SYMBOLS] : "€";
+		return { ...meta, price: `${symbol}${meta.amount / 100}` };
+	});
 }

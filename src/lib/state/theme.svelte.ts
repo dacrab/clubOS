@@ -2,50 +2,43 @@ import { browser } from "$app/environment";
 
 export type Theme = "light" | "dark" | "system";
 
-export function isValid(v: unknown): v is Theme {
-	return v === "light" || v === "dark" || v === "system";
-}
-const prefersDark = (): boolean =>
+const prefersDark = () =>
 	typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches;
 
-function createTheme(): {
-	readonly current: Theme;
-	readonly isDark: boolean;
-	setTheme: (t: Theme) => void;
-	toggle: () => void;
-} {
-	let current = $state<Theme>("system");
+let current = $state<Theme>("system");
 
-	if (browser) {
-		const stored = localStorage.getItem("theme");
-		if (isValid(stored)) current = stored;
-	}
-
-	const apply = (): void => {
-		const dark = current === "dark" || (current === "system" && prefersDark());
-		document.documentElement.classList[dark ? "add" : "remove"]("dark");
-	};
-
-	if (browser) apply();
-
-	return {
-		get current() {
-			return current;
-		},
-		get isDark() {
-			return current === "dark" || (current === "system" && browser && prefersDark());
-		},
-		setTheme(t) {
-			current = t;
-			if (browser) {
-				localStorage.setItem("theme", t);
-				apply();
-			}
-		},
-		toggle() {
-			this.setTheme(this.isDark ? "light" : "dark");
-		},
-	};
+if (browser) {
+	const stored = localStorage.getItem("theme");
+	if (stored === "light" || stored === "dark" || stored === "system") current = stored;
 }
 
-export const theme = createTheme();
+function apply() {
+	const dark = current === "dark" || (current === "system" && prefersDark());
+	document.documentElement.classList[dark ? "add" : "remove"]("dark");
+}
+
+if (browser) apply();
+
+const THEMES = ["light", "dark", "system"] as const;
+export function isValid(t: string): t is Theme {
+	return THEMES.includes(t as Theme);
+}
+
+export const theme = {
+	get current() {
+		return current;
+	},
+	get isDark() {
+		return current === "dark" || (current === "system" && browser && prefersDark());
+	},
+	setTheme(t: Theme) {
+		current = t;
+		if (browser) {
+			localStorage.setItem("theme", t);
+			apply();
+		}
+	},
+	toggle() {
+		this.setTheme(this.isDark ? "light" : "dark");
+	},
+};

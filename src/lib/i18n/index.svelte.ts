@@ -1,20 +1,12 @@
 import { browser } from "$app/environment";
 import el from "./el.json";
 import en from "./en.json";
-import type { TranslationsStructure } from "./types";
 
 export type Locale = "en" | "el";
 
-function isTranslations(v: unknown): v is TranslationsStructure {
-	return typeof v === "object" && v !== null;
-}
+const translations = { en, el } as const;
 
-const translations = {
-	en,
-	el: isTranslations(el) ? el : (en as TranslationsStructure),
-};
-
-const getNestedValue = (obj: unknown, path: string): string => {
+const getNestedValue = (obj: Record<string, unknown>, path: string): string => {
 	const result = path
 		.split(".")
 		.reduce<unknown>(
@@ -58,4 +50,4 @@ function createI18n(): {
 
 export const i18n = createI18n();
 
-export const t = (key: string): string => i18n.t(key);
+export const { t } = i18n;

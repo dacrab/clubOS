@@ -1,59 +1,28 @@
-import { AdminUserUpdateSchema } from "$lib/schemas";
-import { canAssign, requireAdmin, text } from "$lib/server/admin-helpers";
-import { getSupabaseAdmin } from "$lib/server/supabase-admin";
+import { and, eq } from "drizzle-orm";
+import { clerkClient } from "svelte-clerk/server";
+import { getDb } from "$lib/db/client";
+import { memberships } from "$lib/db/schema/memberships";
+import type { AdminCtx } from "$lib/server/admin-helpers";
+import { requireAdmin } from "$lib/server/admin-helpers";
 import type { RequestHandler } from "./$types";
 
-export const PATCH: RequestHandler = async ({ params, request, locals }) => {
-	const ctx = await requireAdmin(locals);
-	if (ctx instanceof Response) return ctx;
+async function deleteUser(id: string, ctx: AdminCtx): Promise<Response> {
+	const db = getDb();
+	const mems = await db
+		.select({ tenantId: memberships.tenantId })
+		.from(memberships)
+		.where(and(eq(memberships.userId, id), eq(memberships.tenantId, ctx.tenantId)))
+		.limit(1);
 
-	const parsed = AdminUserUpdateSchema.safeParse(await request.json().catch(() => ({})));
-	if (!parsed.success) return text("Invalid request body", 400);
+	if (!mems[0]) return new Response("User not found in your tenant", { status: 404 });
 
-	const { full_name, role, password } = parsed.data;
-	if (role && !canAssign(ctx.callerRole, role)) return text("Cannot assign higher privileges", 403);
-
-	const admin = getSupabaseAdmin();
-	const meta: Record<string, unknown> = {};
-	if (full_name) meta.full_name = full_name;
-	if (role) meta.role = role;
-
-	const updates: { password?: string; user_metadata?: Record<string, unknown> } = {};
-	if (password) updates.password = password;
-	if (Object.keys(meta).length) updates.user_metadata = meta;
-
-	if (Object.keys(updates).length) {
-		const { error } = await admin.auth.admin.updateUserById(params.id, updates);
-		if (error) return text("Failed to update user", 400);
-	}
-
-	if (full_name) await admin.from("users").update({ full_name }).eq("id", params.id);
-	if (role)
-		await admin
-			.from("memberships")
-			.update({ role })
-			.eq("user_id", params.id)
-			.eq("tenant_id", ctx.tenantId);
-
+	await clerkClient.users.deleteUser(id);
 	return new Response(null, { status: 204 });
-};
-
-export const PUT: RequestHandler = PATCH;
+}
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-	const ctx = await requireAdmin(locals);
+	const ctx = await requireAdmin(locals.userId);
 	if (ctx instanceof Response) return ctx;
 
-	const admin = getSupabaseAdmin();
-	const { data: membership } = await admin
-		.from("memberships")
-		.select("tenant_id")
-		.eq("user_id", params.id)
-		.eq("tenant_id", ctx.tenantId)
-		.maybeSingle();
-
-	if (!membership) return text("User not found in your tenant", 404);
-
-	const { error } = await admin.auth.admin.deleteUser(params.id);
-	return error ? text("Failed to delete user", 400) : new Response(null, { status: 204 });
+	return deleteUser(params.id, ctx);
 };

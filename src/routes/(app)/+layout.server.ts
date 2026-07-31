@@ -1,23 +1,31 @@
 import { redirect } from "@sveltejs/kit";
+import type { AuthObject } from "svelte-clerk/server";
+import { buildClerkProps } from "svelte-clerk/server";
+import { resolveUserContext } from "$lib/server/auth";
 import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ locals }) => {
-	const { user, userCtx } = locals;
-	if (!user) throw redirect(307, "/");
-	if (!userCtx?.membership) throw redirect(307, "/onboarding");
+	const userId = locals.userId;
+	if (!userId) throw redirect(307, "/");
+
+	const ctx = await resolveUserContext(userId);
+	if (!ctx?.membership) throw redirect(307, "/onboarding");
+
+	const authObj: AuthObject = typeof locals.auth === "function" ? locals.auth() : locals.auth;
 
 	const sessionUser = {
-		id: user.id,
-		email: user.email ?? "",
-		username: userCtx.profile?.fullName ?? user.email ?? "",
-		role: userCtx.membership.role ?? "staff",
-		tenantId: userCtx.membership.tenantId,
-		facilityId: userCtx.membership.facilityId,
+		id: userId,
+		email: "",
+		username: ctx.profile?.fullName ?? "",
+		role: ctx.membership.role,
+		tenantId: ctx.membership.tenantId,
+		facilityId: ctx.membership.facilityId,
 	};
 
 	return {
+		...buildClerkProps(authObj),
 		user: sessionUser,
-		settings: userCtx.tenant?.settings ?? null,
-		activeSession: userCtx.activeSession,
+		settings: ctx.tenant?.settings ?? null,
+		activeSession: ctx.activeSession,
 	};
 };

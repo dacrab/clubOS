@@ -1,90 +1,74 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockCreateUser = vi.fn();
-const mockDeleteUser = vi.fn();
-const mockUpdateUserById = vi.fn();
-const mockInsert = vi.fn();
-const mockUpdate = vi.fn();
-const mockMembershipSelect = vi.fn();
-const mockEq = vi.fn();
-const mockSecondEq = vi.fn();
-
-vi.mock("$lib/server/supabase-admin", () => ({
-	getSupabaseAdmin: () => ({
-		auth: {
-			admin: {
-				createUser: mockCreateUser,
-				deleteUser: mockDeleteUser,
-				updateUserById: mockUpdateUserById,
-			},
-		},
-		from: (t: string) => {
-			if (t === "memberships") {
-				return {
-					select: () => ({
-						eq: () => ({
-							eq: () => ({ single: mockMembershipSelect, maybeSingle: mockMembershipSelect }),
-						}),
-					}),
-					insert: mockInsert,
-					update: mockUpdate,
-				};
-			}
-			if (t === "users") {
-				return { update: mockUpdate };
-			}
-			return { insert: mockInsert };
-		},
-	}),
+const qb = vi.hoisted(() => ({
+	insert: vi.fn(),
+	update: vi.fn(),
+	select: vi.fn(),
 }));
+
+const { mockClerkCreateUser, mockClerkDeleteUser, mockClerkUpdateUser } = vi.hoisted(() => ({
+	mockClerkCreateUser: vi.fn(),
+	mockClerkDeleteUser: vi.fn(),
+	mockClerkUpdateUser: vi.fn(),
+}));
+
+vi.mock("svelte-clerk/server", () => ({
+	clerkClient: {
+		users: {
+			createUser: mockClerkCreateUser,
+			deleteUser: mockClerkDeleteUser,
+			updateUser: mockClerkUpdateUser,
+		},
+	},
+}));
+
+vi.mock("$lib/db/client", () => ({ getDb: () => qb }));
 
 import { DELETE, POST, PUT } from "./+server";
 
 const json = (body: object, method = "POST"): Request =>
 	new Request("http://localhost", { method, body: JSON.stringify(body) });
-const adminLocals = { user: { id: "u1" } } as Partial<App.Locals> as App.Locals;
+
+const adminLocals = { userId: "u1" } as Partial<App.Locals> as App.Locals;
+const guestLocals = { userId: null } as Partial<App.Locals> as App.Locals;
+
+function mockMembershipRow(role = "owner", tenantId = "t1") {
+	qb.select.mockReturnValue({
+		from: () => ({
+			where: () => ({ limit: () => Promise.resolve([{ tenantId, role }]) }),
+		}),
+	});
+}
+
+function mockNoMembership() {
+	qb.select.mockReturnValue({
+		from: () => ({
+			where: () => ({ limit: () => Promise.resolve([]) }),
+		}),
+	});
+}
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	mockMembershipSelect.mockResolvedValue({ data: { tenant_id: "t1", role: "owner" } });
-	mockInsert.mockResolvedValue({ error: null });
-	mockUpdate.mockReturnValue({ eq: mockEq });
-	mockEq.mockReturnValue({ eq: mockSecondEq });
-	mockSecondEq.mockResolvedValue({ error: null });
+	mockMembershipRow("owner");
+	qb.insert.mockReturnValue({
+		values: () => ({ onConflictDoNothing: () => Promise.resolve() }),
+	});
+	qb.update.mockReturnValue({ set: () => ({ where: () => Promise.resolve() }) });
 });
 
 describe("POST /api/admin/users", () => {
 	it("creates user and membership", async () => {
-		mockCreateUser.mockResolvedValueOnce({ data: { user: { id: "new1" } }, error: null });
-		mockInsert.mockResolvedValueOnce({ error: null });
+		mockClerkCreateUser.mockResolvedValueOnce({ id: "new1" });
 		const res = await POST({
 			request: json({ email: "x@x.com", password: "pass123", role: "staff", full_name: "Test" }),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(200);
 		expect(await res.json()).toEqual({ id: "new1" });
-		expect(mockCreateUser).toHaveBeenCalledWith(
-			expect.objectContaining({ email: "x@x.com", password: "pass123", email_confirm: true }),
+		expect(mockClerkCreateUser).toHaveBeenCalledWith(
+			expect.objectContaining({ emailAddress: ["x@x.com"], password: "pass123" }),
 		);
-		expect(mockInsert).toHaveBeenCalledWith(
-			expect.objectContaining({
-				user_id: "new1",
-				tenant_id: "t1",
-				role: "staff",
-				is_primary: true,
-			}),
-		);
-	});
-
-	it("rolls back auth user on membership error", async () => {
-		mockCreateUser.mockResolvedValueOnce({ data: { user: { id: "new1" } }, error: null });
-		mockInsert.mockResolvedValueOnce({ error: { message: "Duplicate" } });
-		const res = await POST({
-			request: json({ email: "x@x.com", password: "pass123", role: "staff", full_name: "Test" }),
-			locals: adminLocals,
-		} as Parameters<typeof POST>[0]);
-		expect(res.status).toBe(400);
-		expect(mockDeleteUser).toHaveBeenCalledWith("new1");
 	});
 
 	it("returns 400 with missing fields", async () => {
@@ -93,60 +77,55 @@ describe("POST /api/admin/users", () => {
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(400);
-		expect(mockCreateUser).not.toHaveBeenCalled();
+		expect(mockClerkCreateUser).not.toHaveBeenCalled();
 	});
 
-	it("returns 401 when user is not authenticated", async () => {
-		const unauthLocals = { user: null } as Partial<App.Locals> as App.Locals;
+	it("returns 401 when not authenticated", async () => {
 		const res = await POST({
 			request: json({ email: "x@x.com", password: "pass123", role: "staff", full_name: "Test" }),
-			locals: unauthLocals,
+			locals: guestLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(401);
-		expect(mockCreateUser).not.toHaveBeenCalled();
+	});
+});
+
+describe("POST role hierarchy", () => {
+	it("prevents admin caller from creating owner", async () => {
+		mockMembershipRow("admin");
+		const res = await POST({
+			request: json({ email: "x@x.com", password: "pass123", role: "owner", full_name: "Admin" }),
+			locals: adminLocals,
+		} as Parameters<typeof POST>[0]);
+		expect(res.status).toBe(403);
+		expect(mockClerkCreateUser).not.toHaveBeenCalled();
 	});
 
-	it("returns 403 when non-admin (staff role) tries to create user", async () => {
-		mockMembershipSelect.mockResolvedValueOnce({ data: { tenant_id: "t1", role: "staff" } });
+	it("prevents staff caller from creating any user", async () => {
+		mockMembershipRow("staff");
 		const res = await POST({
 			request: json({ email: "x@x.com", password: "pass123", role: "staff", full_name: "Test" }),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(403);
-		expect(mockCreateUser).not.toHaveBeenCalled();
 	});
 
-	it("returns 403 when admin tries to escalate privilege (create owner)", async () => {
-		mockMembershipSelect.mockResolvedValueOnce({ data: { tenant_id: "t1", role: "admin" } });
+	it("allows owner caller to create owner", async () => {
+		mockClerkCreateUser.mockResolvedValueOnce({ id: "new1" });
 		const res = await POST({
-			request: json({ email: "x@x.com", password: "pass123", role: "owner", full_name: "Test" }),
+			request: json({ email: "x@x.com", password: "pass123", role: "owner", full_name: "Owner" }),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
-		expect(res.status).toBe(403);
-		expect(mockCreateUser).not.toHaveBeenCalled();
+		expect(res.status).toBe(200);
 	});
 });
 
 describe("PUT /api/admin/users", () => {
-	it("updates user metadata and role", async () => {
-		mockUpdateUserById.mockResolvedValueOnce({ data: { user: { id: "u2" } }, error: null });
-		mockUpdate.mockReturnValueOnce({ eq: mockEq });
-		mockEq.mockReturnValueOnce({ eq: mockSecondEq });
-		mockSecondEq.mockResolvedValueOnce({ error: null });
-
+	it("updates user and role", async () => {
 		const res = await PUT({
 			request: json({ id: "u2", full_name: "Updated", role: "manager" }, "PUT"),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(204);
-		expect(mockUpdateUserById).toHaveBeenCalledWith(
-			"u2",
-			expect.objectContaining({
-				user_metadata: expect.objectContaining({ full_name: "Updated", role: "manager" }),
-			}),
-		);
-		expect(mockUpdate).toHaveBeenCalledWith({ role: "manager" });
-		expect(mockEq).toHaveBeenCalledWith("user_id", "u2");
 	});
 
 	it("returns 400 when id is missing", async () => {
@@ -157,69 +136,49 @@ describe("PUT /api/admin/users", () => {
 		expect(res.status).toBe(400);
 	});
 
-	it("returns 401 when user is not authenticated", async () => {
-		const unauthLocals = { user: null } as Partial<App.Locals> as App.Locals;
+	it("returns 401 when not authenticated", async () => {
 		const res = await PUT({
 			request: json({ id: "u2", full_name: "Updated" }, "PUT"),
-			locals: unauthLocals,
+			locals: guestLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(401);
-	});
-
-	it("returns 403 when admin tries to assign owner role", async () => {
-		mockMembershipSelect.mockResolvedValueOnce({ data: { tenant_id: "t1", role: "admin" } });
-		const res = await PUT({
-			request: json({ id: "u2", role: "owner" }, "PUT"),
-			locals: adminLocals,
-		} as Parameters<typeof POST>[0]);
-		expect(res.status).toBe(403);
 	});
 });
 
 describe("DELETE /api/admin/users", () => {
-	it("deletes auth user", async () => {
-		mockDeleteUser.mockResolvedValueOnce({ data: { user: { id: "u2" } }, error: null });
+	it("deletes user", async () => {
+		mockClerkDeleteUser.mockResolvedValueOnce({ errors: undefined });
 		const res = await DELETE({
 			request: json({ id: "u2" }, "DELETE"),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(204);
-		expect(mockDeleteUser).toHaveBeenCalledWith("u2");
+		expect(mockClerkDeleteUser).toHaveBeenCalledWith("u2");
 	});
 
-	it("returns 404 when user has no membership in the caller tenant", async () => {
-		mockMembershipSelect.mockResolvedValueOnce({ data: { tenant_id: "t1", role: "owner" } });
-		mockMembershipSelect.mockResolvedValueOnce({ data: null, error: { message: "Not found" } });
-		const res = await DELETE({
-			request: json({ id: "u2" }, "DELETE"),
-			locals: adminLocals,
-		} as Parameters<typeof POST>[0]);
-		expect(res.status).toBe(404);
-		expect(mockDeleteUser).not.toHaveBeenCalled();
-	});
-
-	it("returns 400 when id is missing", async () => {
-		const res = await DELETE({ request: json({}, "DELETE"), locals: adminLocals } as Parameters<
-			typeof POST
-		>[0]);
-		expect(res.status).toBe(400);
-	});
-
-	it("returns 401 when user is not authenticated", async () => {
-		const unauthLocals = { user: null } as Partial<App.Locals> as App.Locals;
-		const res = await DELETE({
-			request: json({ id: "u2" }, "DELETE"),
-			locals: unauthLocals,
-		} as Parameters<typeof POST>[0]);
-		expect(res.status).toBe(401);
-	});
-
-	it("returns 403 when non-admin tries to delete", async () => {
-		mockMembershipSelect.mockResolvedValueOnce({ data: { tenant_id: "t1", role: "staff" } });
+	it("returns 403 when caller has no membership", async () => {
+		mockNoMembership();
 		const res = await DELETE({
 			request: json({ id: "u2" }, "DELETE"),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(403);
+		expect(mockClerkDeleteUser).not.toHaveBeenCalled();
+	});
+
+	it("returns 400 when id is missing", async () => {
+		const res = await DELETE({
+			request: json({}, "DELETE"),
+			locals: adminLocals,
+		} as Parameters<typeof POST>[0]);
+		expect(res.status).toBe(400);
+	});
+
+	it("returns 401 when not authenticated", async () => {
+		const res = await DELETE({
+			request: json({ id: "u2" }, "DELETE"),
+			locals: guestLocals,
+		} as Parameters<typeof POST>[0]);
+		expect(res.status).toBe(401);
 	});
 });

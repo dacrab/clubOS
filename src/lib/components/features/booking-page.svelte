@@ -27,10 +27,10 @@ import Textarea from "$lib/components/ui/textarea/textarea.svelte";
 import { t } from "$lib/i18n/index.svelte";
 import { settings } from "$lib/state/settings.svelte";
 import type { Booking, BookingDetails, BookingStatus, BookingType } from "$lib/types/database";
+import { api } from "$lib/utils/api";
 import { runCrud } from "$lib/utils/crud";
 import { fmtDate, formatDateTimeLocal, tomorrowAt } from "$lib/utils/format";
 import { getBookingStatusBadgeVariant } from "$lib/utils/helpers";
-import { supabase } from "$lib/utils/supabase";
 
 type Props = {
 	type: BookingType;
@@ -122,14 +122,16 @@ function openDialog(item?: Booking) {
 }
 
 async function checkConflict(startsAt: Date, endsAt: Date): Promise<boolean> {
-	const { data } = await supabase.rpc("check_booking_conflict", {
-		p_facility_id: user.facilityId,
-		p_type: type,
-		p_starts_at: startsAt.toISOString(),
-		p_ends_at: endsAt.toISOString(),
-		...(editingItem ? { p_exclude_id: editingItem.id } : {}),
+	const result = await api<{ conflict: boolean }>("bookings.checkConflict", {
+		filter: {
+			facilityId: user.facilityId,
+			type,
+			startsAt: startsAt.toISOString(),
+			endsAt: endsAt.toISOString(),
+			...(editingItem ? { excludeId: editingItem.id } : {}),
+		},
 	});
-	return Boolean(data);
+	return Boolean(result.conflict);
 }
 
 async function handleSave(): Promise<void> {
@@ -170,14 +172,14 @@ async function handleSave(): Promise<void> {
 		let newId: string | null = null;
 		const ok = await runCrud(async () => {
 			if (editingItem) {
-				return supabase.from("bookings").update(payload).eq("id", editingItem.id);
+				await api("bookings.update", { data: payload, filter: { id: editingItem.id } });
+				return {};
 			}
-			const { data, error: err } = await supabase
-				.from("bookings")
-				.insert({ ...payload, created_by: user.id })
-				.select("id");
-			newId = data?.[0]?.id ?? null;
-			return { error: err };
+			const result = await api<{ id: string }>("bookings.insert", {
+				data: { ...payload, created_by: user.id },
+			});
+			newId = result.id ?? null;
+			return {};
 		});
 		if (ok) {
 			showDialog = false;
@@ -203,7 +205,10 @@ let deleteOpen = $state(false);
 async function confirmDelete(): Promise<void> {
 	if (!deleteTarget) return;
 	const target = deleteTarget;
-	const ok = await runCrud(() => supabase.from("bookings").delete().eq("id", target.id));
+	const ok = await runCrud(async () => {
+		await api("bookings.delete", { filter: { id: target.id } });
+		return {};
+	});
 	if (ok) deleteOpen = false;
 }
 </script>
