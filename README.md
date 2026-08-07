@@ -19,6 +19,13 @@ bun install
 # Set up environment (secrets via Doppler — or copy .env.example to .env)
 doppler setup
 
+# Set up the database (Neon)
+# Requires DATABASE_URL (via Doppler or .env)
+bun run db:migrate
+
+# Seed a demo tenant (requires SEED_PASSWORD, optional CLERK_SECRET_KEY)
+bun run db:seed
+
 # Start development server
 bun run dev
 ```
