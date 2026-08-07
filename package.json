@@ -13,6 +13,9 @@
 		"format": "biome check --write .",
 		"test": "vitest run",
 		"test:watch": "vitest",
+		"db:migrate": "drizzle-kit migrate",
+		"db:generate": "drizzle-kit generate",
+		"db:push": "drizzle-kit push",
 		"db:seed": "bun scripts/seed.ts"
 	},
 	"devDependencies": {
