@@ -30,7 +30,6 @@ export const load: PageServerLoad = async ({ parent }) => {
 			.where(eq(categories.facilityId, fid))
 			.orderBy(categories.name),
 		Promise.all([
-			// today revenue
 			db
 				.select({ total: sql<string>`COALESCE(SUM(total_amount), '0')` })
 				.from(orders)
@@ -41,7 +40,6 @@ export const load: PageServerLoad = async ({ parent }) => {
 						lte(orders.createdAt, todayEnd),
 					),
 				),
-			// today orders count
 			db
 				.select({ count: sql<number>`count(*)::int` })
 				.from(orders)
@@ -52,7 +50,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 						lte(orders.createdAt, todayEnd),
 					),
 				),
-			// low stock count
+			// low stock (≤5)
 			db
 				.select({ count: sql<number>`count(*)::int` })
 				.from(products)
@@ -91,7 +89,6 @@ export const load: PageServerLoad = async ({ parent }) => {
 				GROUP BY day
 				ORDER BY day
 			`),
-			// recent orders
 			db
 				.select()
 				.from(orders)

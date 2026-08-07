@@ -41,7 +41,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const db = getDb();
 
 	switch (action) {
-		// ── Products ──────────────────────────────────────────
+		// ── Products ──
 		case "products.insert": {
 			if (!facilityId) return forbidden();
 			const [row] = await db
@@ -85,7 +85,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return json(mapRows(rows));
 		}
 
-		// ── Categories ────────────────────────────────────────
+		// ── Categories ──
 		case "categories.insert": {
 			if (!facilityId) return forbidden();
 			const [row] = await db
@@ -114,7 +114,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return json({ success: true });
 		}
 
-		// ── Bookings ──────────────────────────────────────────
+		// ── Bookings ──
 		case "bookings.insert": {
 			if (!facilityId) return forbidden();
 			const [row] = await db
@@ -163,7 +163,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return json({ conflict: Number(conf[0]?.count ?? 0) > 0 });
 		}
 
-		// ── Register Sessions ─────────────────────────────────
+		// ── Register Sessions ──
 		case "registerSessions.insert": {
 			if (!facilityId) return forbidden();
 			const [row] = await db
@@ -198,7 +198,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return json({ success: true });
 		}
 
-		// ── Orders ────────────────────────────────────────────
+		// ── Orders ──
 		case "orders.create": {
 			if (!facilityId) return forbidden();
 			const orderFilter = OrderCreateFilterSchema.safeParse(filter);

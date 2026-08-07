@@ -1,20 +1,7 @@
 /**
- * ClubOS Demo Seed
- *
- * Creates a fully-functional demo environment:
- *   - 1 tenant (Demo Club) with subscription + facility
- *   - 4 users: owner, admin, manager, staff
- *   - 3 product categories (Greek locale)
- *   - 10 products across those categories
- *
- * Usage:
- *   bun run db:seed        — via npm script (recommended)
- *   bun scripts/seed.ts    — direct invocation
- *
- * Required env:
- *   DATABASE_URL           — Neon Postgres connection string
- *   CLERK_SECRET_KEY       — Clerk secret key (for creating users)
- *   SEED_PASSWORD          — password for all demo users
+ * ClubOS Demo Seed — creates a demo tenant (Demo Club) with subscription, facility,
+ * 4 users, 3 categories and 10 products. Run via `bun run db:seed`.
+ * Requires DATABASE_URL and SEED_PASSWORD (CLERK_SECRET_KEY optional).
  */
 
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -28,7 +15,7 @@ import { tenants } from "../src/lib/db/schema/tenants";
 import { users } from "../src/lib/db/schema/users";
 import { DAY_MS } from "../src/lib/types/database";
 
-// ─── Env validation ────────────────────────────────────────────────────────
+// ─── Env validation ───
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const PASSWORD = process.env.SEED_PASSWORD;
@@ -41,7 +28,7 @@ if (!DATABASE_URL || !PASSWORD) {
 const client = postgres(DATABASE_URL, { prepare: false });
 const db = drizzle(client);
 
-// ─── Clerk Admin Client (optional: for creating users in Clerk) ─────────────
+// ─── Clerk Admin Client (optional) ───
 
 async function createClerkUser(email: string, password: string, name: string) {
 	const key = process.env.CLERK_SECRET_KEY;
@@ -73,7 +60,7 @@ async function createClerkUser(email: string, password: string, name: string) {
 	return data.id;
 }
 
-// ─── Seed data ─────────────────────────────────────────────────────────────
+// ─── Seed data ───
 
 const USERS = [
 	{ email: "owner@clubos.app", name: "Demo Owner", role: "owner" as const },
@@ -98,7 +85,7 @@ const PRODUCTS: { name: string; price: number; cat: Category; stock?: number }[]
 	{ name: "Πορτοκαλάδα", price: 2.0, cat: "Αναψυκτικά", stock: 30 },
 ];
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
+// ─── Helpers ───
 
 function step(msg: string): void {
 	console.log(`  ✓ ${msg}`);
@@ -108,19 +95,19 @@ function warn(msg: string): void {
 	console.warn(`  ⚠ ${msg}`);
 }
 
-// ─── Seed ──────────────────────────────────────────────────────────────────
+// ─── Seed ───
 
 async function seed(): Promise<void> {
 	console.log("\n🌱 Seeding ClubOS...\n");
 
-	// ── Tenant ──────────────────────────────────────────────────────────────
+	// ── Tenant ──
 	const [tenant] = await db
 		.insert(tenants)
 		.values({ name: "Demo Club", slug: "demo-club", settings: { currency_code: "EUR" } })
 		.onConflictDoUpdate({ target: tenants.slug, set: { name: "Demo Club" } })
 		.returning();
 
-	// ── Subscription ────────────────────────────────────────────────────────
+	// ── Subscription ──
 	const trialEnd = new Date(Date.now() + 14 * DAY_MS);
 	await db
 		.insert(subscriptions)
@@ -136,7 +123,7 @@ async function seed(): Promise<void> {
 			set: { status: "trialing", trialEnd, currentPeriodEnd: trialEnd },
 		});
 
-	// ── Facility ─────────────────────────────────────────────────────────────
+	// ── Facility ──
 	const [facility] = await db
 		.insert(facilities)
 		.values({ tenantId: tenant.id, name: "Main Facility" })
@@ -145,7 +132,7 @@ async function seed(): Promise<void> {
 
 	step("Tenant + Subscription + Facility");
 
-	// ── Users ────────────────────────────────────────────────────────────────
+	// ── Users ──
 	let ownerId: string | undefined;
 
 	for (const u of USERS) {
@@ -190,7 +177,7 @@ async function seed(): Promise<void> {
 	if (!ownerId) throw new Error("Owner user not created — cannot seed products");
 	step("Users (4)");
 
-	// ── Categories ───────────────────────────────────────────────────────────
+	// ── Categories ──
 	const catRows = await db
 		.insert(categories)
 		.values(CATEGORIES.map((name) => ({ facilityId: facility.id, name })))
@@ -200,7 +187,7 @@ async function seed(): Promise<void> {
 	const catMap = Object.fromEntries(catRows.map((c) => [c.name, c.id])) as Record<Category, string>;
 	step("Categories (3)");
 
-	// ── Products ─────────────────────────────────────────────────────────────
+	// ── Products ──
 	await db
 		.insert(products)
 		.values(
