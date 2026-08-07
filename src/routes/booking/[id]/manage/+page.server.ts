@@ -1,6 +1,9 @@
 import { error, fail } from "@sveltejs/kit";
-import { getSupabaseAdmin } from "$lib/server/supabase-admin";
+import { eq, sql } from "drizzle-orm";
+import { getDb } from "$lib/db/client";
+import { bookings } from "$lib/db/schema/bookings";
 import { verifyBookingToken } from "$lib/server/token";
+import { mapRow } from "$lib/utils/mapper";
 import type { Actions, PageServerLoad } from "./$types";
 
 function validateAccess(params: { id: string }, url: URL): void {
@@ -11,12 +14,12 @@ function validateAccess(params: { id: string }, url: URL): void {
 export const load: PageServerLoad = async ({ params, url }) => {
 	validateAccess(params, url);
 
-	const admin = getSupabaseAdmin();
-	const { data: booking } = await admin.from("bookings").select("*").eq("id", params.id).single();
+	const db = getDb();
+	const [booking] = await db.select().from(bookings).where(eq(bookings.id, params.id)).limit(1);
 
 	if (!booking) throw error(404, "Booking not found");
 
-	return { booking };
+	return { booking: mapRow(booking) };
 };
 
 export const actions: Actions = {
@@ -25,17 +28,27 @@ export const actions: Actions = {
 		const fd = await request.formData();
 		const reason = String(fd.get("reason") ?? "");
 
-		const admin = getSupabaseAdmin();
-		const { error: err } = await admin
-			.from("bookings")
-			.update({
+		const db = getDb();
+		const [existing] = await db
+			.select({ notes: bookings.notes })
+			.from(bookings)
+			.where(eq(bookings.id, params.id))
+			.limit(1);
+
+		if (!existing) return fail(404, { error: "Booking not found" });
+		if (existing.notes?.includes("Canceled by customer")) {
+			return fail(400, { error: "Booking is already canceled" });
+		}
+
+		await db
+			.update(bookings)
+			.set({
 				status: "canceled",
 				notes: `Canceled by customer.${reason ? ` Reason: ${reason}` : ""}`,
-				updated_at: new Date().toISOString(),
+				updatedAt: sql`now()`,
 			})
-			.eq("id", params.id);
+			.where(eq(bookings.id, params.id));
 
-		if (err) return fail(500, { message: err.message });
 		return { success: true };
 	},
 
@@ -46,16 +59,26 @@ export const actions: Actions = {
 
 		if (!message) return fail(400, { rescheduleMessage: "Please describe your request" });
 
-		const admin = getSupabaseAdmin();
-		const { error: err } = await admin
-			.from("bookings")
-			.update({
-				notes: `Reschedule requested: ${message}`,
-				updated_at: new Date().toISOString(),
-			})
-			.eq("id", params.id);
+		const db = getDb();
+		const [existing] = await db
+			.select({ notes: bookings.notes })
+			.from(bookings)
+			.where(eq(bookings.id, params.id))
+			.limit(1);
 
-		if (err) return fail(500, { rescheduleMessage: err.message });
+		const priorNotes = existing?.notes ?? "";
+		const appended = priorNotes
+			? `${priorNotes}\nReschedule requested: ${message}`
+			: `Reschedule requested: ${message}`;
+
+		await db
+			.update(bookings)
+			.set({
+				notes: appended,
+				updatedAt: sql`now()`,
+			})
+			.where(eq(bookings.id, params.id));
+
 		return { rescheduleSent: true };
 	},
 };

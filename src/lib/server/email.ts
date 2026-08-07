@@ -1,6 +1,8 @@
 import { error, json } from "@sveltejs/kit";
+import { eq } from "drizzle-orm";
 import { env } from "$env/dynamic/private";
-import { getSupabaseAdmin } from "$lib/server/supabase-admin";
+import { getDb } from "$lib/db/client";
+import { bookings } from "$lib/db/schema/bookings";
 import { generateBookingToken } from "$lib/server/token";
 
 const RESEND_API_KEY = env.RESEND_API_KEY;
@@ -32,17 +34,20 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
 	}
 }
 
-export function buildBookingEmailLines(booking: {
-	customer_name: string;
-	customer_phone: string | null;
-	starts_at: string;
-	type: string;
-	notes: string | null;
-}): string[] {
+export function buildBookingEmailLines(
+	booking: {
+		customer_name: string;
+		customer_phone: string | null;
+		starts_at: string;
+		type: string;
+		notes: string | null;
+	},
+	timezone = "Europe/Athens",
+): string[] {
 	return [
 		`Customer: ${booking.customer_name}`,
 		`Phone: ${booking.customer_phone ?? "—"}`,
-		`Date: ${new Date(booking.starts_at).toLocaleString("en-GB", { timeZone: "Europe/Athens" })}`,
+		`Date: ${new Date(booking.starts_at).toLocaleString("en-GB", { timeZone: timezone })}`,
 		`Type: ${booking.type}`,
 		booking.notes ? `Notes: ${booking.notes}` : null,
 	].filter((x): x is string => x !== null);
@@ -77,11 +82,12 @@ export async function sendBookingEmail(
 		return json({ sent: false, reason: "RESEND_API_KEY not configured" });
 	}
 
-	const admin = getSupabaseAdmin();
-	const { data: booking } = await admin.from("bookings").select("*").eq("id", bookingId).single();
+	const db = getDb();
+	const rows = await db.select().from(bookings).where(eq(bookings.id, bookingId)).limit(1);
+	const booking = rows[0];
 	if (!booking) throw error(404, "Booking not found");
 
-	if (!booking.customer_email) {
+	if (!booking.customerEmail) {
 		return json({ sent: false, reason: "No customer email on booking" });
 	}
 
@@ -89,9 +95,20 @@ export async function sendBookingEmail(
 	const manageUrl = `${origin}/booking/${booking.id}/manage?token=${generateBookingToken(booking.id)}`;
 
 	await sendEmail(
-		booking.customer_email,
-		`${subjectPrefix} — ${booking.customer_name}`,
-		buildBookingEmailHtml(heading, buildBookingEmailLines(booking), manageUrl, ctaLabel),
+		booking.customerEmail,
+		`${subjectPrefix} — ${booking.customerName}`,
+		buildBookingEmailHtml(
+			heading,
+			buildBookingEmailLines({
+				customer_name: booking.customerName,
+				customer_phone: booking.customerPhone,
+				starts_at: booking.startsAt.toISOString(),
+				type: booking.type,
+				notes: booking.notes,
+			}),
+			manageUrl,
+			ctaLabel,
+		),
 	);
 
 	return json({ sent: true });

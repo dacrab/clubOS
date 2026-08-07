@@ -13,6 +13,9 @@
 		"format": "biome check --write .",
 		"test": "vitest run",
 		"test:watch": "vitest",
+		"db:migrate": "drizzle-kit migrate",
+		"db:generate": "drizzle-kit generate",
+		"db:push": "drizzle-kit push",
 		"db:seed": "bun scripts/seed.ts"
 	},
 	"devDependencies": {
@@ -23,6 +26,7 @@
 		"@tailwindcss/vite": "^4.3.2",
 		"@types/node": "^26.1.1",
 		"@vitest/coverage-v8": "^4.1.10",
+		"drizzle-kit": "^0.31.10",
 		"jsdom": "^29.1.1",
 		"knip": "^6.25.0",
 		"svelte": "^5.56.4",
@@ -36,12 +40,12 @@
 	"dependencies": {
 		"@internationalized/date": "^3.12.2",
 		"@lucide/svelte": "^1.23.0",
+		"@clerk/backend": "^3.13.2",
 		"@sentry/sveltekit": "^10.64.0",
-		"@supabase/ssr": "^0.12.0",
-		"@supabase/supabase-js": "^2.110.1",
-		"@vercel/analytics": "^2.0.1",
-		"@vercel/speed-insights": "^2.0.0",
 		"bits-ui": "^2.18.1",
+		"drizzle-orm": "^0.45.2",
+		"postgres": "^3.4.9",
+		"svelte-clerk": "^1.1.11",
 		"svelte-sonner": "^1.1.1",
 		"zod": "^4.4.3"
 	},

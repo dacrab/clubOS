@@ -24,4 +24,16 @@ describe("token utils", () => {
 		const { verifyBookingToken } = await import("./token");
 		expect(verifyBookingToken("any", "")).toBe(false);
 	});
+
+	it("rejects a corrupted token", async () => {
+		const { verifyBookingToken } = await import("./token");
+		expect(verifyBookingToken("some-id", "not-a-valid-hex")).toBe(false);
+	});
+
+	it("handles empty id", async () => {
+		const { generateBookingToken, verifyBookingToken } = await import("./token");
+		const token = generateBookingToken("");
+		expect(token.length).toBe(64);
+		expect(verifyBookingToken("", token)).toBe(true);
+	});
 });

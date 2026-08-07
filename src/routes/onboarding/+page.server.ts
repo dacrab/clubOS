@@ -1,27 +1,28 @@
 import { redirect } from "@sveltejs/kit";
+import { clerkClient } from "svelte-clerk/server";
 import { getHomeForRole } from "$lib/config/auth";
+import { resolveUserContext } from "$lib/server/auth";
 import { fetchPlans } from "$lib/server/plans";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, url }) => {
-	const { user, supabase } = locals;
+	const userId = locals.userId;
+	if (!userId) throw redirect(307, "/signup");
 
-	if (!user) throw redirect(307, "/signup");
+	const ctx = await resolveUserContext(userId);
+	if (ctx.membership?.tenantId) throw redirect(307, getHomeForRole(ctx.membership.role));
 
-	const { data: membership } = await supabase
-		.from("memberships")
-		.select("tenant_id, role")
-		.eq("user_id", user.id)
-		.order("is_primary", { ascending: false })
-		.limit(1)
-		.single();
+	const client = clerkClient;
+	const clerkUser = await client.users.getUser(userId);
 
-	if (membership?.tenant_id) throw redirect(307, getHomeForRole(membership.role));
-
-	const plans = await fetchPlans();
+	const plans = fetchPlans();
 
 	return {
-		user: { id: user.id, email: user.email ?? "", fullName: user.user_metadata?.full_name ?? "" },
+		user: {
+			id: userId,
+			email: clerkUser.emailAddresses[0]?.emailAddress ?? "",
+			fullName: clerkUser.fullName ?? "",
+		},
 		sessionId: url.searchParams.get("session_id"),
 		plans,
 	};

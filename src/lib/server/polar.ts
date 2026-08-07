@@ -1,5 +1,7 @@
 import { env } from "$env/dynamic/private";
-import { getSupabaseAdmin } from "$lib/server/supabase-admin";
+import { getDb } from "$lib/db/client";
+import { subscriptions } from "$lib/db/schema/subscriptions";
+import { SUBSCRIPTION_STATUSES, type SubscriptionStatus } from "$lib/types/database";
 
 const POLAR_BASE = "https://api.polar.sh/v1";
 
@@ -60,7 +62,10 @@ export async function createCheckout(args: {
 	return polarPost<{ url: string }>("/checkouts/", {
 		products: [args.productId],
 		customer_email: args.email,
-		customer_metadata: { user_id: args.userId, tenant_id: args.tenantId },
+		customer_metadata: {
+			user_id: args.userId,
+			...(args.tenantId ? { tenant_id: args.tenantId } : {}),
+		},
 		success_url: args.successUrl,
 		cancel_url: args.cancelUrl,
 	});
@@ -68,6 +73,26 @@ export async function createCheckout(args: {
 
 export async function getCheckout(checkoutId: string): Promise<Record<string, unknown>> {
 	return polarGet(`/checkouts/${checkoutId}`);
+}
+
+function validateStatus(s: string): SubscriptionStatus {
+	return SUBSCRIPTION_STATUSES.includes(s as SubscriptionStatus)
+		? (s as SubscriptionStatus)
+		: "active";
+}
+
+export function isActive(sub: unknown): boolean {
+	if (!sub || typeof sub !== "object") return false;
+	const s = sub as { status: unknown; periodEnd?: unknown; trialEnd?: unknown };
+	const status = s.status;
+	if (typeof status !== "string" || (status !== "trialing" && status !== "active")) return false;
+	const now = Date.now();
+	const periodEnd = s.periodEnd;
+	const trialEnd = s.trialEnd;
+	return (
+		(typeof periodEnd === "string" && new Date(periodEnd).getTime() > now) ||
+		(typeof trialEnd === "string" && new Date(trialEnd).getTime() > now)
+	);
 }
 
 export async function upsertSubscription(args: {
@@ -80,28 +105,29 @@ export async function upsertSubscription(args: {
 	trialStart: string | null;
 	trialEnd: string | null;
 }): Promise<void> {
-	const {
-		tenantId,
-		customerId,
-		subscriptionId,
-		status,
-		planName,
-		currentPeriodEnd,
-		trialStart,
-		trialEnd,
-	} = args;
-	const { error } = await getSupabaseAdmin().from("subscriptions").upsert(
-		{
-			tenant_id: tenantId,
-			polar_customer_id: customerId,
-			polar_subscription_id: subscriptionId,
-			status,
-			plan_name: planName,
-			current_period_end: currentPeriodEnd,
-			trial_start: trialStart,
-			trial_end: trialEnd,
-		},
-		{ onConflict: "tenant_id" },
-	);
-	if (error) throw new Error(error.message);
+	const { tenantId, customerId, subscriptionId, status, planName, currentPeriodEnd, trialEnd } =
+		args;
+	const db = getDb();
+	await db
+		.insert(subscriptions)
+		.values({
+			tenantId,
+			polarCustomerId: customerId,
+			polarSubscriptionId: subscriptionId,
+			status: validateStatus(status),
+			planName,
+			currentPeriodEnd: currentPeriodEnd ? new Date(currentPeriodEnd) : null,
+			trialEnd: trialEnd ? new Date(trialEnd) : null,
+		})
+		.onConflictDoUpdate({
+			target: subscriptions.tenantId,
+			set: {
+				polarCustomerId: customerId,
+				polarSubscriptionId: subscriptionId,
+				status: validateStatus(status),
+				planName,
+				currentPeriodEnd: currentPeriodEnd ? new Date(currentPeriodEnd) : null,
+				trialEnd: trialEnd ? new Date(trialEnd) : null,
+			},
+		});
 }

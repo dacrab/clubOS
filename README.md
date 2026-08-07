@@ -16,9 +16,8 @@ Modern point-of-sale and club management system for sports facilities, entertain
 # Install dependencies
 bun install
 
-# Set up environment
-cp .env.example .env.local
-# Add your Supabase credentials to .env.local
+# Set up environment (secrets via Doppler — or copy .env.example to .env)
+doppler setup
 
 # Start development server
 bun run dev
@@ -38,7 +37,9 @@ bun run test         # Run tests
 ## Tech Stack
 
 - **SvelteKit 2** - Full-stack framework
-- **Supabase** - Database and authentication
+- **Neon** - Serverless Postgres database
+- **Drizzle ORM** - Type-safe database access
+- **Clerk** - Authentication and user management
 - **Tailwind CSS v4** - Styling
 - **Polar.sh** - Payment processing
 

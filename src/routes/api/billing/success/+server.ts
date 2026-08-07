@@ -35,7 +35,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		const productId =
 			Array.isArray(products) && products.length > 0 ? safeStr(products[0]?.id) : null;
 
-		if (!productId || !tenantId || !customerId || !subscriptionId || !locals.user) {
+		if (!productId || !tenantId || !customerId || !subscriptionId || !locals.userId) {
 			throw redirect(307, "/billing?error=missing_data");
 		}
 

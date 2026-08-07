@@ -1,4 +1,6 @@
-import { getSupabaseAdmin } from "$lib/server/supabase-admin";
+import { and, eq } from "drizzle-orm";
+import { getDb } from "$lib/db/client";
+import { memberships } from "$lib/db/schema/memberships";
 import type { MemberRole } from "$lib/types/database";
 
 export interface AdminCtx {
@@ -6,17 +8,19 @@ export interface AdminCtx {
 	callerRole: MemberRole;
 }
 
-export async function requireAdmin(locals: App.Locals): Promise<AdminCtx | Response> {
-	if (!locals.user) return text("Unauthorized", 401);
-	const { data: m } = await getSupabaseAdmin()
-		.from("memberships")
-		.select("tenant_id, role")
-		.eq("user_id", locals.user.id)
-		.eq("is_primary", true)
-		.single();
+export async function requireAdmin(userId: string | null): Promise<AdminCtx | Response> {
+	if (!userId) return text("Unauthorized", 401);
+	const db = getDb();
+	const mems = await db
+		.select({ tenantId: memberships.tenantId, role: memberships.role })
+		.from(memberships)
+		.where(and(eq(memberships.userId, userId), eq(memberships.isPrimary, true)))
+		.limit(1);
+
+	const m = mems[0];
 	if (!m || (m.role !== "owner" && m.role !== "admin")) return text("Forbidden", 403);
 	const callerRole = m.role === "owner" ? "owner" : "admin";
-	return { tenantId: m.tenant_id, callerRole };
+	return { tenantId: m.tenantId, callerRole };
 }
 
 export function canAssign(caller: MemberRole, target: MemberRole | undefined): boolean {

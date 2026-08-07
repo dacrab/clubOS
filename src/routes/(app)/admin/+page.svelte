@@ -209,6 +209,6 @@ const TONE_FG: Record<string, string> = {
 	bind:open={showNewSaleDialog}
 	products={data.products}
 	categories={data.categories}
-	activeSession={data.activeSession}
+	activeSession={data.activeSession as { id: string } | null}
 	user={data.user}
 />

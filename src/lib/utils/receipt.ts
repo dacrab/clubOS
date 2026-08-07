@@ -62,7 +62,7 @@ ${discountHtml}
 <p class="center">#${orderId ? shortId(orderId) : "N/A"}</p>
 </body></html>`;
 
-	w.document.documentElement.innerHTML = html;
+	w.document.write(html);
 	w.document.close();
 	w.print();
 }

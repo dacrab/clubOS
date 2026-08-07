@@ -1,8 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
 import { PLANS_META } from "$lib/config/plans";
-import { polarGet, upsertSubscription } from "$lib/server/polar";
-import { getSupabaseAdmin } from "$lib/server/supabase-admin";
+import { upsertSubscription } from "$lib/server/polar";
 import type { RequestHandler } from "./$types";
 
 const enc = new TextEncoder();
@@ -42,15 +41,6 @@ function safeMeta(val: unknown): Record<string, string> | null {
 	const result: Record<string, string> = {};
 	for (const [k, v] of Object.entries(r)) {
 		if (typeof v === "string") result[k] = v;
-	}
-	return result;
-}
-
-function safeData(val: unknown): Record<string, unknown> {
-	if (!val || typeof val !== "object") return {};
-	const result: Record<string, unknown> = {};
-	for (const [k, v] of Object.entries(val)) {
-		result[k] = v;
 	}
 	return result;
 }
@@ -105,10 +95,10 @@ export const POST: RequestHandler = async ({ request }) => {
 	const eventType = safeStr(
 		event && typeof event === "object" ? (event as Record<string, unknown>).type : null,
 	);
-	const rawData =
-		event && typeof event === "object" ? (event as Record<string, unknown>).data : null;
-	const eventData = safeData(rawData);
-	const admin = getSupabaseAdmin();
+	const eventData: Record<string, unknown> =
+		event && typeof event === "object"
+			? { ...((event as Record<string, unknown>).data as Record<string, unknown> | undefined) }
+			: {};
 
 	switch (eventType) {
 		case "checkout.created":
@@ -116,7 +106,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			const status = safeStr(eventData.status);
 			const subId = safeStr(eventData.subscription_id);
 			if (status === "succeeded" && subId) {
-				const sub = await polarGet<Record<string, unknown>>(`/subscriptions/${subId}`);
 				const meta = safeMeta(eventData.customer_metadata);
 				const tenantId = meta?.tenant_id ?? null;
 				if (!tenantId) break;
@@ -128,7 +117,7 @@ export const POST: RequestHandler = async ({ request }) => {
 					subscriptionId: subId,
 					status: "active",
 					planName: plan?.name,
-					currentPeriodEnd: toIso(sub.current_period_end),
+					currentPeriodEnd: toIso(eventData.current_period_end),
 				});
 			}
 			break;
@@ -167,13 +156,11 @@ export const POST: RequestHandler = async ({ request }) => {
 			const tenantId = meta?.tenant_id ?? null;
 			if (!tenantId) break;
 
-			const subId = safeStr(eventData.id);
-			if (subId) {
-				await admin
-					.from("subscriptions")
-					.update({ status: "past_due" })
-					.eq("polar_subscription_id", subId);
-			}
+			await syncSubscription(tenantId, {
+				customerId: safeStr(eventData.customer_id) ?? undefined,
+				subscriptionId: safeStr(eventData.id) ?? undefined,
+				status: "past_due",
+			});
 			break;
 		}
 	}

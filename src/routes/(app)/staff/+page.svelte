@@ -16,9 +16,9 @@ import Input from "$lib/components/ui/input/input.svelte";
 import Label from "$lib/components/ui/label/label.svelte";
 import Separator from "$lib/components/ui/separator/separator.svelte";
 import { t } from "$lib/i18n/index.svelte";
+import { api } from "$lib/utils/api";
 import { runCrud } from "$lib/utils/crud";
 import { fmtCurrency, fmtDate } from "$lib/utils/format";
-import { supabase } from "$lib/utils/supabase";
 
 const { data } = $props();
 
@@ -36,20 +36,23 @@ const cashDifference = $derived(countedCash - expectedCash);
 async function openRegister(): Promise<void> {
 	if (!data.user.facilityId) return;
 	processing = true;
-	const ok = await runCrud(() =>
-		supabase.from("register_sessions").insert({
-			facility_id: data.user.facilityId,
-			opened_by: data.user.id,
-			opened_at: new Date().toISOString(),
-			opening_cash: 0,
-		}),
-	);
+	const ok = await runCrud(async () => {
+		await api("registerSessions.insert", {
+			data: {
+				facility_id: data.user.facilityId,
+				opened_by: data.user.id,
+				opened_at: new Date().toISOString(),
+				opening_cash: 0,
+			},
+		});
+		return {};
+	});
 	processing = false;
 	if (ok) showOpenDialog = false;
 }
 
 function openCloseDialog(): void {
-	expectedCash = data.activeSession?.opening_cash ?? 0;
+	expectedCash = Number(data.activeSession?.opening_cash ?? 0);
 	countedCash = expectedCash;
 	showCloseDialog = true;
 }
@@ -58,14 +61,17 @@ async function closeRegister(): Promise<void> {
 	const session = data.activeSession;
 	if (!closingName.trim() || !session) return;
 	processing = true;
-	const ok = await runCrud(() =>
-		supabase.rpc("close_register_session", {
-			p_session_id: session.id,
-			p_closed_by: data.user.id,
-			p_closing_cash: countedCash,
-			p_closing_notes: closingNotes || null,
-		}),
-	);
+	const ok = await runCrud(async () => {
+		await api("registerSessions.close", {
+			filter: {
+				sessionId: session.id,
+				userId: data.user.id,
+				closingCash: countedCash,
+				notes: closingNotes || null,
+			},
+		});
+		return {};
+	});
 	processing = false;
 	if (ok) {
 		showCloseDialog = false;
@@ -97,7 +103,7 @@ async function closeRegister(): Promise<void> {
 	{:else}
 		<div class="grid gap-6 lg:grid-cols-2">
 			<Card><CardContent class="pt-6 space-y-4">
-				<div class="flex items-center justify-between"><span class="text-sm text-muted-foreground">{t("register.openedAt")}</span><span class="font-medium">{fmtDate(data.activeSession.opened_at ?? "")}</span></div>
+				<div class="flex items-center justify-between"><span class="text-sm text-muted-foreground">{t("register.openedAt")}</span><span class="font-medium">{fmtDate(data.activeSession?.opened_at ?? "")}</span></div>
 				<Separator />
 				<div class="flex items-center justify-center"><Button size="lg" class="w-full max-w-xs" onclick={() => showNewSaleDialog = true}><Plus class="mr-2 h-5 w-5" />{t("orders.newSale")}</Button></div>
 			</CardContent></Card>
@@ -106,7 +112,7 @@ async function closeRegister(): Promise<void> {
 	{/if}
 </div>
 
-<NewSaleDialog bind:open={showNewSaleDialog} products={data.products} categories={data.categories} activeSession={data.activeSession} user={data.user} />
+<NewSaleDialog bind:open={showNewSaleDialog} products={data.products} categories={data.categories} activeSession={data.activeSession as { id: string } | null} user={data.user} />
 
 <Dialog bind:open={showOpenDialog}>
 	<DialogContent>

@@ -1,7 +1,6 @@
 <script lang="ts">
 import { toast } from "svelte-sonner";
 import { t } from "$lib/i18n/index.svelte";
-import { supabase } from "$lib/utils/supabase";
 
 type Props = {
 	bucket: string;
@@ -9,7 +8,7 @@ type Props = {
 	currentUrl?: string;
 };
 
-let { bucket, onUpload, currentUrl = "" }: Props = $props();
+let { bucket: _bucket, onUpload, currentUrl = "" }: Props = $props();
 let uploading = $state(false);
 let uploadedUrl = $state("");
 let preview = $derived(uploadedUrl || currentUrl);
@@ -19,15 +18,19 @@ async function handleFile(e: Event): Promise<void> {
 	if (!file) return;
 	uploading = true;
 	try {
-		const path = `${crypto.randomUUID()}-${file.name}`;
-		const { error } = await supabase.storage.from(bucket).upload(path, file);
-		if (error) throw error;
-		const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-		uploadedUrl = data.publicUrl;
-		onUpload(data.publicUrl);
+		const reader = new FileReader();
+		reader.onload = () => {
+			const result = reader.result;
+			uploadedUrl = typeof result === "string" ? result : "";
+			onUpload(uploadedUrl);
+			uploading = false;
+		};
+		reader.onerror = () => {
+			throw new Error("Failed to read file");
+		};
+		reader.readAsDataURL(file);
 	} catch (err) {
 		toast.error(err instanceof Error ? err.message : t("common.error"));
-	} finally {
 		uploading = false;
 	}
 }

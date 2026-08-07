@@ -1,27 +1,35 @@
-import { getSupabaseAdmin } from "$lib/server/supabase-admin";
+import { eq } from "drizzle-orm";
+import { clerkClient } from "svelte-clerk/server";
+import { getDb } from "$lib/db/client";
+import { memberships } from "$lib/db/schema/memberships";
+import { users } from "$lib/db/schema/users";
 import { USERS_PER_PAGE } from "$lib/types/database";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const { user } = await parent();
-	const admin = getSupabaseAdmin();
+	const db = getDb();
 
-	const { data: tenantUsers } = await admin
-		.from("v_tenant_users")
-		.select("user_id, role, full_name")
-		.eq("tenant_id", user.tenantId);
+	const rows = await db
+		.select({ userId: memberships.userId, role: memberships.role, fullName: users.fullName })
+		.from(memberships)
+		.innerJoin(users, eq(users.id, memberships.userId))
+		.where(eq(memberships.tenantId, user.tenantId ?? ""));
 
-	if (!tenantUsers?.length) return { users: [] };
+	if (!rows.length) return { users: [] };
 
-	const { data: authData } = await admin.auth.admin.listUsers({ perPage: USERS_PER_PAGE });
-	const emailMap = new Map(authData.users.map((u) => [u.id, u.email]));
+	const client = clerkClient;
+	const clerkUsers = await client.users.getUserList({ limit: USERS_PER_PAGE });
+	const emailMap = new Map(
+		clerkUsers.data.map((u) => [u.id, u.emailAddresses[0]?.emailAddress ?? ""]),
+	);
 
-	const users = tenantUsers.map((u) => ({
-		id: u.user_id,
-		email: emailMap.get(u.user_id) ?? "",
-		full_name: u.full_name,
+	const usersList = rows.map((u) => ({
+		id: u.userId,
+		email: emailMap.get(u.userId) ?? "",
+		full_name: u.fullName,
 		role: u.role,
 	}));
 
-	return { users };
+	return { users: usersList };
 };

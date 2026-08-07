@@ -1,5 +1,6 @@
-import type { BadgeVariant } from "$lib/components/ui/badge/badge.svelte";
-import type { BookingStatus, MemberRole, OrderItemView, ProductRef } from "$lib/types/database";
+import type { BookingStatus, MemberRole, OrderItemView } from "$lib/types/database";
+
+type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "success" | "warning";
 
 export const getRoleBadgeVariant = (role: MemberRole | undefined): BadgeVariant =>
 	role === "owner"
@@ -20,8 +21,6 @@ export const getBookingStatusBadgeVariant = (status: BookingStatus | undefined):
 				: "secondary";
 
 export const shortId = (id: string): string => id.slice(0, 8);
-
-export const getProductName = (p: ProductRef): string => p?.name ?? "Unknown";
 
 export const getActiveOrderItems = (items: OrderItemView[] | null | undefined): OrderItemView[] =>
 	items?.filter((i) => !i.is_deleted) ?? [];

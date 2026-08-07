@@ -1,48 +1,72 @@
 /**
- * ClubOS Demo Seed
- *
- * Creates a fully-functional demo environment:
- *   - 1 tenant (Demo Club) with subscription + facility
- *   - 4 users: owner, admin, manager, staff
- *   - 3 product categories (Greek locale)
- *   - 10 products across those categories
- *
- * Usage:
- *   bun run db:seed          — via npm script (recommended)
- *   bun scripts/seed.ts      — direct invocation
- *   bun tsx scripts/seed.ts  — also works; Bun intercepts tsx and loads .env.local
- *
- * Required env (auto-loaded from .env.local by Bun runtime):
- *   PUBLIC_SUPABASE_URL   — local Supabase API URL
- *   SUPABASE_SECRET_KEY   — service_role JWT (for admin auth operations)
- *   SEED_PASSWORD         — password for all demo users
+ * ClubOS Demo Seed — creates a demo tenant (Demo Club) with subscription, facility,
+ * 4 users, 3 categories and 10 products. Run via `bun run db:seed`.
+ * Requires DATABASE_URL and SEED_PASSWORD (CLERK_SECRET_KEY optional).
  */
 
-import { createClient } from "@supabase/supabase-js";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { categories } from "../src/lib/db/schema/categories";
+import { facilities } from "../src/lib/db/schema/facilities";
+import { memberships } from "../src/lib/db/schema/memberships";
+import { products } from "../src/lib/db/schema/products";
+import { subscriptions } from "../src/lib/db/schema/subscriptions";
+import { tenants } from "../src/lib/db/schema/tenants";
+import { users } from "../src/lib/db/schema/users";
 import { DAY_MS } from "../src/lib/types/database";
 
-// ─── Env validation ────────────────────────────────────────────────────────
+// ─── Env validation ───
 
-const url = process.env.PUBLIC_SUPABASE_URL;
-const key = process.env.SUPABASE_SECRET_KEY;
+const DATABASE_URL = process.env.DATABASE_URL;
 const PASSWORD = process.env.SEED_PASSWORD;
 
-if (!url || !key || !PASSWORD) {
-	console.error("❌ Missing env: PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY, SEED_PASSWORD");
+if (!DATABASE_URL || !PASSWORD) {
+	console.error("Missing env: DATABASE_URL, SEED_PASSWORD");
 	process.exit(1);
 }
 
-const supabase = createClient(url, key, {
-	auth: { autoRefreshToken: false, persistSession: false },
-});
+const client = postgres(DATABASE_URL, { prepare: false });
+const db = drizzle(client);
 
-// ─── Seed data ─────────────────────────────────────────────────────────────
+// ─── Clerk Admin Client (optional) ───
+
+async function createClerkUser(email: string, password: string, name: string) {
+	const key = process.env.CLERK_SECRET_KEY;
+	if (!key) {
+		console.warn("CLERK_SECRET_KEY not set - using placeholder IDs");
+		return `placeholder-${email.replace(/[^a-z0-9]/g, "-")}`;
+	}
+
+	const res = await fetch("https://api.clerk.com/v1/users", {
+		method: "POST",
+		headers: {
+			Authorization: `Bearer ${key}`,
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
+			email_address: [email],
+			password,
+			first_name: name,
+			public_metadata: { role: "owner" },
+		}),
+	});
+
+	if (!res.ok) {
+		const body = await res.text();
+		throw new Error(`Clerk API error: ${res.status} ${body}`);
+	}
+
+	const data = await res.json();
+	return data.id;
+}
+
+// ─── Seed data ───
 
 const USERS = [
-	{ email: "owner@clubos.app", name: "Demo Owner", role: "owner" },
-	{ email: "admin@clubos.app", name: "Demo Admin", role: "admin" },
-	{ email: "manager@clubos.app", name: "Demo Manager", role: "manager" },
-	{ email: "staff@clubos.app", name: "Demo Staff", role: "staff" },
+	{ email: "owner@clubos.app", name: "Demo Owner", role: "owner" as const },
+	{ email: "admin@clubos.app", name: "Demo Admin", role: "admin" as const },
+	{ email: "manager@clubos.app", name: "Demo Manager", role: "manager" as const },
+	{ email: "staff@clubos.app", name: "Demo Staff", role: "staff" as const },
 ] as const;
 
 const CATEGORIES = ["Καφέδες", "Σνακ", "Αναψυκτικά"] as const;
@@ -61,7 +85,7 @@ const PRODUCTS: { name: string; price: number; cat: Category; stock?: number }[]
 	{ name: "Πορτοκαλάδα", price: 2.0, cat: "Αναψυκτικά", stock: 30 },
 ];
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
+// ─── Helpers ───
 
 function step(msg: string): void {
 	console.log(`  ✓ ${msg}`);
@@ -71,159 +95,116 @@ function warn(msg: string): void {
 	console.warn(`  ⚠ ${msg}`);
 }
 
-// ─── Seed ──────────────────────────────────────────────────────────────────
+// ─── Seed ───
 
 async function seed(): Promise<void> {
 	console.log("\n🌱 Seeding ClubOS...\n");
 
-	// ── Tenant ──────────────────────────────────────────────────────────────
-	const { data: tenant } = await supabase
-		.from("tenants")
-		.upsert(
-			{ name: "Demo Club", slug: "demo-club", settings: { currency_code: "EUR" } },
-			{ onConflict: "slug" },
-		)
-		.select("id")
-		.single()
-		.throwOnError();
+	// ── Tenant ──
+	const [tenant] = await db
+		.insert(tenants)
+		.values({ name: "Demo Club", slug: "demo-club", settings: { currency_code: "EUR" } })
+		.onConflictDoUpdate({ target: tenants.slug, set: { name: "Demo Club" } })
+		.returning();
 
-	if (!tenant) throw new Error("Failed to upsert tenant");
+	// ── Subscription ──
+	const trialEnd = new Date(Date.now() + 14 * DAY_MS);
+	await db
+		.insert(subscriptions)
+		.values({
+			tenantId: tenant.id,
+			status: "trialing",
+			planName: "Trial",
+			trialEnd,
+			currentPeriodEnd: trialEnd,
+		})
+		.onConflictDoUpdate({
+			target: subscriptions.tenantId,
+			set: { status: "trialing", trialEnd, currentPeriodEnd: trialEnd },
+		});
 
-	// ── Subscription ────────────────────────────────────────────────────────
-	const trialEnd = new Date(Date.now() + 14 * DAY_MS).toISOString();
-	await supabase
-		.from("subscriptions")
-		.upsert(
-			{
-				tenant_id: tenant.id,
-				status: "trialing",
-				plan_name: "Trial",
-				trial_end: trialEnd,
-				current_period_end: trialEnd,
-			},
-			{ onConflict: "tenant_id" },
-		)
-		.throwOnError();
-
-	// ── Facility ─────────────────────────────────────────────────────────────
-	const { data: facility } = await supabase
-		.from("facilities")
-		.upsert({ tenant_id: tenant.id, name: "Main Facility" }, { onConflict: "tenant_id,name" })
-		.select("id")
-		.single()
-		.throwOnError();
-
-	if (!facility) throw new Error("Failed to upsert facility");
+	// ── Facility ──
+	const [facility] = await db
+		.insert(facilities)
+		.values({ tenantId: tenant.id, name: "Main Facility" })
+		.onConflictDoNothing()
+		.returning();
 
 	step("Tenant + Subscription + Facility");
 
-	// ── Users ────────────────────────────────────────────────────────────────
-	// Fetch existing auth users once to avoid duplicate creation.
-	const { data: authData } = await supabase.auth.admin.listUsers();
-	const existingByEmail = new Map(authData.users.map((u) => [u.email, u.id]));
-
+	// ── Users ──
 	let ownerId: string | undefined;
 
 	for (const u of USERS) {
-		// Resolve or create auth user
-		let userId = existingByEmail.get(u.email);
-
-		if (!userId) {
-			const { data, error } = await supabase.auth.admin.createUser({
-				email: u.email,
-				password: PASSWORD,
-				email_confirm: true,
-				user_metadata: { full_name: u.name },
-			});
-			if (error) {
-				warn(`Failed to create ${u.email}: ${error.message}`);
-				continue;
-			}
-			userId = data.user?.id;
+		let userId: string;
+		try {
+			userId = await createClerkUser(u.email, PASSWORD, u.name);
+		} catch (e) {
+			warn(`Failed to create Clerk user ${u.email}: ${e}`);
+			continue;
 		}
 
-		if (!userId) continue;
+		await db
+			.insert(users)
+			.values({ id: userId, fullName: u.name })
+			.onConflictDoUpdate({ target: users.id, set: { fullName: u.name } });
+
 		if (u.role === "owner") ownerId = userId;
 
-		// Sync public.users profile
-		await supabase
-			.from("users")
-			.upsert({ id: userId, full_name: u.name }, { onConflict: "id" })
-			.throwOnError();
-
-		// Memberships use partial unique indexes (not usable by PostgREST for
-		// ON CONFLICT), so we select-then-insert to stay idempotent.
-		// - tenant-wide membership: facility_id IS NULL (owner, admin, manager)
-		// - facility-specific:      facility_id set      (staff)
 		const facilityId: string | null = u.role === "staff" ? facility.id : null;
 
-		const existingQuery = supabase
-			.from("memberships")
-			.select("id")
-			.eq("user_id", userId)
-			.eq("tenant_id", tenant.id);
+		const existing = await db
+			.select({ id: memberships.id })
+			.from(memberships)
+			.where(
+				facilityId
+					? sql`user_id = ${userId} AND tenant_id = ${tenant.id} AND facility_id = ${facilityId}`
+					: sql`user_id = ${userId} AND tenant_id = ${tenant.id} AND facility_id IS NULL`,
+			)
+			.limit(1);
 
-		const { data: existing } = await (facilityId
-			? existingQuery.eq("facility_id", facilityId)
-			: existingQuery.is("facility_id", null)
-		).maybeSingle();
-
-		if (!existing) {
-			await supabase
-				.from("memberships")
-				.insert({
-					user_id: userId,
-					tenant_id: tenant.id,
-					facility_id: facilityId,
-					role: u.role,
-					is_primary: u.role === "owner",
-				})
-				.throwOnError();
+		if (!existing.length) {
+			await db.insert(memberships).values({
+				userId,
+				tenantId: tenant.id,
+				facilityId,
+				role: u.role,
+				isPrimary: u.role === "owner",
+			});
 		}
 	}
 
 	if (!ownerId) throw new Error("Owner user not created — cannot seed products");
 	step("Users (4)");
 
-	// ── Categories ───────────────────────────────────────────────────────────
-	const { data: catRows } = await supabase
-		.from("categories")
-		.upsert(
-			CATEGORIES.map((name) => ({ facility_id: facility.id, name })),
-			{ onConflict: "facility_id,name" },
-		)
-		.select("id, name")
-		.throwOnError();
+	// ── Categories ──
+	const catRows = await db
+		.insert(categories)
+		.values(CATEGORIES.map((name) => ({ facilityId: facility.id, name })))
+		.onConflictDoNothing()
+		.returning({ id: categories.id, name: categories.name });
 
-	const catMap = Object.fromEntries((catRows ?? []).map((c) => [c.name, c.id])) as Record<
-		Category,
-		string
-	>;
-
+	const catMap = Object.fromEntries(catRows.map((c) => [c.name, c.id])) as Record<Category, string>;
 	step("Categories (3)");
 
-	// ── Products ─────────────────────────────────────────────────────────────
-	await supabase
-		.from("products")
-		.upsert(
+	// ── Products ──
+	await db
+		.insert(products)
+		.values(
 			PRODUCTS.map((p) => ({
-				facility_id: facility.id,
-				category_id: catMap[p.cat],
+				facilityId: facility.id,
+				categoryId: catMap[p.cat],
 				name: p.name,
-				price: p.price,
-				stock_quantity: p.stock ?? 0,
-				track_inventory: p.stock !== undefined,
-				created_by: ownerId,
+				price: String(p.price),
+				stockQuantity: p.stock ?? 0,
+				trackInventory: p.stock !== undefined,
+				createdBy: ownerId,
 			})),
-			{ onConflict: "facility_id,name" },
 		)
-		.throwOnError();
-
+		.onConflictDoNothing();
 	step("Products (10)");
 
 	console.log(`\n✅ Done!\n`);
-	console.log(`   URL:      ${url}`);
-	console.log(`   Studio:   http://127.0.0.1:54323`);
 	console.log(`   Login:    owner@clubos.app`);
 	console.log(`   Password: ${PASSWORD}\n`);
 }

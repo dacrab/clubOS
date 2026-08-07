@@ -22,10 +22,10 @@ import Input from "$lib/components/ui/input/input.svelte";
 import { t } from "$lib/i18n/index.svelte";
 import { settings as globalSettings } from "$lib/state/settings.svelte";
 import type { CartItem, CategoryPartial, Product } from "$lib/types/database";
+import { api } from "$lib/utils/api";
 import { fmtCurrency } from "$lib/utils/format";
 import { shortId } from "$lib/utils/helpers";
 import { printReceipt, type ReceiptData } from "$lib/utils/receipt";
-import { supabase } from "$lib/utils/supabase";
 
 type Props = {
 	open: boolean;
@@ -76,11 +76,11 @@ $effect(() => {
 	if (q.trim() && user.facilityId) {
 		timeout = setTimeout(async () => {
 			if (cancelled) return;
-			const { data } = await supabase.rpc("search_products", {
-				facility_uuid: user.facilityId,
-				search_text: q,
+			const data = await api<Product[]>("products.search", {
+				filter: { facilityId: user.facilityId },
+				data: { searchText: q },
 			});
-			if (!cancelled) searchResults = (data as Product[]) ?? [];
+			if (!cancelled) searchResults = data ?? [];
 		}, 200);
 	} else {
 		searchResults = [];
@@ -145,29 +145,32 @@ async function submitOrder(): Promise<void> {
 	if (processing) return;
 	processing = true;
 	try {
-		const { data, error } = await supabase.rpc("create_order", {
-			p_facility_id: user.facilityId,
-			p_session_id: activeSession.id,
-			p_user_id: user.id,
-			p_items: cart.map((i) => ({
-				product_id: i.product.id,
-				quantity: i.quantity,
-				unit_price: i.product.price,
-				is_treat: i.isTreat,
-			})),
-			p_coupon_count: couponCount,
-			p_coupon_value: COUPON_VALUE,
+		const result = await api<{ id: string; error?: string }>("orders.create", {
+			filter: {
+				facilityId: user.facilityId,
+				sessionId: activeSession.id,
+				userId: user.id,
+				items: cart.map((i) => ({
+					productId: i.product.id,
+					productName: i.product.name,
+					quantity: i.quantity,
+					unitPrice: String(i.product.price),
+					lineTotal: String(i.product.price * i.quantity),
+					isTreat: i.isTreat,
+				})),
+				couponCount,
+				couponValue: COUPON_VALUE,
+			},
 		});
 
-		if (error) throw error;
-		if (data?.error) {
-			toast.error(data.error);
+		if (result?.error) {
+			toast.error(result.error);
 			processing = false;
 			return;
 		}
 
-		lastOrderId = data.id;
-		lastOrderData = { items: [...cart], total, discount, couponCount, orderId: data.id };
+		lastOrderId = result.id;
+		lastOrderData = { items: [...cart], total, discount, couponCount, orderId: result.id };
 		toast.success(t("common.success"));
 		clearCart();
 		showCart = false;

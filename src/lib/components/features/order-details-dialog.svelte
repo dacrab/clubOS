@@ -16,7 +16,7 @@ import Table, {
 import { t } from "$lib/i18n/index.svelte";
 import type { OrderView } from "$lib/types/database";
 import { fmtCurrency, fmtDate } from "$lib/utils/format";
-import { getActiveOrderItems, getProductName, shortId } from "$lib/utils/helpers";
+import { getActiveOrderItems, shortId } from "$lib/utils/helpers";
 
 type Props = {
 	open: boolean;
@@ -49,7 +49,7 @@ let { open = $bindable(), order }: Props = $props();
 								<TableRow>
 									<TableCell>
 										<div class="flex items-center gap-2">
-											{getProductName(item.products)}
+											{item.product_ref?.name ?? "Unknown"}
 											{#if item.is_treat}
 												<Badge variant="secondary" class="text-xs">
 													<Gift class="h-3 w-3 mr-1" />{t("orders.treat")}

@@ -44,7 +44,7 @@ const getSessionOrders = (sid: string) =>
 						<div class="flex items-center justify-between">
 							<div class="space-y-1">
 								<CardTitle class="text-base flex items-center gap-2">
-									{fmtDate(session.opened_at)}
+									{fmtDate(session.opened_at ?? "")}
 									<Badge variant={session.closed_at ? "secondary" : "success"}>{t(session.closed_at ? "register.sessionClosed" : "register.sessionOpen")}</Badge>
 								</CardTitle>
 								<p class="text-sm text-muted-foreground">{orders.length} {t("nav.orders").toLowerCase()} · {fmtCurrency(sessionTotal)}</p>
