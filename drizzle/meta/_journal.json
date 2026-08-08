@@ -15,6 +15,20 @@
       "when": 1785410000000,
       "tag": "0001_tearful_sunfire",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786091965990,
+      "tag": "0002_married_lila_cheney",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786178281747,
+      "tag": "0003_lying_moonstone",
+      "breakpoints": true
     }
   ]
 }

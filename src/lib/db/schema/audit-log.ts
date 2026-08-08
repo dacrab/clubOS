@@ -10,6 +10,6 @@ export const auditLog = pgTable("audit_log", {
 	action: text("action").notNull(),
 	oldData: jsonb("old_data"),
 	newData: jsonb("new_data"),
-	changedBy: uuid("changed_by").references(() => users.id, { onDelete: "set null" }),
+	changedBy: text("changed_by").references(() => users.id, { onDelete: "set null" }),
 	changedAt: timestamp("changed_at", { withTimezone: true }).notNull().defaultNow(),
 });

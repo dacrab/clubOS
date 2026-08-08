@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
 import { PLANS_META } from "$lib/config/plans";
-import { upsertSubscription } from "$lib/server/polar";
+import { upsertSubscription, validateStatus } from "$lib/server/polar";
 import type { RequestHandler } from "./$types";
 
 const enc = new TextEncoder();
@@ -59,7 +59,7 @@ async function syncSubscription(
 		tenantId,
 		customerId: args.customerId ?? "",
 		subscriptionId: args.subscriptionId ?? "",
-		status: args.status,
+		status: validateStatus(args.status),
 		planName: args.planName ?? "Subscription",
 		currentPeriodEnd: args.currentPeriodEnd ?? null,
 		trialStart: null,

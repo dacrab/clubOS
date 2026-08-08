@@ -22,11 +22,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 		.limit(1);
 
 	const tenant = rows[0];
-	const rawSettings: unknown = tenant?.settings;
-	const partialSettings: Partial<TenantSettings> =
-		rawSettings && typeof rawSettings === "object"
-			? (Object.assign({}, rawSettings as Record<string, unknown>) as Partial<TenantSettings>)
-			: {};
+	const partialSettings: Partial<TenantSettings> = tenant?.settings ?? {};
 
 	return {
 		settings: mergeSettings(partialSettings),
@@ -68,8 +64,8 @@ export const actions: Actions = {
 				.where(eq(tenants.id, tenantId))
 				.limit(1);
 
-			const merged = {
-				...((existing?.settings as Record<string, unknown>) ?? {}),
+			const merged: Partial<TenantSettings> = {
+				...(existing?.settings ?? {}),
 				...validated.data,
 			};
 			await db.update(tenants).set({ settings: merged }).where(eq(tenants.id, tenantId));

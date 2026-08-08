@@ -49,9 +49,7 @@ export async function resolveUserContext(userId: string): Promise<App.UserContex
 		.limit(1);
 
 	const VALID_ROLES: readonly MemberRole[] = ["owner", "admin", "manager", "staff"];
-	const role = VALID_ROLES.includes(memRow.role as MemberRole)
-		? (memRow.role as MemberRole)
-		: "staff";
+	const role = VALID_ROLES.includes(memRow.role) ? memRow.role : "staff";
 
 	return {
 		membership: {
@@ -60,7 +58,7 @@ export async function resolveUserContext(userId: string): Promise<App.UserContex
 			facilityId: memRow.facilityId,
 		},
 		profile: memRow.fullName ? { fullName: memRow.fullName } : null,
-		tenant: memRow.tenant ? { settings: memRow.tenant.settings as Record<string, unknown> } : null,
+		tenant: memRow.tenant ? { settings: memRow.tenant.settings } : null,
 		subscription: memRow.subscription,
 		activeSession: activeSessions[0] ?? null,
 	};

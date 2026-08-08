@@ -4,6 +4,7 @@
  * Requires DATABASE_URL and SEED_PASSWORD (CLERK_SECRET_KEY optional).
  */
 
+import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { categories } from "../src/lib/db/schema/categories";
@@ -195,7 +196,7 @@ async function seed(): Promise<void> {
 				facilityId: facility.id,
 				categoryId: catMap[p.cat],
 				name: p.name,
-				price: String(p.price),
+				price: p.price,
 				stockQuantity: p.stock ?? 0,
 				trackInventory: p.stock !== undefined,
 				createdBy: ownerId,

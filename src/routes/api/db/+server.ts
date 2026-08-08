@@ -9,9 +9,13 @@ import { products } from "$lib/db/schema/products";
 import { registerSessions } from "$lib/db/schema/register-sessions";
 import {
 	BookingConflictFilterSchema,
+	BookingFormSchema,
+	CategoryFormSchema,
 	DbRequestSchema,
 	OrderCreateFilterSchema,
+	ProductFormSchema,
 	RegisterSessionCloseFilterSchema,
+	RegisterSessionOpenSchema,
 } from "$lib/schemas";
 import { resolveUserContext } from "$lib/server/auth";
 import { mapRow, mapRows } from "$lib/utils/mapper";
@@ -44,17 +48,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		// ── Products ──
 		case "products.insert": {
 			if (!facilityId) return forbidden();
+			const parsed = ProductFormSchema.safeParse(data);
+			if (!parsed.success) return json({ error: "Invalid request" }, { status: 400 });
 			const [row] = await db
 				.insert(products)
-				.values({ ...data, facilityId, createdBy: userId } as typeof products.$inferInsert)
+				.values({ ...parsed.data, facilityId, createdBy: userId })
 				.returning();
 			return json(row ? mapRow(row) : null);
 		}
 		case "products.update": {
 			if (!facilityId) return forbidden();
+			const parsed = ProductFormSchema.safeParse(data);
+			if (!parsed.success) return json({ error: "Invalid request" }, { status: 400 });
 			const [row] = await db
 				.update(products)
-				.set(data as typeof products.$inferInsert)
+				.set(parsed.data)
 				.where(and(eq(products.id, idFrom(filter)), eq(products.facilityId, facilityId)))
 				.returning();
 			if (!row) return forbidden();
@@ -70,13 +78,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return json({ success: true });
 		}
 		case "products.search": {
+			if (!facilityId) return forbidden();
 			const text = String(data?.searchText ?? "");
 			const rows = await db
 				.select()
 				.from(products)
 				.where(
 					and(
-						eq(products.facilityId, facilityId ?? ""),
+						eq(products.facilityId, facilityId),
 						text ? sql`${products.name} ILIKE ${`%${text}%`}` : undefined,
 					),
 				)
@@ -88,17 +97,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		// ── Categories ──
 		case "categories.insert": {
 			if (!facilityId) return forbidden();
+			const parsed = CategoryFormSchema.safeParse(data);
+			if (!parsed.success) return json({ error: "Invalid request" }, { status: 400 });
 			const [row] = await db
 				.insert(categories)
-				.values({ ...data, facilityId } as typeof categories.$inferInsert)
+				.values({ ...parsed.data, facilityId })
 				.returning();
 			return json(row ? mapRow(row) : null);
 		}
 		case "categories.update": {
 			if (!facilityId) return forbidden();
+			const parsed = CategoryFormSchema.safeParse(data);
+			if (!parsed.success) return json({ error: "Invalid request" }, { status: 400 });
 			const [row] = await db
 				.update(categories)
-				.set(data as typeof categories.$inferInsert)
+				.set(parsed.data)
 				.where(and(eq(categories.id, idFrom(filter)), eq(categories.facilityId, facilityId)))
 				.returning();
 			if (!row) return forbidden();
@@ -117,17 +130,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		// ── Bookings ──
 		case "bookings.insert": {
 			if (!facilityId) return forbidden();
+			const parsed = BookingFormSchema.safeParse(data);
+			if (!parsed.success) return json({ error: "Invalid request" }, { status: 400 });
 			const [row] = await db
 				.insert(bookings)
-				.values({ ...data, facilityId, createdBy: userId } as typeof bookings.$inferInsert)
+				.values({ ...parsed.data, facilityId, createdBy: userId })
 				.returning();
 			return json(row ? mapRow(row) : null);
 		}
 		case "bookings.update": {
 			if (!facilityId) return forbidden();
+			const parsed = BookingFormSchema.safeParse(data);
+			if (!parsed.success) return json({ error: "Invalid request" }, { status: 400 });
 			const [row] = await db
 				.update(bookings)
-				.set({ ...(data as typeof bookings.$inferInsert), updatedAt: sql`now()` })
+				.set({ ...parsed.data, updatedAt: sql`now()` })
 				.where(and(eq(bookings.id, idFrom(filter)), eq(bookings.facilityId, facilityId)))
 				.returning();
 			if (!row) return forbidden();
@@ -143,6 +160,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return json({ success: true });
 		}
 		case "bookings.checkConflict": {
+			if (!facilityId) return forbidden();
 			const conflictFilter = BookingConflictFilterSchema.safeParse(filter);
 			if (!conflictFilter.success) return json({ error: "Invalid request" }, { status: 400 });
 			const bookingType = conflictFilter.data.type ?? "event";
@@ -151,7 +169,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				.from(bookings)
 				.where(
 					and(
-						eq(bookings.facilityId, facilityId ?? ""),
+						eq(bookings.facilityId, facilityId),
 						eq(bookings.type, bookingType),
 						sql`${bookings.startsAt} < ${conflictFilter.data.endsAt}::timestamptz`,
 						sql`${bookings.endsAt} > ${conflictFilter.data.startsAt}::timestamptz`,
@@ -166,9 +184,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		// ── Register Sessions ──
 		case "registerSessions.insert": {
 			if (!facilityId) return forbidden();
+			const parsed = RegisterSessionOpenSchema.safeParse(data);
+			if (!parsed.success) return json({ error: "Invalid request" }, { status: 400 });
 			const [row] = await db
 				.insert(registerSessions)
-				.values({ ...data, facilityId, openedBy: userId } as typeof registerSessions.$inferInsert)
+				.values({ ...parsed.data, facilityId, openedBy: userId })
 				.returning();
 			return json(row ? mapRow(row) : null);
 		}
@@ -181,10 +201,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				.set({
 					closedBy: userId,
 					closedAt: sql`now()`,
-					closingCash:
-						closeFilter.data.closingCash !== undefined
-							? String(closeFilter.data.closingCash)
-							: null,
+					closingCash: closeFilter.data.closingCash ?? null,
 					notes: closeFilter.data.notes ?? null,
 				})
 				.where(
@@ -210,14 +227,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				productId: i.productId,
 				productName: i.productName,
 				quantity: i.quantity,
-				unitPrice: String(i.unitPrice),
-				lineTotal: String(i.lineTotal),
+				unitPrice: i.unitPrice,
+				lineTotal: i.lineTotal,
 				isTreat: i.isTreat ?? false,
 			}));
 
-			const subtotal = rows.reduce((s, i) => s + Number(i.lineTotal), 0).toFixed(2);
-			const discountAmount = (couponCount * couponValue).toFixed(2);
-			const totalAmount = (Number(subtotal) - couponCount * couponValue).toFixed(2);
+			const subtotal = rows.reduce((s, i) => s + i.lineTotal, 0);
+			const discountAmount = couponCount * couponValue;
+			const totalAmount = Math.max(0, subtotal - discountAmount);
 
 			const [order] = await db
 				.insert(orders)

@@ -153,9 +153,9 @@ export interface RegisterSession {
 	closed_by: string | null;
 	opened_at: string;
 	closed_at: string | null;
-	opening_cash: string;
-	closing_cash: string | null;
-	expected_cash: string | null;
+	opening_cash: number;
+	closing_cash: number | null;
+	expected_cash: number | null;
 	notes: string | null;
 	created_at: string;
 }

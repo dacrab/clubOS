@@ -9,7 +9,7 @@ export const categories = pgTable(
 			.notNull()
 			.references(() => facilities.id, { onDelete: "cascade" }),
 		// biome-ignore lint/suspicious/noExplicitAny: Drizzle self-referencing FK pattern
-		parentId: uuid("parent_id").references((): any => categories, {
+		parentId: uuid("parent_id").references((): any => categories.id, {
 			onDelete: "set null",
 		}),
 		name: text("name").notNull(),

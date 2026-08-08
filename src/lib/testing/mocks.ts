@@ -84,7 +84,7 @@ export interface MockUserCtx {
 	subscription: {
 		status: SubscriptionStatus;
 		trialEnd: string | null;
-		periodEnd: string | null;
+		currentPeriodEnd: string | null;
 	} | null;
 	tenant: { id: string; name: string; settings: Record<string, unknown> } | null;
 	profile: { fullName: string };
@@ -113,7 +113,7 @@ function buildUserCtx(
 			? {
 					status: subscription.status,
 					trialEnd: subscription.trialEnd?.toISOString() ?? null,
-					periodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
+					currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
 				}
 			: null,
 		tenant: tenant ? { id: tenant.id, name: tenant.name, settings: {} } : null,

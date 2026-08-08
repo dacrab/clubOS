@@ -1,18 +1,17 @@
 import { sql } from "drizzle-orm";
 import { boolean, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { memberRoleEnum } from "./enums";
 import { facilities } from "./facilities";
 import { tenants } from "./tenants";
 import { users } from "./users";
 
-export const memberRole = text("role", {
-	enum: ["owner", "admin", "manager", "staff"],
-});
+export const memberRole = memberRoleEnum("role");
 
 export const memberships = pgTable(
 	"memberships",
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
-		userId: uuid("user_id")
+		userId: text("user_id")
 			.notNull()
 			.references(() => users.id, { onDelete: "cascade" }),
 		tenantId: uuid("tenant_id")

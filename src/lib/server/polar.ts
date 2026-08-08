@@ -5,6 +5,12 @@ import { SUBSCRIPTION_STATUSES, type SubscriptionStatus } from "$lib/types/datab
 
 const POLAR_BASE = "https://api.polar.sh/v1";
 
+function toTimestamp(value: Date | string | null): number | null {
+	if (!value) return null;
+	const ms = typeof value === "string" ? new Date(value).getTime() : value.getTime();
+	return Number.isNaN(ms) ? null : ms;
+}
+
 function polarToken(): string {
 	const token = env.POLAR_ACCESS_TOKEN;
 	if (!token) throw new Error("POLAR_ACCESS_TOKEN is not set");
@@ -75,31 +81,26 @@ export async function getCheckout(checkoutId: string): Promise<Record<string, un
 	return polarGet(`/checkouts/${checkoutId}`);
 }
 
-function validateStatus(s: string): SubscriptionStatus {
+export function validateStatus(s: string): SubscriptionStatus {
 	return SUBSCRIPTION_STATUSES.includes(s as SubscriptionStatus)
 		? (s as SubscriptionStatus)
 		: "active";
 }
 
-export function isActive(sub: unknown): boolean {
-	if (!sub || typeof sub !== "object") return false;
-	const s = sub as { status: unknown; periodEnd?: unknown; trialEnd?: unknown };
-	const status = s.status;
-	if (typeof status !== "string" || (status !== "trialing" && status !== "active")) return false;
+export function isActive(sub: typeof subscriptions.$inferSelect | null): boolean {
+	if (!sub) return false;
+	if (sub.status !== "trialing" && sub.status !== "active") return false;
 	const now = Date.now();
-	const periodEnd = s.periodEnd;
-	const trialEnd = s.trialEnd;
-	return (
-		(typeof periodEnd === "string" && new Date(periodEnd).getTime() > now) ||
-		(typeof trialEnd === "string" && new Date(trialEnd).getTime() > now)
-	);
+	const periodEnd = toTimestamp(sub.currentPeriodEnd);
+	const trialEnd = toTimestamp(sub.trialEnd);
+	return (periodEnd !== null && periodEnd > now) || (trialEnd !== null && trialEnd > now);
 }
 
 export async function upsertSubscription(args: {
 	tenantId: string;
 	customerId: string;
 	subscriptionId: string;
-	status: string;
+	status: SubscriptionStatus;
 	planName: string;
 	currentPeriodEnd: string | null;
 	trialStart: string | null;

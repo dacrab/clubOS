@@ -1,9 +1,8 @@
 import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { subscriptionStatusEnum } from "./enums";
 import { tenants } from "./tenants";
 
-export const subscriptionStatus = text("status", {
-	enum: ["trialing", "active", "canceled", "past_due", "unpaid", "paused"],
-});
+export const subscriptionStatus = subscriptionStatusEnum("status");
 
 export const subscriptions = pgTable("subscriptions", {
 	id: uuid("id").primaryKey().defaultRandom(),

@@ -52,7 +52,7 @@ async function openRegister(): Promise<void> {
 }
 
 function openCloseDialog(): void {
-	expectedCash = Number(data.activeSession?.opening_cash ?? 0);
+	expectedCash = data.activeSession?.openingCash ?? 0;
 	countedCash = expectedCash;
 	showCloseDialog = true;
 }
@@ -103,7 +103,7 @@ async function closeRegister(): Promise<void> {
 	{:else}
 		<div class="grid gap-6 lg:grid-cols-2">
 			<Card><CardContent class="pt-6 space-y-4">
-				<div class="flex items-center justify-between"><span class="text-sm text-muted-foreground">{t("register.openedAt")}</span><span class="font-medium">{fmtDate(data.activeSession?.opened_at ?? "")}</span></div>
+				<div class="flex items-center justify-between"><span class="text-sm text-muted-foreground">{t("register.openedAt")}</span><span class="font-medium">{fmtDate(data.activeSession?.openedAt ?? "")}</span></div>
 				<Separator />
 				<div class="flex items-center justify-center"><Button size="lg" class="w-full max-w-xs" onclick={() => showNewSaleDialog = true}><Plus class="mr-2 h-5 w-5" />{t("orders.newSale")}</Button></div>
 			</CardContent></Card>
