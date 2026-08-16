@@ -1,5 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
+import { mergeSettings } from "$lib/config/settings";
 import { getDb } from "$lib/db/client";
 import { bookings } from "$lib/db/schema/bookings";
 import { categories } from "$lib/db/schema/categories";
@@ -161,6 +162,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 		case "bookings.checkConflict": {
 			if (!facilityId) return forbidden();
+			// NOTE (TOCTOU): this is a plain SELECT before the separate
+			// `bookings.insert` call, so two concurrent requests can double-book.
+			// Drizzle's pgTable DSL does not model exclusion constraints yet; a
+			// hard guarantee requires a raw migration adding e.g.
+			//   EXCLUDE USING gist (facility_id WITH =, type WITH =,
+			//                       tstzrange(starts_at, ends_at) WITH &&)
+			// backed by the btree_gist extension.
 			const conflictFilter = BookingConflictFilterSchema.safeParse(filter);
 			if (!conflictFilter.success) return json({ error: "Invalid request" }, { status: 400 });
 			const bookingType = conflictFilter.data.type ?? "event";
@@ -221,18 +229,51 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			const orderFilter = OrderCreateFilterSchema.safeParse(filter);
 			if (!orderFilter.success) return json({ error: "No items" }, { status: 400 });
 
-			const { items, couponCount = 0, couponValue = 0.5 } = orderFilter.data;
+			const { items, couponCount = 0 } = orderFilter.data;
 
-			const rows = items.map((i) => ({
-				productId: i.productId,
-				productName: i.productName,
-				quantity: i.quantity,
-				unitPrice: i.unitPrice,
-				lineTotal: i.lineTotal,
-				isTreat: i.isTreat ?? false,
-			}));
+			// Look up prices server-side — never trust client-supplied prices.
+			const productIds = [...new Set(items.map((i) => i.productId))];
+			const productRows = await db
+				.select({
+					id: products.id,
+					name: products.name,
+					price: products.price,
+					trackInventory: products.trackInventory,
+					stockQuantity: products.stockQuantity,
+				})
+				.from(products)
+				.where(and(eq(products.facilityId, facilityId), inArray(products.id, productIds)));
 
-			const subtotal = rows.reduce((s, i) => s + i.lineTotal, 0);
+			const productById = new Map(productRows.map((p) => [p.id, p]));
+
+			const lineItems: Array<{
+				productId: string;
+				productName: string;
+				quantity: number;
+				unitPrice: number;
+				lineTotal: number;
+				isTreat: boolean;
+			}> = [];
+			for (const item of items) {
+				const product = productById.get(item.productId);
+				if (!product)
+					return json(
+						{ error: "One or more items are not available in this facility" },
+						{ status: 400 },
+					);
+				const isTreat = item.isTreat ?? false;
+				lineItems.push({
+					productId: product.id,
+					productName: product.name,
+					quantity: item.quantity,
+					unitPrice: product.price,
+					lineTotal: isTreat ? 0 : product.price * item.quantity,
+					isTreat,
+				});
+			}
+
+			const subtotal = lineItems.reduce((s, i) => s + i.lineTotal, 0);
+			const couponValue = mergeSettings(ctx.tenant?.settings ?? null).coupons_value;
 			const discountAmount = couponCount * couponValue;
 			const totalAmount = Math.max(0, subtotal - discountAmount);
 
@@ -250,7 +291,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				.returning();
 
 			await db.insert(orderItems).values(
-				rows.map((i) => ({
+				lineItems.map((i) => ({
 					orderId: order.id,
 					facilityId,
 					productId: i.productId,
@@ -261,6 +302,19 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					isTreat: i.isTreat,
 				})),
 			);
+
+			// Decrement stock for products that track inventory.
+			for (const item of lineItems) {
+				const product = productById.get(item.productId);
+				if (product?.trackInventory) {
+					await db
+						.update(products)
+						.set({
+							stockQuantity: sql`GREATEST(${products.stockQuantity} - ${item.quantity}, 0)`,
+						})
+						.where(and(eq(products.id, item.productId), eq(products.facilityId, facilityId)));
+				}
+			}
 
 			return json(order ? mapRow(order) : null);
 		}

@@ -1,4 +1,3 @@
-import { error, json } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import { env } from "$env/dynamic/private";
 import { getDb } from "$lib/db/client";
@@ -8,6 +7,22 @@ import { generateBookingToken } from "$lib/server/token";
 const RESEND_API_KEY = env.RESEND_API_KEY;
 
 const FROM = env.EMAIL_FROM ?? "ClubOS <bookings@clubos.app>";
+
+function escapeHtml(value: string): string {
+	return value
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;");
+}
+
+function jsonResponse(body: Record<string, unknown>, status = 200): Response {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { "content-type": "application/json" },
+	});
+}
 
 export function canSendEmail(): boolean {
 	return !!RESEND_API_KEY;
@@ -61,12 +76,12 @@ export function buildBookingEmailHtml(
 ): string {
 	const cta =
 		ctaUrl && ctaLabel
-			? `<tr><td style="padding:24px 0"><a href="${ctaUrl}" style="display:inline-block;background:#1d9bf0;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">${ctaLabel}</a></td></tr>`
+			? `<tr><td style="padding:24px 0"><a href="${escapeHtml(ctaUrl)}" style="display:inline-block;background:#1d9bf0;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">${escapeHtml(ctaLabel)}</a></td></tr>`
 			: "";
 	return `<!DOCTYPE html>
 <table cellpadding="0" cellspacing="0" style="width:100%;max-width:480px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif">
-<tr><td style="padding:32px 0 16px"><h1 style="margin:0;font-size:20px">${heading}</h1></td></tr>
-${bodyLines.map((l) => `<tr><td style="padding:4px 0;color:#374151">${l}</td></tr>`).join("\n")}
+<tr><td style="padding:32px 0 16px"><h1 style="margin:0;font-size:20px">${escapeHtml(heading)}</h1></td></tr>
+${bodyLines.map((l) => `<tr><td style="padding:4px 0;color:#374151">${escapeHtml(l)}</td></tr>`).join("\n")}
 ${cta}
 <tr><td style="padding:24px 0 0;font-size:12px;color:#9ca3af">ClubOS — automated booking notification</td></tr>
 </table>`;
@@ -79,16 +94,16 @@ export async function sendBookingEmail(
 	ctaLabel: string,
 ): Promise<Response> {
 	if (!canSendEmail()) {
-		return json({ sent: false, reason: "RESEND_API_KEY not configured" });
+		return jsonResponse({ sent: false, reason: "RESEND_API_KEY not configured" });
 	}
 
 	const db = getDb();
 	const rows = await db.select().from(bookings).where(eq(bookings.id, bookingId)).limit(1);
 	const booking = rows[0];
-	if (!booking) throw error(404, "Booking not found");
+	if (!booking) return jsonResponse({ sent: false, reason: "Booking not found" }, 404);
 
 	if (!booking.customerEmail) {
-		return json({ sent: false, reason: "No customer email on booking" });
+		return jsonResponse({ sent: false, reason: "No customer email on booking" });
 	}
 
 	const origin = env.ORIGIN ?? "http://localhost:5173";
@@ -96,7 +111,7 @@ export async function sendBookingEmail(
 
 	await sendEmail(
 		booking.customerEmail,
-		`${subjectPrefix} — ${booking.customerName}`,
+		`${subjectPrefix} — ${escapeHtml(booking.customerName)}`,
 		buildBookingEmailHtml(
 			heading,
 			buildBookingEmailLines({
@@ -111,5 +126,5 @@ export async function sendBookingEmail(
 		),
 	);
 
-	return json({ sent: true });
+	return jsonResponse({ sent: true });
 }

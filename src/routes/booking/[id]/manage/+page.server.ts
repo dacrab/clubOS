@@ -30,13 +30,13 @@ export const actions: Actions = {
 
 		const db = getDb();
 		const [existing] = await db
-			.select({ notes: bookings.notes })
+			.select({ status: bookings.status })
 			.from(bookings)
 			.where(eq(bookings.id, params.id))
 			.limit(1);
 
 		if (!existing) return fail(404, { error: "Booking not found" });
-		if (existing.notes?.includes("Canceled by customer")) {
+		if (existing.status === "canceled") {
 			return fail(400, { error: "Booking is already canceled" });
 		}
 

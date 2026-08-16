@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { getDb } from "$lib/db/client";
 import { categories } from "$lib/db/schema/categories";
 import { memberships } from "$lib/db/schema/memberships";
@@ -95,11 +95,43 @@ export const load: PageServerLoad = async ({ parent }) => {
 				.where(eq(orders.facilityId, fid))
 				.orderBy(desc(orders.createdAt))
 				.limit(10),
+			// sales by category
+			db
+				.select({
+					name: sql<string>`COALESCE(${categories.name}, 'Uncategorized')`,
+					quantity: sql<number>`SUM(${orderItems.quantity})::int`,
+				})
+				.from(orderItems)
+				.innerJoin(products, eq(orderItems.productId, products.id))
+				.leftJoin(categories, eq(products.categoryId, categories.id))
+				.where(and(eq(orderItems.facilityId, fid), eq(orderItems.isDeleted, false)))
+				.groupBy(sql`COALESCE(${categories.name}, 'Uncategorized')`)
+				.orderBy(desc(sql`SUM(${orderItems.quantity})`))
+				.limit(10),
 		]),
 	]);
 
-	const [todayRev, todayOrd, lowStock, activeUsers, bestSellers, revenueByDay, recentOrders] =
-		dashboard;
+	const [
+		todayRev,
+		todayOrd,
+		lowStock,
+		activeUsers,
+		bestSellers,
+		revenueByDay,
+		recentOrders,
+		categorySales,
+	] = dashboard;
+
+	const recentOrderIds = (recentOrders ?? []).map((o) => o.id);
+	const recentItems = recentOrderIds.length
+		? await db.select().from(orderItems).where(inArray(orderItems.orderId, recentOrderIds))
+		: [];
+	const itemsByOrderId = new Map<string, typeof recentItems>();
+	for (const item of recentItems) {
+		const group = itemsByOrderId.get(item.orderId);
+		if (group) group.push(item);
+		else itemsByOrderId.set(item.orderId, [item]);
+	}
 
 	return {
 		stats: {
@@ -108,10 +140,22 @@ export const load: PageServerLoad = async ({ parent }) => {
 			lowStockCount: lowStock[0]?.count ?? 0,
 			activeUsers: activeUsers[0]?.count ?? 0,
 		},
-		recentOrders: (recentOrders ?? []).map((o) => ({
-			...mapRow<OrderView>(o),
-			order_items: [] as OrderItemView[],
-		})),
+		recentOrders: (recentOrders ?? []).map((o) => {
+			const items = itemsByOrderId.get(o.id) ?? [];
+			const orderItemsView: OrderItemView[] = items.map((it) => ({
+				id: it.id,
+				quantity: it.quantity,
+				unit_price: Number(it.unitPrice),
+				line_total: Number(it.lineTotal),
+				is_treat: it.isTreat,
+				is_deleted: it.isDeleted,
+				product_ref: { id: it.productId, name: it.productName },
+			}));
+			return {
+				...mapRow<OrderView>(o),
+				order_items: orderItemsView,
+			};
+		}),
 		analytics: {
 			revenueByDay: ((revenueByDay ?? []) as Array<{ day: string; revenue: string }>).map((d) => ({
 				date: d.day,
@@ -121,7 +165,10 @@ export const load: PageServerLoad = async ({ parent }) => {
 				const bp = p as { productName: string; totalQty: number; totalRevenue: string };
 				return { id: bp.productName, name: bp.productName, quantity: bp.totalQty };
 			}),
-			categorySales: [] as Array<{ name: string; quantity: number }>,
+			categorySales: (categorySales ?? []).map((c) => ({
+				name: c.name,
+				quantity: Number(c.quantity ?? 0),
+			})),
 		},
 		products: mapRows<Product>(productsResult),
 		categories: mapRows<CategoryPartial>(categoriesResult ?? []),

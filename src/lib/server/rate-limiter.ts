@@ -1,3 +1,9 @@
+/**
+ * NOTE: This limiter is process-local (an in-memory Map). On serverless runtimes
+ * each instance gets its own store, so it is NOT a global rate limit and it fails
+ * open (an empty store never blocks). It only softens abuse within a single warm
+ * instance. For a hard, cross-instance limit, back this with a KV/DB store.
+ */
 interface Entry {
 	count: number;
 	resetAt: number;
