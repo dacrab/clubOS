@@ -11,7 +11,7 @@ function toStringRecord(val: unknown): Record<string, string> | null {
 	if (!val || typeof val !== "object") return null;
 	const result: Record<string, string> = {};
 	for (const [k, v] of Object.entries(val)) {
-		if (typeof v === "string") result[k] = String(v);
+		if (typeof v === "string") result[k] = v;
 	}
 	return result;
 }

@@ -74,9 +74,7 @@ function toIso(value: unknown): string | null {
 function firstProductId(products: unknown): string | null {
 	if (!Array.isArray(products) || products.length === 0) return null;
 	const first = products[0];
-	return first && typeof first === "object"
-		? safeStr(Object.hasOwn(first, "id") ? (first as Record<string, unknown>).id : null)
-		: null;
+	return first && typeof first === "object" ? safeStr((first as Record<string, unknown>).id) : null;
 }
 
 export const POST: RequestHandler = async ({ request }) => {

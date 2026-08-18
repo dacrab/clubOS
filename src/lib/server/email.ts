@@ -3,6 +3,7 @@ import { env } from "$env/dynamic/private";
 import { getDb } from "$lib/db/client";
 import { bookings } from "$lib/db/schema/bookings";
 import { generateBookingToken } from "$lib/server/token";
+import { DEFAULT_TIMEZONE } from "$lib/types/database";
 
 const RESEND_API_KEY = env.RESEND_API_KEY;
 
@@ -57,7 +58,7 @@ export function buildBookingEmailLines(
 		type: string;
 		notes: string | null;
 	},
-	timezone = "Europe/Athens",
+	timezone = DEFAULT_TIMEZONE,
 ): string[] {
 	return [
 		`Customer: ${booking.customer_name}`,

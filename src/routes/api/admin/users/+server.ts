@@ -51,11 +51,7 @@ async function updateUser(
 		return new Response("Cannot assign higher privileges", { status: 403 });
 
 	const client = clerkClient;
-	const clerkUpdates: Record<string, unknown> = {};
-	if (password) clerkUpdates.password = password;
-	if (Object.keys(clerkUpdates).length) {
-		await client.users.updateUser(id, clerkUpdates);
-	}
+	if (password) await client.users.updateUser(id, { password });
 
 	const db = getDb();
 	if (full_name) await db.update(users).set({ fullName: full_name }).where(eq(users.id, id));

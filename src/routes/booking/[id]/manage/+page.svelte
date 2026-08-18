@@ -3,7 +3,7 @@ import Button from "$lib/components/ui/button/button.svelte";
 import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
 import Input from "$lib/components/ui/input/input.svelte";
 import Label from "$lib/components/ui/label/label.svelte";
-import type { Booking } from "$lib/types/database";
+import { type Booking, DEFAULT_TIMEZONE } from "$lib/types/database";
 
 const { data, form } = $props();
 
@@ -33,7 +33,7 @@ function fmt(iso: string): string {
 		year: "numeric",
 		hour: "2-digit",
 		minute: "2-digit",
-		timeZone: "Europe/Athens",
+		timeZone: DEFAULT_TIMEZONE,
 	});
 }
 </script>

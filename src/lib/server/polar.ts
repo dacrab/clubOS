@@ -37,9 +37,10 @@ export async function polarPost<T = unknown>(
 		headers: polarHeaders(),
 		body: JSON.stringify(body),
 	});
-	const data = await res.json();
+	const data: unknown = await res.json();
 	if (!res.ok) {
-		const msg = data.detail?.[0]?.msg || data.error || "Polar API error";
+		const err = data as { detail?: { msg?: string }[]; error?: string };
+		const msg = err.detail?.[0]?.msg || err.error || "Polar API error";
 		throw new Error(msg);
 	}
 	return data as T;
@@ -49,9 +50,10 @@ export async function polarGet<T = unknown>(path: string): Promise<T> {
 	const res = await fetch(`${POLAR_BASE}${path}`, {
 		headers: { Authorization: `Bearer ${polarToken()}` },
 	});
-	const data = await res.json();
+	const data: unknown = await res.json();
 	if (!res.ok) {
-		const msg = data.detail?.[0]?.msg || data.error || "Polar API error";
+		const err = data as { detail?: { msg?: string }[]; error?: string };
+		const msg = err.detail?.[0]?.msg || err.error || "Polar API error";
 		throw new Error(msg);
 	}
 	return data as T;
