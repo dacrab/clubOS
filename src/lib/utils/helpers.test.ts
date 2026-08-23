@@ -49,14 +49,14 @@ describe("shortId", () => {
 });
 
 describe("getActiveOrderItems", () => {
-	const item = (id: string, is_deleted: boolean): OrderItemView => ({
+	const item = (id: string, isDeleted: boolean): OrderItemView => ({
 		id,
 		quantity: 1,
-		unit_price: 1,
-		line_total: 1,
-		is_treat: false,
-		is_deleted,
-		product_ref: { id, name: id },
+		unitPrice: 1,
+		lineTotal: 1,
+		isTreat: false,
+		isDeleted,
+		productRef: { id, name: id },
 	});
 
 	it("filters out soft-deleted items", () => {

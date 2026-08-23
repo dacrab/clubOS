@@ -43,7 +43,7 @@ const roleBadgeVariant = $derived(getRoleBadgeVariant(session.user?.role));
 				<DropdownMenu>
 					<DropdownMenuTrigger><User class="icon-sm" /></DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
-						<DropdownMenuLabel>{session.user.username || session.user.email}</DropdownMenuLabel>
+						<DropdownMenuLabel>{session.user.fullName || session.user.id}</DropdownMenuLabel>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem>
 							<SignOutButton>

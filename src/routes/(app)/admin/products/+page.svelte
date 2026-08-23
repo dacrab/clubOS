@@ -35,14 +35,14 @@ const blankProduct = (): ProductForm => ({
 	name: "",
 	description: "",
 	price: 0,
-	stock_quantity: 0,
-	category_id: "",
-	image_url: "",
+	stockQuantity: 0,
+	categoryId: "",
+	imageUrl: "",
 });
-const blankCategory = (): { name: string; description: string; parent_id: string } => ({
+const blankCategory = (): { name: string; description: string; parentId: string } => ({
 	name: "",
 	description: "",
-	parent_id: "",
+	parentId: "",
 });
 
 let searchQuery = $state("");
@@ -93,9 +93,9 @@ function openProductEdit(p: Product): void {
 		name: p.name,
 		description: p.description ?? "",
 		price: p.price,
-		stock_quantity: p.stock_quantity,
-		category_id: p.category_id ?? "",
-		image_url: p.image_url ?? "",
+		stockQuantity: p.stockQuantity,
+		categoryId: p.categoryId ?? "",
+		imageUrl: p.imageUrl ?? "",
 	};
 	productOpen = true;
 }
@@ -109,7 +109,7 @@ function openCategoryEdit(cat: CategoryPartial): void {
 	categoryForm = {
 		name: cat.name,
 		description: cat.description ?? "",
-		parent_id: cat.parent_id ?? "",
+		parentId: cat.parentId ?? "",
 	};
 	categoryOpen = true;
 }
@@ -121,10 +121,9 @@ async function saveProduct(): Promise<void> {
 		name: productForm.name,
 		description: productForm.description || null,
 		price: productForm.price,
-		stock_quantity: productForm.stock_quantity,
-		category_id: productForm.category_id || null,
-		image_url: productForm.image_url || null,
-		...(!editingProduct && { facility_id: data.user.facilityId, created_by: data.user.id }),
+		stockQuantity: productForm.stockQuantity,
+		categoryId: productForm.categoryId || null,
+		imageUrl: productForm.imageUrl || null,
 	};
 	const ok = await runCrud(async () => {
 		if (editingProduct) {
@@ -144,8 +143,7 @@ async function saveCategory(): Promise<void> {
 	const payload = {
 		name: categoryForm.name,
 		description: categoryForm.description || null,
-		parent_id: categoryForm.parent_id || null,
-		...(!editingCategory && { facility_id: data.user.facilityId }),
+		parentId: categoryForm.parentId || null,
 	};
 	const ok = await runCrud(async () => {
 		if (editingCategory) {
@@ -195,7 +193,7 @@ async function confirmDeleteCategory(): Promise<void> {
 				</div>
 				<div class="flex-1">
 					<p class="font-semibold text-amber-800 dark:text-amber-200">{t("products.lowStockAlert")}</p>
-					<p class="text-sm text-amber-700 dark:text-amber-300">{data.lowStockProducts.map((p: Product) => `${p.name} (${p.stock_quantity})`).join(", ")}</p>
+					<p class="text-sm text-amber-700 dark:text-amber-300">{data.lowStockProducts.map((p) => `${p.name} (${p.stockQuantity})`).join(", ")}</p>
 				</div>
 			</div>
 		</Card>
@@ -221,12 +219,12 @@ async function confirmDeleteCategory(): Promise<void> {
 				</TableRow></TableHeader>
 				<TableBody>
 					{#each filtered as product (product.id)}
-						{@const badge = getStockBadge(product.stock_quantity)}
+						{@const badge = getStockBadge(product.stockQuantity)}
 						<TableRow>
 							<TableCell class="font-medium">{product.name}</TableCell>
-							<TableCell>{getCategoryName(product.category_id)}</TableCell>
+							<TableCell>{getCategoryName(product.categoryId)}</TableCell>
 							<TableCell>{fmtCurrency(product.price)}</TableCell>
-							<TableCell><Badge variant={badge.variant}>{product.stock_quantity < 0 ? "∞" : product.stock_quantity}</Badge></TableCell>
+							<TableCell><Badge variant={badge.variant}>{product.stockQuantity < 0 ? "∞" : product.stockQuantity}</Badge></TableCell>
 							<TableCell>
 								<div class="flex-center gap-1">
 									<Button variant="ghost" size="icon-sm" onclick={() => openProductEdit(product)} aria-label={t("common.edit")}><Pencil class="icon-sm" /></Button>
@@ -247,19 +245,19 @@ async function confirmDeleteCategory(): Promise<void> {
 	<div class="space-y-2"><Label for="desc">{t("common.description")}</Label><Input id="desc" bind:value={productForm.description} /></div>
 	<div class="grid grid-cols-2 gap-4">
 		<div class="space-y-2"><Label for="price">{t("common.price")}</Label><Input id="price" type="number" step="0.01" min="0" bind:value={productForm.price} required /></div>
-		<div class="space-y-2"><Label for="stock">{t("common.stock")}</Label><Input id="stock" type="number" bind:value={productForm.stock_quantity} /></div>
+		<div class="space-y-2"><Label for="stock">{t("common.stock")}</Label><Input id="stock" type="number" bind:value={productForm.stockQuantity} /></div>
 	</div>
 	<div class="space-y-2">
 		<Label>{t("products.category")}</Label>
-		<Select bind:value={productForm.category_id}>
-			<SelectTrigger selected={getCategoryName(productForm.category_id) || t("products.noCategory")} placeholder={t("products.selectCategory")} />
+		<Select bind:value={productForm.categoryId}>
+			<SelectTrigger selected={getCategoryName(productForm.categoryId) || t("products.noCategory")} placeholder={t("products.selectCategory")} />
 			<SelectContent>
 				<SelectItem value="">{t("products.noCategory")}</SelectItem>
 				{#each data.categories as cat (cat.id)}<SelectItem value={cat.id}>{cat.name}</SelectItem>{/each}
 			</SelectContent>
 		</Select>
 	</div>
-	<div class="space-y-2"><Label for="img">{t("products.imageUrl")}</Label><ImageUpload bucket="products" currentUrl={productForm.image_url} onUpload={(url) => productForm.image_url = url} /></div>
+	<div class="space-y-2"><Label for="img">{t("products.imageUrl")}</Label><ImageUpload currentUrl={productForm.imageUrl} onUpload={(url) => productForm.imageUrl = url} /></div>
 </FormDialog>
 
 <FormDialog bind:open={categoryOpen} title={editingCategory ? t("categories.editCategory") : t("categories.addCategory")} saving={savingCategory} onsubmit={saveCategory} onclose={() => categoryOpen = false}>
@@ -280,8 +278,8 @@ async function confirmDeleteCategory(): Promise<void> {
 	<div class="space-y-2"><Label for="catDesc">{t("common.description")}</Label><Input id="catDesc" bind:value={categoryForm.description} /></div>
 	<div class="space-y-2">
 		<Label>{t("categories.parentCategory")}</Label>
-		<Select bind:value={categoryForm.parent_id}>
-			<SelectTrigger selected={data.categories.find((c) => c.id === categoryForm.parent_id)?.name ?? t("categories.noParent")} placeholder={t("categories.noParent")} />
+		<Select bind:value={categoryForm.parentId}>
+			<SelectTrigger selected={data.categories.find((c) => c.id === categoryForm.parentId)?.name ?? t("categories.noParent")} placeholder={t("categories.noParent")} />
 			<SelectContent>
 				<SelectItem value="">{t("categories.noParent")}</SelectItem>
 				{#each data.categories.filter((c) => c.id !== editingCategory?.id) as cat (cat.id)}<SelectItem value={cat.id}>{cat.name}</SelectItem>{/each}

@@ -24,7 +24,7 @@ vi.mock("svelte-clerk/server", () => ({
 
 vi.mock("$lib/db/client", () => ({ getDb: () => qb }));
 
-import { DELETE, POST, PUT } from "./+server";
+import { DELETE, PATCH, POST } from "./+server";
 
 const json = (body: object, method = "POST"): Request =>
 	new Request("http://localhost", { method, body: JSON.stringify(body) });
@@ -61,7 +61,7 @@ describe("POST /api/admin/users", () => {
 	it("creates user and membership", async () => {
 		mockClerkCreateUser.mockResolvedValueOnce({ id: "new1" });
 		const res = await POST({
-			request: json({ email: "x@x.com", password: "pass123", role: "staff", full_name: "Test" }),
+			request: json({ email: "x@x.com", password: "pass123", role: "staff", fullName: "Test" }),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(200);
@@ -82,7 +82,7 @@ describe("POST /api/admin/users", () => {
 
 	it("returns 401 when not authenticated", async () => {
 		const res = await POST({
-			request: json({ email: "x@x.com", password: "pass123", role: "staff", full_name: "Test" }),
+			request: json({ email: "x@x.com", password: "pass123", role: "staff", fullName: "Test" }),
 			locals: guestLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(401);
@@ -93,7 +93,7 @@ describe("POST role hierarchy", () => {
 	it("prevents admin caller from creating owner", async () => {
 		mockMembershipRow("admin");
 		const res = await POST({
-			request: json({ email: "x@x.com", password: "pass123", role: "owner", full_name: "Admin" }),
+			request: json({ email: "x@x.com", password: "pass123", role: "owner", fullName: "Admin" }),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(403);
@@ -103,7 +103,7 @@ describe("POST role hierarchy", () => {
 	it("prevents staff caller from creating any user", async () => {
 		mockMembershipRow("staff");
 		const res = await POST({
-			request: json({ email: "x@x.com", password: "pass123", role: "staff", full_name: "Test" }),
+			request: json({ email: "x@x.com", password: "pass123", role: "staff", fullName: "Test" }),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(403);
@@ -112,35 +112,56 @@ describe("POST role hierarchy", () => {
 	it("allows owner caller to create owner", async () => {
 		mockClerkCreateUser.mockResolvedValueOnce({ id: "new1" });
 		const res = await POST({
-			request: json({ email: "x@x.com", password: "pass123", role: "owner", full_name: "Owner" }),
+			request: json({ email: "x@x.com", password: "pass123", role: "owner", fullName: "Owner" }),
 			locals: adminLocals,
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(200);
 	});
 });
 
-describe("PUT /api/admin/users", () => {
+describe("PATCH /api/admin/users", () => {
 	it("updates user and role", async () => {
-		const res = await PUT({
-			request: json({ id: "u2", full_name: "Updated", role: "manager" }, "PUT"),
+		mockClerkUpdateUser.mockResolvedValueOnce({});
+		const res = await PATCH({
+			request: json({ id: "u2", fullName: "Updated", role: "manager" }, "PATCH"),
 			locals: adminLocals,
-		} as Parameters<typeof POST>[0]);
+		} as Parameters<typeof PATCH>[0]);
 		expect(res.status).toBe(204);
 	});
 
-	it("returns 400 when id is missing", async () => {
-		const res = await PUT({
-			request: json({ full_name: "Updated" }, "PUT"),
+	it("rejects users outside the caller's tenant", async () => {
+		mockClerkUpdateUser.mockResolvedValueOnce({});
+		// 1st select → requireAdmin membership; 2nd select → target lookup misses.
+		qb.select
+			.mockReturnValueOnce({
+				from: () => ({
+					where: () => ({ limit: () => Promise.resolve([{ tenantId: "t1", role: "owner" }]) }),
+				}),
+			})
+			.mockReturnValueOnce({
+				from: () => ({ where: () => ({ limit: () => Promise.resolve([]) }) }),
+			});
+		const res = await PATCH({
+			request: json({ id: "u2", fullName: "Updated" }, "PATCH"),
 			locals: adminLocals,
-		} as Parameters<typeof POST>[0]);
+		} as Parameters<typeof PATCH>[0]);
+		expect(res.status).toBe(404);
+		expect(mockClerkUpdateUser).not.toHaveBeenCalled();
+	});
+
+	it("returns 400 when id is missing", async () => {
+		const res = await PATCH({
+			request: json({ fullName: "Updated" }, "PATCH"),
+			locals: adminLocals,
+		} as Parameters<typeof PATCH>[0]);
 		expect(res.status).toBe(400);
 	});
 
 	it("returns 401 when not authenticated", async () => {
-		const res = await PUT({
-			request: json({ id: "u2", full_name: "Updated" }, "PUT"),
+		const res = await PATCH({
+			request: json({ id: "u2", fullName: "Updated" }, "PATCH"),
 			locals: guestLocals,
-		} as Parameters<typeof POST>[0]);
+		} as Parameters<typeof PATCH>[0]);
 		expect(res.status).toBe(401);
 	});
 });

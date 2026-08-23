@@ -1,11 +1,13 @@
 import { json } from "@sveltejs/kit";
+import { clerkClient } from "svelte-clerk/server";
+import { env } from "$env/dynamic/private";
 import { PLANS_META } from "$lib/config/plans";
 import { CheckoutBodySchema } from "$lib/schemas";
 import { resolveUserContext } from "$lib/server/auth";
 import { createCheckout } from "$lib/server/polar";
 import type { RequestHandler } from "./$types";
 
-export const POST: RequestHandler = async ({ request, locals }) => {
+export const POST: RequestHandler = async ({ request, locals, url }) => {
 	const userId = locals.userId;
 	if (!userId) return json({ error: "Unauthorized" }, { status: 401 });
 
@@ -17,17 +19,29 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!plan) return json({ error: "Invalid plan" }, { status: 400 });
 
 	const ctx = await resolveUserContext(userId);
-	const tenantId = ctx.membership?.tenantId ?? undefined;
+	const role = ctx.membership?.role;
+	if (!ctx.membership || (role !== "owner" && role !== "admin"))
+		return json({ error: "Forbidden" }, { status: 403 });
+	const tenantId = ctx.membership.tenantId;
 
 	try {
-		const origin = request.headers.get("origin") ?? "http://localhost:5173";
+		let email = "";
+		try {
+			const clerkUser = await clerkClient.users.getUser(userId);
+			email = clerkUser.emailAddresses[0]?.emailAddress ?? "";
+		} catch {
+			// Checkout still works without a prefilled customer email.
+		}
+
+		// Configured ORIGIN wins; otherwise the request URL (never raw headers).
+		const base = env.ORIGIN ?? url.origin;
 		const checkout = await createCheckout({
 			productId: plan.productId,
-			email: "",
+			email,
 			userId,
-			tenantId,
-			successUrl: `${origin}/api/billing/success?checkout_id={CHECKOUT_ID}`,
-			cancelUrl: `${origin}/billing`,
+			tenantId: tenantId ?? undefined,
+			successUrl: `${base}/api/billing/success?checkout_id={CHECKOUT_ID}`,
+			cancelUrl: `${base}/billing`,
 		});
 
 		return json({ url: checkout.url });

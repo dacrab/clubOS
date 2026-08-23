@@ -1,10 +1,11 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { getDb } from "$lib/db/client";
 import { memberships } from "$lib/db/schema/memberships";
 import { registerSessions } from "$lib/db/schema/register-sessions";
 import { subscriptions } from "$lib/db/schema/subscriptions";
 import { tenants } from "$lib/db/schema/tenants";
 import { users } from "$lib/db/schema/users";
+import { resolveFacilityIds } from "$lib/server/scope";
 import type { MemberRole } from "$lib/types/database";
 
 export const EMPTY_CTX: App.UserContext = {
@@ -37,16 +38,17 @@ export async function resolveUserContext(userId: string): Promise<App.UserContex
 	const memRow = mems[0];
 	if (!memRow) return EMPTY_CTX;
 
-	const activeSessions = await db
-		.select()
-		.from(registerSessions)
-		.where(
-			and(
-				eq(registerSessions.facilityId, memRow.facilityId ?? ""),
-				isNull(registerSessions.closedAt),
-			),
-		)
-		.limit(1);
+	const fids = await resolveFacilityIds({
+		tenantId: memRow.tenantId,
+		facilityId: memRow.facilityId,
+	});
+	const activeSessions = fids.length
+		? await db
+				.select()
+				.from(registerSessions)
+				.where(and(inArray(registerSessions.facilityId, fids), isNull(registerSessions.closedAt)))
+				.limit(1)
+		: [];
 
 	const VALID_ROLES: readonly MemberRole[] = ["owner", "admin", "manager", "staff"];
 	const role = VALID_ROLES.includes(memRow.role) ? memRow.role : "staff";

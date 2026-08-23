@@ -24,8 +24,7 @@ let selectedOrder = $state<OrderView | null>(null);
 let showDialog = $state(false);
 let expandedSession = $state<string | null>(null);
 
-const getSessionOrders = (sid: string) =>
-	data.orders.filter((o: OrderView) => o.session_id === sid);
+const getSessionOrders = (sid: string) => data.orders.filter((o) => o.sessionId === sid);
 </script>
 
 <div class="space-y-6">
@@ -37,15 +36,15 @@ const getSessionOrders = (sid: string) =>
 		<div class="space-y-4">
 			{#each data.sessions as session (session.id)}
 				{@const orders = getSessionOrders(session.id)}
-				{@const sessionTotal = orders.reduce((s: number, o: OrderView) => s + o.total_amount, 0)}
+				{@const sessionTotal = orders.reduce((s: number, o) => s + o.totalAmount, 0)}
 				{@const expanded = expandedSession === session.id}
 				<Card>
 					<CardHeader class="pb-3">
 						<div class="flex items-center justify-between">
 							<div class="space-y-1">
 								<CardTitle class="text-base flex items-center gap-2">
-									{fmtDate(session.opened_at ?? "")}
-									<Badge variant={session.closed_at ? "secondary" : "success"}>{t(session.closed_at ? "register.sessionClosed" : "register.sessionOpen")}</Badge>
+									{fmtDate(session.openedAt ?? "")}
+									<Badge variant={session.closedAt ? "secondary" : "success"}>{t(session.closedAt ? "register.sessionClosed" : "register.sessionOpen")}</Badge>
 								</CardTitle>
 								<p class="text-sm text-muted-foreground">{orders.length} {t("nav.orders").toLowerCase()} · {fmtCurrency(sessionTotal)}</p>
 							</div>
@@ -63,9 +62,9 @@ const getSessionOrders = (sid: string) =>
 									{#each orders as order (order.id)}
 										<TableRow class="cursor-pointer hover:bg-muted/50" onclick={() => { selectedOrder = order; showDialog = true; }}>
 											<TableCell class="font-mono text-sm">{shortId(order.id)}</TableCell>
-											<TableCell class="text-sm">{fmtDate(order.created_at)}</TableCell>
-											<TableCell><Badge variant="outline">{getActiveOrderItems(order.order_items).length} {t("orders.itemsCount")}</Badge></TableCell>
-											<TableCell class="font-medium">{fmtCurrency(order.total_amount)}</TableCell>
+											<TableCell class="text-sm">{fmtDate(order.createdAt)}</TableCell>
+											<TableCell><Badge variant="outline">{getActiveOrderItems(order.orderItems).length} {t("orders.itemsCount")}</Badge></TableCell>
+											<TableCell class="font-medium">{fmtCurrency(order.totalAmount)}</TableCell>
 											<TableCell><Button variant="ghost" size="icon-sm" onclick={(e: MouseEvent) => { e.stopPropagation(); selectedOrder = order; showDialog = true; }} aria-label={t("common.view")}><Eye class="h-4 w-4" /></Button></TableCell>
 										</TableRow>
 									{/each}

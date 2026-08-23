@@ -158,7 +158,9 @@
 		"category": "Κατηγορία",
 		"selectCategory": "Επιλέξτε κατηγορία",
 		"noCategory": "Χωρίς κατηγορία",
-		"imageUrl": "URL Εικόνας",
+		"imageUrl": "Εικόνα",
+		"imageTooLarge": "Η εικόνα πρέπει να είναι κάτω από 500 KB",
+		"imageStoredInline": "Αποθηκεύεται με το προϊόν (έως 500 KB)",
 		"lowStock": "Χαμηλό Απόθεμα",
 		"lowStockAlert": "Ειδοποίηση χαμηλού αποθέματος",
 		"outOfStock": "Εξαντλημένο",
@@ -335,14 +337,14 @@
 		"preventOverlaps": "Αποτροπή επικαλύψεων",
 		"preventOverlapsDesc": "Αποτροπή διπλών κρατήσεων",
 		"theme": "Θέμα",
-		"themeDesc": "Προεπιλεγμένο θέμα για νέους χρήστες",
+		"themeDesc": "Αποθηκεύεται ανά συσκευή (browser)",
 		"themes": {
 			"system": "Σύστημα",
 			"light": "Φωτεινό",
 			"dark": "Σκούρο"
 		},
 		"language": "Γλώσσα",
-		"languageDesc": "Προεπιλεγμένη γλώσσα για νέους χρήστες",
+		"languageDesc": "Αποθηκεύεται ανά συσκευή (browser)",
 		"languages": {
 			"en": "Αγγλικά",
 			"el": "Ελληνικά"
@@ -383,5 +385,25 @@
 	"calendar": {
 		"time": "Ώρα",
 		"apply": "Εφαρμογή"
+	},
+	"manage": {
+		"title": "Διαχείριση Κράτησης",
+		"yourBooking": "Η Κράτησή σας",
+		"name": "Όνομα",
+		"phone": "Τηλέφωνο",
+		"date": "Ημερομηνία",
+		"type": "Τύπος",
+		"status": "Κατάσταση",
+		"cancelBooking": "Ακύρωση Κράτησης",
+		"requestReschedule": "Αίτηση Μετακίνησης",
+		"reasonLabel": "Λόγος (προαιρετικό)",
+		"reasonPlaceholder": "Γιατί ακυρώνετε;",
+		"confirmCancellation": "Επιβεβαίωση Ακύρωσης",
+		"keepBooking": "Διατήρηση Κράτησης",
+		"messageLabel": "Πείτε μας την επιθυμητή νέα ημερομηνία/ώρα",
+		"messagePlaceholder": "π.χ. ίδια ώρα το επόμενο Σάββατο",
+		"sendRequest": "Αποστολή Αιτήματος",
+		"canceledSuccess": "Η κράτηση ακυρώθηκε με επιτυχία.",
+		"rescheduleSent": "Το αίτημα στάλθηκε. Το προσωπικό θα επικοινωνήσει μαζί σας."
 	}
 }

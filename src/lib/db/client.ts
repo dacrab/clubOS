@@ -3,7 +3,9 @@ import postgres from "postgres";
 import { env } from "$env/dynamic/private";
 import * as schema from "./schema";
 
-let db: ReturnType<typeof drizzle<typeof schema>> | undefined;
+type Db = ReturnType<typeof drizzle<typeof schema>>;
+
+let db: Db | undefined;
 
 export function getDb() {
 	if (db) return db;
@@ -21,3 +23,6 @@ export function getDb() {
 	db = drizzle(client, { schema });
 	return db;
 }
+
+/** Either the root db handle or a transaction bound to it. */
+export type TxOrDb = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];

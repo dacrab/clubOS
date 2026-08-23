@@ -1,24 +1,10 @@
 import { redirect } from "@sveltejs/kit";
 import { PLANS_META } from "$lib/config/plans";
-import { getCheckout, upsertSubscription } from "$lib/server/polar";
+import { getCheckout, safeMeta, safeStr, toIso, upsertSubscription } from "$lib/server/polar";
 import type { RequestHandler } from "./$types";
 
-function safeStr(val: unknown): string | null {
-	return typeof val === "string" ? val : null;
-}
-
-function toStringRecord(val: unknown): Record<string, string> | null {
-	if (!val || typeof val !== "object") return null;
-	const result: Record<string, string> = {};
-	for (const [k, v] of Object.entries(val)) {
-		if (typeof v === "string") result[k] = v;
-	}
-	return result;
-}
-
-function safeMeta(val: unknown): Record<string, string> | null {
-	const r = toStringRecord(val);
-	return r && typeof r.tenant_id === "string" ? r : null;
+function isRedirect(err: unknown): err is { status: number; location: string } {
+	return typeof err === "object" && err !== null && "status" in err && "location" in err;
 }
 
 export const GET: RequestHandler = async ({ url, locals }) => {
@@ -46,14 +32,14 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			subscriptionId,
 			status: "active",
 			planName: plan?.name ?? "Subscription",
-			currentPeriodEnd: null,
+			currentPeriodEnd: toIso(checkoutData.current_period_end),
 			trialStart: null,
 			trialEnd: null,
 		});
 
 		throw redirect(307, "/admin?welcome=true");
 	} catch (err) {
-		if (err && typeof err === "object" && "status" in err) throw err;
+		if (isRedirect(err)) throw err;
 		throw redirect(307, "/billing?error=payment_failed");
 	}
 };

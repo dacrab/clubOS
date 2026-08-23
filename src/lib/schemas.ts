@@ -52,16 +52,12 @@ export const OrderCreateFilterSchema = z.object({
 		.array(
 			z.object({
 				productId: z.string().min(1),
-				productName: z.string().min(1),
 				quantity: z.number().int().positive(),
-				unitPrice: z.number(),
-				lineTotal: z.number(),
 				isTreat: z.boolean().optional(),
 			}),
 		)
 		.min(1),
 	couponCount: z.number().int().min(0).optional(),
-	couponValue: z.number().min(0).optional(),
 });
 
 const ProductFormSchema = z
@@ -69,50 +65,50 @@ const ProductFormSchema = z
 		name: z.string().min(1),
 		description: z.string().nullable().optional(),
 		price: z.number().min(0),
-		stock_quantity: z.number().int().min(0).optional(),
-		category_id: z.string().nullable().optional(),
-		image_url: z.string().nullable().optional(),
+		stockQuantity: z.number().int().min(0).optional(),
+		categoryId: z.string().nullable().optional(),
+		imageUrl: z.string().nullable().optional(),
 	})
 	.transform((v) => ({
 		name: v.name,
 		description: v.description ?? null,
 		price: v.price,
-		stockQuantity: v.stock_quantity ?? 0,
-		categoryId: v.category_id ?? null,
-		imageUrl: v.image_url ?? null,
+		stockQuantity: v.stockQuantity ?? 0,
+		categoryId: v.categoryId ?? null,
+		imageUrl: v.imageUrl ?? null,
 	}));
 
 const CategoryFormSchema = z
 	.object({
 		name: z.string().min(1),
 		description: z.string().nullable().optional(),
-		parent_id: z.string().nullable().optional(),
+		parentId: z.string().nullable().optional(),
 	})
 	.transform((v) => ({
 		name: v.name,
 		description: v.description ?? null,
-		parentId: v.parent_id ?? null,
+		parentId: v.parentId ?? null,
 	}));
 
 const BookingFormSchema = z
 	.object({
 		type: BookingTypeSchema,
-		customer_name: z.string().min(1),
-		customer_phone: z.string().nullable().optional(),
-		customer_email: z.string().nullable().optional(),
-		starts_at: IsoDateSchema,
-		ends_at: IsoDateSchema,
+		customerName: z.string().min(1),
+		customerPhone: z.string().nullable().optional(),
+		customerEmail: z.string().nullable().optional(),
+		startsAt: IsoDateSchema,
+		endsAt: IsoDateSchema,
 		status: BookingStatusSchema.optional(),
 		notes: z.string().nullable().optional(),
 		details: z.custom<BookingDetails>().optional(),
 	})
 	.transform((v) => ({
 		type: v.type,
-		customerName: v.customer_name,
-		customerPhone: v.customer_phone || null,
-		customerEmail: v.customer_email || null,
-		startsAt: new Date(v.starts_at),
-		endsAt: new Date(v.ends_at),
+		customerName: v.customerName,
+		customerPhone: v.customerPhone || null,
+		customerEmail: v.customerEmail || null,
+		startsAt: new Date(v.startsAt),
+		endsAt: new Date(v.endsAt),
 		status: v.status,
 		notes: v.notes || null,
 		details: v.details ?? {},
@@ -120,12 +116,12 @@ const BookingFormSchema = z
 
 const RegisterSessionOpenSchema = z
 	.object({
-		opening_cash: z.number().min(0).optional(),
-		opened_at: IsoDateSchema.optional(),
+		openingCash: z.number().min(0).optional(),
+		openedAt: IsoDateSchema.optional(),
 	})
 	.transform((v) => ({
-		openingCash: v.opening_cash ?? 0,
-		...(v.opened_at ? { openedAt: new Date(v.opened_at) } : {}),
+		openingCash: v.openingCash ?? 0,
+		...(v.openedAt ? { openedAt: new Date(v.openedAt) } : {}),
 	}));
 
 export { BookingFormSchema, CategoryFormSchema, ProductFormSchema, RegisterSessionOpenSchema };
@@ -135,10 +131,6 @@ export const CheckoutBodySchema = z.object({
 });
 
 export const BookingConfirmBodySchema = z.object({
-	id: BookingIdSchema,
-});
-
-export const BookingRemindBodySchema = z.object({
 	id: BookingIdSchema,
 });
 
@@ -191,14 +183,14 @@ export const TenantSettingsSchema = z
 
 export const AdminUserCreateSchema = z.object({
 	email: z.string().email(),
-	full_name: z.string().min(1),
+	fullName: z.string().min(1),
 	password: z.string().min(6),
 	role: MemberRoleSchema,
 });
 
 export const AdminUserUpdateSchema = z.object({
 	id: z.string(),
-	full_name: z.string().optional(),
+	fullName: z.string().optional(),
 	role: MemberRoleSchema.optional(),
 	password: z.string().optional(),
 });

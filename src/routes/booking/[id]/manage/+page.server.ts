@@ -3,7 +3,6 @@ import { eq, sql } from "drizzle-orm";
 import { getDb } from "$lib/db/client";
 import { bookings } from "$lib/db/schema/bookings";
 import { verifyBookingToken } from "$lib/server/token";
-import { mapRow } from "$lib/utils/mapper";
 import type { Actions, PageServerLoad } from "./$types";
 
 function validateAccess(params: { id: string }, url: URL): void {
@@ -19,7 +18,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 
 	if (!booking) throw error(404, "Booking not found");
 
-	return { booking: mapRow(booking) };
+	return { booking };
 };
 
 export const actions: Actions = {

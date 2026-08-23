@@ -11,7 +11,7 @@ vi.mock("$lib/db/client", () => ({
 }));
 
 import type { MemberRole } from "$lib/types/database";
-import { canAssign, requireAdmin as rawRequireAdmin, text } from "./admin-helpers";
+import { canAssign, requireAdmin as rawRequireAdmin } from "./admin-helpers";
 
 const requireAdmin = rawRequireAdmin as (
 	userId: string | null,
@@ -54,12 +54,5 @@ describe("requireAdmin", () => {
 		const result = await requireAdmin("non-existent");
 		expect(result).toBeInstanceOf(Response);
 		expect((result as Response).status).toBe(403);
-	});
-});
-
-describe("text", () => {
-	it("creates a Response with given message and status", () => {
-		const res = text("Not Found", 404);
-		expect(res.status).toBe(404);
 	});
 });

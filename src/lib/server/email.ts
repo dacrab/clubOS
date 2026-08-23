@@ -4,19 +4,11 @@ import { getDb } from "$lib/db/client";
 import { bookings } from "$lib/db/schema/bookings";
 import { generateBookingToken } from "$lib/server/token";
 import { DEFAULT_TIMEZONE } from "$lib/types/database";
+import { escapeHtml } from "$lib/utils/html";
 
 const RESEND_API_KEY = env.RESEND_API_KEY;
 
 const FROM = env.EMAIL_FROM ?? "ClubOS <bookings@clubos.app>";
-
-function escapeHtml(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;")
-		.replace(/'/g, "&#39;");
-}
 
 function jsonResponse(body: Record<string, unknown>, status = 200): Response {
 	return new Response(JSON.stringify(body), {
@@ -52,18 +44,18 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
 
 export function buildBookingEmailLines(
 	booking: {
-		customer_name: string;
-		customer_phone: string | null;
-		starts_at: string;
+		customerName: string;
+		customerPhone: string | null;
+		startsAt: string;
 		type: string;
 		notes: string | null;
 	},
 	timezone = DEFAULT_TIMEZONE,
 ): string[] {
 	return [
-		`Customer: ${booking.customer_name}`,
-		`Phone: ${booking.customer_phone ?? "—"}`,
-		`Date: ${new Date(booking.starts_at).toLocaleString("en-GB", { timeZone: timezone })}`,
+		`Customer: ${booking.customerName}`,
+		`Phone: ${booking.customerPhone ?? "—"}`,
+		`Date: ${new Date(booking.startsAt).toLocaleString("en-GB", { timeZone: timezone })}`,
 		`Type: ${booking.type}`,
 		booking.notes ? `Notes: ${booking.notes}` : null,
 	].filter((x): x is string => x !== null);
@@ -112,13 +104,13 @@ export async function sendBookingEmail(
 
 	await sendEmail(
 		booking.customerEmail,
-		`${subjectPrefix} — ${escapeHtml(booking.customerName)}`,
+		`${subjectPrefix} — ${booking.customerName}`,
 		buildBookingEmailHtml(
 			heading,
 			buildBookingEmailLines({
-				customer_name: booking.customerName,
-				customer_phone: booking.customerPhone,
-				starts_at: booking.startsAt.toISOString(),
+				customerName: booking.customerName,
+				customerPhone: booking.customerPhone,
+				startsAt: booking.startsAt.toISOString(),
 				type: booking.type,
 				notes: booking.notes,
 			}),

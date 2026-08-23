@@ -6,13 +6,7 @@ export const session = {
 	get user() {
 		return user;
 	},
-	get isAuthenticated() {
-		return user !== null;
-	},
 	setUser(u: SessionUser | null) {
 		user = u;
-	},
-	clear() {
-		user = null;
 	},
 };

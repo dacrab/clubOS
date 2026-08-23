@@ -42,15 +42,7 @@ type Props = {
 	search?: string;
 };
 
-let {
-	type,
-	bookings,
-	user,
-	icon = Package,
-	page = 1,
-	totalPages = 1,
-	search = "",
-}: Props = $props();
+let { type, bookings, icon = Package, page = 1, totalPages = 1, search = "" }: Props = $props();
 
 const isBirthday = $derived(type === "birthday");
 const prefix = $derived(isBirthday ? "bookings.birthday" : "bookings.football");
@@ -62,10 +54,10 @@ let showDialog = $state(false);
 let editingItem = $state<Booking | null>(null);
 let saving = $state(false);
 type FormData = {
-	customer_name: string;
-	customer_phone: string;
-	customer_email: string;
-	starts_at: string;
+	customerName: string;
+	customerPhone: string;
+	customerEmail: string;
+	startsAt: string;
 	notes: string;
 	status: BookingStatus;
 	num_children: number;
@@ -74,10 +66,10 @@ type FormData = {
 	num_players: number;
 };
 let formData = $state<FormData>({
-	customer_name: "",
-	customer_phone: "",
-	customer_email: "",
-	starts_at: "",
+	customerName: "",
+	customerPhone: "",
+	customerEmail: "",
+	startsAt: "",
 	notes: "",
 	status: "confirmed",
 	num_children: 1,
@@ -91,10 +83,10 @@ function openDialog(item?: Booking) {
 	if (item) {
 		const details = item.details ?? {};
 		formData = {
-			customer_name: item.customer_name,
-			customer_phone: item.customer_phone ?? "",
-			customer_email: item.customer_email ?? "",
-			starts_at: item.starts_at.slice(0, 16),
+			customerName: item.customerName,
+			customerPhone: item.customerPhone ?? "",
+			customerEmail: item.customerEmail ?? "",
+			startsAt: formatDateTimeLocal(item.startsAt),
 			notes: item.notes ?? "",
 			status: item.status,
 			num_children: details.num_children ?? 1,
@@ -106,10 +98,10 @@ function openDialog(item?: Booking) {
 		const defaultHour = isBirthday ? DEFAULT_HOUR.birthday : DEFAULT_HOUR.football;
 		const startsAt = formatDateTimeLocal(tomorrowAt(defaultHour));
 		formData = {
-			customer_name: "",
-			customer_phone: "",
-			customer_email: "",
-			starts_at: startsAt,
+			customerName: "",
+			customerPhone: "",
+			customerEmail: "",
+			startsAt,
 			notes: "",
 			status: "confirmed",
 			num_children: 1,
@@ -124,7 +116,6 @@ function openDialog(item?: Booking) {
 async function checkConflict(startsAt: Date, endsAt: Date): Promise<boolean> {
 	const result = await api<{ conflict: boolean }>("bookings.checkConflict", {
 		filter: {
-			facilityId: user.facilityId,
 			type,
 			startsAt: startsAt.toISOString(),
 			endsAt: endsAt.toISOString(),
@@ -135,35 +126,29 @@ async function checkConflict(startsAt: Date, endsAt: Date): Promise<boolean> {
 }
 
 async function handleSave(): Promise<void> {
-	if (!formData.customer_name || !formData.customer_phone || !formData.starts_at) {
+	if (!formData.customerName || !formData.customerPhone || !formData.startsAt) {
 		toast.error(t("common.error"));
 		return;
 	}
 	saving = true;
 	try {
-		const startsAt = new Date(formData.starts_at);
+		const startsAt = new Date(formData.startsAt);
 		const durationMin = isBirthday
 			? settings.current.birthday_duration_min
 			: settings.current.football_duration_min;
 		const endsAt = new Date(startsAt.getTime() + durationMin * 60 * 1000);
-
-		if (settings.current.prevent_overlaps && (await checkConflict(startsAt, endsAt))) {
-			toast.error(t(`${prefix}.conflict`));
-			return;
-		}
 
 		const details: BookingDetails = isBirthday
 			? { num_children: formData.num_children, num_adults: formData.num_adults }
 			: { field_number: formData.field_number, num_players: formData.num_players };
 
 		const payload = {
-			facility_id: user.facilityId,
 			type,
-			customer_name: formData.customer_name,
-			customer_phone: formData.customer_phone,
-			customer_email: formData.customer_email || null,
-			starts_at: startsAt.toISOString(),
-			ends_at: endsAt.toISOString(),
+			customerName: formData.customerName,
+			customerPhone: formData.customerPhone,
+			customerEmail: formData.customerEmail || null,
+			startsAt: startsAt.toISOString(),
+			endsAt: endsAt.toISOString(),
 			status: formData.status,
 			notes: formData.notes || null,
 			details,
@@ -171,19 +156,20 @@ async function handleSave(): Promise<void> {
 
 		let newId: string | null = null;
 		const ok = await runCrud(async () => {
+			if (settings.current.prevent_overlaps && (await checkConflict(startsAt, endsAt))) {
+				throw new Error(t(`${prefix}.conflict`));
+			}
 			if (editingItem) {
 				await api("bookings.update", { data: payload, filter: { id: editingItem.id } });
 				return {};
 			}
-			const result = await api<{ id: string }>("bookings.insert", {
-				data: { ...payload, created_by: user.id },
-			});
+			const result = await api<{ id: string }>("bookings.insert", { data: payload });
 			newId = result.id ?? null;
 			return {};
 		});
 		if (ok) {
 			showDialog = false;
-			if (newId && payload.customer_email) {
+			if (newId && payload.customerEmail) {
 				fetch("/api/booking/confirm", {
 					method: "POST",
 					headers: { "content-type": "application/json" },
@@ -260,10 +246,10 @@ async function confirmDelete(): Promise<void> {
 						{@const details = item.details ?? {}}
 						<TableRow>
 							<TableCell>
-								<p class="font-medium">{item.customer_name}</p>
-								<p class="text-sm text-muted-foreground">{item.customer_phone}</p>
+								<p class="font-medium">{item.customerName}</p>
+								<p class="text-sm text-muted-foreground">{item.customerPhone}</p>
 							</TableCell>
-							<TableCell>{fmtDate(item.starts_at)}</TableCell>
+							<TableCell>{fmtDate(item.startsAt)}</TableCell>
 							{#if isBirthday}
 								<TableCell>
 									{t("common.kidsAndAdults")
@@ -301,19 +287,19 @@ async function confirmDelete(): Promise<void> {
 <FormDialog bind:open={showDialog} title={editingItem ? t(`${prefix}.edit`) : t(`${prefix}.create`)} {saving} onsubmit={handleSave} onclose={() => showDialog = false}>
 	<div class="space-y-2">
 		<Label for="name">{t("bookings.customerName")}</Label>
-		<Input id="name" bind:value={formData.customer_name} required />
+		<Input id="name" bind:value={formData.customerName} required />
 	</div>
 	<div class="space-y-2">
 		<Label for="phone">{t("bookings.customerPhone")}</Label>
-		<Input id="phone" bind:value={formData.customer_phone} required />
+		<Input id="phone" bind:value={formData.customerPhone} required />
 	</div>
 	<div class="space-y-2">
 		<Label for="email">Email</Label>
-		<Input id="email" type="email" bind:value={formData.customer_email} placeholder="customer@example.com" />
+		<Input id="email" type="email" bind:value={formData.customerEmail} placeholder="customer@example.com" />
 	</div>
 	<div class="space-y-2">
 		<Label>{t("bookings.dateTime")}</Label>
-		<DatePicker bind:value={formData.starts_at} enableTime={true} />
+		<DatePicker bind:value={formData.startsAt} enableTime={true} />
 	</div>
 	{#if isBirthday}
 		<div class="grid grid-cols-2 gap-4">
@@ -357,4 +343,4 @@ async function confirmDelete(): Promise<void> {
 	</div>
 </FormDialog>
 
-<ConfirmDelete bind:open={deleteOpen} name={deleteTarget?.customer_name ?? ""} onconfirm={confirmDelete} oncancel={() => deleteOpen = false} />
+<ConfirmDelete bind:open={deleteOpen} name={deleteTarget?.customerName ?? ""} onconfirm={confirmDelete} oncancel={() => deleteOpen = false} />

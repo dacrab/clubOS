@@ -1,12 +1,19 @@
 import { json } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
 import { PLANS_META } from "$lib/config/plans";
-import { upsertSubscription, validateStatus } from "$lib/server/polar";
+import { safeMeta, safeStr, toIso, upsertSubscription, validateStatus } from "$lib/server/polar";
 import type { RequestHandler } from "./$types";
 
 const enc = new TextEncoder();
 const toHex = (buf: ArrayBuffer): string =>
 	Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+
+function constantTimeEqual(a: string, b: string): boolean {
+	if (a.length !== b.length) return false;
+	let diff = 0;
+	for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+	return diff === 0;
+}
 
 async function verifySignature(payload: string, header: string, secret: string): Promise<boolean> {
 	const parts = Object.fromEntries(
@@ -27,22 +34,13 @@ async function verifySignature(payload: string, header: string, secret: string):
 		["sign"],
 	);
 	const signed = await crypto.subtle.sign("HMAC", key, enc.encode(`${timestamp}.${payload}`));
-	return toHex(signed) === sig;
+	return constantTimeEqual(toHex(signed), sig);
 }
 
-function safeStr(val: unknown): string | null {
-	return typeof val === "string" ? val : null;
-}
-
-function safeMeta(val: unknown): Record<string, string> | null {
-	if (!val || typeof val !== "object") return null;
-	const r = val as Record<string, unknown>;
-	if (typeof r.tenant_id !== "string") return null;
-	const result: Record<string, string> = {};
-	for (const [k, v] of Object.entries(r)) {
-		if (typeof v === "string") result[k] = v;
-	}
-	return result;
+function firstProductId(products: unknown): string | null {
+	if (!Array.isArray(products) || products.length === 0) return null;
+	const first = products[0];
+	return first && typeof first === "object" ? safeStr((first as Record<string, unknown>).id) : null;
 }
 
 async function syncSubscription(
@@ -65,16 +63,6 @@ async function syncSubscription(
 		trialStart: null,
 		trialEnd: null,
 	});
-}
-
-function toIso(value: unknown): string | null {
-	return typeof value === "string" ? new Date(value).toISOString() : null;
-}
-
-function firstProductId(products: unknown): string | null {
-	if (!Array.isArray(products) || products.length === 0) return null;
-	const first = products[0];
-	return first && typeof first === "object" ? safeStr((first as Record<string, unknown>).id) : null;
 }
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -137,18 +125,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			});
 			break;
 		}
-		case "subscription.canceled": {
-			const meta = safeMeta(eventData.customer_metadata);
-			const tenantId = meta?.tenant_id ?? null;
-			if (!tenantId) break;
-
-			await syncSubscription(tenantId, {
-				customerId: safeStr(eventData.customer_id) ?? undefined,
-				subscriptionId: safeStr(eventData.id) ?? undefined,
-				status: "canceled",
-			});
-			break;
-		}
+		case "subscription.canceled":
 		case "subscription.revoked": {
 			const meta = safeMeta(eventData.customer_metadata);
 			const tenantId = meta?.tenant_id ?? null;
@@ -157,7 +134,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			await syncSubscription(tenantId, {
 				customerId: safeStr(eventData.customer_id) ?? undefined,
 				subscriptionId: safeStr(eventData.id) ?? undefined,
-				status: "past_due",
+				status: "canceled",
 			});
 			break;
 		}

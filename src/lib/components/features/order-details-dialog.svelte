@@ -33,7 +33,7 @@ let { open = $bindable(), order }: Props = $props();
 		</DialogHeader>
 		{#if order}
 			<div class="space-y-4">
-				<div class="text-sm text-muted-foreground">{fmtDate(order.created_at)}</div>
+				<div class="text-sm text-muted-foreground">{fmtDate(order.createdAt)}</div>
 				<div class="rounded-lg border">
 					<Table>
 						<TableHeader>
@@ -45,12 +45,12 @@ let { open = $bindable(), order }: Props = $props();
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{#each getActiveOrderItems(order.order_items) as item (item.id)}
+							{#each getActiveOrderItems(order.orderItems) as item (item.id)}
 								<TableRow>
 									<TableCell>
 										<div class="flex items-center gap-2">
-											{item.product_ref?.name ?? "Unknown"}
-											{#if item.is_treat}
+											{item.productRef?.name ?? "Unknown"}
+											{#if item.isTreat}
 												<Badge variant="secondary" class="text-xs">
 													<Gift class="h-3 w-3 mr-1" />{t("orders.treat")}
 												</Badge>
@@ -58,8 +58,8 @@ let { open = $bindable(), order }: Props = $props();
 										</div>
 									</TableCell>
 									<TableCell class="text-center">{item.quantity}</TableCell>
-									<TableCell class="text-right">{fmtCurrency(item.unit_price)}</TableCell>
-									<TableCell class="text-right">{item.is_treat ? "-" : fmtCurrency(item.line_total)}</TableCell>
+									<TableCell class="text-right">{fmtCurrency(item.unitPrice)}</TableCell>
+									<TableCell class="text-right">{item.isTreat ? "-" : fmtCurrency(item.lineTotal)}</TableCell>
 								</TableRow>
 							{:else}
 								<TableRow>
@@ -77,16 +77,16 @@ let { open = $bindable(), order }: Props = $props();
 						<span>{t("orders.subtotal")}</span>
 						<span>{fmtCurrency(order.subtotal)}</span>
 					</div>
-					{#if order.discount_amount > 0}
+					{#if order.discountAmount > 0}
 						<div class="flex justify-between text-muted-foreground">
-							<span>{t("orders.discount")} ({order.coupon_count} {t("orders.coupons").toLowerCase()})</span>
-							<span>-{fmtCurrency(order.discount_amount)}</span>
+							<span>{t("orders.discount")} ({order.couponCount} {t("orders.coupons").toLowerCase()})</span>
+							<span>-{fmtCurrency(order.discountAmount)}</span>
 						</div>
 					{/if}
 					<Separator />
 					<div class="flex justify-between text-lg font-bold">
 						<span>{t("orders.total")}</span>
-						<span>{fmtCurrency(order.total_amount)}</span>
+						<span>{fmtCurrency(order.totalAmount)}</span>
 					</div>
 				</div>
 			</div>

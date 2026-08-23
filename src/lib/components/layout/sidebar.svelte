@@ -12,6 +12,7 @@ import {
 	ShoppingCart,
 	Users,
 } from "@lucide/svelte";
+import { SignOutButton } from "svelte-clerk";
 import { page } from "$app/state";
 import Button from "$lib/components/ui/button/button.svelte";
 import Separator from "$lib/components/ui/separator/separator.svelte";
@@ -68,9 +69,11 @@ const isActive = (href: string) =>
 	</nav>
 	<Separator />
 	<div class="p-2">
-		<a href="/logout" class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/50">
-			<LogOut class="h-5 w-5 shrink-0" />{#if !collapsed}<span>{t("nav.logout")}</span>{/if}
-		</a>
+		<SignOutButton>
+			<button class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/50">
+				<LogOut class="h-5 w-5 shrink-0" />{#if !collapsed}<span>{t("nav.logout")}</span>{/if}
+			</button>
+		</SignOutButton>
 		<Button variant="ghost" size="sm" class="mt-2 w-full justify-center" onclick={() => collapsed = !collapsed}>
 			{#if collapsed}<ChevronRight class="h-4 w-4" />{:else}<ChevronLeft class="h-4 w-4" />{/if}
 		</Button>

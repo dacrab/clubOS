@@ -25,7 +25,6 @@ const { data } = $props();
 let showNewSaleDialog = $state(false);
 let showOpenDialog = $state(false);
 let showCloseDialog = $state(false);
-let closingName = $state("");
 let closingNotes = $state("");
 let countedCash = $state(0);
 let expectedCash = $state(0);
@@ -39,9 +38,7 @@ async function openRegister(): Promise<void> {
 	const ok = await runCrud(async () => {
 		await api("registerSessions.insert", {
 			data: {
-				facility_id: data.user.facilityId,
-				opened_by: data.user.id,
-				opened_at: new Date().toISOString(),
+				openedAt: new Date().toISOString(),
 				opening_cash: 0,
 			},
 		});
@@ -52,20 +49,19 @@ async function openRegister(): Promise<void> {
 }
 
 function openCloseDialog(): void {
-	expectedCash = data.activeSession?.openingCash ?? 0;
+	expectedCash = (data.activeSession?.openingCash ?? 0) + (data.sessionSalesTotal ?? 0);
 	countedCash = expectedCash;
 	showCloseDialog = true;
 }
 
 async function closeRegister(): Promise<void> {
 	const session = data.activeSession;
-	if (!closingName.trim() || !session) return;
+	if (!session) return;
 	processing = true;
 	const ok = await runCrud(async () => {
 		await api("registerSessions.close", {
 			filter: {
 				sessionId: session.id,
-				userId: data.user.id,
 				closingCash: countedCash,
 				notes: closingNotes || null,
 			},
@@ -75,7 +71,7 @@ async function closeRegister(): Promise<void> {
 	processing = false;
 	if (ok) {
 		showCloseDialog = false;
-		closingName = closingNotes = "";
+		closingNotes = "";
 		countedCash = 0;
 	}
 }
@@ -125,8 +121,6 @@ async function closeRegister(): Promise<void> {
 </Dialog>
 
 <FormDialog bind:open={showCloseDialog} title={t("register.closeRegister")} description={t("register.closeDescription")} saving={processing} onsubmit={closeRegister} onclose={() => showCloseDialog = false}>
-	<div class="space-y-2"><Label for="closingName">{t("common.yourName")} *</Label><Input id="closingName" bind:value={closingName} required /></div>
-	<Separator />
 	<div class="grid grid-cols-2 gap-4">
 		<div class="space-y-2"><Label>{t("register.expectedCash")}</Label><div class="text-lg font-bold">{fmtCurrency(expectedCash)}</div></div>
 		<div class="space-y-2"><Label for="countedCash">{t("register.countedCash")}</Label><Input id="countedCash" type="number" step="0.01" min="0" bind:value={countedCash} /></div>

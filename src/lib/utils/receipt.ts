@@ -2,15 +2,7 @@ import { i18n, t } from "$lib/i18n/index.svelte";
 import type { CartItem } from "$lib/types/database";
 import { fmtCurrency } from "$lib/utils/format";
 import { shortId } from "$lib/utils/helpers";
-
-function escapeHtml(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;")
-		.replace(/'/g, "&#39;");
-}
+import { escapeHtml } from "$lib/utils/html";
 
 export interface ReceiptData {
 	items: CartItem[];

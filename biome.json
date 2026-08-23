@@ -1,41 +1,25 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
-	"assist": {
-		"actions": {
-			"source": {
-				"organizeImports": {
-					"level": "on"
-				}
-			}
-		}
-	},
-	"linter": {
+	"$schema": "https://biomejs.dev/schemas/2.5.10/schema.json",
+	"vcs": {
 		"enabled": true,
-		"rules": {
-			"preset": "recommended",
-			"correctness": {
-				"noUnusedImports": "error",
-				"noUnusedVariables": "error",
-				"noUnusedFunctionParameters": "warn",
-				"useExhaustiveDependencies": "warn",
-				"noInnerDeclarations": "off",
-				"noSwitchDeclarations": "off"
-			},
-			"suspicious": {
-				"noConsole": "warn",
-				"noDebugger": "error",
-				"noExplicitAny": "error"
-			},
-			"complexity": {
-				"noUselessUndefined": "error"
-			},
-			"style": {
-				"noParameterAssign": "off",
-				"noNonNullAssertion": "off",
-				"useConsistentArrayType": "off",
-				"useImportType": "error"
-			}
-		}
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"includes": [
+			"src/**",
+			"scripts/**",
+			"*.config.*",
+			"biome.json",
+			"!!**/node_modules",
+			"!!**/.svelte-kit",
+			"!!**/.vercel",
+			"!!**/build",
+			"!!**/coverage",
+
+			"!!**/static",
+			"!!**/*.css"
+		]
 	},
 	"formatter": {
 		"enabled": true,
@@ -54,21 +38,77 @@
 			"trailingCommas": "none"
 		}
 	},
-	"files": {
-		"includes": [
-			"src/**",
-			"scripts/**",
-			"*.config.*",
-			"biome.json",
-			"!!**/node_modules",
-			"!!**/.svelte-kit",
-			"!!**/.vercel",
-			"!!**/build",
-			"!!**/coverage",
-
-			"!!**/static",
-			"!!**/*.css"
-		]
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"preset": "recommended",
+			"a11y": {
+				"noSvgWithoutTitle": "off",
+				"useButtonType": "warn"
+			},
+			"complexity": {
+				"noExcessiveCognitiveComplexity": {
+					"level": "warn",
+					"options": { "maxAllowedComplexity": 15 }
+				},
+				"noForEach": "off",
+				"noUselessUndefined": "error",
+				"useLiteralKeys": "off",
+				"useSimplifiedLogicExpression": "warn"
+			},
+			"correctness": {
+				"noUnusedFunctionParameters": "warn",
+				"noUnusedImports": "error",
+				"noUnusedVariables": "error",
+				"useExhaustiveDependencies": "warn",
+				"useHookAtTopLevel": "error"
+			},
+			"performance": {
+				"noAccumulatingSpread": "warn",
+				"noDelete": "warn"
+			},
+			"security": {
+				"noDangerouslySetInnerHtml": "warn"
+			},
+			"suspicious": {
+				"noArrayIndexKey": "warn",
+				"noCommentText": "off",
+				"noConsole": "warn",
+				"noDebugger": "error",
+				"noConfusingVoidType": "error",
+				"noDoubleEquals": "error",
+				"noExplicitAny": "error",
+				"noImplicitAnyLet": "warn",
+				"noMisleadingInstantiator": "error",
+				"noRedeclare": "error",
+				"noSelfCompare": "error",
+				"noVar": "error"
+			},
+			"style": {
+				"noNonNullAssertion": "warn",
+				"noParameterAssign": "error",
+				"noUselessElse": "error",
+				"noUnusedTemplateLiteral": "warn",
+				"useCollapsedElseIf": "warn",
+				"useConsistentArrayType": "warn",
+				"useConsistentBuiltinInstantiation": "error",
+				"useConst": "error",
+				"useDefaultParameterLast": "error",
+				"useImportType": "error",
+				"useSelfClosingElements": "warn",
+				"useShorthandAssign": "error",
+				"useSingleVarDeclarator": "warn",
+				"useTemplate": "error",
+				"useThrowOnlyError": "error"
+			}
+		}
 	},
 	"overrides": [
 		{
@@ -76,9 +116,9 @@
 			"linter": {
 				"rules": {
 					"correctness": {
+						"noUnusedFunctionParameters": "off",
 						"noUnusedImports": "off",
-						"noUnusedVariables": "off",
-						"noUnusedFunctionParameters": "off"
+						"noUnusedVariables": "off"
 					},
 					"suspicious": {
 						"noImplicitAnyLet": "off"
@@ -87,17 +127,7 @@
 			}
 		},
 		{
-			"includes": ["**/*.{test,spec}.ts"],
-			"linter": {
-				"rules": {
-					"suspicious": {
-						"noConsole": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["*.config.*", "scripts/**/*.ts"],
+			"includes": ["**/*.{test,spec}.ts", "*.config.*", "scripts/**/*.ts"],
 			"linter": {
 				"rules": {
 					"suspicious": {

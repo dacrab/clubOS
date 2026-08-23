@@ -4,38 +4,27 @@ import { session } from "./session.svelte";
 
 const mockUser: SessionUser = {
 	id: "u1",
-	email: "test@example.com",
-	username: "test",
+	fullName: "Test User",
 	role: "staff",
 	tenantId: "t1",
 	facilityId: "f1",
 };
 
 describe("session", () => {
-	beforeEach(() => session.clear());
+	beforeEach(() => session.setUser(null));
 
-	it("starts unauthenticated", () => {
-		expect(session.isAuthenticated).toBe(false);
+	it("starts without a user", () => {
 		expect(session.user).toBeNull();
 	});
 
-	it("setUser authenticates", () => {
+	it("setUser stores the user", () => {
 		session.setUser(mockUser);
-		expect(session.isAuthenticated).toBe(true);
 		expect(session.user).toStrictEqual(mockUser);
 	});
 
-	it("setUser(null) clears", () => {
+	it("setUser(null) clears the user", () => {
 		session.setUser(mockUser);
 		session.setUser(null);
 		expect(session.user).toBeNull();
-		expect(session.isAuthenticated).toBe(false);
-	});
-
-	it("clear logs out", () => {
-		session.setUser(mockUser);
-		session.clear();
-		expect(session.user).toBeNull();
-		expect(session.isAuthenticated).toBe(false);
 	});
 });

@@ -76,35 +76,52 @@ describe("hooks.server", () => {
 		handle({ event, resolve } as never);
 
 	describe("public routes", () => {
-		it.each(["/", "/signup", "/reset"])("allows access to %s without auth", async (route) => {
+		it.each(["/", "/signup"])("allows access to %s without auth", async (route) => {
 			const response = await runHandle(createEvent(route, setupAuth(null)));
 			expect(resolve).toHaveBeenCalledOnce();
 			expect(response).toBeInstanceOf(Response);
+		});
+
+		it("allows the token-based booking manage page without auth", async () => {
+			const response = await runHandle(
+				createEvent(
+					"/booking/550e8400-e29b-41d4-a716-446655440000/manage?token=x",
+					setupAuth(null),
+				),
+			);
+			expect(resolve).toHaveBeenCalledOnce();
+			expect(response).toBeInstanceOf(Response);
+		});
+
+		it("still requires auth for other booking routes", async () => {
+			await expect(
+				runHandle(
+					createEvent("/booking/550e8400-e29b-41d4-a716-446655440000/edit", setupAuth(null)),
+				),
+			).rejects.toMatchObject({ status: 307 });
 		});
 	});
 
 	describe("API routes", () => {
-		it.each([
-			"/api/admin/users",
-			"/api/auth/callback",
-			"/api/test",
-		])("allows access to %s without auth", async (route) => {
-			const response = await runHandle(createEvent(route, setupAuth(null)));
-			expect(resolve).toHaveBeenCalledOnce();
-			expect(response).toBeInstanceOf(Response);
-		});
+		it.each(["/api/admin/users", "/api/auth/callback", "/api/test"])(
+			"allows access to %s without auth",
+			async (route) => {
+				const response = await runHandle(createEvent(route, setupAuth(null)));
+				expect(resolve).toHaveBeenCalledOnce();
+				expect(response).toBeInstanceOf(Response);
+			},
+		);
 	});
 
 	describe("auth redirects", () => {
-		it.each([
-			"/admin",
-			"/staff",
-			"/secretary",
-		])("redirects unauthenticated from %s to /", async (route) => {
-			await expect(runHandle(createEvent(route, setupAuth(null)))).rejects.toMatchObject({
-				status: 307,
-			});
-		});
+		it.each(["/admin", "/staff", "/secretary"])(
+			"redirects unauthenticated from %s to /",
+			async (route) => {
+				await expect(runHandle(createEvent(route, setupAuth(null)))).rejects.toMatchObject({
+					status: 307,
+				});
+			},
+		);
 	});
 
 	describe("role-based homepage", () => {

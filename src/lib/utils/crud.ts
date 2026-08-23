@@ -10,7 +10,8 @@ export async function runCrud(
 ): Promise<boolean> {
 	try {
 		const result = await fn();
-		if (result?.error) throw result.error;
+		if (result?.error)
+			throw result.error instanceof Error ? result.error : new Error(String(result.error));
 		toast.success(t("common.success"));
 		if (!options?.skipInvalidate) await invalidateAll();
 		return true;

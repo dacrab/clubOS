@@ -15,7 +15,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const parsed = AdminUserCreateSchema.safeParse(await request.json().catch(() => ({})));
 	if (!parsed.success) return new Response("Missing required fields", { status: 400 });
 
-	const { email, full_name, password, role } = parsed.data;
+	const { email, fullName, password, role } = parsed.data;
 	if (!canAssign(ctx.callerRole, role))
 		return new Response("Cannot assign higher privileges", { status: 403 });
 
@@ -26,10 +26,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		publicMetadata: { role },
 	});
 
-	await getDb()
-		.insert(users)
-		.values({ id: clerkUser.id, fullName: full_name })
-		.onConflictDoNothing();
+	await getDb().insert(users).values({ id: clerkUser.id, fullName }).onConflictDoNothing();
 
 	await getDb().insert(memberships).values({
 		userId: clerkUser.id,
@@ -46,15 +43,21 @@ async function updateUser(
 	ctx: AdminCtx,
 	data: z.infer<typeof AdminUserUpdateSchema>,
 ): Promise<Response> {
-	const { full_name, role, password } = data;
+	const db = getDb();
+	const mems = await db
+		.select({ tenantId: memberships.tenantId })
+		.from(memberships)
+		.where(and(eq(memberships.userId, id), eq(memberships.tenantId, ctx.tenantId)))
+		.limit(1);
+	if (!mems[0]) return new Response("User not found in your tenant", { status: 404 });
+
+	const { fullName, role, password } = data;
 	if (role && !canAssign(ctx.callerRole, role))
 		return new Response("Cannot assign higher privileges", { status: 403 });
 
-	const client = clerkClient;
-	if (password) await client.users.updateUser(id, { password });
+	if (password) await clerkClient.users.updateUser(id, { password });
 
-	const db = getDb();
-	if (full_name) await db.update(users).set({ fullName: full_name }).where(eq(users.id, id));
+	if (fullName) await db.update(users).set({ fullName }).where(eq(users.id, id));
 	if (role)
 		await db
 			.update(memberships)
@@ -74,8 +77,6 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 	return updateUser(parsed.data.id, ctx, parsed.data);
 };
 
-export const PUT: RequestHandler = PATCH;
-
 export const DELETE: RequestHandler = async ({ request, locals }) => {
 	const ctx = await requireAdmin(locals.userId);
 	if (ctx instanceof Response) return ctx;
@@ -83,18 +84,15 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
 	const parsed = AdminUserDeleteSchema.safeParse(await request.json().catch(() => ({})));
 	if (!parsed.success) return new Response("Missing id", { status: 400 });
 
-	const { id } = parsed.data;
 	const db = getDb();
-
 	const mems = await db
 		.select({ tenantId: memberships.tenantId })
 		.from(memberships)
-		.where(and(eq(memberships.userId, id), eq(memberships.tenantId, ctx.tenantId)))
+		.where(and(eq(memberships.userId, parsed.data.id), eq(memberships.tenantId, ctx.tenantId)))
 		.limit(1);
 
 	if (!mems[0]) return new Response("User not found in your tenant", { status: 404 });
 
-	const client = clerkClient;
-	await client.users.deleteUser(id);
+	await clerkClient.users.deleteUser(parsed.data.id);
 	return new Response(null, { status: 204 });
 };

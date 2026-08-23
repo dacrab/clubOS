@@ -10,10 +10,11 @@ import {
 const qb = vi.hoisted(() => ({
 	insert: vi.fn(),
 	select: vi.fn(),
+	transaction: vi.fn(),
 }));
 
 vi.mock("$lib/db/client", () => ({
-	getDb: () => ({ insert: qb.insert, select: qb.select }),
+	getDb: () => ({ insert: qb.insert, select: qb.select, transaction: qb.transaction }),
 }));
 
 vi.mock("$lib/db/schema/tenants", () => ({ tenants: {} }));
@@ -50,6 +51,9 @@ function insertMock(id: string) {
 describe("POST /api/onboarding/complete", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		qb.transaction.mockImplementation(async (cb: (tx: unknown) => Promise<unknown>) =>
+			cb({ insert: qb.insert, select: qb.select }),
+		);
 	});
 
 	it("returns existing tenant if user has membership", async () => {

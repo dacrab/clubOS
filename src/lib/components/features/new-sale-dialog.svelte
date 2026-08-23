@@ -64,7 +64,7 @@ function handlePrintReceipt(): void {
 }
 
 const COUPON_VALUE = $derived(globalSettings.current.coupons_value);
-const rootCategories = $derived(categories.filter((c) => !c.parent_id));
+const rootCategories = $derived(categories.filter((c) => !c.parentId));
 
 let searchResults = $state<Product[]>([]);
 
@@ -76,11 +76,14 @@ $effect(() => {
 	if (q.trim() && user.facilityId) {
 		timeout = setTimeout(async () => {
 			if (cancelled) return;
-			const data = await api<Product[]>("products.search", {
-				filter: { facilityId: user.facilityId },
-				data: { searchText: q },
-			});
-			if (!cancelled) searchResults = data ?? [];
+			try {
+				const data = await api<Product[]>("products.search", {
+					data: { searchText: q },
+				});
+				if (!cancelled) searchResults = data ?? [];
+			} catch {
+				if (!cancelled) searchResults = [];
+			}
 		}, 200);
 	} else {
 		searchResults = [];
@@ -95,7 +98,7 @@ $effect(() => {
 const filteredProducts = $derived.by(() => {
 	if (searchQuery.trim()) return searchResults;
 	if (!selectedCategory) return products;
-	return products.filter((p) => p.category_id === selectedCategory);
+	return products.filter((p) => p.categoryId === selectedCategory);
 });
 
 const subtotal = $derived(
@@ -145,29 +148,17 @@ async function submitOrder(): Promise<void> {
 	if (processing) return;
 	processing = true;
 	try {
-		const result = await api<{ id: string; error?: string }>("orders.create", {
+		const result = await api<{ id: string }>("orders.create", {
 			filter: {
-				facilityId: user.facilityId,
 				sessionId: activeSession.id,
-				userId: user.id,
 				items: cart.map((i) => ({
 					productId: i.product.id,
-					productName: i.product.name,
 					quantity: i.quantity,
-					unitPrice: i.product.price,
-					lineTotal: i.product.price * i.quantity,
 					isTreat: i.isTreat,
 				})),
 				couponCount,
-				couponValue: COUPON_VALUE,
 			},
 		});
-
-		if (result?.error) {
-			toast.error(result.error);
-			processing = false;
-			return;
-		}
 
 		lastOrderId = result.id;
 		lastOrderData = { items: [...cart], total, discount, couponCount, orderId: result.id };
@@ -175,8 +166,8 @@ async function submitOrder(): Promise<void> {
 		clearCart();
 		showCart = false;
 		await invalidateAll();
-	} catch {
-		toast.error(t("common.error"));
+	} catch (err) {
+		toast.error(err instanceof Error ? err.message : t("common.error"));
 	} finally {
 		processing = false;
 	}
@@ -261,8 +252,8 @@ async function submitOrder(): Promise<void> {
 								<span class="font-semibold text-sm leading-tight line-clamp-2 min-h-[2.5rem]">{product.name}</span>
 								<div class="mt-auto pt-3 flex items-end justify-between">
 									<span class="text-lg font-bold text-primary">{fmtCurrency(product.price)}</span>
-									{#if product.track_inventory && product.stock_quantity > 0}
-										<Badge variant="outline" class="text-[10px] px-1.5">{product.stock_quantity}</Badge>
+									{#if product.trackInventory && product.stockQuantity > 0}
+										<Badge variant="outline" class="text-[10px] px-1.5">{product.stockQuantity}</Badge>
 									{/if}
 								</div>
 								<div class="mt-2 flex-center justify-center w-full h-10 rounded-xl bg-primary/10 text-primary font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity">

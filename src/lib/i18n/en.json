@@ -158,7 +158,9 @@
 		"category": "Category",
 		"selectCategory": "Select category",
 		"noCategory": "No category",
-		"imageUrl": "Image URL",
+		"imageUrl": "Image",
+		"imageTooLarge": "Image must be under 500 KB",
+		"imageStoredInline": "Stored with the product (max 500 KB)",
 		"lowStock": "Low Stock",
 		"lowStockAlert": "Low stock alert",
 		"outOfStock": "Out of Stock",
@@ -335,14 +337,14 @@
 		"preventOverlaps": "Prevent booking overlaps",
 		"preventOverlapsDesc": "Prevent double-booking conflicts",
 		"theme": "Theme",
-		"themeDesc": "Default theme for new users",
+		"themeDesc": "Stored per device (browser)",
 		"themes": {
 			"system": "System",
 			"light": "Light",
 			"dark": "Dark"
 		},
 		"language": "Language",
-		"languageDesc": "Default language for new users",
+		"languageDesc": "Stored per device (browser)",
 		"languages": {
 			"en": "English",
 			"el": "Greek"
@@ -383,5 +385,25 @@
 	"calendar": {
 		"time": "Time",
 		"apply": "Apply"
+	},
+	"manage": {
+		"title": "Manage Booking",
+		"yourBooking": "Your Booking",
+		"name": "Name",
+		"phone": "Phone",
+		"date": "Date",
+		"type": "Type",
+		"status": "Status",
+		"cancelBooking": "Cancel Booking",
+		"requestReschedule": "Request Reschedule",
+		"reasonLabel": "Reason (optional)",
+		"reasonPlaceholder": "Why are you canceling?",
+		"confirmCancellation": "Confirm Cancellation",
+		"keepBooking": "Keep Booking",
+		"messageLabel": "Tell us your preferred new date/time",
+		"messagePlaceholder": "e.g. same time next Saturday",
+		"sendRequest": "Send Request",
+		"canceledSuccess": "Booking canceled successfully.",
+		"rescheduleSent": "Reschedule request sent. Staff will contact you."
 	}
 }

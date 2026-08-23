@@ -45,11 +45,11 @@ let showDialog = $state(false);
 				{#each data.orders as order (order.id)}
 					<TableRow class="cursor-pointer hover:bg-muted/50" onclick={() => { selectedOrder = order; showDialog = true; }}>
 						<TableCell class="font-mono text-sm">{shortId(order.id)}</TableCell>
-						<TableCell>{fmtDate(order.created_at)}</TableCell>
-						<TableCell><Badge variant="outline">{getActiveOrderItems(order.order_items).length} {t("orders.itemsCount")}</Badge></TableCell>
+						<TableCell>{fmtDate(order.createdAt)}</TableCell>
+						<TableCell><Badge variant="outline">{getActiveOrderItems(order.orderItems).length} {t("orders.itemsCount")}</Badge></TableCell>
 						<TableCell>{fmtCurrency(order.subtotal)}</TableCell>
-						<TableCell>{#if order.discount_amount > 0}<Badge variant="secondary">-{fmtCurrency(order.discount_amount)}</Badge>{:else}-{/if}</TableCell>
-						<TableCell class="font-medium">{fmtCurrency(order.total_amount)}</TableCell>
+						<TableCell>{#if order.discountAmount > 0}<Badge variant="secondary">-{fmtCurrency(order.discountAmount)}</Badge>{:else}-{/if}</TableCell>
+						<TableCell class="font-medium">{fmtCurrency(order.totalAmount)}</TableCell>
 						<TableCell><Button variant="ghost" size="icon-sm" onclick={(e: MouseEvent) => { e.stopPropagation(); selectedOrder = order; showDialog = true; }} aria-label={t("common.view")}><Eye class="h-4 w-4" /></Button></TableCell>
 					</TableRow>
 				{/each}

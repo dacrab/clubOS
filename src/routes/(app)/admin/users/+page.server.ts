@@ -27,11 +27,12 @@ export const load: PageServerLoad = async ({ parent }) => {
 
 	// Fetch Clerk profiles only for this tenant's members so a globally
 	// paginated user list can't truncate emails for users beyond page 1.
+	// Clerk caps `limit` at 500; larger tenants need batched lookups.
 	const userIds = rows.map((r) => r.userId);
 	const client = clerkClient;
 	const clerkUsers = await client.users.getUserList({
 		userId: userIds,
-		limit: Math.max(USERS_PER_PAGE, userIds.length),
+		limit: Math.min(Math.max(USERS_PER_PAGE, userIds.length), 500),
 	});
 	const emailMap = new Map(
 		clerkUsers.data.map((u) => [u.id, u.emailAddresses[0]?.emailAddress ?? ""]),
@@ -40,7 +41,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 	const usersList = rows.map((u) => ({
 		id: u.userId,
 		email: emailMap.get(u.userId) ?? "",
-		full_name: u.fullName,
+		fullName: u.fullName,
 		role: u.role,
 	}));
 

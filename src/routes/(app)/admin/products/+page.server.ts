@@ -2,8 +2,8 @@ import { and, eq, like, sql } from "drizzle-orm";
 import { getDb } from "$lib/db/client";
 import { categories } from "$lib/db/schema/categories";
 import { products } from "$lib/db/schema/products";
-import type { CategoryPartial, Product } from "$lib/types/database";
-import { mapRows } from "$lib/utils/mapper";
+import { facilityFilter, resolveFacilityIds } from "$lib/server/scope";
+import { escapeLike } from "$lib/utils/helpers";
 import type { PageServerLoad } from "./$types";
 
 const PER_PAGE = 25;
@@ -11,10 +11,25 @@ const PER_PAGE = 25;
 export const load: PageServerLoad = async ({ parent, url }) => {
 	const { user } = await parent();
 	const db = getDb();
-	const fid: string = user.facilityId ?? "";
+	const scope = { tenantId: user.tenantId, facilityId: user.facilityId };
+	const fids = await resolveFacilityIds(scope);
 
 	const page = Math.max(1, Number(url.searchParams.get("page") ?? 1));
 	const from = (page - 1) * PER_PAGE;
+
+	if (!fids.length) {
+		return {
+			lowStockProducts: [],
+			paginatedProducts: [],
+			categories: [],
+			page,
+			totalPages: 0,
+		};
+	}
+
+	const thresholdExpr = scope.facilityId
+		? sql`COALESCE((SELECT settings->>'low_stock_threshold' FROM tenants JOIN facilities ON facilities.tenant_id = tenants.id WHERE facilities.id = ${scope.facilityId})::int, 3)`
+		: sql`COALESCE((SELECT settings->>'low_stock_threshold' FROM tenants WHERE id = ${scope.tenantId})::int, 3)`;
 
 	const lowStockProducts = await db
 		.select({
@@ -28,9 +43,9 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		.from(products)
 		.where(
 			and(
-				eq(products.facilityId, fid),
+				facilityFilter(products.facilityId, fids),
 				eq(products.trackInventory, true),
-				sql`stock_quantity <= COALESCE((SELECT settings->>'low_stock_threshold' FROM tenants JOIN facilities ON facilities.tenant_id = tenants.id WHERE facilities.id = ${fid})::int, 3)`,
+				sql`${products.stockQuantity} <= ${thresholdExpr}`,
 			),
 		)
 		.orderBy(products.name);
@@ -43,50 +58,33 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 			description: categories.description,
 		})
 		.from(categories)
-		.where(eq(categories.facilityId, fid))
+		.where(facilityFilter(categories.facilityId, fids))
 		.orderBy(categories.name);
 
 	const search = url.searchParams.get("search");
+	const searchClause = search ? like(products.name, `%${escapeLike(search)}%`) : undefined;
+	const whereClause = searchClause
+		? and(facilityFilter(products.facilityId, fids), searchClause)
+		: facilityFilter(products.facilityId, fids);
 
-	let countResult: Array<{ count: number }>;
-	if (search) {
-		countResult = await db
-			.select({ count: sql<number>`count(*)` })
-			.from(products)
-			.where(and(eq(products.facilityId, fid), like(products.name, `%${search}%`)));
-	} else {
-		countResult = await db
-			.select({ count: sql<number>`count(*)` })
-			.from(products)
-			.where(eq(products.facilityId, fid));
-	}
-
+	const countResult = await db
+		.select({ count: sql<number>`count(*)` })
+		.from(products)
+		.where(whereClause);
 	const totalCount = Number(countResult[0]?.count ?? 0);
 
-	let query = db
+	const paginatedProducts = await db
 		.select()
 		.from(products)
-		.where(eq(products.facilityId, fid))
+		.where(whereClause)
 		.orderBy(products.name)
 		.limit(PER_PAGE)
 		.offset(from);
 
-	if (search) {
-		query = db
-			.select()
-			.from(products)
-			.where(and(eq(products.facilityId, fid), like(products.name, `%${search}%`)))
-			.orderBy(products.name)
-			.limit(PER_PAGE)
-			.offset(from);
-	}
-
-	const paginatedProducts = await query;
-
 	return {
-		lowStockProducts: mapRows<Product>(lowStockProducts),
-		paginatedProducts: mapRows<Product>(paginatedProducts),
-		categories: mapRows<CategoryPartial>(categoriesResult ?? []),
+		lowStockProducts,
+		paginatedProducts,
+		categories: categoriesResult,
 		page,
 		totalPages: Math.ceil(totalCount / PER_PAGE),
 	};

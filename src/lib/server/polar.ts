@@ -28,15 +28,8 @@ function polarHeaders(): Record<string, string> {
 	return _polarHeaders;
 }
 
-export async function polarPost<T = unknown>(
-	path: string,
-	body: Record<string, unknown>,
-): Promise<T> {
-	const res = await fetch(`${POLAR_BASE}${path}`, {
-		method: "POST",
-		headers: polarHeaders(),
-		body: JSON.stringify(body),
-	});
+async function polarRequest<T>(path: string, init: RequestInit): Promise<T> {
+	const res = await fetch(`${POLAR_BASE}${path}`, init);
 	const data: unknown = await res.json();
 	if (!res.ok) {
 		const err = data as { detail?: { msg?: string }[]; error?: string };
@@ -46,17 +39,16 @@ export async function polarPost<T = unknown>(
 	return data as T;
 }
 
-export async function polarGet<T = unknown>(path: string): Promise<T> {
-	const res = await fetch(`${POLAR_BASE}${path}`, {
-		headers: { Authorization: `Bearer ${polarToken()}` },
+export function polarPost<T = unknown>(path: string, body: Record<string, unknown>): Promise<T> {
+	return polarRequest<T>(path, {
+		method: "POST",
+		headers: polarHeaders(),
+		body: JSON.stringify(body),
 	});
-	const data: unknown = await res.json();
-	if (!res.ok) {
-		const err = data as { detail?: { msg?: string }[]; error?: string };
-		const msg = err.detail?.[0]?.msg || err.error || "Polar API error";
-		throw new Error(msg);
-	}
-	return data as T;
+}
+
+export function polarGet<T = unknown>(path: string): Promise<T> {
+	return polarRequest<T>(path, { headers: { Authorization: `Bearer ${polarToken()}` } });
 }
 
 export async function createCheckout(args: {
@@ -83,10 +75,31 @@ export async function getCheckout(checkoutId: string): Promise<Record<string, un
 	return polarGet(`/checkouts/${checkoutId}`);
 }
 
+/** Unknown statuses fail closed so an unrecognized Polar status never grants access. */
 export function validateStatus(s: string): SubscriptionStatus {
 	return SUBSCRIPTION_STATUSES.includes(s as SubscriptionStatus)
 		? (s as SubscriptionStatus)
-		: "active";
+		: "canceled";
+}
+
+export function safeStr(val: unknown): string | null {
+	return typeof val === "string" ? val : null;
+}
+
+export function safeMeta(val: unknown): Record<string, string> | null {
+	if (!val || typeof val !== "object") return null;
+	if (typeof (val as Record<string, unknown>).tenant_id !== "string") return null;
+	const result: Record<string, string> = {};
+	for (const [k, v] of Object.entries(val)) {
+		if (typeof v === "string") result[k] = v;
+	}
+	return result;
+}
+
+export function toIso(value: unknown): string | null {
+	if (typeof value !== "string") return null;
+	const ms = Date.parse(value);
+	return Number.isNaN(ms) ? null : new Date(ms).toISOString();
 }
 
 export function isActive(sub: typeof subscriptions.$inferSelect | null): boolean {

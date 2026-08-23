@@ -11,13 +11,8 @@ export default defineConfig({
 		coverage: {
 			provider: "v8",
 			reporter: ["text", "html"],
-			include: ["src/lib/**/*.ts"],
-			exclude: [
-				"src/lib/**/*.svelte",
-				"src/lib/types/**",
-				"src/lib/server/**",
-				"src/lib/testing/**",
-			],
+			include: ["src/lib/**/*.ts", "src/hooks.server.ts"],
+			exclude: ["src/lib/**/*.svelte", "src/lib/types/**", "src/lib/testing/**"],
 		},
 	},
 });

@@ -9,8 +9,10 @@ import { checkRateLimit } from "$lib/server/rate-limiter";
 
 const enableSentry = typeof process !== "undefined" && !process.env.VITEST;
 
-const PUBLIC_ROUTES = ["/", "/signup", "/reset"];
+const PUBLIC_ROUTES = ["/", "/signup"];
 const AUTH_ONLY_ROUTES = ["/onboarding", "/billing"];
+// Customer-facing manage page; auth is enforced by its HMAC ?token= param.
+const BOOKING_MANAGE_RE = /^\/booking\/[^/]+\/manage$/;
 
 const authHandle: Handle = async ({ event, resolve }) => {
 	const authFn = event.locals.auth as (opts?: unknown) => { userId: string | null };
@@ -19,7 +21,8 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	event.locals.userId = userId;
 
 	const path = event.url.pathname;
-	const isPublic = PUBLIC_ROUTES.includes(path) || path.startsWith("/api/");
+	const isPublic =
+		PUBLIC_ROUTES.includes(path) || BOOKING_MANAGE_RE.test(path) || path.startsWith("/api/");
 	const isAuthOnly = AUTH_ONLY_ROUTES.includes(path);
 
 	let cached: App.UserContext | undefined;
@@ -62,11 +65,14 @@ const authHandle: Handle = async ({ event, resolve }) => {
 };
 
 const securityHandle: Handle = async ({ event, resolve }) => {
+	// Last entry of x-forwarded-for is the client IP appended by our own proxy/CDN;
+	// earlier entries are attacker-controlled.
 	const ip =
-		event.request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? event.getClientAddress();
+		event.request.headers.get("x-forwarded-for")?.split(",").pop()?.trim() ??
+		event.getClientAddress();
 
 	if (event.request.method !== "GET" && event.request.method !== "HEAD") {
-		const result = checkRateLimit(`write:${ip}`, "burst");
+		const result = await checkRateLimit(`write:${ip}`, "burst");
 		if (!result.allowed) {
 			return new Response("Too Many Requests", {
 				status: 429,
@@ -77,7 +83,7 @@ const securityHandle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	const result = checkRateLimit(`read:${ip}`, "minute");
+	const result = await checkRateLimit(`read:${ip}`, "minute");
 	if (!result.allowed) {
 		return new Response("Too Many Requests", {
 			status: 429,
@@ -89,20 +95,8 @@ const securityHandle: Handle = async ({ event, resolve }) => {
 
 	const response = await resolve(event);
 
-	const csp = [
-		"default-src 'self'",
-		"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://js.sentry-cdn.com",
-		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-		"img-src 'self' data: blob: https://img.clerk.com https://*.clerk.accounts.dev",
-		"font-src 'self' https://fonts.gstatic.com",
-		"connect-src 'self' https://*.clerk.accounts.dev https://*.ingest.sentry.io wss://*.clerk.accounts.dev",
-		"frame-src 'self' https://*.clerk.accounts.dev",
-		"object-src 'none'",
-		"base-uri 'self'",
-		"form-action 'self'",
-	].join("; ");
-
-	response.headers.set("content-security-policy", csp);
+	// CSP is configured in svelte.config.js (kit.csp, mode 'nonce') so Kit can
+	// inject per-request nonces; we only add the non-CSP hardening headers here.
 	response.headers.set("x-content-type-options", "nosniff");
 	response.headers.set("x-frame-options", "DENY");
 	response.headers.set("x-xss-protection", "0");

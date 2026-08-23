@@ -22,5 +22,8 @@ export const getBookingStatusBadgeVariant = (status: BookingStatus | undefined):
 
 export const shortId = (id: string): string => id.slice(0, 8);
 
+/** Escape SQL LIKE wildcards so user input matches literally. */
+export const escapeLike = (s: string): string => s.replace(/[\\%_]/g, "\\$&");
+
 export const getActiveOrderItems = (items: OrderItemView[] | null | undefined): OrderItemView[] =>
-	items?.filter((i) => !i.is_deleted) ?? [];
+	items?.filter((i) => !i.isDeleted) ?? [];

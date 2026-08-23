@@ -5,7 +5,7 @@ import { resolveUserContext } from "$lib/server/auth";
 import { fetchPlans } from "$lib/server/plans";
 import type { PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals }) => {
 	const userId = locals.userId;
 	if (!userId) throw redirect(307, "/signup");
 
@@ -23,7 +23,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			email: clerkUser.emailAddresses[0]?.emailAddress ?? "",
 			fullName: clerkUser.fullName ?? "",
 		},
-		sessionId: url.searchParams.get("session_id"),
 		plans,
 	};
 };

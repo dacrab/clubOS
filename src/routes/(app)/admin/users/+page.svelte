@@ -29,7 +29,7 @@ const { data } = $props();
 
 const ROLES: MemberRole[] = ["owner", "admin", "manager", "staff"];
 const getRoleLabel = (role: MemberRole): string => t(`users.roles.${role}`);
-const blankForm = (): UserForm => ({ full_name: "", email: "", password: "", role: "staff" });
+const blankForm = (): UserForm => ({ fullName: "", email: "", password: "", role: "staff" });
 
 async function apiFetch(url: string, method: string, body?: unknown): Promise<void> {
 	const res = await fetch(url, {
@@ -56,22 +56,21 @@ function openCreate(): void {
 
 function openEdit(user: UserView): void {
 	editing = user;
-	form = { full_name: user.full_name ?? "", email: user.email, password: "", role: user.role };
+	form = { fullName: user.fullName ?? "", email: user.email, password: "", role: user.role };
 	open = true;
 }
 
 async function save(): Promise<void> {
 	saving = true;
 	const payload = {
-		full_name: form.full_name,
+		...(editing && { id: editing.id }),
+		fullName: form.fullName,
 		role: form.role,
 		...(form.password && { password: form.password }),
 		...(!editing && { email: form.email }),
 	};
 	const ok = await runCrud(async () => {
-		const url = editing ? `/api/admin/users/${editing.id}` : "/api/admin/users";
-		const method = editing ? "PATCH" : "POST";
-		await apiFetch(url, method, payload);
+		await apiFetch("/api/admin/users", editing ? "PATCH" : "POST", payload);
 	});
 	if (ok) open = false;
 	saving = false;
@@ -81,7 +80,7 @@ async function confirmRemove(): Promise<void> {
 	if (!deleteTarget) return;
 	const target = deleteTarget;
 	const ok = await runCrud(async () => {
-		await apiFetch(`/api/admin/users/${target.id}`, "DELETE");
+		await apiFetch("/api/admin/users", "DELETE", { id: target.id });
 	});
 	if (ok) deleteOpen = false;
 }
@@ -110,7 +109,7 @@ async function confirmRemove(): Promise<void> {
 				<TableBody>
 					{#each data.users as user (user.id)}
 						<TableRow>
-							<TableCell class="font-medium">{user.full_name ?? "-"}</TableCell>
+							<TableCell class="font-medium">{user.fullName ?? "-"}</TableCell>
 							<TableCell class="text-muted-foreground">{user.email}</TableCell>
 							<TableCell><Badge variant={getRoleBadgeVariant(user.role)}>{getRoleLabel(user.role)}</Badge></TableCell>
 							<TableCell>
@@ -130,7 +129,7 @@ async function confirmRemove(): Promise<void> {
 </div>
 
 <FormDialog bind:open title={editing ? t("users.editUser") : t("users.addUser")} {saving} onsubmit={save} onclose={() => open = false}>
-	<div class="space-y-2"><Label for="full_name">{t("users.fullName")}</Label><Input id="full_name" bind:value={form.full_name} required /></div>
+	<div class="space-y-2"><Label for="full_name">{t("users.fullName")}</Label><Input id="full_name" bind:value={form.fullName} required /></div>
 	{#if !editing}
 		<div class="space-y-2"><Label for="email">{t("users.email")}</Label><Input id="email" type="email" bind:value={form.email} required /></div>
 	{/if}
@@ -147,4 +146,4 @@ async function confirmRemove(): Promise<void> {
 	</div>
 </FormDialog>
 
-<ConfirmDelete bind:open={deleteOpen} name={deleteTarget?.full_name ?? deleteTarget?.email ?? ""} onconfirm={confirmRemove} oncancel={() => deleteOpen = false} />
+<ConfirmDelete bind:open={deleteOpen} name={deleteTarget?.fullName ?? deleteTarget?.email ?? ""} onconfirm={confirmRemove} oncancel={() => deleteOpen = false} />

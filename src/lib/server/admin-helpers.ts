@@ -27,4 +27,4 @@ export function canAssign(caller: MemberRole, target: MemberRole | undefined): b
 	return !target || caller === "owner" || target !== "owner";
 }
 
-export const text = (msg: string, status: number): Response => new Response(msg, { status });
+const text = (msg: string, status: number): Response => new Response(msg, { status });

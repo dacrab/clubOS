@@ -1,4 +1,3 @@
-export * from "./audit-log";
 export * from "./bookings";
 export * from "./categories";
 export * from "./facilities";

@@ -28,12 +28,12 @@ let showDialog = $state(false);
 							<div>
 								<div class="flex items-center gap-2">
 									<p class="font-medium">#{shortId(order.id)}</p>
-									{#if order.order_items?.length > 0}<Badge variant="outline" class="text-xs">{order.order_items.length} {t("orders.itemsCount")}</Badge>{/if}
+									{#if order.orderItems?.length > 0}<Badge variant="outline" class="text-xs">{order.orderItems.length} {t("orders.itemsCount")}</Badge>{/if}
 								</div>
-								<p class="text-sm text-muted-foreground">{fmtDate(order.created_at)}</p>
+								<p class="text-sm text-muted-foreground">{fmtDate(order.createdAt)}</p>
 							</div>
 						</div>
-						<div class="flex items-center gap-3"><p class="font-medium">{fmtCurrency(order.total_amount)}</p><Eye class="h-4 w-4 text-muted-foreground" /></div>
+						<div class="flex items-center gap-3"><p class="font-medium">{fmtCurrency(order.totalAmount)}</p><Eye class="h-4 w-4 text-muted-foreground" /></div>
 					</button>
 				{/each}
 			</div>

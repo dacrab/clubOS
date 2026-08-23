@@ -9,8 +9,8 @@ describe("token utils", () => {
 		const { generateBookingToken, verifyBookingToken } = await import("./token");
 		const id = "550e8400-e29b-41d4-a716-446655440000";
 		const token = generateBookingToken(id);
-		expect(token).toBeTruthy();
-		expect(token.length).toBe(64);
+		expect(token).toContain(".");
+		expect(token.split(".")[1]).toHaveLength(64);
 		expect(verifyBookingToken(id, token)).toBe(true);
 	});
 
@@ -23,17 +23,12 @@ describe("token utils", () => {
 	it("returns false for malformed input", async () => {
 		const { verifyBookingToken } = await import("./token");
 		expect(verifyBookingToken("any", "")).toBe(false);
+		expect(verifyBookingToken("any", "not-a-valid-token")).toBe(false);
 	});
 
-	it("rejects a corrupted token", async () => {
-		const { verifyBookingToken } = await import("./token");
-		expect(verifyBookingToken("some-id", "not-a-valid-hex")).toBe(false);
-	});
-
-	it("handles empty id", async () => {
+	it("rejects expired tokens", async () => {
 		const { generateBookingToken, verifyBookingToken } = await import("./token");
-		const token = generateBookingToken("");
-		expect(token.length).toBe(64);
-		expect(verifyBookingToken("", token)).toBe(true);
+		const token = generateBookingToken("some-id", -1000);
+		expect(verifyBookingToken("some-id", token)).toBe(false);
 	});
 });

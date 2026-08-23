@@ -1,5 +1,5 @@
 {
-	"$schema": "https://unpkg.com/knip@latest/schema.json",
+	"$schema": "https://unpkg.com/knip@6/schema.json",
 	"entry": [
 		"src/**/*.{svelte,ts}",
 		"scripts/**/*.ts"
@@ -8,10 +8,7 @@
 		"src/**/*.{ts,svelte}",
 		"scripts/**/*.ts"
 	],
-	"ignoreDependencies": [
-		"tailwindcss-animate",
-		"tailwindcss"
-	],
+	"ignoreDependencies": ["tailwindcss"],
 	"ignore": [],
 	"paths": {
 		"$lib/*": [
