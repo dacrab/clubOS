@@ -1,6 +1,7 @@
 <script lang="ts">
-import { ChevronDown, ChevronUp, DollarSign, Eye } from "@lucide/svelte";
+import { ChevronDown, ChevronUp, DollarSign } from "@lucide/svelte";
 import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
+import OrderRow from "$lib/components/features/order-row.svelte";
 import EmptyState from "$lib/components/layout/empty-state.svelte";
 import PageHeader from "$lib/components/layout/page-header.svelte";
 import Badge from "$lib/components/ui/badge/badge.svelte";
@@ -8,7 +9,6 @@ import Button from "$lib/components/ui/button/button.svelte";
 import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
 import Table, {
 	TableBody,
-	TableCell,
 	TableHead,
 	TableHeader,
 	TableRow,
@@ -16,7 +16,6 @@ import Table, {
 import { t } from "$lib/i18n/index.svelte";
 import type { OrderView } from "$lib/types/database";
 import { fmtCurrency, fmtDate } from "$lib/utils/format";
-import { getActiveOrderItems, shortId } from "$lib/utils/helpers";
 
 const { data } = $props();
 
@@ -60,13 +59,7 @@ const getSessionOrders = (sid: string) => data.orders.filter((o) => o.sessionId 
 								<TableHeader><TableRow><TableHead>{t("orders.orderNumber")}</TableHead><TableHead>{t("date.date")}</TableHead><TableHead>{t("orders.items")}</TableHead><TableHead>{t("orders.total")}</TableHead><TableHead class="w-16"></TableHead></TableRow></TableHeader>
 								<TableBody>
 									{#each orders as order (order.id)}
-										<TableRow class="cursor-pointer hover:bg-muted/50" onclick={() => { selectedOrder = order; showDialog = true; }}>
-											<TableCell class="font-mono text-sm">{shortId(order.id)}</TableCell>
-											<TableCell class="text-sm">{fmtDate(order.createdAt)}</TableCell>
-											<TableCell><Badge variant="outline">{getActiveOrderItems(order.orderItems).length} {t("orders.itemsCount")}</Badge></TableCell>
-											<TableCell class="font-medium">{fmtCurrency(order.totalAmount)}</TableCell>
-											<TableCell><Button variant="ghost" size="icon-sm" onclick={(e: MouseEvent) => { e.stopPropagation(); selectedOrder = order; showDialog = true; }} aria-label={t("common.view")}><Eye class="h-4 w-4" /></Button></TableCell>
-										</TableRow>
+										<OrderRow {order} onSelect={() => { selectedOrder = order; showDialog = true; }} />
 									{/each}
 								</TableBody>
 							</Table></div>

@@ -6,7 +6,7 @@ import type { OrderItemView, OrderView } from "$lib/types/database";
 
 type OrderRow = typeof orders.$inferSelect;
 
-function toItemViews(items: Array<typeof orderItems.$inferSelect>): OrderItemView[] {
+function toItemViews(items: (typeof orderItems.$inferSelect)[]): OrderItemView[] {
 	return items.map((it) => ({
 		id: it.id,
 		quantity: it.quantity,
@@ -25,7 +25,7 @@ export async function loadOrderViews(rows: OrderRow[]): Promise<OrderView[]> {
 		? await getDb().select().from(orderItems).where(inArray(orderItems.orderId, ids))
 		: [];
 
-	const byOrderId = new Map<string, Array<typeof orderItems.$inferSelect>>();
+	const byOrderId = new Map<string, (typeof orderItems.$inferSelect)[]>();
 	for (const item of items) {
 		const group = byOrderId.get(item.orderId);
 		if (group) group.push(item);

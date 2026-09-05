@@ -43,7 +43,7 @@ export const actions: Actions = {
 			.limit(1);
 
 		const membership = mems[0];
-		if (!membership || !["owner", "admin"].includes(membership.role)) {
+		if (!(membership && ["owner", "admin"].includes(membership.role))) {
 			return fail(403, { error: "Forbidden" });
 		}
 

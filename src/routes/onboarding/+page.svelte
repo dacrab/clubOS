@@ -95,7 +95,7 @@ async function completeOnboarding(): Promise<{ tenantId: string }> {
 async function handlePlanSelect(planId: PlanId): Promise<void> {
 	selectedPlan = planId;
 	const plan = data.plans.find((p: { id: PlanId }) => p.id === planId);
-	if (!plan || !data.user) return;
+	if (!(plan && data.user)) return;
 
 	loading = true;
 	try {

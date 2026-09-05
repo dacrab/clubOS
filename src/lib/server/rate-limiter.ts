@@ -52,6 +52,7 @@ let upstashWarned = false;
 function warnOnce(message: string, err: unknown) {
 	if (upstashWarned) return;
 	upstashWarned = true;
+	// biome-ignore lint/suspicious/noConsole: intentional one-time server diagnostic when rate limiting fails open
 	console.warn(`rate-limiter: ${message}, failing open to memory`, err);
 }
 

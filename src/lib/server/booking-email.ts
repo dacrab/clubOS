@@ -1,4 +1,5 @@
 import { json } from "@sveltejs/kit";
+import { env } from "$env/dynamic/private";
 import { BookingConfirmBodySchema } from "$lib/schemas";
 import { getVerifiedBooking } from "$lib/server/booking-ownership";
 import { sendBookingEmail } from "$lib/server/email";
@@ -18,5 +19,13 @@ export async function handleBookingEmail(
 	if (verified.booking.status === "canceled")
 		return json({ sent: false, reason: "Unable to send notification" });
 
-	return sendBookingEmail(parsed.data.id, email.subjectPrefix, email.heading, email.ctaLabel);
+	// Configured ORIGIN wins; otherwise the request URL (never raw headers).
+	const origin = env.ORIGIN ?? new URL(request.url).origin;
+	return sendBookingEmail(
+		parsed.data.id,
+		origin,
+		email.subjectPrefix,
+		email.heading,
+		email.ctaLabel,
+	);
 }

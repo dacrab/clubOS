@@ -5,6 +5,7 @@ export default defineConfig({
 	out: "./drizzle",
 	dialect: "postgresql",
 	dbCredentials: {
-		url: process.env.DATABASE_URL!,
+		// drizzle-kit fails with its own clear error when unset; we only assert the type here.
+		url: process.env.DATABASE_URL as string,
 	},
 });

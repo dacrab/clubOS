@@ -115,7 +115,7 @@ function openCategoryEdit(cat: CategoryPartial): void {
 }
 
 async function saveProduct(): Promise<void> {
-	if (!data.user.facilityId || !data.user.id) return;
+	if (!(data.user.facilityId && data.user.id)) return;
 	savingProduct = true;
 	const payload = {
 		name: productForm.name,

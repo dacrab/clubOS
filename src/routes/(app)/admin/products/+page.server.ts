@@ -2,7 +2,7 @@ import { and, eq, like, sql } from "drizzle-orm";
 import { getDb } from "$lib/db/client";
 import { categories } from "$lib/db/schema/categories";
 import { products } from "$lib/db/schema/products";
-import { facilityFilter, resolveFacilityIds } from "$lib/server/scope";
+import { facilityFilter, lowStockThreshold, resolveFacilityIds } from "$lib/server/scope";
 import { escapeLike } from "$lib/utils/helpers";
 import type { PageServerLoad } from "./$types";
 
@@ -27,9 +27,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		};
 	}
 
-	const thresholdExpr = scope.facilityId
-		? sql`COALESCE((SELECT settings->>'low_stock_threshold' FROM tenants JOIN facilities ON facilities.tenant_id = tenants.id WHERE facilities.id = ${scope.facilityId})::int, 3)`
-		: sql`COALESCE((SELECT settings->>'low_stock_threshold' FROM tenants WHERE id = ${scope.tenantId})::int, 3)`;
+	const thresholdExpr = lowStockThreshold(scope);
 
 	const lowStockProducts = await db
 		.select({

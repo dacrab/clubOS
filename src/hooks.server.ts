@@ -6,6 +6,7 @@ import { getHomeForRole } from "$lib/config/auth";
 import { EMPTY_CTX, resolveUserContext } from "$lib/server/auth";
 import { isActive } from "$lib/server/polar";
 import { checkRateLimit } from "$lib/server/rate-limiter";
+import type { MemberRole } from "$lib/types/database";
 
 const enableSentry = typeof process !== "undefined" && !process.env.VITEST;
 
@@ -14,6 +15,23 @@ const AUTH_ONLY_ROUTES = ["/onboarding", "/billing"];
 // Customer-facing manage page; auth is enforced by its HMAC ?token= param.
 const BOOKING_MANAGE_RE = /^\/booking\/[^/]+\/manage$/;
 
+type RouteAccess = { isPublic: boolean; isAuthOnly: boolean };
+
+function classifyRoute(path: string): RouteAccess {
+	return {
+		isPublic:
+			PUBLIC_ROUTES.includes(path) || BOOKING_MANAGE_RE.test(path) || path.startsWith("/api/"),
+		isAuthOnly: AUTH_ONLY_ROUTES.includes(path),
+	};
+}
+
+function requireRole(path: string, role: MemberRole | null): void {
+	const isAdmin = role === "owner" || role === "admin";
+	if (path.startsWith("/admin") && !isAdmin) throw redirect(307, getHomeForRole(role));
+	if (path.startsWith("/secretary") && !(isAdmin || role === "manager"))
+		throw redirect(307, getHomeForRole(role));
+}
+
 const authHandle: Handle = async ({ event, resolve }) => {
 	const authFn = event.locals.auth as (opts?: unknown) => { userId: string | null };
 	const auth = typeof authFn === "function" ? authFn() : authFn;
@@ -21,9 +39,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	event.locals.userId = userId;
 
 	const path = event.url.pathname;
-	const isPublic =
-		PUBLIC_ROUTES.includes(path) || BOOKING_MANAGE_RE.test(path) || path.startsWith("/api/");
-	const isAuthOnly = AUTH_ONLY_ROUTES.includes(path);
+	const { isPublic, isAuthOnly } = classifyRoute(path);
 
 	let cached: App.UserContext | undefined;
 	const getCtx = async (): Promise<App.UserContext> => {
@@ -52,14 +68,11 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	const tenantId = ctx.membership?.tenantId ?? null;
 	const active = isActive(ctx.subscription);
 
-	if (!tenantId && !isAuthOnly) throw redirect(307, "/onboarding");
+	if (!(tenantId || isAuthOnly)) throw redirect(307, "/onboarding");
 	if (tenantId && !active && !isAuthOnly) throw redirect(307, "/billing");
 	if (isAuthOnly) return resolve(event);
 
-	const isAdmin = role === "owner" || role === "admin";
-	if (path.startsWith("/admin") && !isAdmin) throw redirect(307, getHomeForRole(role));
-	if (path.startsWith("/secretary") && !(isAdmin || role === "manager"))
-		throw redirect(307, getHomeForRole(role));
+	requireRole(path, role);
 
 	return resolve(event);
 };

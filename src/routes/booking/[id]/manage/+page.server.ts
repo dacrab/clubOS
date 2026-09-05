@@ -7,7 +7,7 @@ import type { Actions, PageServerLoad } from "./$types";
 
 function validateAccess(params: { id: string }, url: URL): void {
 	const token = url.searchParams.get("token");
-	if (!token || !verifyBookingToken(params.id, token)) throw error(404, "Booking not found");
+	if (!(token && verifyBookingToken(params.id, token))) throw error(404, "Booking not found");
 }
 
 export const load: PageServerLoad = async ({ params, url }) => {

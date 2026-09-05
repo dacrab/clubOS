@@ -82,6 +82,7 @@ ${cta}
 
 export async function sendBookingEmail(
 	bookingId: string,
+	origin: string,
 	subjectPrefix: string,
 	heading: string,
 	ctaLabel: string,
@@ -99,7 +100,6 @@ export async function sendBookingEmail(
 		return jsonResponse({ sent: false, reason: "No customer email on booking" });
 	}
 
-	const origin = env.ORIGIN ?? "http://localhost:5173";
 	const manageUrl = `${origin}/booking/${booking.id}/manage?token=${generateBookingToken(booking.id)}`;
 
 	await sendEmail(

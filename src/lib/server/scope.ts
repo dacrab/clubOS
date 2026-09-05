@@ -25,3 +25,14 @@ export async function resolveFacilityIds(s: DataScope): Promise<string[]> {
 export function facilityFilter(col: AnyPgColumn, ids: string[]): SQL {
 	return ids.length ? inArray(col, ids) : sql`false`;
 }
+
+/**
+ * SQL expression for the caller's effective low-stock threshold: the tenant's
+ * setting resolved via the caller's facility, or directly for tenant-wide
+ * members (facilityId === null), falling back to 3.
+ */
+export function lowStockThreshold(s: DataScope): SQL {
+	return s.facilityId
+		? sql`COALESCE((SELECT settings->>'low_stock_threshold' FROM tenants JOIN facilities ON facilities.tenant_id = tenants.id WHERE facilities.id = ${s.facilityId})::int, 3)`
+		: sql`COALESCE((SELECT settings->>'low_stock_threshold' FROM tenants WHERE id = ${s.tenantId})::int, 3)`;
+}

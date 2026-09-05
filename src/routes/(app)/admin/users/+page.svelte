@@ -22,6 +22,7 @@ import Table, {
 } from "$lib/components/ui/table/table.svelte";
 import { t } from "$lib/i18n/index.svelte";
 import type { MemberRole, UserForm, UserView } from "$lib/types/database";
+import { apiRequest } from "$lib/utils/api";
 import { runCrud } from "$lib/utils/crud";
 import { getRoleBadgeVariant } from "$lib/utils/helpers";
 
@@ -30,15 +31,6 @@ const { data } = $props();
 const ROLES: MemberRole[] = ["owner", "admin", "manager", "staff"];
 const getRoleLabel = (role: MemberRole): string => t(`users.roles.${role}`);
 const blankForm = (): UserForm => ({ fullName: "", email: "", password: "", role: "staff" });
-
-async function apiFetch(url: string, method: string, body?: unknown): Promise<void> {
-	const res = await fetch(url, {
-		method,
-		headers: { "Content-Type": "application/json" },
-		body: body ? JSON.stringify(body) : undefined,
-	});
-	if (!res.ok) throw new Error(await res.text());
-}
 
 let open = $state(false);
 let editing = $state<UserView | null>(null);
@@ -70,7 +62,7 @@ async function save(): Promise<void> {
 		...(!editing && { email: form.email }),
 	};
 	const ok = await runCrud(async () => {
-		await apiFetch("/api/admin/users", editing ? "PATCH" : "POST", payload);
+		await apiRequest("/api/admin/users", editing ? "PATCH" : "POST", payload);
 	});
 	if (ok) open = false;
 	saving = false;
@@ -80,7 +72,7 @@ async function confirmRemove(): Promise<void> {
 	if (!deleteTarget) return;
 	const target = deleteTarget;
 	const ok = await runCrud(async () => {
-		await apiFetch("/api/admin/users", "DELETE", { id: target.id });
+		await apiRequest("/api/admin/users", "DELETE", { id: target.id });
 	});
 	if (ok) deleteOpen = false;
 }

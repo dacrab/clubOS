@@ -16,19 +16,19 @@ const getValue = (obj: unknown, path: string): unknown =>
 
 describe("i18n", () => {
 	it("en and el have matching keys", () => {
-		const enKeys = getKeys(en).sort(),
-			elKeys = getKeys(el).sort();
+		const enKeys = getKeys(en).sort();
+		const elKeys = getKeys(el).sort();
 		expect(enKeys.filter((k) => !elKeys.includes(k))).toEqual([]);
 		expect(elKeys.filter((k) => !enKeys.includes(k))).toEqual([]);
 	});
 
 	it("placeholders match between locales", () => {
 		const issues = getKeys(en).filter((key) => {
-			const enVal = getValue(en, key),
-				elVal = getValue(el, key);
+			const enVal = getValue(en, key);
+			const elVal = getValue(el, key);
 			if (typeof enVal !== "string" || typeof elVal !== "string") return false;
-			const enP = (enVal.match(/\{\w+\}/g) || []).sort().join(),
-				elP = (elVal.match(/\{\w+\}/g) || []).sort().join();
+			const enP = (enVal.match(/\{\w+\}/g) || []).sort().join();
+			const elP = (elVal.match(/\{\w+\}/g) || []).sort().join();
 			return enP !== elP;
 		});
 		expect(issues).toEqual([]);

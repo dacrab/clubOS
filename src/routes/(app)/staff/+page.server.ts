@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 						.where(eq(orders.sessionId, activeSession.id))
 						.orderBy(desc(orders.createdAt))
 						.limit(5)
-				: Promise.resolve([] as Array<typeof orders.$inferSelect>),
+				: Promise.resolve([] as (typeof orders.$inferSelect)[]),
 			activeSession
 				? db
 						.select({ total: sql<string>`COALESCE(SUM(total_amount), '0')` })
@@ -34,7 +34,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 						.from(products)
 						.where(facilityFilter(products.facilityId, fids))
 						.orderBy(products.name)
-				: Promise.resolve([] as Array<typeof products.$inferSelect>),
+				: Promise.resolve([] as (typeof products.$inferSelect)[]),
 			fids.length
 				? db
 						.select({
@@ -47,12 +47,12 @@ export const load: PageServerLoad = async ({ parent }) => {
 						.where(facilityFilter(categories.facilityId, fids))
 						.orderBy(categories.name)
 				: Promise.resolve(
-						[] as Array<{
+						[] as {
 							id: string;
 							name: string;
 							parentId: string | null;
 							description: string | null;
-						}>,
+						}[],
 					),
 		]);
 

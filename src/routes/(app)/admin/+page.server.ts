@@ -6,7 +6,12 @@ import { orderItems } from "$lib/db/schema/order-items";
 import { orders } from "$lib/db/schema/orders";
 import { products } from "$lib/db/schema/products";
 import { loadOrderViews } from "$lib/server/order-views";
-import { type DataScope, facilityFilter, resolveFacilityIds } from "$lib/server/scope";
+import {
+	type DataScope,
+	facilityFilter,
+	lowStockThreshold,
+	resolveFacilityIds,
+} from "$lib/server/scope";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -29,9 +34,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 	const todayStart = sql`${today}::timestamptz`;
 	const todayEnd = sql`${today}::timestamptz + interval '1 day'`;
 
-	const thresholdExpr = scope.facilityId
-		? sql`COALESCE((SELECT settings->>'low_stock_threshold' FROM tenants JOIN facilities ON facilities.tenant_id = tenants.id WHERE facilities.id = ${scope.facilityId})::int, 3)`
-		: sql`COALESCE((SELECT settings->>'low_stock_threshold' FROM tenants WHERE id = ${scope.tenantId})::int, 3)`;
+	const thresholdExpr = lowStockThreshold(scope);
 
 	const [productsResult, categoriesResult, dashboard] = await Promise.all([
 		db

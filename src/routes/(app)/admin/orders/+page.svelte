@@ -1,10 +1,10 @@
 <script lang="ts">
-import { Eye, ShoppingCart } from "@lucide/svelte";
+import { ShoppingCart } from "@lucide/svelte";
 import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
+import OrderRow from "$lib/components/features/order-row.svelte";
 import EmptyState from "$lib/components/layout/empty-state.svelte";
 import PageHeader from "$lib/components/layout/page-header.svelte";
 import Badge from "$lib/components/ui/badge/badge.svelte";
-import Button from "$lib/components/ui/button/button.svelte";
 import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
 import Input from "$lib/components/ui/input/input.svelte";
 import Pagination from "$lib/components/ui/pagination/pagination.svelte";
@@ -17,8 +17,7 @@ import Table, {
 } from "$lib/components/ui/table/table.svelte";
 import { t } from "$lib/i18n/index.svelte";
 import type { OrderView } from "$lib/types/database";
-import { fmtCurrency, fmtDate } from "$lib/utils/format";
-import { getActiveOrderItems, shortId } from "$lib/utils/helpers";
+import { fmtCurrency } from "$lib/utils/format";
 
 const { data } = $props();
 
@@ -43,15 +42,10 @@ let showDialog = $state(false);
 			</TableRow></TableHeader>
 			<TableBody>
 				{#each data.orders as order (order.id)}
-					<TableRow class="cursor-pointer hover:bg-muted/50" onclick={() => { selectedOrder = order; showDialog = true; }}>
-						<TableCell class="font-mono text-sm">{shortId(order.id)}</TableCell>
-						<TableCell>{fmtDate(order.createdAt)}</TableCell>
-						<TableCell><Badge variant="outline">{getActiveOrderItems(order.orderItems).length} {t("orders.itemsCount")}</Badge></TableCell>
+					<OrderRow {order} onSelect={() => { selectedOrder = order; showDialog = true; }}>
 						<TableCell>{fmtCurrency(order.subtotal)}</TableCell>
 						<TableCell>{#if order.discountAmount > 0}<Badge variant="secondary">-{fmtCurrency(order.discountAmount)}</Badge>{:else}-{/if}</TableCell>
-						<TableCell class="font-medium">{fmtCurrency(order.totalAmount)}</TableCell>
-						<TableCell><Button variant="ghost" size="icon-sm" onclick={(e: MouseEvent) => { e.stopPropagation(); selectedOrder = order; showDialog = true; }} aria-label={t("common.view")}><Eye class="h-4 w-4" /></Button></TableCell>
-					</TableRow>
+					</OrderRow>
 				{/each}
 			</TableBody>
 		</Table></Card>

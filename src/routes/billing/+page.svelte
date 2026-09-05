@@ -13,7 +13,7 @@ let loading = $state(false);
 let selectedPlan = $state<PlanId | null>(null);
 
 async function handleSelect(planId: PlanId) {
-	if (!data.user?.id || !data.user?.email) {
+	if (!(data.user?.id && data.user?.email)) {
 		toast.error(t("common.error"));
 		return;
 	}

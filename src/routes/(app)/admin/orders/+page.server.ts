@@ -1,9 +1,10 @@
-import { desc, sql } from "drizzle-orm";
+import { and, desc, ilike, sql } from "drizzle-orm";
 import { getDb } from "$lib/db/client";
 import { orders } from "$lib/db/schema/orders";
 import { loadOrderViews } from "$lib/server/order-views";
-import { type DataScope, resolveFacilityIds } from "$lib/server/scope";
+import { type DataScope, facilityFilter, resolveFacilityIds } from "$lib/server/scope";
 import type { OrderView } from "$lib/types/database";
+import { escapeLike } from "$lib/utils/helpers";
 import type { PageServerLoad } from "./$types";
 
 const PER_PAGE = 25;
@@ -20,28 +21,31 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
 	if (!fids.length) return { orders: [], page, totalPages: 0, search };
 
-	const baseFilter = sql`facility_id = ANY(${fids})`;
-	const searchClause = search ? sql` AND id::text ILIKE ${`${search}%`}` : sql``;
+	const searchClause = search
+		? ilike(sql`${orders.id}::text`, `${escapeLike(search)}%`)
+		: undefined;
+	const whereClause = searchClause
+		? and(facilityFilter(orders.facilityId, fids), searchClause)
+		: facilityFilter(orders.facilityId, fids);
 
-	const countRows = await db.execute<{ count: number }>(
-		sql`SELECT count(*) FROM ${orders} WHERE ${baseFilter}${searchClause}`,
-	);
-	const count = Number(Array.isArray(countRows) ? countRows[0]?.count : 0);
-
-	const ordersResult = await db
-		.select()
-		.from(orders)
-		.where(sql`${baseFilter}${searchClause}`)
-		.orderBy(desc(orders.createdAt))
-		.limit(PER_PAGE)
-		.offset(from);
+	const [countResult, ordersResult] = await Promise.all([
+		db.select({ count: sql<number>`count(*)` }).from(orders).where(whereClause),
+		db
+			.select()
+			.from(orders)
+			.where(whereClause)
+			.orderBy(desc(orders.createdAt))
+			.limit(PER_PAGE)
+			.offset(from),
+	]);
+	const totalCount = Number(countResult[0]?.count ?? 0);
 
 	const ordersWithItems: OrderView[] = await loadOrderViews(ordersResult);
 
 	return {
 		orders: ordersWithItems,
 		page,
-		totalPages: Math.ceil(count / PER_PAGE),
+		totalPages: Math.ceil(totalCount / PER_PAGE),
 		search,
 	};
 };

@@ -21,7 +21,7 @@ import { DAY_MS } from "../src/lib/types/database";
 const DATABASE_URL = process.env.DATABASE_URL;
 const PASSWORD = process.env.SEED_PASSWORD;
 
-if (!DATABASE_URL || !PASSWORD) {
+if (!(DATABASE_URL && PASSWORD)) {
 	console.error("Missing env: DATABASE_URL, SEED_PASSWORD");
 	process.exit(1);
 }
@@ -205,8 +205,8 @@ async function seed(): Promise<void> {
 		.onConflictDoNothing();
 	step("Products (10)");
 
-	console.log(`\n✅ Done!\n`);
-	console.log(`   Login:    owner@clubos.app`);
+	console.log("\n✅ Done!\n");
+	console.log("   Login:    owner@clubos.app");
 	console.log(`   Password: ${PASSWORD}\n`);
 }
 

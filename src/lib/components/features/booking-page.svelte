@@ -126,7 +126,7 @@ async function checkConflict(startsAt: Date, endsAt: Date): Promise<boolean> {
 }
 
 async function handleSave(): Promise<void> {
-	if (!formData.customerName || !formData.customerPhone || !formData.startsAt) {
+	if (!(formData.customerName && formData.customerPhone && formData.startsAt)) {
 		toast.error(t("common.error"));
 		return;
 	}
