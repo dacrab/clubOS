@@ -65,6 +65,53 @@ async function syncSubscription(
 	});
 }
 
+async function handleCheckoutEvent(eventData: Record<string, unknown>): Promise<void> {
+	const status = safeStr(eventData.status);
+	const subId = safeStr(eventData.subscription_id);
+	if (!(status === "succeeded" && subId)) return;
+	const meta = safeMeta(eventData.customer_metadata);
+	const tenantId = meta?.tenant_id ?? null;
+	if (!tenantId) return;
+
+	const productId = firstProductId(eventData.products);
+	const plan = productId ? PLANS_META.find((p) => p.productId === productId) : undefined;
+	await syncSubscription(tenantId, {
+		customerId: safeStr(eventData.customer_id) ?? undefined,
+		subscriptionId: subId,
+		status: "active",
+		planName: plan?.name,
+		currentPeriodEnd: toIso(eventData.current_period_end),
+	});
+}
+
+async function handleSubscriptionUpdated(eventData: Record<string, unknown>): Promise<void> {
+	const meta = safeMeta(eventData.customer_metadata);
+	const tenantId = meta?.tenant_id ?? null;
+	if (!tenantId) return;
+
+	const productId = safeStr(eventData.product_id);
+	const plan = productId ? PLANS_META.find((p) => p.productId === productId) : undefined;
+	await syncSubscription(tenantId, {
+		customerId: safeStr(eventData.customer_id) ?? undefined,
+		subscriptionId: safeStr(eventData.id) ?? undefined,
+		status: safeStr(eventData.status) ?? "active",
+		planName: plan?.name,
+		currentPeriodEnd: toIso(eventData.current_period_end),
+	});
+}
+
+async function handleSubscriptionCanceled(eventData: Record<string, unknown>): Promise<void> {
+	const meta = safeMeta(eventData.customer_metadata);
+	const tenantId = meta?.tenant_id ?? null;
+	if (!tenantId) return;
+
+	await syncSubscription(tenantId, {
+		customerId: safeStr(eventData.customer_id) ?? undefined,
+		subscriptionId: safeStr(eventData.id) ?? undefined,
+		status: "canceled",
+	});
+}
+
 export const POST: RequestHandler = async ({ request }) => {
 	const secret = env.POLAR_WEBHOOK_SECRET;
 	if (!secret) {
@@ -88,56 +135,17 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	switch (eventType) {
 		case "checkout.created":
-		case "checkout.updated": {
-			const status = safeStr(eventData.status);
-			const subId = safeStr(eventData.subscription_id);
-			if (status === "succeeded" && subId) {
-				const meta = safeMeta(eventData.customer_metadata);
-				const tenantId = meta?.tenant_id ?? null;
-				if (!tenantId) break;
-
-				const productId = firstProductId(eventData.products);
-				const plan = productId ? PLANS_META.find((p) => p.productId === productId) : undefined;
-				await syncSubscription(tenantId, {
-					customerId: safeStr(eventData.customer_id) ?? undefined,
-					subscriptionId: subId,
-					status: "active",
-					planName: plan?.name,
-					currentPeriodEnd: toIso(eventData.current_period_end),
-				});
-			}
+		case "checkout.updated":
+			await handleCheckoutEvent(eventData);
 			break;
-		}
 		case "subscription.active":
-		case "subscription.updated": {
-			const meta = safeMeta(eventData.customer_metadata);
-			const tenantId = meta?.tenant_id ?? null;
-			if (!tenantId) break;
-
-			const productId = safeStr(eventData.product_id);
-			const plan = productId ? PLANS_META.find((p) => p.productId === productId) : undefined;
-			await syncSubscription(tenantId, {
-				customerId: safeStr(eventData.customer_id) ?? undefined,
-				subscriptionId: safeStr(eventData.id) ?? undefined,
-				status: safeStr(eventData.status) ?? "active",
-				planName: plan?.name,
-				currentPeriodEnd: toIso(eventData.current_period_end),
-			});
+		case "subscription.updated":
+			await handleSubscriptionUpdated(eventData);
 			break;
-		}
 		case "subscription.canceled":
-		case "subscription.revoked": {
-			const meta = safeMeta(eventData.customer_metadata);
-			const tenantId = meta?.tenant_id ?? null;
-			if (!tenantId) break;
-
-			await syncSubscription(tenantId, {
-				customerId: safeStr(eventData.customer_id) ?? undefined,
-				subscriptionId: safeStr(eventData.id) ?? undefined,
-				status: "canceled",
-			});
+		case "subscription.revoked":
+			await handleSubscriptionCanceled(eventData);
 			break;
-		}
 	}
 
 	return json({ received: true });

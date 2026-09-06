@@ -5,6 +5,8 @@ import * as schema from "./schema";
 
 type Db = ReturnType<typeof drizzle<typeof schema>>;
 
+export type DbClient = Db;
+
 let db: Db | undefined;
 
 export function getDb() {
