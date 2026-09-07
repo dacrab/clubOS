@@ -1,3 +1,4 @@
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 import { facilities } from "./facilities";
 
@@ -8,8 +9,7 @@ export const categories = pgTable(
 		facilityId: uuid("facility_id")
 			.notNull()
 			.references(() => facilities.id, { onDelete: "cascade" }),
-		// biome-ignore lint/suspicious/noExplicitAny: Drizzle self-referencing FK pattern
-		parentId: uuid("parent_id").references((): any => categories.id, {
+		parentId: uuid("parent_id").references((): AnyPgColumn => categories.id, {
 			onDelete: "set null",
 		}),
 		name: text("name").notNull(),

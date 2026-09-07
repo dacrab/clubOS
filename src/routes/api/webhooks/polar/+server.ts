@@ -112,6 +112,23 @@ async function handleSubscriptionCanceled(eventData: Record<string, unknown>): P
 	});
 }
 
+/** Parse a signature-verified webhook body; null means malformed (ack, no retry). */
+function parseEvent(body: string): { type: string | null; data: Record<string, unknown> } | null {
+	let event: unknown;
+	try {
+		event = JSON.parse(body);
+	} catch {
+		return null;
+	}
+	if (!event || typeof event !== "object") return { type: null, data: {} };
+	// Sound narrowing after the typeof guard above.
+	const record = event as Record<string, unknown>;
+	return {
+		type: safeStr(record.type),
+		data: { ...(record.data as Record<string, unknown> | undefined) },
+	};
+}
+
 export const POST: RequestHandler = async ({ request }) => {
 	const secret = env.POLAR_WEBHOOK_SECRET;
 	if (!secret) {
@@ -124,27 +141,23 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ error: "Invalid signature" }, { status: 400 });
 	}
 
-	const event: unknown = JSON.parse(body);
-	const eventType = safeStr(
-		event && typeof event === "object" ? (event as Record<string, unknown>).type : null,
-	);
-	const eventData: Record<string, unknown> =
-		event && typeof event === "object"
-			? { ...((event as Record<string, unknown>).data as Record<string, unknown> | undefined) }
-			: {};
+	// The signature is verified above, so a malformed body can only be a
+	// Polar-side issue; ack it so Polar does not retry-loop.
+	const event = parseEvent(body);
+	if (!event) return json({ received: true });
 
-	switch (eventType) {
+	switch (event.type) {
 		case "checkout.created":
 		case "checkout.updated":
-			await handleCheckoutEvent(eventData);
+			await handleCheckoutEvent(event.data);
 			break;
 		case "subscription.active":
 		case "subscription.updated":
-			await handleSubscriptionUpdated(eventData);
+			await handleSubscriptionUpdated(event.data);
 			break;
 		case "subscription.canceled":
 		case "subscription.revoked":
-			await handleSubscriptionCanceled(eventData);
+			await handleSubscriptionCanceled(event.data);
 			break;
 	}
 

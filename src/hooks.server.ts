@@ -32,10 +32,19 @@ function requireRole(path: string, role: MemberRole | null): void {
 		throw redirect(307, getHomeForRole(role));
 }
 
+/**
+ * svelte-clerk sets locals.auth to a function returning the request's auth object.
+ * Narrow with a runtime guard instead of a cast so a svelte-clerk upgrade that
+ * changes the shape fails closed to signed-out rather than mistyping every
+ * downstream auth decision. (Single justified cast, inside the guard.)
+ */
+function asAuthFn(v: unknown): (() => { userId: string | null }) | null {
+	return typeof v === "function" ? (v as () => { userId: string | null }) : null;
+}
+
 const authHandle: Handle = async ({ event, resolve }) => {
-	const authFn = event.locals.auth as (opts?: unknown) => { userId: string | null };
-	const auth = typeof authFn === "function" ? authFn() : authFn;
-	const userId = auth?.userId ?? null;
+	const authFn = asAuthFn(event.locals.auth);
+	const userId = authFn ? (authFn().userId ?? null) : null;
 	event.locals.userId = userId;
 
 	const path = event.url.pathname;

@@ -19,7 +19,11 @@ function isBooking(v: unknown): v is Booking {
 	);
 }
 
-let booking = $derived(isBooking(data.booking) ? data.booking : ({} as Booking));
+type MaybeBooking = { ok: true; booking: Booking } | { ok: false };
+
+let booking = $derived<MaybeBooking>(
+	isBooking(data.booking) ? { ok: true, booking: data.booking } : { ok: false },
+);
 
 let cancelMode = $state(false);
 let cancelReason = $state("");
@@ -43,19 +47,31 @@ function fmt(value: Date | string): string {
 	<title>{t("manage.title")} — ClubOS</title>
 </svelte:head>
 
+{#if !booking.ok}
+	<div class="mx-auto max-w-lg px-4 py-12">
+		<Card>
+			<CardHeader>
+				<CardTitle>{t("manage.title")}</CardTitle>
+			</CardHeader>
+			<CardContent>
+				<p>{t("manage.notFound")}</p>
+			</CardContent>
+		</Card>
+	</div>
+{:else}
 <div class="mx-auto max-w-lg px-4 py-12">
 	<Card>
 		<CardHeader>
 			<CardTitle>{t("manage.yourBooking")}</CardTitle>
 		</CardHeader>
 		<CardContent class="space-y-3">
-			<p><strong>{t("manage.name")}:</strong> {booking.customerName}</p>
-			<p><strong>{t("manage.phone")}:</strong> {booking.customerPhone ?? "—"}</p>
-			<p><strong>{t("manage.date")}:</strong> {fmt(booking.startsAt)}</p>
-			<p><strong>{t("manage.type")}:</strong> {booking.type}</p>
-			<p><strong>{t("manage.status")}:</strong> {t(`bookings.status.${booking.status}`)}</p>
-			{#if booking.notes}
-				<p><strong>{t("common.notes")}:</strong> {booking.notes}</p>
+			<p><strong>{t("manage.name")}:</strong> {booking.booking.customerName}</p>
+			<p><strong>{t("manage.phone")}:</strong> {booking.booking.customerPhone ?? "—"}</p>
+			<p><strong>{t("manage.date")}:</strong> {fmt(booking.booking.startsAt)}</p>
+			<p><strong>{t("manage.type")}:</strong> {booking.booking.type}</p>
+			<p><strong>{t("manage.status")}:</strong> {t(`bookings.status.${booking.booking.status}`)}</p>
+			{#if booking.booking.notes}
+				<p><strong>{t("common.notes")}:</strong> {booking.booking.notes}</p>
 			{/if}
 		</CardContent>
 	</Card>
@@ -103,3 +119,4 @@ function fmt(value: Date | string): string {
 		<p class="mt-4 text-red-600">{form.rescheduleMessage}</p>
 	{/if}
 </div>
+{/if}

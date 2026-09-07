@@ -1,5 +1,22 @@
 import type { DbAction } from "$lib/types/database";
 
+/**
+ * All /api/db success responses are raw JSON payloads (rows, `row | null`,
+ * `{ success: true }`); failures respond `{ error }` with a non-2xx status.
+ * Parse 2xx bodies strictly so shape drift fails loudly at this boundary
+ * instead of surfacing as `undefined` deep inside a component. A 2xx body
+ * carrying an error envelope is drift too — throw rather than return it.
+ */
+async function parseOkBody(res: Response): Promise<unknown> {
+	const body = await res.text();
+	if (body === "") return null;
+	try {
+		return JSON.parse(body) as unknown;
+	} catch {
+		throw new Error("Malformed API response");
+	}
+}
+
 export async function api<T>(
 	action: DbAction,
 	opts?: {
@@ -14,9 +31,15 @@ export async function api<T>(
 		body: JSON.stringify({ action, data: opts?.data, filter: opts?.filter }),
 		signal: opts?.signal,
 	});
-	const json: { error?: string } & Record<string, unknown> = await res.json().catch(() => ({}));
-	if (!res.ok) throw new Error(json.error ?? "API error");
-	return json as T;
+	if (!res.ok) throw new Error(await errorMessage(res));
+	const payload = await parseOkBody(res);
+	if (payload && typeof payload === "object" && "error" in payload) {
+		const err = (payload as Record<string, unknown>).error;
+		throw new Error(typeof err === "string" ? err : "Malformed API response");
+	}
+	// Single justified cast: T is the caller's declared shape for this action;
+	// malformed payloads are rejected above.
+	return payload as T;
 }
 
 /** Fetch an API endpoint with the given method (JSON body if provided). */
@@ -33,8 +56,9 @@ export async function apiRequest<T>(
 		signal: opts?.signal,
 	});
 	if (!res.ok) throw new Error(await errorMessage(res));
-	const json: Record<string, unknown> = await res.json().catch(() => ({}));
-	return json as T;
+	// Single justified cast: same-origin endpoints whose callers do not read
+	// the success payload (the users API responds 204 No Content).
+	return (await parseOkBody(res)) as T;
 }
 
 /** Prefer a JSON `{ error }` payload; fall back to plain text (e.g. users API). */

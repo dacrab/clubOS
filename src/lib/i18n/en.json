@@ -404,6 +404,7 @@
 		"messagePlaceholder": "e.g. same time next Saturday",
 		"sendRequest": "Send Request",
 		"canceledSuccess": "Booking canceled successfully.",
-		"rescheduleSent": "Reschedule request sent. Staff will contact you."
+		"rescheduleSent": "Reschedule request sent. Staff will contact you.",
+		"notFound": "Booking not found."
 	}
 }

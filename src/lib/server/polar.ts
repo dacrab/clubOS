@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { env } from "$env/dynamic/private";
 import { getDb } from "$lib/db/client";
 import { subscriptions } from "$lib/db/schema/subscriptions";
@@ -28,7 +29,7 @@ function polarHeaders(): Record<string, string> {
 	return _polarHeaders;
 }
 
-async function polarRequest<T>(path: string, init: RequestInit): Promise<T> {
+async function polarRequest(path: string, init: RequestInit): Promise<unknown> {
 	const res = await fetch(`${POLAR_BASE}${path}`, init);
 	const data: unknown = await res.json();
 	if (!res.ok) {
@@ -36,20 +37,23 @@ async function polarRequest<T>(path: string, init: RequestInit): Promise<T> {
 		const msg = err.detail?.[0]?.msg || err.error || "Polar API error";
 		throw new Error(msg);
 	}
-	return data as T;
+	return data;
 }
 
-export function polarPost<T = unknown>(path: string, body: Record<string, unknown>): Promise<T> {
-	return polarRequest<T>(path, {
+export function polarPost(path: string, body: Record<string, unknown>): Promise<unknown> {
+	return polarRequest(path, {
 		method: "POST",
 		headers: polarHeaders(),
 		body: JSON.stringify(body),
 	});
 }
 
-export function polarGet<T = unknown>(path: string): Promise<T> {
-	return polarRequest<T>(path, { headers: { Authorization: `Bearer ${polarToken()}` } });
+export function polarGet(path: string): Promise<unknown> {
+	return polarRequest(path, { headers: { Authorization: `Bearer ${polarToken()}` } });
 }
+
+// Polar's success payloads are external contracts; validate instead of casting.
+const CheckoutResponse = z.object({ url: z.string().url() });
 
 export async function createCheckout(args: {
 	productId: string;
@@ -59,7 +63,7 @@ export async function createCheckout(args: {
 	successUrl: string;
 	cancelUrl: string;
 }): Promise<{ url: string }> {
-	return polarPost<{ url: string }>("/checkouts/", {
+	const data = await polarPost("/checkouts/", {
 		products: [args.productId],
 		customer_email: args.email,
 		customer_metadata: {
@@ -69,10 +73,20 @@ export async function createCheckout(args: {
 		success_url: args.successUrl,
 		cancel_url: args.cancelUrl,
 	});
+	const parsed = CheckoutResponse.safeParse(data);
+	if (!parsed.success) {
+		throw new Error(`Polar checkout response invalid: ${parsed.error.message}`);
+	}
+	return parsed.data;
 }
 
 export async function getCheckout(checkoutId: string): Promise<Record<string, unknown>> {
-	return polarGet(`/checkouts/${checkoutId}`);
+	const data = await polarGet(`/checkouts/${checkoutId}`);
+	if (!data || typeof data !== "object") {
+		throw new Error("Polar checkout response invalid: expected an object");
+	}
+	// Sound narrowing after the typeof guard; consumers narrow fields with safeStr/safeMeta.
+	return data as Record<string, unknown>;
 }
 
 /** Unknown statuses fail closed so an unrecognized Polar status never grants access. */
