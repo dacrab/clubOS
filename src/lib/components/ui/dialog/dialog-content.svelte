@@ -13,8 +13,7 @@ type Props = {
 let { class: className = "", children, showClose = true }: Props = $props();
 
 function handleInteractOutside(e: Event) {
-	const target = e.target as HTMLElement;
-	if (target?.closest(".flatpickr-calendar")) {
+	if (e.target instanceof Element && e.target.closest(".flatpickr-calendar")) {
 		e.preventDefault();
 	}
 }

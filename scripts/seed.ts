@@ -185,7 +185,12 @@ async function seed(): Promise<void> {
 		.onConflictDoNothing()
 		.returning({ id: categories.id, name: categories.name });
 
-	const catMap = Object.fromEntries(catRows.map((c) => [c.name, c.id])) as Record<Category, string>;
+	const catIds = new Map(catRows.map((c) => [c.name, c.id]));
+	const categoryId = (cat: Category): string => {
+		const id = catIds.get(cat);
+		if (!id) throw new Error(`Seed is missing the "${cat}" category`);
+		return id;
+	};
 	step("Categories (3)");
 
 	// ── Products ──
@@ -194,7 +199,7 @@ async function seed(): Promise<void> {
 		.values(
 			PRODUCTS.map((p) => ({
 				facilityId: facility.id,
-				categoryId: catMap[p.cat],
+				categoryId: categoryId(p.cat),
 				name: p.name,
 				price: p.price,
 				stockQuantity: p.stock ?? 0,

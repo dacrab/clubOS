@@ -13,7 +13,8 @@ let uploadedUrl = $state("");
 let preview = $derived(uploadedUrl || currentUrl);
 
 function handleFile(e: Event): void {
-	const input = e.target as HTMLInputElement;
+	if (!(e.target instanceof HTMLInputElement)) return;
+	const input = e.target;
 	const file = input.files?.[0];
 	if (!file) return;
 	if (file.size > 500_000) {
