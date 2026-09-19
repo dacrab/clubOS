@@ -158,15 +158,16 @@ export const load: PageServerLoad = async ({ parent }) => {
 		},
 		recentOrders,
 		analytics: {
-			revenueByDay: ((revenueByDay ?? []) as Array<{ day: string; revenue: string }>).map((d) => ({
+			revenueByDay: revenueByDay.map((d) => ({
 				date: d.day,
 				revenue: Number(d.revenue),
 			})),
-			bestSellers: (bestSellers ?? []).map((p) => {
-				const bp = p as { productName: string; totalQty: number };
-				return { id: bp.productName, name: bp.productName, quantity: bp.totalQty };
-			}),
-			categorySales: (categorySales ?? []).map((c) => ({
+			bestSellers: bestSellers.map((p) => ({
+				id: p.productName,
+				name: p.productName,
+				quantity: p.totalQty,
+			})),
+			categorySales: categorySales.map((c) => ({
 				name: c.name,
 				quantity: Number(c.quantity ?? 0),
 			})),

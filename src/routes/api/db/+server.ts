@@ -27,8 +27,13 @@ function forbidden(msg = "Forbidden") {
 	return json({ error: msg }, { status: 403 });
 }
 
-function idFrom(filter: Record<string, unknown> | undefined): string {
-	return typeof filter?.id === "string" ? filter.id : "";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** A filter id must be a uuid: the column is uuid-typed, so a non-uuid string
+ * would surface as a Postgres cast error instead of an invalid request. */
+function idFrom(filter: Record<string, unknown> | undefined): string | null {
+	const id = filter?.id;
+	return typeof id === "string" && UUID_RE.test(id) ? id : null;
 }
 
 const ACTION_ROLES: Record<DbAction, readonly MemberRole[]> = {
@@ -75,12 +80,14 @@ async function handleProductsInsert(a: ActionContext): Promise<Response> {
 
 async function handleProductsUpdate(a: ActionContext): Promise<Response> {
 	if (!a.facilityId) return forbidden();
+	const id = idFrom(a.filter);
+	if (!id) return invalidRequest();
 	const parsed = ProductFormSchema.safeParse(a.data);
 	if (!parsed.success) return invalidRequest();
 	const [row] = await a.db
 		.update(products)
 		.set(parsed.data)
-		.where(and(eq(products.id, idFrom(a.filter)), eq(products.facilityId, a.facilityId)))
+		.where(and(eq(products.id, id), eq(products.facilityId, a.facilityId)))
 		.returning();
 	if (!row) return forbidden();
 	return json(row);
@@ -88,9 +95,11 @@ async function handleProductsUpdate(a: ActionContext): Promise<Response> {
 
 async function handleProductsDelete(a: ActionContext): Promise<Response> {
 	if (!a.facilityId) return forbidden();
+	const id = idFrom(a.filter);
+	if (!id) return invalidRequest();
 	const [row] = await a.db
 		.delete(products)
-		.where(and(eq(products.id, idFrom(a.filter)), eq(products.facilityId, a.facilityId)))
+		.where(and(eq(products.id, id), eq(products.facilityId, a.facilityId)))
 		.returning();
 	if (!row) return forbidden();
 	return json({ success: true });
@@ -127,12 +136,14 @@ async function handleCategoriesInsert(a: ActionContext): Promise<Response> {
 
 async function handleCategoriesUpdate(a: ActionContext): Promise<Response> {
 	if (!a.facilityId) return forbidden();
+	const id = idFrom(a.filter);
+	if (!id) return invalidRequest();
 	const parsed = CategoryFormSchema.safeParse(a.data);
 	if (!parsed.success) return invalidRequest();
 	const [row] = await a.db
 		.update(categories)
 		.set(parsed.data)
-		.where(and(eq(categories.id, idFrom(a.filter)), eq(categories.facilityId, a.facilityId)))
+		.where(and(eq(categories.id, id), eq(categories.facilityId, a.facilityId)))
 		.returning();
 	if (!row) return forbidden();
 	return json(row);
@@ -140,9 +151,11 @@ async function handleCategoriesUpdate(a: ActionContext): Promise<Response> {
 
 async function handleCategoriesDelete(a: ActionContext): Promise<Response> {
 	if (!a.facilityId) return forbidden();
+	const id = idFrom(a.filter);
+	if (!id) return invalidRequest();
 	const [row] = await a.db
 		.delete(categories)
-		.where(and(eq(categories.id, idFrom(a.filter)), eq(categories.facilityId, a.facilityId)))
+		.where(and(eq(categories.id, id), eq(categories.facilityId, a.facilityId)))
 		.returning();
 	if (!row) return forbidden();
 	return json({ success: true });
@@ -184,12 +197,14 @@ async function handleBookingsInsert(a: ActionContext): Promise<Response> {
 
 async function handleBookingsUpdate(a: ActionContext): Promise<Response> {
 	if (!a.facilityId) return forbidden();
+	const id = idFrom(a.filter);
+	if (!id) return invalidRequest();
 	const parsed = BookingFormSchema.safeParse(a.data);
 	if (!parsed.success) return invalidRequest();
 	const [row] = await a.db
 		.update(bookings)
 		.set({ ...parsed.data, updatedAt: sql`now()` })
-		.where(and(eq(bookings.id, idFrom(a.filter)), eq(bookings.facilityId, a.facilityId)))
+		.where(and(eq(bookings.id, id), eq(bookings.facilityId, a.facilityId)))
 		.returning();
 	if (!row) return forbidden();
 	return json(row);
@@ -197,9 +212,11 @@ async function handleBookingsUpdate(a: ActionContext): Promise<Response> {
 
 async function handleBookingsDelete(a: ActionContext): Promise<Response> {
 	if (!a.facilityId) return forbidden();
+	const id = idFrom(a.filter);
+	if (!id) return invalidRequest();
 	const [row] = await a.db
 		.delete(bookings)
-		.where(and(eq(bookings.id, idFrom(a.filter)), eq(bookings.facilityId, a.facilityId)))
+		.where(and(eq(bookings.id, id), eq(bookings.facilityId, a.facilityId)))
 		.returning();
 	if (!row) return forbidden();
 	return json({ success: true });

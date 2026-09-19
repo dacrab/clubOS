@@ -1,4 +1,5 @@
 import { browser } from "$app/environment";
+import { asRecord } from "$lib/utils/helpers";
 import el from "./el.json";
 import en from "./en.json";
 
@@ -7,15 +8,10 @@ export type Locale = "en" | "el";
 const translations = { en, el } as const;
 
 const getNestedValue = (obj: Record<string, unknown>, path: string): string => {
-	const result = path
-		.split(".")
-		.reduce<unknown>(
-			(acc, key) =>
-				acc && typeof acc === "object" && key in acc
-					? (acc as Record<string, unknown>)[key]
-					: undefined,
-			obj,
-		);
+	const result = path.split(".").reduce<unknown>((acc, key) => {
+		const record = asRecord(acc);
+		return record && key in record ? record[key] : undefined;
+	}, obj);
 	return typeof result === "string" ? result : path;
 };
 

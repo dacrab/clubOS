@@ -33,7 +33,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			status: "active",
 			planName: plan?.name ?? "Subscription",
 			currentPeriodEnd: toIso(checkoutData.current_period_end),
-			trialStart: null,
 			trialEnd: null,
 		});
 

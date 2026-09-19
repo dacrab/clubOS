@@ -22,6 +22,12 @@ export const getBookingStatusBadgeVariant = (status: BookingStatus | undefined):
 
 export const shortId = (id: string): string => id.slice(0, 8);
 
+/** Narrow an unknown JSON value to a plain object; null for arrays and primitives. */
+export function asRecord(value: unknown): Record<string, unknown> | null {
+	if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+	return value as Record<string, unknown>;
+}
+
 /** Escape SQL LIKE wildcards so user input matches literally. */
 export const escapeLike = (s: string): string => s.replace(/[\\%_]/g, "\\$&");
 

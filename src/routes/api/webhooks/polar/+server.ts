@@ -2,6 +2,7 @@ import { json } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
 import { PLANS_META } from "$lib/config/plans";
 import { safeMeta, safeStr, toIso, upsertSubscription, validateStatus } from "$lib/server/polar";
+import { asRecord } from "$lib/utils/helpers";
 import type { RequestHandler } from "./$types";
 
 const enc = new TextEncoder();
@@ -38,9 +39,8 @@ async function verifySignature(payload: string, header: string, secret: string):
 }
 
 function firstProductId(products: unknown): string | null {
-	if (!Array.isArray(products) || products.length === 0) return null;
-	const first = products[0];
-	return first && typeof first === "object" ? safeStr((first as Record<string, unknown>).id) : null;
+	if (!Array.isArray(products)) return null;
+	return safeStr(asRecord(products[0])?.id);
 }
 
 async function syncSubscription(
@@ -60,7 +60,6 @@ async function syncSubscription(
 		status: validateStatus(args.status),
 		planName: args.planName ?? "Subscription",
 		currentPeriodEnd: args.currentPeriodEnd ?? null,
-		trialStart: null,
 		trialEnd: null,
 	});
 }
@@ -121,11 +120,11 @@ function parseEvent(body: string): { type: string | null; data: Record<string, u
 		return null;
 	}
 	if (!event || typeof event !== "object") return { type: null, data: {} };
-	// Sound narrowing after the typeof guard above.
-	const record = event as Record<string, unknown>;
+	const record = asRecord(event);
+	if (!record) return { type: null, data: {} };
 	return {
 		type: safeStr(record.type),
-		data: { ...(record.data as Record<string, unknown> | undefined) },
+		data: { ...asRecord(record.data) },
 	};
 }
 

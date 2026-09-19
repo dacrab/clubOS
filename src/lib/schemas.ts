@@ -31,23 +31,21 @@ export const DbRequestSchema = z.object({
 	filter: z.record(z.string(), z.unknown()).optional(),
 });
 
-export const BookingConflictFilterSchema = z
-	.object({
-		type: BookingTypeSchema.optional(),
-		startsAt: z.string().optional(),
-		endsAt: z.string().optional(),
-		excludeId: z.string().optional(),
-	})
-	.passthrough();
+export const BookingConflictFilterSchema = z.object({
+	type: BookingTypeSchema.optional(),
+	startsAt: IsoDateSchema,
+	endsAt: IsoDateSchema,
+	excludeId: z.string().uuid().optional(),
+});
 
 export const RegisterSessionCloseFilterSchema = z.object({
-	sessionId: z.string().min(1),
+	sessionId: z.string().uuid(),
 	closingCash: z.number().optional(),
 	notes: z.string().nullable().optional(),
 });
 
 export const OrderCreateFilterSchema = z.object({
-	sessionId: z.string().min(1),
+	sessionId: z.string().uuid(),
 	items: z
 		.array(
 			z.object({

@@ -5,12 +5,13 @@ import Input from "$lib/components/ui/input/input.svelte";
 import Label from "$lib/components/ui/label/label.svelte";
 import { t } from "$lib/i18n/index.svelte";
 import { type Booking, DEFAULT_TIMEZONE } from "$lib/types/database";
+import { asRecord } from "$lib/utils/helpers";
 
 const { data, form } = $props();
 
 function isBooking(v: unknown): v is Booking {
-	if (!v || typeof v !== "object") return false;
-	const b = v as Record<string, unknown>;
+	const b = asRecord(v);
+	if (!b) return false;
 	return (
 		typeof b.id === "string" &&
 		typeof b.customerName === "string" &&

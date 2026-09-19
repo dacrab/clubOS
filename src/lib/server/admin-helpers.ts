@@ -8,6 +8,8 @@ export interface AdminCtx {
 	callerRole: MemberRole;
 }
 
+const text = (msg: string, status: number): Response => new Response(msg, { status });
+
 export async function requireAdmin(userId: string | null): Promise<AdminCtx | Response> {
 	if (!userId) return text("Unauthorized", 401);
 	const db = getDb();
@@ -26,5 +28,3 @@ export async function requireAdmin(userId: string | null): Promise<AdminCtx | Re
 export function canAssign(caller: MemberRole, target: MemberRole | undefined): boolean {
 	return !target || caller === "owner" || target !== "owner";
 }
-
-const text = (msg: string, status: number): Response => new Response(msg, { status });

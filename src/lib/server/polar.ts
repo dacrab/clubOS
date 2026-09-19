@@ -3,6 +3,7 @@ import { env } from "$env/dynamic/private";
 import { getDb } from "$lib/db/client";
 import { subscriptions } from "$lib/db/schema/subscriptions";
 import { SUBSCRIPTION_STATUSES, type SubscriptionStatus } from "$lib/types/database";
+import { asRecord } from "$lib/utils/helpers";
 
 const POLAR_BASE = "https://api.polar.sh/v1";
 
@@ -81,19 +82,14 @@ export async function createCheckout(args: {
 }
 
 export async function getCheckout(checkoutId: string): Promise<Record<string, unknown>> {
-	const data = await polarGet(`/checkouts/${checkoutId}`);
-	if (!data || typeof data !== "object") {
-		throw new Error("Polar checkout response invalid: expected an object");
-	}
-	// Sound narrowing after the typeof guard; consumers narrow fields with safeStr/safeMeta.
-	return data as Record<string, unknown>;
+	const record = asRecord(await polarGet(`/checkouts/${checkoutId}`));
+	if (!record) throw new Error("Polar checkout response invalid: expected an object");
+	return record;
 }
 
 /** Unknown statuses fail closed so an unrecognized Polar status never grants access. */
 export function validateStatus(s: string): SubscriptionStatus {
-	return SUBSCRIPTION_STATUSES.includes(s as SubscriptionStatus)
-		? (s as SubscriptionStatus)
-		: "canceled";
+	return SUBSCRIPTION_STATUSES.find((status) => status === s) ?? "canceled";
 }
 
 export function safeStr(val: unknown): string | null {
@@ -101,10 +97,10 @@ export function safeStr(val: unknown): string | null {
 }
 
 export function safeMeta(val: unknown): Record<string, string> | null {
-	if (!val || typeof val !== "object") return null;
-	if (typeof (val as Record<string, unknown>).tenant_id !== "string") return null;
+	const record = asRecord(val);
+	if (!record || typeof record.tenant_id !== "string") return null;
 	const result: Record<string, string> = {};
-	for (const [k, v] of Object.entries(val)) {
+	for (const [k, v] of Object.entries(record)) {
 		if (typeof v === "string") result[k] = v;
 	}
 	return result;
@@ -132,7 +128,6 @@ export async function upsertSubscription(args: {
 	status: SubscriptionStatus;
 	planName: string;
 	currentPeriodEnd: string | null;
-	trialStart: string | null;
 	trialEnd: string | null;
 }): Promise<void> {
 	const { tenantId, customerId, subscriptionId, status, planName, currentPeriodEnd, trialEnd } =

@@ -39,7 +39,7 @@ async function openRegister(): Promise<void> {
 		await api("registerSessions.insert", {
 			data: {
 				openedAt: new Date().toISOString(),
-				opening_cash: 0,
+				openingCash: 0,
 			},
 		});
 		return {};

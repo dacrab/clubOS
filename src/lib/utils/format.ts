@@ -1,4 +1,4 @@
-import { CURRENCY_OPTIONS } from "$lib/config/settings";
+import { currencySymbol } from "$lib/config/settings";
 import { settings } from "$lib/state/settings.svelte";
 
 const DATE_FORMATS = {
@@ -23,7 +23,7 @@ export function fmtDate(date: string | Date, includeTime = true): string {
 	const fmt = settings.current.date_format;
 	const pad = (n: number): string => String(n).padStart(2, "0");
 	const [day, month, year] = [pad(d.getDate()), pad(d.getMonth() + 1), String(d.getFullYear())];
-	const formatter = DATE_FORMATS[fmt as keyof typeof DATE_FORMATS] ?? DATE_FORMATS["DD/MM/YYYY"];
+	const formatter = DATE_FORMATS[fmt];
 	const dateStr = formatter(day, month, year);
 
 	if (!includeTime) return dateStr;
@@ -51,11 +51,6 @@ export function formatDateTimeLocal(date: Date, withTime = true): string {
 	return `${base}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-type CurrencyValue = (typeof CURRENCY_OPTIONS)[number]["value"];
-const CURRENCY_SYMBOLS = Object.fromEntries(
-	CURRENCY_OPTIONS.map((c) => [c.value, c.symbol]),
-) as Partial<Record<CurrencyValue, string>>;
-
 export function currentCurrencySymbol(): string {
-	return CURRENCY_SYMBOLS[settings.current.currency_code] ?? "?";
+	return currencySymbol(settings.current.currency_code);
 }

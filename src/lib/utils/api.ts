@@ -1,4 +1,5 @@
 import type { DbAction } from "$lib/types/database";
+import { asRecord } from "./helpers";
 
 /**
  * All /api/db success responses are raw JSON payloads (rows, `row | null`,
@@ -33,9 +34,9 @@ export async function api<T>(
 	});
 	if (!res.ok) throw new Error(await errorMessage(res));
 	const payload = await parseOkBody(res);
-	if (payload && typeof payload === "object" && "error" in payload) {
-		const err = (payload as Record<string, unknown>).error;
-		throw new Error(typeof err === "string" ? err : "Malformed API response");
+	const record = asRecord(payload);
+	if (record && "error" in record) {
+		throw new Error(typeof record.error === "string" ? record.error : "Malformed API response");
 	}
 	// Single justified cast: T is the caller's declared shape for this action;
 	// malformed payloads are rejected above.

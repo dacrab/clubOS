@@ -45,6 +45,10 @@ export const CURRENCY_OPTIONS = [
 	{ value: "DKK", labelKey: "settings.currencies.DKK", symbol: "kr" },
 ] as const;
 
+/** Display symbol for a currency code, falling back to the default currency. */
+export const currencySymbol = (code: string | undefined): string =>
+	CURRENCY_OPTIONS.find((c) => c.value === code)?.symbol ?? "€";
+
 export const DATE_FORMAT_OPTIONS = [
 	{ value: "DD/MM/YYYY", labelKey: "settings.dateFormats.DDMMYYYY" },
 	{ value: "MM/DD/YYYY", labelKey: "settings.dateFormats.MMDDYYYY" },
