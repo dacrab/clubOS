@@ -27,7 +27,7 @@ jobs:
       - name: Test
         run: bun run test
 
-      - uses: dopplerhq/cli-action@v4
+      - uses: dopplerhq/cli-action@4819d808ab99e5cde19a0637a16536a4038fad73 # v4
 
       - name: Build
         run: doppler run -- bun run build
