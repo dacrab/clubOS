@@ -7,7 +7,7 @@ export { default as CardTitle } from "./card-title.svelte";
 </script>
 
 <script lang="ts">
-	import { cn } from "$lib/utils/cn";
+	import { cn } from "#lib/utils/cn.js";
 	import type { Snippet } from "svelte";
 	import type { HTMLAttributes } from "svelte/elements";
 

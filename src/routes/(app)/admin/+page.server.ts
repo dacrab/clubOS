@@ -1,17 +1,17 @@
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
-import { getDb } from "$lib/db/client";
-import { categories } from "$lib/db/schema/categories";
-import { memberships } from "$lib/db/schema/memberships";
-import { orderItems } from "$lib/db/schema/order-items";
-import { orders } from "$lib/db/schema/orders";
-import { products } from "$lib/db/schema/products";
-import { loadOrderViews } from "$lib/server/order-views";
+import { getDb } from "#lib/db/client.js";
+import { categories } from "#lib/db/schema/categories.js";
+import { memberships } from "#lib/db/schema/memberships.js";
+import { orderItems } from "#lib/db/schema/order-items.js";
+import { orders } from "#lib/db/schema/orders.js";
+import { products } from "#lib/db/schema/products.js";
+import { loadOrderViews } from "#lib/server/order-views.js";
 import {
 	type DataScope,
 	facilityFilter,
 	lowStockThreshold,
 	resolveFacilityIds,
-} from "$lib/server/scope";
+} from "#lib/server/scope.js";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ parent }) => {

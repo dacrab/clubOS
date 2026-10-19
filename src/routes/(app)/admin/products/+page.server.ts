@@ -1,9 +1,9 @@
 import { and, eq, like, sql } from "drizzle-orm";
-import { getDb } from "$lib/db/client";
-import { categories } from "$lib/db/schema/categories";
-import { products } from "$lib/db/schema/products";
-import { facilityFilter, lowStockThreshold, resolveFacilityIds } from "$lib/server/scope";
-import { escapeLike } from "$lib/utils/helpers";
+import { getDb } from "#lib/db/client.js";
+import { categories } from "#lib/db/schema/categories.js";
+import { products } from "#lib/db/schema/products.js";
+import { facilityFilter, lowStockThreshold, resolveFacilityIds } from "#lib/server/scope.js";
+import { escapeLike } from "#lib/utils/helpers.js";
 import type { PageServerLoad } from "./$types";
 
 const PER_PAGE = 25;

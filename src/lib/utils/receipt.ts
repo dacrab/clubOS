@@ -1,8 +1,8 @@
-import { i18n, t } from "$lib/i18n/index.svelte";
-import type { CartItem } from "$lib/types/database";
-import { fmtCurrency } from "$lib/utils/format";
-import { shortId } from "$lib/utils/helpers";
-import { escapeHtml } from "$lib/utils/html";
+import { i18n, t } from "#lib/i18n/index.svelte.js";
+import type { CartItem } from "#lib/types/database.js";
+import { fmtCurrency } from "#lib/utils/format.js";
+import { shortId } from "#lib/utils/helpers.js";
+import { escapeHtml } from "#lib/utils/html.js";
 
 export interface ReceiptData {
 	items: CartItem[];

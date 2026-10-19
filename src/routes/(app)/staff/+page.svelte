@@ -1,24 +1,24 @@
 <script lang="ts">
 import { DollarSign, Plus } from "@lucide/svelte";
-import NewSaleDialog from "$lib/components/features/new-sale-dialog.svelte";
-import RecentOrders from "$lib/components/features/recent-orders.svelte";
-import PageHeader from "$lib/components/layout/page-header.svelte";
-import Button from "$lib/components/ui/button/button.svelte";
-import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
-import Dialog from "$lib/components/ui/dialog/dialog.svelte";
-import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
-import DialogDescription from "$lib/components/ui/dialog/dialog-description.svelte";
-import DialogFooter from "$lib/components/ui/dialog/dialog-footer.svelte";
-import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
-import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
-import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
-import Input from "$lib/components/ui/input/input.svelte";
-import Label from "$lib/components/ui/label/label.svelte";
-import Separator from "$lib/components/ui/separator/separator.svelte";
-import { t } from "$lib/i18n/index.svelte";
-import { api } from "$lib/utils/api";
-import { runCrud } from "$lib/utils/crud";
-import { fmtCurrency, fmtDate } from "$lib/utils/format";
+import NewSaleDialog from "#lib/components/features/new-sale-dialog.svelte";
+import RecentOrders from "#lib/components/features/recent-orders.svelte";
+import PageHeader from "#lib/components/layout/page-header.svelte";
+import Button from "#lib/components/ui/button/button.svelte";
+import Card, { CardContent } from "#lib/components/ui/card/card.svelte";
+import Dialog from "#lib/components/ui/dialog/dialog.svelte";
+import DialogContent from "#lib/components/ui/dialog/dialog-content.svelte";
+import DialogDescription from "#lib/components/ui/dialog/dialog-description.svelte";
+import DialogFooter from "#lib/components/ui/dialog/dialog-footer.svelte";
+import DialogHeader from "#lib/components/ui/dialog/dialog-header.svelte";
+import DialogTitle from "#lib/components/ui/dialog/dialog-title.svelte";
+import FormDialog from "#lib/components/ui/form-dialog/form-dialog.svelte";
+import Input from "#lib/components/ui/input/input.svelte";
+import Label from "#lib/components/ui/label/label.svelte";
+import Separator from "#lib/components/ui/separator/separator.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
+import { api } from "#lib/utils/api.js";
+import { runCrud } from "#lib/utils/crud.js";
+import { fmtCurrency, fmtDate } from "#lib/utils/format.js";
 
 const { data } = $props();
 

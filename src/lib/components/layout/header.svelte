@@ -1,18 +1,18 @@
 <script lang="ts">
 import { LogOut, User } from "@lucide/svelte";
 import { SignOutButton } from "svelte-clerk";
-import LanguageSwitcher from "$lib/components/layout/language-switcher.svelte";
-import ThemeToggle from "$lib/components/layout/theme-toggle.svelte";
-import Badge from "$lib/components/ui/badge/badge.svelte";
-import DropdownMenu from "$lib/components/ui/dropdown-menu/dropdown-menu.svelte";
-import DropdownMenuContent from "$lib/components/ui/dropdown-menu/dropdown-menu-content.svelte";
-import DropdownMenuItem from "$lib/components/ui/dropdown-menu/dropdown-menu-item.svelte";
-import DropdownMenuLabel from "$lib/components/ui/dropdown-menu/dropdown-menu-label.svelte";
-import DropdownMenuSeparator from "$lib/components/ui/dropdown-menu/dropdown-menu-separator.svelte";
-import DropdownMenuTrigger from "$lib/components/ui/dropdown-menu/dropdown-menu-trigger.svelte";
-import { t } from "$lib/i18n/index.svelte";
-import { session } from "$lib/state/session.svelte";
-import { getRoleBadgeVariant } from "$lib/utils/helpers";
+import LanguageSwitcher from "#lib/components/layout/language-switcher.svelte";
+import ThemeToggle from "#lib/components/layout/theme-toggle.svelte";
+import Badge from "#lib/components/ui/badge/badge.svelte";
+import DropdownMenu from "#lib/components/ui/dropdown-menu/dropdown-menu.svelte";
+import DropdownMenuContent from "#lib/components/ui/dropdown-menu/dropdown-menu-content.svelte";
+import DropdownMenuItem from "#lib/components/ui/dropdown-menu/dropdown-menu-item.svelte";
+import DropdownMenuLabel from "#lib/components/ui/dropdown-menu/dropdown-menu-label.svelte";
+import DropdownMenuSeparator from "#lib/components/ui/dropdown-menu/dropdown-menu-separator.svelte";
+import DropdownMenuTrigger from "#lib/components/ui/dropdown-menu/dropdown-menu-trigger.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
+import { session } from "#lib/state/session.svelte.js";
+import { getRoleBadgeVariant } from "#lib/utils/helpers.js";
 
 type Props = { public?: boolean; showLogo?: boolean };
 let { public: isPublic = false, showLogo = true }: Props = $props();

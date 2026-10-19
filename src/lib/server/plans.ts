@@ -1,5 +1,5 @@
-import { PLANS_META, type PlanData } from "$lib/config/plans";
-import { currencySymbol } from "$lib/config/settings";
+import { PLANS_META, type PlanData } from "#lib/config/plans.js";
+import { currencySymbol } from "#lib/config/settings.js";
 
 export function fetchPlans(): PlanData[] {
 	return PLANS_META.map((meta) => {

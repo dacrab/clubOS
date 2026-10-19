@@ -1,13 +1,12 @@
-import { json } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
-import type { TxOrDb } from "$lib/db/client";
-import { getDb } from "$lib/db/client";
-import { facilities } from "$lib/db/schema/facilities";
-import { memberships } from "$lib/db/schema/memberships";
-import { subscriptions } from "$lib/db/schema/subscriptions";
-import { tenants } from "$lib/db/schema/tenants";
-import { OnboardingBodySchema } from "$lib/schemas";
-import { DAY_MS, DEFAULT_TIMEZONE, TRIAL_DAYS } from "$lib/types/database";
+import type { TxOrDb } from "#lib/db/client.js";
+import { getDb } from "#lib/db/client.js";
+import { facilities } from "#lib/db/schema/facilities.js";
+import { memberships } from "#lib/db/schema/memberships.js";
+import { subscriptions } from "#lib/db/schema/subscriptions.js";
+import { tenants } from "#lib/db/schema/tenants.js";
+import { OnboardingBodySchema } from "#lib/schemas.js";
+import { DAY_MS, DEFAULT_TIMEZONE, TRIAL_DAYS } from "#lib/types/database.js";
 import type { RequestHandler } from "./$types";
 
 const GREEK_MAP: Record<string, string> = {
@@ -63,10 +62,10 @@ async function uniqueSlug(db: TxOrDb, base: string): Promise<string> {
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const userId = locals.userId;
-	if (!userId) return json({ error: "Unauthorized" }, { status: 401 });
+	if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
 	const parsed = OnboardingBodySchema.safeParse(await request.json().catch(() => ({})));
-	if (!parsed.success) return json({ error: "Missing required fields" }, { status: 400 });
+	if (!parsed.success) return Response.json({ error: "Missing required fields" }, { status: 400 });
 
 	const { tenant, facility, createTrial = true } = parsed.data;
 	const db = getDb();
@@ -77,7 +76,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		.where(eq(memberships.userId, userId))
 		.limit(1);
 
-	if (existingMems[0]) return json({ tenantId: existingMems[0].tenantId });
+	if (existingMems[0]) return Response.json({ tenantId: existingMems[0].tenantId });
 
 	try {
 		const tenantId = await db.transaction(async (tx) => {
@@ -116,9 +115,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return tenantRow.id;
 		});
 
-		return json({ tenantId });
+		return Response.json({ tenantId });
 	} catch (err) {
 		const message = err instanceof Error ? err.message : "Unknown error";
-		return json({ error: `Failed to complete onboarding: ${message}` }, { status: 500 });
+		return Response.json({ error: `Failed to complete onboarding: ${message}` }, { status: 500 });
 	}
 };

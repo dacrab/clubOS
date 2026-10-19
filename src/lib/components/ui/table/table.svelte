@@ -7,7 +7,7 @@ export { default as TableRow } from "./table-row.svelte";
 </script>
 
 <script lang="ts">
-	import { cn } from "$lib/utils/cn";
+	import { cn } from "#lib/utils/cn.js";
 	import type { Snippet } from "svelte";
 	import type { HTMLTableAttributes } from "svelte/elements";
 

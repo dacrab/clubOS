@@ -1,5 +1,5 @@
-import { browser } from "$app/environment";
-import { asRecord } from "$lib/utils/helpers";
+import { asRecord } from "#lib/utils/helpers.js";
+import { browser } from "$app/env";
 import el from "./el.json";
 import en from "./en.json";
 

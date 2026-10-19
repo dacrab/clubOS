@@ -13,12 +13,12 @@ import {
 	Users,
 } from "@lucide/svelte";
 import { SignOutButton } from "svelte-clerk";
+import Button from "#lib/components/ui/button/button.svelte";
+import Separator from "#lib/components/ui/separator/separator.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
+import { session } from "#lib/state/session.svelte.js";
+import { cn } from "#lib/utils/cn.js";
 import { page } from "$app/state";
-import Button from "$lib/components/ui/button/button.svelte";
-import Separator from "$lib/components/ui/separator/separator.svelte";
-import { t } from "$lib/i18n/index.svelte";
-import { session } from "$lib/state/session.svelte";
-import { cn } from "$lib/utils/cn";
 
 let collapsed = $state(false);
 

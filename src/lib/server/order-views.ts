@@ -1,8 +1,8 @@
 import { inArray } from "drizzle-orm";
-import { getDb } from "$lib/db/client";
-import { orderItems } from "$lib/db/schema/order-items";
-import type { orders } from "$lib/db/schema/orders";
-import type { OrderItemView, OrderView } from "$lib/types/database";
+import { getDb } from "#lib/db/client.js";
+import { orderItems } from "#lib/db/schema/order-items.js";
+import type { orders } from "#lib/db/schema/orders.js";
+import type { OrderItemView, OrderView } from "#lib/types/database.js";
 
 type OrderRow = typeof orders.$inferSelect;
 

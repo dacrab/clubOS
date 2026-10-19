@@ -1,11 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { env } from "$env/dynamic/private";
-import { DAY_MS } from "$lib/types/database";
+import { DAY_MS } from "#lib/types/database.js";
+import { BOOKING_TOKEN_SECRET } from "$app/env/private";
 
 const DEFAULT_TTL_MS = 30 * DAY_MS;
 
 function getSecret(): string {
-	const secret = env.BOOKING_TOKEN_SECRET;
+	const secret = BOOKING_TOKEN_SECRET;
 	if (!secret) throw new Error("Missing BOOKING_TOKEN_SECRET env var");
 	return secret;
 }

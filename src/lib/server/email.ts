@@ -1,14 +1,12 @@
 import { eq } from "drizzle-orm";
-import { env } from "$env/dynamic/private";
-import { getDb } from "$lib/db/client";
-import { bookings } from "$lib/db/schema/bookings";
-import { generateBookingToken } from "$lib/server/token";
-import { DEFAULT_TIMEZONE } from "$lib/types/database";
-import { escapeHtml } from "$lib/utils/html";
+import { getDb } from "#lib/db/client.js";
+import { bookings } from "#lib/db/schema/bookings.js";
+import { generateBookingToken } from "#lib/server/token.js";
+import { DEFAULT_TIMEZONE } from "#lib/types/database.js";
+import { escapeHtml } from "#lib/utils/html.js";
+import { EMAIL_FROM, RESEND_API_KEY } from "$app/env/private";
 
-const RESEND_API_KEY = env.RESEND_API_KEY;
-
-const FROM = env.EMAIL_FROM ?? "ClubOS <bookings@clubos.app>";
+const FROM = EMAIL_FROM ?? "ClubOS <bookings@clubos.app>";
 
 function jsonResponse(body: Record<string, unknown>, status = 200): Response {
 	return new Response(JSON.stringify(body), {

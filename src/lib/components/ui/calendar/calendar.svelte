@@ -2,8 +2,8 @@
 import type { DateValue } from "@internationalized/date";
 import { ChevronLeft, ChevronRight } from "@lucide/svelte";
 import { Calendar as CalendarPrimitive } from "bits-ui";
-import { buttonVariants } from "$lib/components/ui/button/button.svelte";
-import { cn } from "$lib/utils/cn";
+import { buttonVariants } from "#lib/components/ui/button/button.svelte";
+import { cn } from "#lib/utils/cn.js";
 
 type Props = {
 	value?: DateValue;

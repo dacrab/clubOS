@@ -1,6 +1,6 @@
 <script lang="ts">
 import { Cake, CircleDot } from "@lucide/svelte";
-import BookingPage from "$lib/components/features/booking-page.svelte";
+import BookingPage from "#lib/components/features/booking-page.svelte";
 
 const { data } = $props();
 

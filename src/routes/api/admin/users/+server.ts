@@ -1,11 +1,15 @@
 import { and, eq } from "drizzle-orm";
 import { clerkClient } from "svelte-clerk/server";
 import type { z } from "zod";
-import { getDb } from "$lib/db/client";
-import { memberships } from "$lib/db/schema/memberships";
-import { users } from "$lib/db/schema/users";
-import { AdminUserCreateSchema, AdminUserDeleteSchema, AdminUserUpdateSchema } from "$lib/schemas";
-import { type AdminCtx, canAssign, requireAdmin } from "$lib/server/admin-helpers";
+import { getDb } from "#lib/db/client.js";
+import { memberships } from "#lib/db/schema/memberships.js";
+import { users } from "#lib/db/schema/users.js";
+import {
+	AdminUserCreateSchema,
+	AdminUserDeleteSchema,
+	AdminUserUpdateSchema,
+} from "#lib/schemas.js";
+import { type AdminCtx, canAssign, requireAdmin } from "#lib/server/admin-helpers.js";
 import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ request, locals }) => {

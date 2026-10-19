@@ -1,5 +1,5 @@
-import { currencySymbol } from "$lib/config/settings";
-import { settings } from "$lib/state/settings.svelte";
+import { currencySymbol } from "#lib/config/settings.js";
+import { settings } from "#lib/state/settings.svelte.js";
 
 const DATE_FORMATS = {
 	"MM/DD/YYYY": (d: string, m: string, y: string) => `${m}/${d}/${y}`,

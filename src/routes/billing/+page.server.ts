@@ -1,5 +1,5 @@
-import { resolveUserContext } from "$lib/server/auth";
-import { fetchPlans } from "$lib/server/plans";
+import { resolveUserContext } from "#lib/server/auth.js";
+import { fetchPlans } from "#lib/server/plans.js";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {

@@ -1,12 +1,12 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
-import { getDb } from "$lib/db/client";
-import { memberships } from "$lib/db/schema/memberships";
-import { registerSessions } from "$lib/db/schema/register-sessions";
-import { subscriptions } from "$lib/db/schema/subscriptions";
-import { tenants } from "$lib/db/schema/tenants";
-import { users } from "$lib/db/schema/users";
-import { resolveFacilityIds } from "$lib/server/scope";
-import type { MemberRole } from "$lib/types/database";
+import { getDb } from "#lib/db/client.js";
+import { memberships } from "#lib/db/schema/memberships.js";
+import { registerSessions } from "#lib/db/schema/register-sessions.js";
+import { subscriptions } from "#lib/db/schema/subscriptions.js";
+import { tenants } from "#lib/db/schema/tenants.js";
+import { users } from "#lib/db/schema/users.js";
+import { resolveFacilityIds } from "#lib/server/scope.js";
+import type { MemberRole } from "#lib/types/database.js";
 
 export const EMPTY_CTX: App.UserContext = {
 	membership: null,

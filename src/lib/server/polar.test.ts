@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { subscriptions } from "$lib/db/schema/subscriptions";
+import type { subscriptions } from "#lib/db/schema/subscriptions.js";
 import { isActive } from "./polar";
 
 type Sub = typeof subscriptions.$inferSelect;
