@@ -1,10 +1,10 @@
 import { desc, eq, sql } from "drizzle-orm";
-import { getDb } from "$lib/db/client";
-import { categories } from "$lib/db/schema/categories";
-import { orders } from "$lib/db/schema/orders";
-import { products } from "$lib/db/schema/products";
-import { loadOrderViews } from "$lib/server/order-views";
-import { facilityFilter, resolveFacilityIds } from "$lib/server/scope";
+import { getDb } from "#lib/db/client.js";
+import { categories } from "#lib/db/schema/categories.js";
+import { orders } from "#lib/db/schema/orders.js";
+import { products } from "#lib/db/schema/products.js";
+import { loadOrderViews } from "#lib/server/order-views.js";
+import { facilityFilter, resolveFacilityIds } from "#lib/server/scope.js";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ parent }) => {

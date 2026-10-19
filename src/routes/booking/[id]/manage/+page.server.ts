@@ -1,8 +1,8 @@
 import { error, fail } from "@sveltejs/kit";
 import { eq, sql } from "drizzle-orm";
-import { getDb } from "$lib/db/client";
-import { bookings } from "$lib/db/schema/bookings";
-import { verifyBookingToken } from "$lib/server/token";
+import { getDb } from "#lib/db/client.js";
+import { bookings } from "#lib/db/schema/bookings.js";
+import { verifyBookingToken } from "#lib/server/token.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 function validateAccess(params: { id: string }, url: URL): void {

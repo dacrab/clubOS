@@ -1,12 +1,12 @@
 import { handleErrorWithSentry, sentryHandle } from "@sentry/sveltekit";
-import { type Handle, type HandleServerError, redirect } from "@sveltejs/kit";
-import { sequence } from "@sveltejs/kit/hooks";
+import { redirect } from "@sveltejs/kit";
+import { type Handle, type HandleServerError, sequence } from "@sveltejs/kit/hooks";
 import { withClerkHandler } from "svelte-clerk/server";
-import { getHomeForRole } from "$lib/config/auth";
-import { EMPTY_CTX, resolveUserContext } from "$lib/server/auth";
-import { isActive } from "$lib/server/polar";
-import { checkRateLimit } from "$lib/server/rate-limiter";
-import type { MemberRole } from "$lib/types/database";
+import { getHomeForRole } from "#lib/config/auth.js";
+import { EMPTY_CTX, resolveUserContext } from "#lib/server/auth.js";
+import { isActive } from "#lib/server/polar.js";
+import { checkRateLimit } from "#lib/server/rate-limiter.js";
+import type { MemberRole } from "#lib/types/database.js";
 
 const enableSentry = typeof process !== "undefined" && !process.env.VITEST;
 

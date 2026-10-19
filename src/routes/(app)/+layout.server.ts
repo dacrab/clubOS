@@ -1,7 +1,7 @@
 import { redirect } from "@sveltejs/kit";
 import type { AuthObject } from "svelte-clerk/server";
 import { buildClerkProps } from "svelte-clerk/server";
-import { resolveUserContext } from "$lib/server/auth";
+import { resolveUserContext } from "#lib/server/auth.js";
 import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ locals }) => {

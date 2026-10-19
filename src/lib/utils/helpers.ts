@@ -1,4 +1,4 @@
-import type { BookingStatus, MemberRole, OrderItemView } from "$lib/types/database";
+import type { BookingStatus, MemberRole, OrderItemView } from "#lib/types/database.js";
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "success" | "warning";
 

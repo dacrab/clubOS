@@ -3,7 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const now = vi.hoisted(() => ({ value: Date.now() }));
 const envState = vi.hoisted(() => ({ env: {} as Record<string, string | undefined> }));
 
-vi.mock("$env/dynamic/private", () => ({ env: envState.env }));
+vi.mock("$app/env/private", () => ({
+	get UPSTASH_REDIS_REST_URL() {
+		return envState.env.UPSTASH_REDIS_REST_URL;
+	},
+	get UPSTASH_REDIS_REST_TOKEN() {
+		return envState.env.UPSTASH_REDIS_REST_TOKEN;
+	},
+}));
 vi.stubGlobal("Date", { now: () => now.value });
 
 const fetchMock = vi.hoisted(() => vi.fn());

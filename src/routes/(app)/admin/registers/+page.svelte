@@ -1,21 +1,21 @@
 <script lang="ts">
 import { ChevronDown, ChevronUp, DollarSign } from "@lucide/svelte";
-import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
-import OrderRow from "$lib/components/features/order-row.svelte";
-import EmptyState from "$lib/components/layout/empty-state.svelte";
-import PageHeader from "$lib/components/layout/page-header.svelte";
-import Badge from "$lib/components/ui/badge/badge.svelte";
-import Button from "$lib/components/ui/button/button.svelte";
-import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
+import OrderDetailsDialog from "#lib/components/features/order-details-dialog.svelte";
+import OrderRow from "#lib/components/features/order-row.svelte";
+import EmptyState from "#lib/components/layout/empty-state.svelte";
+import PageHeader from "#lib/components/layout/page-header.svelte";
+import Badge from "#lib/components/ui/badge/badge.svelte";
+import Button from "#lib/components/ui/button/button.svelte";
+import Card, { CardContent, CardHeader, CardTitle } from "#lib/components/ui/card/card.svelte";
 import Table, {
 	TableBody,
 	TableHead,
 	TableHeader,
 	TableRow,
-} from "$lib/components/ui/table/table.svelte";
-import { t } from "$lib/i18n/index.svelte";
-import type { OrderView } from "$lib/types/database";
-import { fmtCurrency, fmtDate } from "$lib/utils/format";
+} from "#lib/components/ui/table/table.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
+import type { OrderView } from "#lib/types/database.js";
+import { fmtCurrency, fmtDate } from "#lib/utils/format.js";
 
 const { data } = $props();
 

@@ -1,5 +1,5 @@
-import type { TenantSettings } from "$lib/config/settings";
-import { DEFAULT_SETTINGS } from "$lib/config/settings";
+import type { TenantSettings } from "#lib/config/settings.js";
+import { DEFAULT_SETTINGS } from "#lib/config/settings.js";
 
 let current = $state(DEFAULT_SETTINGS);
 

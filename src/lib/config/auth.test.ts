@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { MemberRole } from "$lib/types/database";
+import type { MemberRole } from "#lib/types/database.js";
 import { getHomeForRole } from "./auth";
 
 describe("getHomeForRole", () => {

@@ -1,6 +1,6 @@
 <script lang="ts">
 import { toast } from "svelte-sonner";
-import { t } from "$lib/i18n/index.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
 
 type Props = {
 	onUpload: (url: string) => void;

@@ -2,27 +2,31 @@
 import { RotateCcw, Save } from "@lucide/svelte";
 import { untrack } from "svelte";
 import { toast } from "svelte-sonner";
-import { enhance } from "$app/forms";
-import { invalidateAll } from "$app/navigation";
-import PageHeader from "$lib/components/layout/page-header.svelte";
-import Button from "$lib/components/ui/button/button.svelte";
+import PageHeader from "#lib/components/layout/page-header.svelte";
+import Button from "#lib/components/ui/button/button.svelte";
 import Card, {
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "$lib/components/ui/card/card.svelte";
-import Input from "$lib/components/ui/input/input.svelte";
-import Select from "$lib/components/ui/select/select.svelte";
-import SelectContent from "$lib/components/ui/select/select-content.svelte";
-import SelectItem from "$lib/components/ui/select/select-item.svelte";
-import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
-import Separator from "$lib/components/ui/separator/separator.svelte";
-import SettingRow from "$lib/components/ui/setting-row/setting-row.svelte";
-import Switch from "$lib/components/ui/switch/switch.svelte";
-import { CURRENCY_OPTIONS, DATE_FORMAT_OPTIONS, TIME_FORMAT_OPTIONS } from "$lib/config/settings";
-import { i18n, type Locale, t } from "$lib/i18n/index.svelte";
-import { isValid as isValidTheme, type Theme, theme } from "$lib/state/theme.svelte";
+} from "#lib/components/ui/card/card.svelte";
+import Input from "#lib/components/ui/input/input.svelte";
+import Select from "#lib/components/ui/select/select.svelte";
+import SelectContent from "#lib/components/ui/select/select-content.svelte";
+import SelectItem from "#lib/components/ui/select/select-item.svelte";
+import SelectTrigger from "#lib/components/ui/select/select-trigger.svelte";
+import Separator from "#lib/components/ui/separator/separator.svelte";
+import SettingRow from "#lib/components/ui/setting-row/setting-row.svelte";
+import Switch from "#lib/components/ui/switch/switch.svelte";
+import {
+	CURRENCY_OPTIONS,
+	DATE_FORMAT_OPTIONS,
+	TIME_FORMAT_OPTIONS,
+} from "#lib/config/settings.js";
+import { i18n, type Locale, t } from "#lib/i18n/index.svelte.js";
+import { isValid as isValidTheme, type Theme, theme } from "#lib/state/theme.svelte.js";
+import { enhance } from "$app/forms";
+import { refreshAll } from "$app/navigation";
 
 const THEME_OPTIONS: { value: Theme; labelKey: string }[] = [
 	{ value: "system", labelKey: "settings.themes.system" },
@@ -72,7 +76,7 @@ const handleReset = (): void => {
 			saving = false;
 			if (result.type === "success") {
 				toast.success(t("common.success"));
-				await invalidateAll();
+				await refreshAll();
 			} else {
 				toast.error(t("common.error"));
 			}

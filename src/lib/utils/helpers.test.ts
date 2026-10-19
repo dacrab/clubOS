@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { OrderItemView } from "$lib/types/database";
+import type { OrderItemView } from "#lib/types/database.js";
 import {
 	getActiveOrderItems,
 	getBookingStatusBadgeVariant,

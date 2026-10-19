@@ -1,9 +1,9 @@
 import { and, eq, isNull, or } from "drizzle-orm";
 import { clerkClient } from "svelte-clerk/server";
-import { getDb } from "$lib/db/client";
-import { memberships } from "$lib/db/schema/memberships";
-import { users } from "$lib/db/schema/users";
-import { USERS_PER_PAGE } from "$lib/types/database";
+import { getDb } from "#lib/db/client.js";
+import { memberships } from "#lib/db/schema/memberships.js";
+import { users } from "#lib/db/schema/users.js";
+import { USERS_PER_PAGE } from "#lib/types/database.js";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ parent }) => {

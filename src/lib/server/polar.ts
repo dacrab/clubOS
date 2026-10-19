@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { env } from "$env/dynamic/private";
-import { getDb } from "$lib/db/client";
-import { subscriptions } from "$lib/db/schema/subscriptions";
-import { SUBSCRIPTION_STATUSES, type SubscriptionStatus } from "$lib/types/database";
-import { asRecord } from "$lib/utils/helpers";
+import { getDb } from "#lib/db/client.js";
+import { subscriptions } from "#lib/db/schema/subscriptions.js";
+import { SUBSCRIPTION_STATUSES, type SubscriptionStatus } from "#lib/types/database.js";
+import { asRecord } from "#lib/utils/helpers.js";
+import { POLAR_ACCESS_TOKEN } from "$app/env/private";
 
 const POLAR_BASE = "https://api.polar.sh/v1";
 
@@ -14,7 +14,7 @@ function toTimestamp(value: Date | string | null): number | null {
 }
 
 function polarToken(): string {
-	const token = env.POLAR_ACCESS_TOKEN;
+	const token = POLAR_ACCESS_TOKEN;
 	if (!token) throw new Error("POLAR_ACCESS_TOKEN is not set");
 	return token;
 }

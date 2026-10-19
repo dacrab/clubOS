@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
-import { getDb } from "$lib/db/client";
-import { bookings } from "$lib/db/schema/bookings";
-import { facilities } from "$lib/db/schema/facilities";
-import { resolveUserContext } from "$lib/server/auth";
+import { getDb } from "#lib/db/client.js";
+import { bookings } from "#lib/db/schema/bookings.js";
+import { facilities } from "#lib/db/schema/facilities.js";
+import { resolveUserContext } from "#lib/server/auth.js";
 
 /**
  * Fetch a booking and verify the caller is allowed to act on it. A caller with a

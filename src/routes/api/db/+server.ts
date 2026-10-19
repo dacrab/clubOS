@@ -1,13 +1,12 @@
-import { json } from "@sveltejs/kit";
 import { and, eq, inArray, ne, sql } from "drizzle-orm";
-import { mergeSettings } from "$lib/config/settings";
-import { type DbClient, getDb } from "$lib/db/client";
-import { bookings } from "$lib/db/schema/bookings";
-import { categories } from "$lib/db/schema/categories";
-import { orderItems } from "$lib/db/schema/order-items";
-import { orders } from "$lib/db/schema/orders";
-import { products } from "$lib/db/schema/products";
-import { registerSessions } from "$lib/db/schema/register-sessions";
+import { mergeSettings } from "#lib/config/settings.js";
+import { type DbClient, getDb } from "#lib/db/client.js";
+import { bookings } from "#lib/db/schema/bookings.js";
+import { categories } from "#lib/db/schema/categories.js";
+import { orderItems } from "#lib/db/schema/order-items.js";
+import { orders } from "#lib/db/schema/orders.js";
+import { products } from "#lib/db/schema/products.js";
+import { registerSessions } from "#lib/db/schema/register-sessions.js";
 import {
 	BookingConflictFilterSchema,
 	BookingFormSchema,
@@ -17,14 +16,14 @@ import {
 	ProductFormSchema,
 	RegisterSessionCloseFilterSchema,
 	RegisterSessionOpenSchema,
-} from "$lib/schemas";
-import { resolveUserContext } from "$lib/server/auth";
-import type { DbAction, MemberRole } from "$lib/types/database";
-import { escapeLike } from "$lib/utils/helpers";
+} from "#lib/schemas.js";
+import { resolveUserContext } from "#lib/server/auth.js";
+import type { DbAction, MemberRole } from "#lib/types/database.js";
+import { escapeLike } from "#lib/utils/helpers.js";
 import type { RequestHandler } from "./$types";
 
 function forbidden(msg = "Forbidden") {
-	return json({ error: msg }, { status: 403 });
+	return Response.json({ error: msg }, { status: 403 });
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -64,7 +63,7 @@ type ActionContext = {
 	filter: Record<string, unknown> | undefined;
 };
 
-const invalidRequest = () => json({ error: "Invalid request" }, { status: 400 });
+const invalidRequest = () => Response.json({ error: "Invalid request" }, { status: 400 });
 
 // ── Products ──
 async function handleProductsInsert(a: ActionContext): Promise<Response> {
@@ -75,7 +74,7 @@ async function handleProductsInsert(a: ActionContext): Promise<Response> {
 		.insert(products)
 		.values({ ...parsed.data, facilityId: a.facilityId, createdBy: a.userId })
 		.returning();
-	return json(row ?? null);
+	return Response.json(row ?? null);
 }
 
 async function handleProductsUpdate(a: ActionContext): Promise<Response> {
@@ -90,7 +89,7 @@ async function handleProductsUpdate(a: ActionContext): Promise<Response> {
 		.where(and(eq(products.id, id), eq(products.facilityId, a.facilityId)))
 		.returning();
 	if (!row) return forbidden();
-	return json(row);
+	return Response.json(row);
 }
 
 async function handleProductsDelete(a: ActionContext): Promise<Response> {
@@ -102,7 +101,7 @@ async function handleProductsDelete(a: ActionContext): Promise<Response> {
 		.where(and(eq(products.id, id), eq(products.facilityId, a.facilityId)))
 		.returning();
 	if (!row) return forbidden();
-	return json({ success: true });
+	return Response.json({ success: true });
 }
 
 async function handleProductsSearch(a: ActionContext): Promise<Response> {
@@ -119,7 +118,7 @@ async function handleProductsSearch(a: ActionContext): Promise<Response> {
 		)
 		.orderBy(products.name)
 		.limit(20);
-	return json(rows);
+	return Response.json(rows);
 }
 
 // ── Categories ──
@@ -131,7 +130,7 @@ async function handleCategoriesInsert(a: ActionContext): Promise<Response> {
 		.insert(categories)
 		.values({ ...parsed.data, facilityId: a.facilityId })
 		.returning();
-	return json(row ?? null);
+	return Response.json(row ?? null);
 }
 
 async function handleCategoriesUpdate(a: ActionContext): Promise<Response> {
@@ -146,7 +145,7 @@ async function handleCategoriesUpdate(a: ActionContext): Promise<Response> {
 		.where(and(eq(categories.id, id), eq(categories.facilityId, a.facilityId)))
 		.returning();
 	if (!row) return forbidden();
-	return json(row);
+	return Response.json(row);
 }
 
 async function handleCategoriesDelete(a: ActionContext): Promise<Response> {
@@ -158,7 +157,7 @@ async function handleCategoriesDelete(a: ActionContext): Promise<Response> {
 		.where(and(eq(categories.id, id), eq(categories.facilityId, a.facilityId)))
 		.returning();
 	if (!row) return forbidden();
-	return json({ success: true });
+	return Response.json({ success: true });
 }
 
 // ── Bookings ──
@@ -191,8 +190,9 @@ async function handleBookingsInsert(a: ActionContext): Promise<Response> {
 			.returning();
 		return row;
 	});
-	if (!created) return json({ error: "Slot conflicts with an existing booking" }, { status: 409 });
-	return json(created);
+	if (!created)
+		return Response.json({ error: "Slot conflicts with an existing booking" }, { status: 409 });
+	return Response.json(created);
 }
 
 async function handleBookingsUpdate(a: ActionContext): Promise<Response> {
@@ -207,7 +207,7 @@ async function handleBookingsUpdate(a: ActionContext): Promise<Response> {
 		.where(and(eq(bookings.id, id), eq(bookings.facilityId, a.facilityId)))
 		.returning();
 	if (!row) return forbidden();
-	return json(row);
+	return Response.json(row);
 }
 
 async function handleBookingsDelete(a: ActionContext): Promise<Response> {
@@ -219,7 +219,7 @@ async function handleBookingsDelete(a: ActionContext): Promise<Response> {
 		.where(and(eq(bookings.id, id), eq(bookings.facilityId, a.facilityId)))
 		.returning();
 	if (!row) return forbidden();
-	return json({ success: true });
+	return Response.json({ success: true });
 }
 
 async function handleBookingsCheckConflict(a: ActionContext): Promise<Response> {
@@ -242,7 +242,7 @@ async function handleBookingsCheckConflict(a: ActionContext): Promise<Response> 
 				conflictFilter.data.excludeId ? ne(bookings.id, conflictFilter.data.excludeId) : undefined,
 			),
 		);
-	return json({ conflict: Number(conf[0]?.count ?? 0) > 0 });
+	return Response.json({ conflict: Number(conf[0]?.count ?? 0) > 0 });
 }
 
 // ── Register Sessions ──
@@ -254,7 +254,7 @@ async function handleRegisterSessionsInsert(a: ActionContext): Promise<Response>
 		.insert(registerSessions)
 		.values({ ...parsed.data, facilityId: a.facilityId, openedBy: a.userId })
 		.returning();
-	return json(row ?? null);
+	return Response.json(row ?? null);
 }
 
 async function handleRegisterSessionsClose(a: ActionContext): Promise<Response> {
@@ -289,7 +289,7 @@ async function handleRegisterSessionsClose(a: ActionContext): Promise<Response> 
 		return row;
 	});
 	if (!closed) return forbidden();
-	return json({ success: true });
+	return Response.json({ success: true });
 }
 
 // ── Orders ──
@@ -332,7 +332,7 @@ async function resolveOrderLineItems(
 		if (!product)
 			return {
 				ok: false,
-				response: json(
+				response: Response.json(
 					{ error: "One or more items are not available in this facility" },
 					{ status: 400 },
 				),
@@ -354,7 +354,7 @@ async function handleOrdersCreate(a: ActionContext): Promise<Response> {
 	if (!a.facilityId) return forbidden();
 	const facilityId = a.facilityId;
 	const orderFilter = OrderCreateFilterSchema.safeParse(a.filter);
-	if (!orderFilter.success) return json({ error: "No items" }, { status: 400 });
+	if (!orderFilter.success) return Response.json({ error: "No items" }, { status: 400 });
 
 	const { items, couponCount = 0 } = orderFilter.data;
 
@@ -371,7 +371,7 @@ async function handleOrdersCreate(a: ActionContext): Promise<Response> {
 			),
 		)
 		.limit(1);
-	if (!session[0]) return json({ error: "Invalid register session" }, { status: 400 });
+	if (!session[0]) return Response.json({ error: "Invalid register session" }, { status: 400 });
 
 	const { lineItems, productById } = resolved;
 	const subtotal = lineItems.reduce((s, i) => s + i.lineTotal, 0);
@@ -422,7 +422,7 @@ async function handleOrdersCreate(a: ActionContext): Promise<Response> {
 		return created;
 	});
 
-	return json(order ?? null);
+	return Response.json(order ?? null);
 }
 
 const ACTION_HANDLERS: Record<DbAction, (a: ActionContext) => Promise<Response>> = {
@@ -444,7 +444,7 @@ const ACTION_HANDLERS: Record<DbAction, (a: ActionContext) => Promise<Response>>
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const userId = locals.userId;
-	if (!userId) return json({ error: "Unauthorized" }, { status: 401 });
+	if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
 	const ctx = await resolveUserContext(userId);
 	if (!ctx.membership) return forbidden("No membership");
@@ -452,7 +452,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const body = await request.json().catch(() => null);
 	const parsed = DbRequestSchema.safeParse(body);
-	if (!parsed.success) return json({ error: "Invalid request" }, { status: 400 });
+	if (!parsed.success) return Response.json({ error: "Invalid request" }, { status: 400 });
 	const { action, data, filter } = parsed.data;
 
 	if (!ACTION_ROLES[action].includes(role)) return forbidden("Insufficient role");

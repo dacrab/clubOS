@@ -1,8 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("$env/dynamic/private", () => ({
-	env: { BOOKING_TOKEN_SECRET: "test-secret-123" },
-}));
+vi.mock("$app/env/private", () => ({ BOOKING_TOKEN_SECRET: "test-secret-123" }));
 
 describe("token utils", () => {
 	it("generates and verifies a token", async () => {

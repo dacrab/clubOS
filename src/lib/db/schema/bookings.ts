@@ -1,5 +1,5 @@
 import { jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import type { BookingDetails } from "$lib/types/database";
+import type { BookingDetails } from "#lib/types/database.js";
 import { bookingStatusEnum, bookingTypeEnum } from "./enums";
 import { facilities } from "./facilities";
 import { users } from "./users";

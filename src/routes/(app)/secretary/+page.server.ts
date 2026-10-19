@@ -1,7 +1,7 @@
 import { and, eq, gte, sql } from "drizzle-orm";
-import { getDb } from "$lib/db/client";
-import { bookings } from "$lib/db/schema/bookings";
-import { facilityFilter, resolveFacilityIds } from "$lib/server/scope";
+import { getDb } from "#lib/db/client.js";
+import { bookings } from "#lib/db/schema/bookings.js";
+import { facilityFilter, resolveFacilityIds } from "#lib/server/scope.js";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ parent }) => {

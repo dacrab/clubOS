@@ -1,7 +1,7 @@
 <script lang="ts">
 import { BarChart3 } from "@lucide/svelte";
-import { t } from "$lib/i18n/index.svelte";
-import { currentCurrencySymbol, fmtCurrency } from "$lib/utils/format";
+import { t } from "#lib/i18n/index.svelte.js";
+import { currentCurrencySymbol, fmtCurrency } from "#lib/utils/format.js";
 
 type Day = { date: string; revenue: number };
 type Props = { days: Day[] };

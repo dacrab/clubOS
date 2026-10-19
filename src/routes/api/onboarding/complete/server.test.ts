@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { MockUser } from "$lib/testing/mocks";
+import type { MockUser } from "#lib/testing/mocks.js";
 import {
 	createMockLocals,
 	createMockRequest,
 	createMockUser,
 	generateId,
-} from "$lib/testing/mocks";
+} from "#lib/testing/mocks.js";
 
 const qb = vi.hoisted(() => ({
 	insert: vi.fn(),
@@ -13,14 +13,14 @@ const qb = vi.hoisted(() => ({
 	transaction: vi.fn(),
 }));
 
-vi.mock("$lib/db/client", () => ({
+vi.mock("#lib/db/client.js", () => ({
 	getDb: () => ({ insert: qb.insert, select: qb.select, transaction: qb.transaction }),
 }));
 
-vi.mock("$lib/db/schema/tenants", () => ({ tenants: {} }));
-vi.mock("$lib/db/schema/facilities", () => ({ facilities: {} }));
-vi.mock("$lib/db/schema/memberships", () => ({ memberships: {} }));
-vi.mock("$lib/db/schema/subscriptions", () => ({ subscriptions: {} }));
+vi.mock("#lib/db/schema/tenants.js", () => ({ tenants: {} }));
+vi.mock("#lib/db/schema/facilities.js", () => ({ facilities: {} }));
+vi.mock("#lib/db/schema/memberships.js", () => ({ memberships: {} }));
+vi.mock("#lib/db/schema/subscriptions.js", () => ({ subscriptions: {} }));
 
 const { POST } = await import("./+server");
 
