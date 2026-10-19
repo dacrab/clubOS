@@ -1,13 +1,13 @@
 <script lang="ts">
 import { Eye } from "@lucide/svelte";
-import Badge from "$lib/components/ui/badge/badge.svelte";
-import Button from "$lib/components/ui/button/button.svelte";
-import TableCell from "$lib/components/ui/table/table-cell.svelte";
-import TableRow from "$lib/components/ui/table/table-row.svelte";
-import { t } from "$lib/i18n/index.svelte";
-import type { OrderView } from "$lib/types/database";
-import { fmtCurrency, fmtDate } from "$lib/utils/format";
-import { getActiveOrderItems, shortId } from "$lib/utils/helpers";
+import Badge from "#lib/components/ui/badge/badge.svelte";
+import Button from "#lib/components/ui/button/button.svelte";
+import TableCell from "#lib/components/ui/table/table-cell.svelte";
+import TableRow from "#lib/components/ui/table/table-row.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
+import type { OrderView } from "#lib/types/database.js";
+import { fmtCurrency, fmtDate } from "#lib/utils/format.js";
+import { getActiveOrderItems, shortId } from "#lib/utils/helpers.js";
 
 type Props = {
 	order: OrderView;

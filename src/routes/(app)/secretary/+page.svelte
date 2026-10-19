@@ -1,14 +1,14 @@
 <script lang="ts">
 import { Cake, Calendar, CircleDot } from "@lucide/svelte";
-import PageHeader from "$lib/components/layout/page-header.svelte";
-import Button from "$lib/components/ui/button/button.svelte";
+import PageHeader from "#lib/components/layout/page-header.svelte";
+import Button from "#lib/components/ui/button/button.svelte";
 import Card, {
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "$lib/components/ui/card/card.svelte";
-import { t } from "$lib/i18n/index.svelte";
+} from "#lib/components/ui/card/card.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
 
 const { data } = $props();
 </script>

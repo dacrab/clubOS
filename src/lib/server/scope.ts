@@ -1,7 +1,7 @@
 import { eq, inArray, type SQL, sql } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { getDb } from "$lib/db/client";
-import { facilities } from "$lib/db/schema/facilities";
+import { getDb } from "#lib/db/client.js";
+import { facilities } from "#lib/db/schema/facilities.js";
 
 export interface DataScope {
 	tenantId: string | null;

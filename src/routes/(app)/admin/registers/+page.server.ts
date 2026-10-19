@@ -1,9 +1,9 @@
 import { desc } from "drizzle-orm";
-import { getDb } from "$lib/db/client";
-import { orders } from "$lib/db/schema/orders";
-import { registerSessions } from "$lib/db/schema/register-sessions";
-import { loadOrderViews } from "$lib/server/order-views";
-import { facilityFilter, resolveFacilityIds } from "$lib/server/scope";
+import { getDb } from "#lib/db/client.js";
+import { orders } from "#lib/db/schema/orders.js";
+import { registerSessions } from "#lib/db/schema/register-sessions.js";
+import { loadOrderViews } from "#lib/server/order-views.js";
+import { facilityFilter, resolveFacilityIds } from "#lib/server/scope.js";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ parent }) => {

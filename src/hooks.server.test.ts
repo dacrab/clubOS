@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createMockMembership, createMockTenant, createMockUser } from "$lib/testing/mocks";
+import { createMockMembership, createMockTenant, createMockUser } from "#lib/testing/mocks.js";
 
 const { mockResolveUserContext } = vi.hoisted(() => ({
 	mockResolveUserContext: vi.fn(),
 }));
 
-vi.mock("$lib/server/auth", () => ({
+vi.mock("#lib/server/auth.js", () => ({
 	resolveUserContext: mockResolveUserContext,
 	EMPTY_CTX: {
 		membership: null,
@@ -16,7 +16,7 @@ vi.mock("$lib/server/auth", () => ({
 	},
 }));
 
-vi.mock("$lib/server/polar", () => ({
+vi.mock("#lib/server/polar.js", () => ({
 	isActive: (sub: Record<string, unknown> | null) => sub?.status === "active",
 }));
 
@@ -35,7 +35,7 @@ vi.mock("svelte-clerk/server", () => ({
 	withClerkHandler: () => (o: unknown) => o,
 }));
 
-vi.mock("$lib/server/rate-limiter", () => ({
+vi.mock("#lib/server/rate-limiter.js", () => ({
 	checkRateLimit: () => ({ allowed: true, remaining: 999, resetAt: Date.now() + 60000 }),
 }));
 

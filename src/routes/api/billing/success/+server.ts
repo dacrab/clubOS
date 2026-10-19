@@ -1,6 +1,6 @@
 import { redirect } from "@sveltejs/kit";
-import { PLANS_META } from "$lib/config/plans";
-import { getCheckout, safeMeta, safeStr, toIso, upsertSubscription } from "$lib/server/polar";
+import { PLANS_META } from "#lib/config/plans.js";
+import { getCheckout, safeMeta, safeStr, toIso, upsertSubscription } from "#lib/server/polar.js";
 import type { RequestHandler } from "./$types";
 
 function isRedirect(err: unknown): err is { status: number; location: string } {

@@ -1,8 +1,7 @@
-import { json } from "@sveltejs/kit";
-import { env } from "$env/dynamic/private";
-import { PLANS_META } from "$lib/config/plans";
-import { safeMeta, safeStr, toIso, upsertSubscription, validateStatus } from "$lib/server/polar";
-import { asRecord } from "$lib/utils/helpers";
+import { PLANS_META } from "#lib/config/plans.js";
+import { safeMeta, safeStr, toIso, upsertSubscription, validateStatus } from "#lib/server/polar.js";
+import { asRecord } from "#lib/utils/helpers.js";
+import { POLAR_WEBHOOK_SECRET } from "$app/env/private";
 import type { RequestHandler } from "./$types";
 
 const enc = new TextEncoder();
@@ -129,21 +128,21 @@ function parseEvent(body: string): { type: string | null; data: Record<string, u
 }
 
 export const POST: RequestHandler = async ({ request }) => {
-	const secret = env.POLAR_WEBHOOK_SECRET;
+	const secret = POLAR_WEBHOOK_SECRET;
 	if (!secret) {
-		return json({ error: "Polar webhook secret not configured" }, { status: 500 });
+		return Response.json({ error: "Polar webhook secret not configured" }, { status: 500 });
 	}
 
 	const body = await request.text();
 	const sig = request.headers.get("webhook-signature") ?? "";
 	if (!(await verifySignature(body, sig, secret))) {
-		return json({ error: "Invalid signature" }, { status: 400 });
+		return Response.json({ error: "Invalid signature" }, { status: 400 });
 	}
 
 	// The signature is verified above, so a malformed body can only be a
 	// Polar-side issue; ack it so Polar does not retry-loop.
 	const event = parseEvent(body);
-	if (!event) return json({ received: true });
+	if (!event) return Response.json({ received: true });
 
 	switch (event.type) {
 		case "checkout.created":
@@ -160,5 +159,5 @@ export const POST: RequestHandler = async ({ request }) => {
 			break;
 	}
 
-	return json({ received: true });
+	return Response.json({ received: true });
 };

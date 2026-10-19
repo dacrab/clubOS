@@ -1,4 +1,4 @@
-import type { MemberRole } from "$lib/types/database";
+import type { MemberRole } from "#lib/types/database.js";
 
 const ROLE_HOME: Record<MemberRole, string> = {
 	owner: "/admin",

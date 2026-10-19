@@ -22,7 +22,7 @@ vi.mock("svelte-clerk/server", () => ({
 	},
 }));
 
-vi.mock("$lib/db/client", () => ({ getDb: () => qb }));
+vi.mock("#lib/db/client.js", () => ({ getDb: () => qb }));
 
 import { DELETE, PATCH, POST } from "./+server";
 

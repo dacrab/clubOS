@@ -1,23 +1,23 @@
 <script lang="ts">
 import { ShoppingCart } from "@lucide/svelte";
-import OrderDetailsDialog from "$lib/components/features/order-details-dialog.svelte";
-import OrderRow from "$lib/components/features/order-row.svelte";
-import EmptyState from "$lib/components/layout/empty-state.svelte";
-import PageHeader from "$lib/components/layout/page-header.svelte";
-import Badge from "$lib/components/ui/badge/badge.svelte";
-import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
-import Input from "$lib/components/ui/input/input.svelte";
-import Pagination from "$lib/components/ui/pagination/pagination.svelte";
+import OrderDetailsDialog from "#lib/components/features/order-details-dialog.svelte";
+import OrderRow from "#lib/components/features/order-row.svelte";
+import EmptyState from "#lib/components/layout/empty-state.svelte";
+import PageHeader from "#lib/components/layout/page-header.svelte";
+import Badge from "#lib/components/ui/badge/badge.svelte";
+import Card, { CardContent } from "#lib/components/ui/card/card.svelte";
+import Input from "#lib/components/ui/input/input.svelte";
+import Pagination from "#lib/components/ui/pagination/pagination.svelte";
 import Table, {
 	TableBody,
 	TableCell,
 	TableHead,
 	TableHeader,
 	TableRow,
-} from "$lib/components/ui/table/table.svelte";
-import { t } from "$lib/i18n/index.svelte";
-import type { OrderView } from "$lib/types/database";
-import { fmtCurrency } from "$lib/utils/format";
+} from "#lib/components/ui/table/table.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
+import type { OrderView } from "#lib/types/database.js";
+import { fmtCurrency } from "#lib/utils/format.js";
 
 const { data } = $props();
 

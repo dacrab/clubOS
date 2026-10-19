@@ -1,4 +1,4 @@
-import type { SessionUser } from "$lib/types/database";
+import type { SessionUser } from "#lib/types/database.js";
 
 let user = $state<SessionUser | null>(null);
 

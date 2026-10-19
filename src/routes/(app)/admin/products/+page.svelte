@@ -1,33 +1,33 @@
 <script lang="ts">
 import { AlertTriangle, FolderTree, Package, Pencil, Plus, Trash2 } from "@lucide/svelte";
-import ImageUpload from "$lib/components/image-upload.svelte";
-import EmptyState from "$lib/components/layout/empty-state.svelte";
-import PageHeader from "$lib/components/layout/page-header.svelte";
-import Badge from "$lib/components/ui/badge/badge.svelte";
-import Button from "$lib/components/ui/button/button.svelte";
-import Card from "$lib/components/ui/card/card.svelte";
-import ConfirmDelete from "$lib/components/ui/confirm-delete/confirm-delete.svelte";
-import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
-import Input from "$lib/components/ui/input/input.svelte";
-import Label from "$lib/components/ui/label/label.svelte";
-import Pagination from "$lib/components/ui/pagination/pagination.svelte";
-import Select from "$lib/components/ui/select/select.svelte";
-import SelectContent from "$lib/components/ui/select/select-content.svelte";
-import SelectItem from "$lib/components/ui/select/select-item.svelte";
-import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
+import ImageUpload from "#lib/components/image-upload.svelte";
+import EmptyState from "#lib/components/layout/empty-state.svelte";
+import PageHeader from "#lib/components/layout/page-header.svelte";
+import Badge from "#lib/components/ui/badge/badge.svelte";
+import Button from "#lib/components/ui/button/button.svelte";
+import Card from "#lib/components/ui/card/card.svelte";
+import ConfirmDelete from "#lib/components/ui/confirm-delete/confirm-delete.svelte";
+import FormDialog from "#lib/components/ui/form-dialog/form-dialog.svelte";
+import Input from "#lib/components/ui/input/input.svelte";
+import Label from "#lib/components/ui/label/label.svelte";
+import Pagination from "#lib/components/ui/pagination/pagination.svelte";
+import Select from "#lib/components/ui/select/select.svelte";
+import SelectContent from "#lib/components/ui/select/select-content.svelte";
+import SelectItem from "#lib/components/ui/select/select-item.svelte";
+import SelectTrigger from "#lib/components/ui/select/select-trigger.svelte";
 import Table, {
 	TableBody,
 	TableCell,
 	TableHead,
 	TableHeader,
 	TableRow,
-} from "$lib/components/ui/table/table.svelte";
-import { t } from "$lib/i18n/index.svelte";
-import { settings } from "$lib/state/settings.svelte";
-import type { CategoryPartial, Product, ProductForm } from "$lib/types/database";
-import { api } from "$lib/utils/api";
-import { runCrud } from "$lib/utils/crud";
-import { fmtCurrency } from "$lib/utils/format";
+} from "#lib/components/ui/table/table.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
+import { settings } from "#lib/state/settings.svelte.js";
+import type { CategoryPartial, Product, ProductForm } from "#lib/types/database.js";
+import { api } from "#lib/utils/api.js";
+import { runCrud } from "#lib/utils/crud.js";
+import { fmtCurrency } from "#lib/utils/format.js";
 
 const { data } = $props();
 

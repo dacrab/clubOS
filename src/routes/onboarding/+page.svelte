@@ -1,25 +1,25 @@
 <script lang="ts">
 import { Building2, Check, Loader2, Mail, MapPin, Phone } from "@lucide/svelte";
 import { toast } from "svelte-sonner";
-import PlanSelector from "$lib/components/features/plan-selector.svelte";
-import Header from "$lib/components/layout/header.svelte";
-import Button from "$lib/components/ui/button/button.svelte";
+import PlanSelector from "#lib/components/features/plan-selector.svelte";
+import Header from "#lib/components/layout/header.svelte";
+import Button from "#lib/components/ui/button/button.svelte";
 import Card, {
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "$lib/components/ui/card/card.svelte";
-import Input from "$lib/components/ui/input/input.svelte";
-import Label from "$lib/components/ui/label/label.svelte";
-import Select from "$lib/components/ui/select/select.svelte";
-import SelectContent from "$lib/components/ui/select/select-content.svelte";
-import SelectItem from "$lib/components/ui/select/select-item.svelte";
-import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
-import type { PlanId } from "$lib/config/plans";
-import { t } from "$lib/i18n/index.svelte";
-import { DEFAULT_TIMEZONE } from "$lib/types/database";
-import { startCheckout } from "$lib/utils/checkout";
+} from "#lib/components/ui/card/card.svelte";
+import Input from "#lib/components/ui/input/input.svelte";
+import Label from "#lib/components/ui/label/label.svelte";
+import Select from "#lib/components/ui/select/select.svelte";
+import SelectContent from "#lib/components/ui/select/select-content.svelte";
+import SelectItem from "#lib/components/ui/select/select-item.svelte";
+import SelectTrigger from "#lib/components/ui/select/select-trigger.svelte";
+import type { PlanId } from "#lib/config/plans.js";
+import { t } from "#lib/i18n/index.svelte.js";
+import { DEFAULT_TIMEZONE } from "#lib/types/database.js";
+import { startCheckout } from "#lib/utils/checkout.js";
 
 type Step = 1 | 2 | 3;
 

@@ -14,7 +14,7 @@ vi.mock("$app/navigation", () => ({
 	replaceState: vi.fn(),
 }));
 
-vi.mock("$lib/state/settings.svelte", () => ({
+vi.mock("#lib/state/settings.svelte.js", () => ({
 	settings: {
 		current: { currency_code: "EUR", date_format: "DD/MM/YYYY", time_format: "24h" },
 		setSettings: vi.fn(),

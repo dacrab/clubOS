@@ -1,6 +1,6 @@
 import { redirect } from "@sveltejs/kit";
-import { getHomeForRole } from "$lib/config/auth";
-import { resolveUserContext } from "$lib/server/auth";
+import { getHomeForRole } from "#lib/config/auth.js";
+import { resolveUserContext } from "#lib/server/auth.js";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {

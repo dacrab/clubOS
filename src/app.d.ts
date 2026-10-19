@@ -1,7 +1,7 @@
-import type { TenantSettings } from "$lib/config/settings";
-import type { registerSessions } from "$lib/db/schema/register-sessions";
-import type { subscriptions } from "$lib/db/schema/subscriptions";
-import type { MemberRole } from "$lib/types/database";
+import type { TenantSettings } from "#lib/config/settings.js";
+import type { registerSessions } from "#lib/db/schema/register-sessions.js";
+import type { subscriptions } from "#lib/db/schema/subscriptions.js";
+import type { MemberRole } from "#lib/types/database.js";
 
 declare global {
 	namespace App {

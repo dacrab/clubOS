@@ -1,4 +1,4 @@
-import type { DbAction } from "$lib/types/database";
+import type { DbAction } from "#lib/types/database.js";
 import { asRecord } from "./helpers";
 
 /**

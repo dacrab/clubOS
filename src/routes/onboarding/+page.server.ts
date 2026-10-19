@@ -1,8 +1,8 @@
 import { redirect } from "@sveltejs/kit";
 import { clerkClient } from "svelte-clerk/server";
-import { getHomeForRole } from "$lib/config/auth";
-import { resolveUserContext } from "$lib/server/auth";
-import { fetchPlans } from "$lib/server/plans";
+import { getHomeForRole } from "#lib/config/auth.js";
+import { resolveUserContext } from "#lib/server/auth.js";
+import { fetchPlans } from "#lib/server/plans.js";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {

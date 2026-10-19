@@ -1,7 +1,7 @@
 <script lang="ts">
 import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 import type { Snippet } from "svelte";
-import { buttonVariants } from "$lib/components/ui/button/button.svelte";
+import { buttonVariants } from "#lib/components/ui/button/button.svelte";
 
 type Props = DropdownMenuPrimitive.TriggerProps & {
 	class?: string;

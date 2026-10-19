@@ -1,5 +1,5 @@
 <script lang="ts" module>
-import { cn } from "$lib/utils/cn";
+import { cn } from "#lib/utils/cn.js";
 
 const base =
 	"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 transition-[color,background-color,border-color,box-shadow,transform] duration-[--duration-fast] ease-[--ease-out] active:scale-[0.97]";

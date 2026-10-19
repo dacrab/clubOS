@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const settingsState = {
 	current: { date_format: "DD/MM/YYYY", time_format: "24h", currency_code: "EUR" },
 };
-vi.mock("$lib/state/settings.svelte", () => ({ settings: settingsState }));
+vi.mock("#lib/state/settings.svelte.js", () => ({ settings: settingsState }));
 
 const { currentCurrencySymbol, fmtCurrency, fmtDate, formatDateTimeLocal } = await import(
 	"./format"

@@ -13,19 +13,19 @@ import {
 	X,
 } from "@lucide/svelte";
 import { toast } from "svelte-sonner";
-import { invalidateAll } from "$app/navigation";
-import Badge from "$lib/components/ui/badge/badge.svelte";
-import Button from "$lib/components/ui/button/button.svelte";
-import Dialog from "$lib/components/ui/dialog/dialog.svelte";
-import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
-import Input from "$lib/components/ui/input/input.svelte";
-import { t } from "$lib/i18n/index.svelte";
-import { settings as globalSettings } from "$lib/state/settings.svelte";
-import type { CartItem, CategoryPartial, Product } from "$lib/types/database";
-import { api } from "$lib/utils/api";
-import { fmtCurrency } from "$lib/utils/format";
-import { shortId } from "$lib/utils/helpers";
-import { printReceipt, type ReceiptData } from "$lib/utils/receipt";
+import Badge from "#lib/components/ui/badge/badge.svelte";
+import Button from "#lib/components/ui/button/button.svelte";
+import Dialog from "#lib/components/ui/dialog/dialog.svelte";
+import DialogContent from "#lib/components/ui/dialog/dialog-content.svelte";
+import Input from "#lib/components/ui/input/input.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
+import { settings as globalSettings } from "#lib/state/settings.svelte.js";
+import type { CartItem, CategoryPartial, Product } from "#lib/types/database.js";
+import { api } from "#lib/utils/api.js";
+import { fmtCurrency } from "#lib/utils/format.js";
+import { shortId } from "#lib/utils/helpers.js";
+import { printReceipt, type ReceiptData } from "#lib/utils/receipt.js";
+import { refreshAll } from "$app/navigation";
 
 type Props = {
 	open: boolean;
@@ -165,7 +165,7 @@ async function submitOrder(): Promise<void> {
 		toast.success(t("common.success"));
 		clearCart();
 		showCart = false;
-		await invalidateAll();
+		await refreshAll();
 	} catch (err) {
 		toast.error(err instanceof Error ? err.message : t("common.error"));
 	} finally {

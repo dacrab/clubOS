@@ -1,30 +1,30 @@
 <script lang="ts">
 import { Pencil, Plus, Trash2, Users } from "@lucide/svelte";
-import EmptyState from "$lib/components/layout/empty-state.svelte";
-import PageHeader from "$lib/components/layout/page-header.svelte";
-import Badge from "$lib/components/ui/badge/badge.svelte";
-import Button from "$lib/components/ui/button/button.svelte";
-import Card, { CardContent } from "$lib/components/ui/card/card.svelte";
-import ConfirmDelete from "$lib/components/ui/confirm-delete/confirm-delete.svelte";
-import FormDialog from "$lib/components/ui/form-dialog/form-dialog.svelte";
-import Input from "$lib/components/ui/input/input.svelte";
-import Label from "$lib/components/ui/label/label.svelte";
-import Select from "$lib/components/ui/select/select.svelte";
-import SelectContent from "$lib/components/ui/select/select-content.svelte";
-import SelectItem from "$lib/components/ui/select/select-item.svelte";
-import SelectTrigger from "$lib/components/ui/select/select-trigger.svelte";
+import EmptyState from "#lib/components/layout/empty-state.svelte";
+import PageHeader from "#lib/components/layout/page-header.svelte";
+import Badge from "#lib/components/ui/badge/badge.svelte";
+import Button from "#lib/components/ui/button/button.svelte";
+import Card, { CardContent } from "#lib/components/ui/card/card.svelte";
+import ConfirmDelete from "#lib/components/ui/confirm-delete/confirm-delete.svelte";
+import FormDialog from "#lib/components/ui/form-dialog/form-dialog.svelte";
+import Input from "#lib/components/ui/input/input.svelte";
+import Label from "#lib/components/ui/label/label.svelte";
+import Select from "#lib/components/ui/select/select.svelte";
+import SelectContent from "#lib/components/ui/select/select-content.svelte";
+import SelectItem from "#lib/components/ui/select/select-item.svelte";
+import SelectTrigger from "#lib/components/ui/select/select-trigger.svelte";
 import Table, {
 	TableBody,
 	TableCell,
 	TableHead,
 	TableHeader,
 	TableRow,
-} from "$lib/components/ui/table/table.svelte";
-import { t } from "$lib/i18n/index.svelte";
-import type { MemberRole, UserForm, UserView } from "$lib/types/database";
-import { apiRequest } from "$lib/utils/api";
-import { runCrud } from "$lib/utils/crud";
-import { getRoleBadgeVariant } from "$lib/utils/helpers";
+} from "#lib/components/ui/table/table.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
+import type { MemberRole, UserForm, UserView } from "#lib/types/database.js";
+import { apiRequest } from "#lib/utils/api.js";
+import { runCrud } from "#lib/utils/crud.js";
+import { getRoleBadgeVariant } from "#lib/utils/helpers.js";
 
 const { data } = $props();
 

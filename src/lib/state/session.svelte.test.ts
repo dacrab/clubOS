@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import type { SessionUser } from "$lib/types/database";
+import type { SessionUser } from "#lib/types/database.js";
 import { session } from "./session.svelte";
 
 const mockUser: SessionUser = {

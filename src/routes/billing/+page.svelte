@@ -1,11 +1,11 @@
 <script lang="ts">
 import { AlertCircle } from "@lucide/svelte";
 import { toast } from "svelte-sonner";
-import PlanSelector from "$lib/components/features/plan-selector.svelte";
-import Header from "$lib/components/layout/header.svelte";
-import type { PlanId } from "$lib/config/plans";
-import { t } from "$lib/i18n/index.svelte";
-import { startCheckout } from "$lib/utils/checkout";
+import PlanSelector from "#lib/components/features/plan-selector.svelte";
+import Header from "#lib/components/layout/header.svelte";
+import type { PlanId } from "#lib/config/plans.js";
+import { t } from "#lib/i18n/index.svelte.js";
+import { startCheckout } from "#lib/utils/checkout.js";
 
 const { data } = $props();
 

@@ -9,14 +9,14 @@ import {
 	Star,
 	TrendingUp,
 } from "@lucide/svelte";
-import NewSaleDialog from "$lib/components/features/new-sale-dialog.svelte";
-import RecentOrders from "$lib/components/features/recent-orders.svelte";
-import RevenueChart from "$lib/components/features/revenue-chart.svelte";
-import PageHeader from "$lib/components/layout/page-header.svelte";
-import Button from "$lib/components/ui/button/button.svelte";
-import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
-import { t } from "$lib/i18n/index.svelte";
-import { fmtCurrency } from "$lib/utils/format";
+import NewSaleDialog from "#lib/components/features/new-sale-dialog.svelte";
+import RecentOrders from "#lib/components/features/recent-orders.svelte";
+import RevenueChart from "#lib/components/features/revenue-chart.svelte";
+import PageHeader from "#lib/components/layout/page-header.svelte";
+import Button from "#lib/components/ui/button/button.svelte";
+import Card, { CardContent, CardHeader, CardTitle } from "#lib/components/ui/card/card.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
+import { fmtCurrency } from "#lib/utils/format.js";
 
 const { data } = $props();
 

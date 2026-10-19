@@ -1,13 +1,13 @@
 <script lang="ts">
 import type { Snippet } from "svelte";
-import Button from "$lib/components/ui/button/button.svelte";
-import Dialog from "$lib/components/ui/dialog/dialog.svelte";
-import DialogContent from "$lib/components/ui/dialog/dialog-content.svelte";
-import DialogDescription from "$lib/components/ui/dialog/dialog-description.svelte";
-import DialogFooter from "$lib/components/ui/dialog/dialog-footer.svelte";
-import DialogHeader from "$lib/components/ui/dialog/dialog-header.svelte";
-import DialogTitle from "$lib/components/ui/dialog/dialog-title.svelte";
-import { t } from "$lib/i18n/index.svelte";
+import Button from "#lib/components/ui/button/button.svelte";
+import Dialog from "#lib/components/ui/dialog/dialog.svelte";
+import DialogContent from "#lib/components/ui/dialog/dialog-content.svelte";
+import DialogDescription from "#lib/components/ui/dialog/dialog-description.svelte";
+import DialogFooter from "#lib/components/ui/dialog/dialog-footer.svelte";
+import DialogHeader from "#lib/components/ui/dialog/dialog-header.svelte";
+import DialogTitle from "#lib/components/ui/dialog/dialog-title.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
 
 type Props = {
 	open: boolean;

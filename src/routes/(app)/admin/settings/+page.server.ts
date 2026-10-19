@@ -1,10 +1,10 @@
 import { fail } from "@sveltejs/kit";
 import { and, eq } from "drizzle-orm";
-import { DEFAULT_SETTINGS, mergeSettings, type TenantSettings } from "$lib/config/settings";
-import { getDb } from "$lib/db/client";
-import { memberships } from "$lib/db/schema/memberships";
-import { tenants } from "$lib/db/schema/tenants";
-import { TenantSettingsSchema } from "$lib/schemas";
+import { DEFAULT_SETTINGS, mergeSettings, type TenantSettings } from "#lib/config/settings.js";
+import { getDb } from "#lib/db/client.js";
+import { memberships } from "#lib/db/schema/memberships.js";
+import { tenants } from "#lib/db/schema/tenants.js";
+import { TenantSettingsSchema } from "#lib/schemas.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ parent }) => {

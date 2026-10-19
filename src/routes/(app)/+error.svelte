@@ -1,14 +1,14 @@
 <script lang="ts">
 import { AlertTriangle, Home, RotateCcw } from "@lucide/svelte";
-import { page } from "$app/state";
-import Button from "$lib/components/ui/button/button.svelte";
+import Button from "#lib/components/ui/button/button.svelte";
 import Card, {
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "$lib/components/ui/card/card.svelte";
-import { t } from "$lib/i18n/index.svelte";
+} from "#lib/components/ui/card/card.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
+import { page } from "$app/state";
 
 const errorInfo = $derived.by(() => {
 	if (page.status === 404)

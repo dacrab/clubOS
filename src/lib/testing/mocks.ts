@@ -1,6 +1,6 @@
 import { vi } from "vitest";
-import type { MemberRole, SubscriptionStatus } from "$lib/types/database";
-import { DAY_MS } from "$lib/types/database";
+import type { MemberRole, SubscriptionStatus } from "#lib/types/database.js";
+import { DAY_MS } from "#lib/types/database.js";
 
 export interface MockUser {
 	id: string;

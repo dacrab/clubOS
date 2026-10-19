@@ -1,7 +1,7 @@
 import { z } from "zod";
-import type { CurrencyCode, DateFormat, TimeFormat } from "$lib/config/settings";
-import type { BookingDetails } from "$lib/types/database";
-import { DB_ACTIONS } from "$lib/types/database";
+import type { CurrencyCode, DateFormat, TimeFormat } from "#lib/config/settings.js";
+import type { BookingDetails } from "#lib/types/database.js";
+import { DB_ACTIONS } from "#lib/types/database.js";
 
 export const MemberRoleSchema = z.enum(["owner", "admin", "manager", "staff"]);
 

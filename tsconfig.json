@@ -1,19 +1,14 @@
 {
-	"extends": "./.svelte-kit/tsconfig.json",
+	"extends": "$app/tsconfig",
 	"compilerOptions": {
 		"allowJs": false,
 		"checkJs": false,
-		"esModuleInterop": true,
-		"forceConsistentCasingInFileNames": true,
-		"resolveJsonModule": true,
-		"skipLibCheck": true,
 		"sourceMap": true,
-		"moduleResolution": "bundler",
-		"moduleDetection": "force",
-		"isolatedModules": true,
-		"verbatimModuleSyntax": true,
-		"noEmit": true,
-		"types": ["svelte", "node"],
+		"types": [
+			"$app/types",
+			"svelte",
+			"node"
+		],
 		"strict": true,
 		"noFallthroughCasesInSwitch": true,
 		"noUnusedLocals": true,
@@ -22,5 +17,12 @@
 		"allowUnreachableCode": false,
 		"allowUnusedLabels": false
 	},
-	"exclude": []
+	"exclude": [
+		
+	],
+	"include": [
+		"src",
+		"vite.config.ts",
+		"drizzle.config.ts"
+	]
 }

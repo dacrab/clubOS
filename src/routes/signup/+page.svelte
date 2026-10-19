@@ -1,13 +1,13 @@
 <script lang="ts">
 import { SignUp } from "svelte-clerk";
-import Header from "$lib/components/layout/header.svelte";
+import Header from "#lib/components/layout/header.svelte";
 import Card, {
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "$lib/components/ui/card/card.svelte";
-import { t } from "$lib/i18n/index.svelte";
+} from "#lib/components/ui/card/card.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
 </script>
 
 <div class="page-public">

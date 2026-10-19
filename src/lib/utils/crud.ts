@@ -1,6 +1,6 @@
 import { toast } from "svelte-sonner";
-import { invalidateAll } from "$app/navigation";
-import { t } from "$lib/i18n/index.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
+import { refreshAll } from "$app/navigation";
 
 type Result = { error?: unknown };
 
@@ -13,7 +13,7 @@ export async function runCrud(
 		if (result?.error)
 			throw result.error instanceof Error ? result.error : new Error(String(result.error));
 		toast.success(t("common.success"));
-		if (!options?.skipInvalidate) await invalidateAll();
+		if (!options?.skipInvalidate) await refreshAll();
 		return true;
 	} catch (err) {
 		toast.error(err instanceof Error ? err.message : t("common.error"));

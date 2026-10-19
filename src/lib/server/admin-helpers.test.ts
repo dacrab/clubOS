@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("$lib/db/client", () => ({
+vi.mock("#lib/db/client.js", () => ({
 	getDb: () => ({
 		select: () => ({
 			from: () => ({
@@ -10,7 +10,7 @@ vi.mock("$lib/db/client", () => ({
 	}),
 }));
 
-import type { MemberRole } from "$lib/types/database";
+import type { MemberRole } from "#lib/types/database.js";
 import { canAssign, requireAdmin as rawRequireAdmin } from "./admin-helpers";
 
 const requireAdmin = rawRequireAdmin as (

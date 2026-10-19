@@ -1,10 +1,10 @@
 import { and, desc, ilike, sql } from "drizzle-orm";
-import { getDb } from "$lib/db/client";
-import { orders } from "$lib/db/schema/orders";
-import { loadOrderViews } from "$lib/server/order-views";
-import { type DataScope, facilityFilter, resolveFacilityIds } from "$lib/server/scope";
-import type { OrderView } from "$lib/types/database";
-import { escapeLike } from "$lib/utils/helpers";
+import { getDb } from "#lib/db/client.js";
+import { orders } from "#lib/db/schema/orders.js";
+import { loadOrderViews } from "#lib/server/order-views.js";
+import { type DataScope, facilityFilter, resolveFacilityIds } from "#lib/server/scope.js";
+import type { OrderView } from "#lib/types/database.js";
+import { escapeLike } from "#lib/utils/helpers.js";
 import type { PageServerLoad } from "./$types";
 
 const PER_PAGE = 25;

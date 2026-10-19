@@ -1,4 +1,4 @@
-import { handleBookingEmail } from "$lib/server/booking-email";
+import { handleBookingEmail } from "#lib/server/booking-email.js";
 import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ request, locals }) =>

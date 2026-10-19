@@ -5,13 +5,12 @@
  * Map that only softens abuse within one warm instance. Any Upstash failure
  * fails open to the memory store (logged once per process).
  */
-import { env } from "$env/dynamic/private";
+import { UPSTASH_REDIS_REST_TOKEN, UPSTASH_REDIS_REST_URL } from "$app/env/private";
 
 interface Hit {
 	count: number;
 	resetAt: number;
 }
-
 interface RateLimitStore {
 	hit(key: string, windowMs: number): Promise<Hit>;
 }
@@ -57,10 +56,10 @@ function warnOnce(message: string, err: unknown) {
 }
 
 async function upstashPipeline(commands: string[][]): Promise<unknown[]> {
-	const res = await fetch(`${env.UPSTASH_REDIS_REST_URL}/pipeline`, {
+	const res = await fetch(`${UPSTASH_REDIS_REST_URL}/pipeline`, {
 		method: "POST",
 		headers: {
-			authorization: `Bearer ${env.UPSTASH_REDIS_REST_TOKEN}`,
+			authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`,
 			"content-type": "application/json",
 		},
 		body: JSON.stringify(commands),
@@ -88,7 +87,7 @@ const upstashStore: RateLimitStore = {
 // ── Public API ──
 
 function getStore(): RateLimitStore {
-	if (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN) {
+	if (UPSTASH_REDIS_REST_URL && UPSTASH_REDIS_REST_TOKEN) {
 		return {
 			hit: async (key, windowMs) => {
 				try {

@@ -1,7 +1,7 @@
 <script lang="ts">
 import { Label as LabelPrimitive } from "bits-ui";
 import type { Snippet } from "svelte";
-import { cn } from "$lib/utils/cn";
+import { cn } from "#lib/utils/cn.js";
 
 type Props = {
 	for?: string;

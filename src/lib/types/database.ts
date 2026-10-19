@@ -1,6 +1,6 @@
-import type { bookings } from "$lib/db/schema/bookings";
-import type { products } from "$lib/db/schema/products";
-import type { registerSessions } from "$lib/db/schema/register-sessions";
+import type { bookings } from "#lib/db/schema/bookings.js";
+import type { products } from "#lib/db/schema/products.js";
+import type { registerSessions } from "#lib/db/schema/register-sessions.js";
 
 export type MemberRole = "owner" | "admin" | "manager" | "staff";
 export type BookingType = "birthday" | "football" | "event" | "other";

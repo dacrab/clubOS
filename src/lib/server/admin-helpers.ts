@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
-import { getDb } from "$lib/db/client";
-import { memberships } from "$lib/db/schema/memberships";
-import type { MemberRole } from "$lib/types/database";
+import { getDb } from "#lib/db/client.js";
+import { memberships } from "#lib/db/schema/memberships.js";
+import type { MemberRole } from "#lib/types/database.js";
 
 export interface AdminCtx {
 	tenantId: string;

@@ -1,8 +1,8 @@
 <script lang="ts">
-import Header from "$lib/components/layout/header.svelte";
-import Sidebar from "$lib/components/layout/sidebar.svelte";
-import { session } from "$lib/state/session.svelte";
-import { settings } from "$lib/state/settings.svelte";
+import Header from "#lib/components/layout/header.svelte";
+import Sidebar from "#lib/components/layout/sidebar.svelte";
+import { session } from "#lib/state/session.svelte.js";
+import { settings } from "#lib/state/settings.svelte.js";
 
 const { data, children } = $props();
 

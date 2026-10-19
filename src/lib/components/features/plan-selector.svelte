@@ -1,14 +1,14 @@
 <script lang="ts">
 import { Building2, Check, Loader2, Users, Zap } from "@lucide/svelte";
-import Button from "$lib/components/ui/button/button.svelte";
+import Button from "#lib/components/ui/button/button.svelte";
 import Card, {
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "$lib/components/ui/card/card.svelte";
-import type { PlanData, PlanIcon, PlanId } from "$lib/config/plans";
-import { t } from "$lib/i18n/index.svelte";
+} from "#lib/components/ui/card/card.svelte";
+import type { PlanData, PlanIcon, PlanId } from "#lib/config/plans.js";
+import { t } from "#lib/i18n/index.svelte.js";
 
 const ICONS = { Building2, Users, Zap } as const satisfies Record<PlanIcon, unknown>;
 

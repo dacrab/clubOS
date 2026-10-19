@@ -1,11 +1,11 @@
 <script lang="ts">
-import Button from "$lib/components/ui/button/button.svelte";
-import Card, { CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/card.svelte";
-import Input from "$lib/components/ui/input/input.svelte";
-import Label from "$lib/components/ui/label/label.svelte";
-import { t } from "$lib/i18n/index.svelte";
-import { type Booking, DEFAULT_TIMEZONE } from "$lib/types/database";
-import { asRecord } from "$lib/utils/helpers";
+import Button from "#lib/components/ui/button/button.svelte";
+import Card, { CardContent, CardHeader, CardTitle } from "#lib/components/ui/card/card.svelte";
+import Input from "#lib/components/ui/input/input.svelte";
+import Label from "#lib/components/ui/label/label.svelte";
+import { t } from "#lib/i18n/index.svelte.js";
+import { type Booking, DEFAULT_TIMEZONE } from "#lib/types/database.js";
+import { asRecord } from "#lib/utils/helpers.js";
 
 const { data, form } = $props();
 
