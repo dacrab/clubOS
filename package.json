@@ -38,10 +38,10 @@
 		"vitest": "^4.1.10"
 	},
 	"dependencies": {
+		"@clerk/backend": "^3.13.2",
 		"@internationalized/date": "^3.12.2",
 		"@lucide/svelte": "^1.23.0",
-		"@clerk/backend": "^3.13.2",
-		"@sentry/sveltekit": "^10.64.0",
+		"@sentry/sveltekit": "^11.8.0",
 		"bits-ui": "^2.18.1",
 		"drizzle-orm": "^0.45.2",
 		"postgres": "^3.4.9",
