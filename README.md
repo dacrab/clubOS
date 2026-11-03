@@ -1,24 +1,24 @@
 # ClubOS
 
-A point-of-sale and club management app for venues and sports facilities.
+The counter, the bookings, and the team — in one place.
 
 **Live demo:** https://clubos.vercel.app
 
-ClubOS brings the counter, bookings, and team tools into one place. Staff can take orders quickly, managers can handle party and field reservations, and owners can run multiple locations from a single account.
+ClubOS is a point-of-sale and management app for clubs, sports venues, and other multi-location businesses. Staff take orders, managers look after parties and field reservations, and owners keep an eye on revenue and access.
 
-## Features
+## Day to day
 
-- Fast point of sale with products, categories, treats, and coupons
-- Birthday party and field bookings, plus self-service links for customers
-- Registers and shift management
-- Staff accounts with role-based access
-- Multiple locations under one account
-- Revenue dashboard and recent orders
-- Available in English and Greek
+- Sell products, categories, treats, and coupons from a fast checkout
+- Take birthday party and field bookings, with self-service links for customers
+- Open and close register sessions, then look back at past ones
+- Give staff the access they need: owner, admin, manager, or staff
+- Run more than one location from the same account
+- Follow revenue and recent orders on the dashboard
+- Switch between English and Greek
 
-## Run it locally
+## Running locally
 
-You'll need [Bun](https://bun.sh), a [Neon](https://neon.tech) Postgres database, a [Clerk](https://clerk.com) app, and [Doppler](https://doppler.com) for secrets.
+Local setup takes a Neon database, a Clerk application, and Doppler.
 
 ```bash
 bun install
@@ -28,21 +28,13 @@ bun run db:seed
 bun run dev
 ```
 
-Open [localhost:5173](http://localhost:5173).
+Visit [localhost:5173](http://localhost:5173). Set `SEED_PASSWORD` before running the seed if you want the demo tenant.
 
-Set `SEED_PASSWORD` before seeding if you want to create the demo tenant and its users.
+## A few details
 
-## Good to know
+- The database blocks overlapping bookings, so two people can't take the same slot.
+- Subscriptions go through Polar and need an active or trialing plan.
+- Booking emails are optional and use Resend.
+- Upstash Redis is optional; it adds rate limiting across instances.
 
-- Booking overlaps are blocked by the database, so two people can't reserve the same slot.
-- Subscriptions run through Polar; access requires an active or trialing subscription.
-- Booking emails are optional and need a Resend key.
-- Upstash Redis is optional and only adds cross-instance rate limiting.
-
-## Built with
-
-SvelteKit, Neon Postgres, Drizzle, Clerk, Polar, and Tailwind CSS. Hosted on Vercel.
-
-## License
-
-MIT
+SvelteKit, Neon Postgres, Drizzle, Clerk, Polar, and Tailwind CSS. Deployed on Vercel. MIT licensed.
