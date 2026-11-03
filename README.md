@@ -1,74 +1,47 @@
 # ClubOS
 
-Point-of-sale and club management system for sports facilities, entertainment venues, and multi-location businesses.
+A point-of-sale and club management app for venues and sports facilities.
+
+**Live demo:** https://clubos.vercel.app
+
+ClubOS brings the counter, bookings, and team tools into one place. Staff can take orders quickly, managers can handle party and field reservations, and owners can run multiple locations from a single account.
 
 ## Features
 
-- **Point of Sale** - Fast checkout with products, categories, treats, and coupons
-- **Bookings** - Manage birthday parties and field reservations
-- **Multi-tenant** - Support multiple locations with role-based access
-- **Subscriptions** - Polar.sh-powered billing with trial periods
-- **Multilingual** - English and Greek support
+- Fast point of sale with products, categories, treats, and coupons
+- Birthday party and field bookings, plus self-service links for customers
+- Registers and shift management
+- Staff accounts with role-based access
+- Multiple locations under one account
+- Revenue dashboard and recent orders
+- Available in English and Greek
 
-## Quick Start
+## Run it locally
+
+You'll need [Bun](https://bun.sh), a [Neon](https://neon.tech) Postgres database, a [Clerk](https://clerk.com) app, and [Doppler](https://doppler.com) for secrets.
 
 ```bash
-# Install dependencies
 bun install
-
-# Set up environment (secrets via Doppler — or copy .env.example to .env)
 doppler setup
-
-# Set up the database (Neon)
-# Requires DATABASE_URL (via Doppler or .env)
 bun run db:migrate
-
-# Seed a demo tenant (requires SEED_PASSWORD, optional CLERK_SECRET_KEY)
 bun run db:seed
-
-# Start development server
 bun run dev
 ```
 
-Visit `http://localhost:5173` to see the app.
+Open [localhost:5173](http://localhost:5173).
 
-## Development
+Set `SEED_PASSWORD` before seeding if you want to create the demo tenant and its users.
 
-```bash
-bun run dev          # Start dev server
-bun run build        # Build for production
-bun run check        # Type check (svelte-check) + knip + biome
-bun run test         # Run tests
-```
+## Good to know
 
-## How it works
+- Booking overlaps are blocked by the database, so two people can't reserve the same slot.
+- Subscriptions run through Polar; access requires an active or trialing subscription.
+- Booking emails are optional and need a Resend key.
+- Upstash Redis is optional and only adds cross-instance rate limiting.
 
-- Multi-tenant with role-based access (owner, admin, manager, staff). All data
-  queries are scoped to the caller's facility, or every facility in their
-  tenant for tenant-wide members.
-- Booking overlaps are blocked at the database level; the API returns a
-  friendly error instead of a raw constraint violation.
-- Subscription access is granted only for an `active`/`trialing` status with a
-  future end date, driven by Polar webhooks. Unknown statuses fail closed.
-- API endpoints are rate-limited per client IP (Upstash Redis when configured,
-  otherwise a per-instance fallback).
+## Built with
 
-## Tech Stack
-
-- **SvelteKit 2** - Full-stack framework
-- **Neon** - Serverless Postgres database
-- **Drizzle ORM** - Type-safe database access
-- **Clerk** - Authentication and user management
-- **Tailwind CSS v4** - Styling
-- **Polar.sh** - Payment processing
-- **Upstash Redis** (optional) - Cross-instance rate limiting
-
-## Deployment
-
-Deploy to Vercel. Required env vars: `DATABASE_URL`, Clerk secret/publishable
-keys, `POLAR_ACCESS_TOKEN`, `POLAR_WEBHOOK_SECRET`, `BOOKING_TOKEN_SECRET`,
-`ORIGIN`; optional: `RESEND_API_KEY` (booking emails), `SENTRY_*`,
-`EMAIL_FROM`, `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`.
+SvelteKit, Neon Postgres, Drizzle, Clerk, Polar, and Tailwind CSS. Hosted on Vercel.
 
 ## License
 
